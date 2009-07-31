@@ -472,7 +472,6 @@ ECVNoDeviceError:
 	if(!_audioPipe) {
 		ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_device input:YES];
 		ECVAudioDevice *const output = [ECVAudioDevice defaultOutputDevice];
-		usleep(100000); // Make sure the device has time to initialize.
 		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
 		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
 		if(!inputStream || !outputStream) return NO;
@@ -510,13 +509,11 @@ ECVNoDeviceError:
 		return;
 	}
 	[NSThread setThreadPriority:1.0f];
-	if(![self threaded_play]) {
-		NSParameterAssert([_playLock condition] != ECVNotPlaying);
-		[_playLock unlockWithCondition:ECVNotPlaying];
-		[pool release];
-		return;
+	if(![self threaded_play]) goto bail;
+	if(![self startAudio]) {
+		usleep(500000); // Make sure the device has time to initialize.
+		if(![self startAudio]) goto bail;
 	}
-	while(![self startAudio]); // TODO: We should bail eventually.
 	[_playLock unlockWithCondition:ECVPlaying];
 
 	NSUInteger const simultaneousTransfers = self.simultaneousTransfers;
@@ -584,6 +581,7 @@ ECVNoDeviceError:
 	[_playLock lock];
 	CVPixelBufferRelease(_pendingImageBuffer);
 	_pendingImageBuffer = NULL;
+bail:
 	NSParameterAssert([_playLock condition] != ECVNotPlaying);
 	[_playLock unlockWithCondition:ECVNotPlaying];
 	[pool drain];
