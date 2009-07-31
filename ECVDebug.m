@@ -109,7 +109,3 @@ NSString *ECVIOKitErrorToString(IOReturn error)
 	}
 	return [NSString stringWithFormat:@"Unknown error %d (code:0x%x sub:0x%x system:0x%x)", error, err_get_code(error), err_get_sub(error), err_get_system(error)];
 }
-NSTimeInterval ECVUptime(void)
-{
-	return (NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(UpTime())) * 1e-9;
-}

@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <IOKit/usb/IOUSBLib.h>
 
 extern NSString *ECVIOKitErrorToString(IOReturn error);
-extern NSTimeInterval ECVUptime(void);
 
 #define ECVRetryDefault 3
 
