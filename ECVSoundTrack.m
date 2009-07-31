@@ -69,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(_soundDescriptionHandle) DisposeHandle((Handle)_soundDescriptionHandle);
 	_soundDescriptionHandle = NULL;
 	_basicDescription = desc;
-	ECVOSStatus(QTSoundDescriptionCreate(&desc, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_soundDescriptionHandle));
+	ECVOSStatus(QTSoundDescriptionCreate(&desc, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_soundDescriptionHandle), ECVRetryDefault);
 }
 
 #pragma mark -NSObject

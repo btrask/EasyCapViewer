@@ -60,11 +60,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	SetRect(&r, 0, 0, roundf(s.width), roundf(s.height));
 
 	GWorldPtr gWorld = NULL;
-	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, CVPixelBufferGetPixelFormatType(buffer), &r, NULL, NULL, 0, CVPixelBufferGetBaseAddress(buffer), CVPixelBufferGetBytesPerRow(buffer)));
+	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, CVPixelBufferGetPixelFormatType(buffer), &r, NULL, NULL, 0, CVPixelBufferGetBaseAddress(buffer), CVPixelBufferGetBytesPerRow(buffer)), ECVRetryDefault);
 	PixMapHandle const pixMap = GetGWorldPixMap(gWorld);
 
 	Size maxSize = 0;
-	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, quality, type, NULL, &maxSize));
+	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, quality, type, NULL, &maxSize), ECVRetryDefault);
 	if(_pendingFrame && GetHandleSize(_pendingFrame) < maxSize) {
 		DisposeHandle(_pendingFrame);
 		_pendingFrame = NULL;
@@ -73,7 +73,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(!_pendingFrameDescription) _pendingFrameDescription = (ImageDescriptionHandle)NewHandle(sizeof(ImageDescription));
 
 	HLock(_pendingFrame);
-	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(quality * codecMaxQuality), type, _pendingFrameDescription, *_pendingFrame));
+	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(quality * codecMaxQuality), type, _pendingFrameDescription, *_pendingFrame), ECVRetryDefault);
 	HUnlock(_pendingFrame);
 	DisposeGWorld(gWorld);
 
@@ -85,7 +85,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSParameterAssert(_hasPendingFrame);
 	NSParameterAssert(_pendingFrame);
 	NSParameterAssert(_pendingFrameDescription);
-	ECVOSStatus(AddMediaSample([[self media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
+	ECVOSStatus(AddMediaSample([[self media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
 	_hasPendingFrame = NO;
 }
 - (void)addFrameWithPixelBuffer:(CVPixelBufferRef)buffer codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time

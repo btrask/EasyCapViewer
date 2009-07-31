@@ -43,12 +43,12 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 {
 	if((self = [super init])) {
 		_inputStreamDescription = inputDesc;
-		ECVOSStatus(AudioConverterNew(&inputDesc, &outputDesc, &_converter));
+		ECVOSStatus(AudioConverterNew(&inputDesc, &outputDesc, &_converter), ECVRetryDefault);
 
 		UInt32 quality = kAudioConverterQuality_Max;
-		ECVOSStatus(AudioConverterSetProperty(_converter, kAudioConverterSampleRateConverterQuality, sizeof(quality), &quality));
+		ECVOSStatus(AudioConverterSetProperty(_converter, kAudioConverterSampleRateConverterQuality, sizeof(quality), &quality), ECVRetryDefault);
 		UInt32 primeMethod = kConverterPrimeMethod_None;
-		ECVOSStatus(AudioConverterSetProperty(_converter, kAudioConverterPrimeMethod, sizeof(primeMethod), &primeMethod));
+		ECVOSStatus(AudioConverterSetProperty(_converter, kAudioConverterPrimeMethod, sizeof(primeMethod), &primeMethod), ECVRetryDefault);
 
 		UInt32 const bufferCount = 100; // Seems reasonable?
 		_bufferList = malloc(sizeof(AudioBufferList) + sizeof(AudioBuffer) * (bufferCount - 1));
@@ -101,7 +101,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 
 - (void)dealloc
 {
-	ECVOSStatus(AudioConverterDispose(_converter));
+	ECVOSStatus(AudioConverterDispose(_converter), ECVRetryDefault);
 	if(_bufferList) free(_bufferList);
 	[super dealloc];
 }

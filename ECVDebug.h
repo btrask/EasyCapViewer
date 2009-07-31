@@ -29,16 +29,17 @@ extern NSTimeInterval ECVUptime(void);
 
 #define ECVRetryDefault 3
 
-#define ECVError(error, retry) do {\
+#define ECVIOReturn(error, retry) do {\
 	int __i = 0;\
 	IOReturn __e;\
-	while(__i < (retry) + 1 && kIOReturnSuccess != (__e = (error))) __i++;\
+	for(; __i <= (retry) && kIOReturnSuccess != (__e = (error)); __i++) usleep(100000);\
 	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
 	if(kIOReturnSuccess != __e) goto ECVGenericError;\
 } while(NO)
-//if(kIOReturnSuccess != __e) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:@"IOReturn error: %@", ECVIOKitErrorToString(__e)];
 
-#define ECVOSStatus(error) do {\
-	OSStatus __e = (OSStatus)(error);\
+#define ECVOSStatus(error, retry) do {\
+	int __i = 0;\
+	OSStatus __e;\
+	for(; __i <= (retry) && noErr != (__e = (error)); __i++) usleep(100000);\
 	if(noErr != __e) NSLog(@"%s:%d (%s) %s: '%d'", __FILE__, __LINE__, __PRETTY_FUNCTION__, #error, __e);\
 } while(NO)
