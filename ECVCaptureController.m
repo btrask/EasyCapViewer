@@ -277,6 +277,7 @@ ECVNoDeviceError:
 }
 - (IBAction)stopRecording:(id)sender
 {
+	if(!_movie) return;
 	[_soundTrack ECV_insertMediaAtTime:QTZeroTime];
 	[_videoTrack ECV_insertMediaInRange:[[_videoTrack media] ECV_timeRange] intoTrackInRange:[[_soundTrack media] ECV_timeRange]];
 	[[_soundTrack media] ECV_endEdits];
@@ -397,13 +398,15 @@ ECVNoDeviceError:
 }
 - (void)setPlaying:(BOOL)flag
 {
-	[_playLock lock];
 	if(flag) {
+		[_playLock lock];
 		if(![self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStartPlaying];
 			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
 		} else [_playLock unlock];
 	} else {
+		[self stopRecording:self];
+		[_playLock lock];
 		if([self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
