@@ -24,6 +24,8 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.5.7</string>
 	<key>ECVCaptureTypes</key>
 	<array>
 		<dict>
