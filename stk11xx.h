@@ -106,9 +106,9 @@ static void usb_stk11xx_write_registry(ECVSTK1160Controller *dev, u_int16_t inde
 {
 	(void)[dev writeValue:value atIndex:index];
 }
-static void usb_stk11xx_read_registry(ECVSTK1160Controller *dev, u_int16_t index, int *value)
+static void usb_stk11xx_read_registry(ECVSTK1160Controller *dev, u_int16_t index, int32_t *value)
 {
-	(void)[dev readValue:value atIndex:index];
+	(void)[dev readValue:(SInt32 *)value atIndex:index];
 }
 static void usb_stk11xx_set_feature(ECVSTK1160Controller *dev, int index)
 {

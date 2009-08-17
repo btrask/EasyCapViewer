@@ -158,7 +158,7 @@ extern NSString *const ECVSaturationKey;
 - (BOOL)setAlternateInterface:(UInt8)alternateSetting;
 - (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)value index:(UInt16)index length:(UInt16)length data:(void *)data;
 - (BOOL)writeValue:(UInt16)value atIndex:(UInt16)index;
-- (BOOL)readValue:(out int *)outVale atIndex:(UInt16)index;
+- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)index;
 - (BOOL)setFeatureAtIndex:(UInt16)index;
 
 - (void)noteVideoSettingDidChange; // Be sure to call this when you change the resolution or deinterlacing mode. NOT thread safe, pause first!

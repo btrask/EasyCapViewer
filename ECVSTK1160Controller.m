@@ -126,8 +126,9 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 }
 - (BOOL)threaded_watchdog
 {
-	int value;
+	SInt32 value;
 	if(![self readValue:&value atIndex:0x0001]) return NO;
+	NSLog(@"value is %d", value);
 	return 0x0003 == value;
 }
 - (void)threaded_readFrame:(IOUSBLowLatencyIsocFrame *)frame bytes:(UInt8 const *)bytes

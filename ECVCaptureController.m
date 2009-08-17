@@ -549,7 +549,10 @@ ECVNoDeviceError:
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
-		(void)[self threaded_watchdog];
+		if(![self threaded_watchdog]) {
+			[innerPool release];
+			break;
+		}
 		NSUInteger transfer = 0;
 		for(; transfer < simultaneousTransfers; transfer++ ) {
 			UInt8 *const frameData = fullFrameData + frameRequestSize * microframesPerTransfer * transfer;
@@ -721,12 +724,12 @@ ECVNoDeviceError:
 {
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:kUSBRqClearFeature value:value index:index length:0 data:NULL];
 }
-- (BOOL)readValue:(out int *)outValue atIndex:(UInt16)index
+- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)index
 {
-	int ignored;
-	int *const ptr = outValue ? outValue : &ignored;
-	*ptr = 0;
-	return [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:kUSBRqGetStatus value:0 index:index length:sizeof(int) data:ptr];
+	SInt32 v = 0;
+	BOOL const r = [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:kUSBRqGetStatus value:0 index:index length:sizeof(v) data:&v];
+	if(outValue) *outValue = CFSwapInt32LittleToHost(v);
+	return r;
 }
 - (BOOL)setFeatureAtIndex:(UInt16)index
 {
