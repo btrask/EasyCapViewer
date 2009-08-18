@@ -596,7 +596,7 @@ bail:
 	size_t const theoreticalRowLength = self.captureSize.width * 2; // YUYV is effectively 2Bpp.
 	size_t const actualRowLength = CVPixelBufferGetBytesPerRow(_pendingImageBuffer);
 	size_t const rowPadding = actualRowLength - theoreticalRowLength;
-	BOOL const skipLines = ECVFullFrame != _fieldType && ECVLineDouble != _deinterlacingMode && ECVBlur != _deinterlacingMode;
+	BOOL const skipLines = ECVFullFrame != _fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
 
 	size_t used = 0;
 	size_t rowOffset = _pendingImageLength % actualRowLength;
@@ -651,7 +651,7 @@ bail:
 		}
 	}
 	if(clearNewBuffer) {
-		UInt32 const val = 0x10801080;
+		uint32_t const val = CFSwapInt32HostToBig(0x80108010);
 		memset_pattern4(CVPixelBufferGetBaseAddress(_pendingImageBuffer), &val, CVPixelBufferGetDataSize(_pendingImageBuffer));
 	}
 	CVPixelBufferUnlockBaseAddress(_pendingImageBuffer, 0);
