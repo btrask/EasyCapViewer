@@ -205,6 +205,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 @synthesize delegate = delegate;
 @synthesize blurFramesTogether = _blurFramesTogether;
 @synthesize aspectRatio = _aspectRatio;
+- (void)setAspectRatio:(NSSize)ratio
+{
+	_aspectRatio = ratio;
+	[self reshape];
+}
 @synthesize vsync = _vsync;
 - (void)setVsync:(BOOL)flag
 {
