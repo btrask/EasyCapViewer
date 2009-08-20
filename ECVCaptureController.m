@@ -296,7 +296,11 @@ ECVNoDeviceError:
 }
 - (IBAction)changeScale:(id)sender
 {
-	[[self window] setContentSize:[self outputSizeWithScale:[sender tag]]];
+	NSRect f = [[self window] contentRectForFrameRect:[[self window] frame]];
+	NSSize const s = [self outputSizeWithScale:[sender tag]];
+	f.origin.y += NSHeight(f) - s.height;
+	f.size = s;
+	[[self window] setFrame:[[self window] frameRectForContentRect:f] display:YES];
 }
 - (IBAction)changeAspectRatio:(id)sender
 {
@@ -334,7 +338,9 @@ ECVNoDeviceError:
 	[[self window] setContentAspectRatio:ratio];
 	NSRect f = [[self window] contentRectForFrameRect:[[self window] frame]];
 	CGFloat const r = ratio.height / ratio.width;
-	f.size.height = NSWidth(f) * r;
+	CGFloat const newHeight = NSWidth(f) * r;
+	f.origin.y += NSHeight(f) - newHeight;
+	f.size.height = newHeight;
 	if(!self.fullScreen) [[self window] setFrame:[[self window] frameRectForContentRect:f] display:YES];
 	[[self window] setMinSize:NSMakeSize(200.0f, 200.0f * r)];
 }
