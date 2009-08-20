@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Views
 #import "MPLWindow.h"
-#import "MPLVideoView.h"
+#import "ECVVideoView.h"
 
 // Controllers
 #import "ECVController.h"
@@ -60,10 +60,6 @@ enum {
 	ECVPlaying,
 	ECVStopPlaying
 }; // _playLock
-enum {
-	ECVDrawLoopWait,
-	ECVDrawLoopRun
-}; // _drawLock
 
 static void ECVDeviceRemoved(ECVCaptureController *controller, io_service_t service, uint32_t messageType, void *messageArgument)
 {
@@ -197,9 +193,6 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	ECVIOReturn((*_interfaceInterface)->CreateInterfaceAsyncEventSource(_interfaceInterface, NULL), ECVRetryDefault);
 	_playLock = [[NSConditionLock alloc] initWithCondition:ECVNotPlaying];
-	_drawLock = [[NSConditionLock alloc] initWithCondition:ECVDrawLoopWait];
-	_draw = NO;
-	_waitingBufferPointers = [[NSMutableArray alloc] init];
 
 	return self;
 
@@ -289,8 +282,6 @@ ECVNoDeviceError:
 	[_movie updateMovieFile];
 	[_movie release];
 	_movie = nil;
-	CVPixelBufferRelease(_previousImageBuffer);
-	_previousImageBuffer = NULL;
 }
 
 #pragma mark -
@@ -540,12 +531,8 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored), ECVRetryDefault);
 	currentFrame += 10;
 
-	_ignoringFirstFrame = YES;
 	_pendingImageLength = 0;
-	[_drawLock lockWhenCondition:ECVDrawLoopWait];
-	_draw = YES;
-	[_drawLock unlock];
-	[NSApplication detachDrawingThread:@selector(threaded_drawWaitingBuffers) toTarget:self withObject:nil];
+	_firstFrame = YES;
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
@@ -578,12 +565,7 @@ ECVNoDeviceError:
 	[self stopAudio];
 	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);
 	if(fullFrameList) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameList);
-	[_drawLock lock];
-	_draw = NO;
-	[_drawLock unlockWithCondition:ECVDrawLoopRun];
 	[_playLock lock];
-	CVPixelBufferRelease(_pendingImageBuffer);
-	_pendingImageBuffer = NULL;
 bail:
 	NSParameterAssert([_playLock condition] != ECVNotPlaying);
 	[_playLock unlockWithCondition:ECVNotPlaying];
@@ -591,22 +573,23 @@ bail:
 }
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
 {
-	if(!_pendingImageBuffer || !bytes || !length) return;
-	size_t const maxLength = CVPixelBufferGetDataSize(_pendingImageBuffer);
+	if(!bytes || !length) return;
+	UInt8 *const dest = videoView.bufferBytes;
+	if(!dest) return;
+	size_t const maxLength = videoView.bufferSize;
 	size_t const theoreticalRowLength = self.captureSize.width * 2; // YUYV is effectively 2Bpp.
-	size_t const actualRowLength = CVPixelBufferGetBytesPerRow(_pendingImageBuffer);
+	size_t const actualRowLength = videoView.bytesPerRow;
 	size_t const rowPadding = actualRowLength - theoreticalRowLength;
 	BOOL const skipLines = ECVFullFrame != _fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
 
 	size_t used = 0;
 	size_t rowOffset = _pendingImageLength % actualRowLength;
-	CVPixelBufferLockBaseAddress(_pendingImageBuffer, 0);
 	while(used < length) {
 		size_t const remainingRowLength = theoreticalRowLength - rowOffset;
 		size_t const unused = length - used;
 		BOOL isFinishingRow = unused >= remainingRowLength;
 		size_t const rowFillLength = MIN(maxLength - _pendingImageLength, MIN(remainingRowLength, unused));
-		memcpy(CVPixelBufferGetBaseAddress(_pendingImageBuffer) + _pendingImageLength, bytes + used, rowFillLength);
+		memcpy(dest + _pendingImageLength, bytes + used, rowFillLength);
 		_pendingImageLength += rowFillLength;
 		if(_pendingImageLength >= maxLength) break;
 		if(isFinishingRow) {
@@ -616,79 +599,23 @@ bail:
 		used += rowFillLength;
 		rowOffset = 0;
 	}
-	CVPixelBufferUnlockBaseAddress(_pendingImageBuffer, 0);
 }
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType absoluteTime:(AbsoluteTime)time
 {
-	if(_ignoringFirstFrame) {
-		_ignoringFirstFrame = NO;
-		return; // The first frame is typically corrupted, it doesn't really matter but it just looks bad.
+	if(_firstFrame) {
+		_firstFrame = NO;
+		return;
 	}
 
-	CVPixelBufferRef const currentImageBuffer = _pendingImageBuffer;
-	if(currentImageBuffer) {
-		[_drawLock lock];
-		BOOL const dropFrames = [_waitingBufferPointers count] >= 2;
-		if(dropFrames) [self clearWaitingBuffers];
-		[videoView droppedFrame:dropFrames];
-		[_waitingBufferPointers insertObject:[NSValue valueWithPointer:CVBufferRetain(currentImageBuffer)] atIndex:0];
-		[_drawLock unlockWithCondition:ECVDrawLoopRun];
+	ECVBufferFillType fill = ECVBufferFillGarbage;
+	switch(_deinterlacingMode) {
+		case ECVWeave    : fill = ECVBufferFillPrevious; break;
+		case ECVAlternate: fill = ECVBufferFillClear   ; break;
 	}
+	[videoView createNewBuffer:fill blendLastTwoBuffers:ECVBlur == _deinterlacingMode];
 
-	CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, _imageBufferPool, &_pendingImageBuffer);
-	CVPixelBufferLockBaseAddress(_pendingImageBuffer, 0);
-	BOOL clearNewBuffer = !currentImageBuffer;
-	if(currentImageBuffer) {
-		switch(_deinterlacingMode) {
-			case ECVWeave:
-				CVPixelBufferLockBaseAddress(currentImageBuffer, 0);
-				memcpy(CVPixelBufferGetBaseAddress(_pendingImageBuffer), CVPixelBufferGetBaseAddress(currentImageBuffer), CVPixelBufferGetDataSize(_pendingImageBuffer));
-				CVPixelBufferUnlockBaseAddress(currentImageBuffer, 0);
-				break;
-			case ECVAlternate:
-				clearNewBuffer = YES;
-				break;
-		}
-	}
-	if(clearNewBuffer) {
-		uint32_t const val = CFSwapInt32HostToBig(0x80108010);
-		memset_pattern4(CVPixelBufferGetBaseAddress(_pendingImageBuffer), &val, CVPixelBufferGetDataSize(_pendingImageBuffer));
-	}
-	CVPixelBufferUnlockBaseAddress(_pendingImageBuffer, 0);
-
-	_pendingImageLength = ECVLowField == fieldType && ECVLineDouble != _deinterlacingMode && ECVBlur != _deinterlacingMode ? CVPixelBufferGetBytesPerRow(_pendingImageBuffer) : 0;
+	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
 	_fieldType = fieldType;
-
-	ECVFrameStorage *const frame = [[[ECVFrameStorage alloc] init] autorelease];
-	frame->buffer = currentImageBuffer;
-	frame->time = time;
-	[self performSelectorOnMainThread:@selector(_startNewImage:) withObject:frame waitUntilDone:NO];
-}
-- (void)threaded_drawWaitingBuffers
-{
-	while(YES) {
-		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-
-		[_drawLock lockWhenCondition:ECVDrawLoopRun];
-		if(!_draw) {
-			[self clearWaitingBuffers];
-			[_drawLock unlockWithCondition:ECVDrawLoopWait];
-			[pool release];
-			break;
-		}
-		CVPixelBufferRef const buffer = [[_waitingBufferPointers lastObject] pointerValue];
-		[_waitingBufferPointers removeLastObject];
-		[_drawLock unlockWithCondition:[_waitingBufferPointers count] ? ECVDrawLoopRun : ECVDrawLoopWait];
-
-		videoView.imageBuffer = buffer;
-		CVBufferRelease(buffer);
-		[pool drain];
-	}
-}
-- (void)clearWaitingBuffers
-{
-	for(NSValue *const value in _waitingBufferPointers) CVBufferRelease([value pointerValue]);
-	[_waitingBufferPointers removeAllObjects];
 }
 
 #pragma mark -
@@ -741,21 +668,10 @@ ECVNoDeviceError:
 - (void)noteVideoSettingDidChange
 {
 	NSParameterAssert(!self.isPlaying);
-	CVPixelBufferPoolRelease(_imageBufferPool);
-	CVPixelBufferRelease(_pendingImageBuffer);
-	_pendingImageBuffer = NULL;
-	_pendingImageLength = 0;
 	NSSize s = self.captureSize;
 	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2.0f;
-	(void)CVPixelBufferPoolCreate(kCFAllocatorDefault, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSNumber numberWithUnsignedInt:2], kCVPixelBufferPoolMinimumBufferCountKey,
-			[NSNumber numberWithDouble:0], kCVPixelBufferPoolMaximumBufferAgeKey,
-		nil], (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSNumber numberWithInt:k2vuyPixelFormat], kCVPixelBufferPixelFormatTypeKey,
-			[NSNumber numberWithUnsignedInteger:roundf(s.width)], kCVPixelBufferWidthKey,
-			[NSNumber numberWithUnsignedInteger:roundf(s.height)], kCVPixelBufferHeightKey,
-			[NSNumber numberWithBool:YES], kCVPixelBufferOpenGLCompatibilityKey,
-		nil], &_imageBufferPool);
+	[videoView configureWithPixelFormat:k2vuyPixelFormat width:roundf(s.width) height:roundf(s.height) numberOfBuffers:100]; // TODO: Use a more sensible number of buffers (less than 5 should do).
+	_pendingImageLength = 0;
 }
 
 #pragma mark -ECVCaptureController(Private)
@@ -763,21 +679,7 @@ ECVNoDeviceError:
 - (void)_startNewImage:(ECVFrameStorage *)frame
 {
 	if(!_videoTrack || !_soundTrackStarted) return;
-	if(ECVBlur == _deinterlacingMode && _previousImageBuffer && frame->buffer) {
-		// We do the blurring in OpenGL, which doesn't help when we're recording. Another option might to be record the OpenGL output, but that has its own problems.
-		CVPixelBufferLockBaseAddress(_previousImageBuffer, 0);
-		CVPixelBufferLockBaseAddress(frame->buffer, 0);
-		size_t const length = CVPixelBufferGetDataSize(frame->buffer);
-		UInt8 *const baseBytes = CVPixelBufferGetBaseAddress(_previousImageBuffer);
-		UInt8 *const newBytes = CVPixelBufferGetBaseAddress(frame->buffer);
-		size_t i;
-		for(i = 0; i < length; i++) baseBytes[i] = newBytes[i] / 2 + baseBytes[i] / 2; // A more knowledgeable person might be able to optimize this a lot more.
-		CVPixelBufferUnlockBaseAddress(frame->buffer, 0);
-		CVPixelBufferUnlockBaseAddress(_previousImageBuffer, 0);
-	}
-	[_videoTrack addFrameWithPixelBuffer:_previousImageBuffer codecType:kJPEGCodecType quality:0.5f time:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(frame->time)) * 1e-9];
-	CVPixelBufferRelease(_previousImageBuffer);
-	_previousImageBuffer = CVPixelBufferRetain(frame->buffer);
+//	[_videoTrack addFrameWithPixelBuffer:_previousImageBuffer codecType:kJPEGCodecType quality:0.5f time:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(frame->time)) * 1e-9];
 }
 - (void)_audioDeviceDidReceiveInput:(NSValue *)bufferListValue
 {
@@ -822,23 +724,17 @@ ECVNoDeviceError:
 	if(_interfaceInterface) (*_interfaceInterface)->Release(_interfaceInterface);
 	_audioInput.delegate = nil;
 	_audioOutput.delegate = nil;
-	[self clearWaitingBuffers];
 
 	IOObjectRelease(_device);
 	[_productName release];
 	IOObjectRelease(_deviceRemovedNotification);
-	CVPixelBufferPoolRelease(_imageBufferPool);
-	CVPixelBufferRelease(_pendingImageBuffer);
 	[_playLock release];
-	[_drawLock release];
-	[_waitingBufferPointers release];
 	[_audioInput release];
 	[_audioOutput release];
 	[_audioPipe release];
 	[_movie release];
 	[_soundTrack release];
 	[_videoTrack release];
-	CVPixelBufferRelease(_previousImageBuffer);
 	[super dealloc];
 }
 
@@ -908,9 +804,9 @@ ECVNoDeviceError:
 	if(_noteDeviceRemovedWhenSheetCloses) [self noteDeviceRemoved];
 }
 
-#pragma mark -NSObject(MPLVideoViewDelegate)
+#pragma mark -NSObject(ECVVideoViewDelegate)
 
-- (BOOL)videoView:(MPLVideoView *)sender handleKeyDown:(NSEvent *)anEvent
+- (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
 {
 	if([@" " isEqualToString:[anEvent charactersIgnoringModifiers]]) {
 		[self togglePlaying:self];

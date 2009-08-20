@@ -12,4 +12,4 @@
 		(x);\
 		GLenum __e;\
 		while((__e = glGetError()) != GL_NO_ERROR) printf("%s:%d %s/%s glGetError(): 0x%03x\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #x, __e);\
-	} while(0);
+	} while(0)

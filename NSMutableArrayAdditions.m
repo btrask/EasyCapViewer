@@ -21,21 +21,21 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
-#import <QTKit/QTKit.h>
+#import "NSMutableArrayAdditions.h"
 
-@interface QTMedia(ECVAdditions)
+@implementation NSMutableArray(ECVAdditions)
 
-- (void)ECV_beginEdits;
-- (void)ECV_endEdits;
-- (QTTimeRange)ECV_timeRange;
+#pragma mark -NSMutableArray(ECVAdditions)
 
-@end
-
-@interface QTTrack(ECVAdditions)
-
-- (void)ECV_insertMediaInRange:(QTTimeRange)srcRange intoTrackInRange:(QTTimeRange)dstRange;
-- (void)ECV_insertMediaInRange:(QTTimeRange)range atTime:(QTTime)time;
-- (void)ECV_insertMediaAtTime:(QTTime)time;
+- (void)ECV_enqueue:(id)obj
+{
+	[self insertObject:obj atIndex:0];
+}
+- (id)ECV_dequeue
+{
+	id const obj = [self lastObject];
+	if(obj) [self removeLastObject];
+	return obj;
+}
 
 @end

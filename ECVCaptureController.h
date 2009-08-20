@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Views
-@class MPLVideoView;
+@class ECVVideoView;
 
 // Controllers
 @class ECVCaptureController;
@@ -77,7 +77,7 @@ extern NSString *const ECVSaturationKey;
 @interface ECVCaptureController : NSWindowController 
 {
 	@private
-	IBOutlet MPLVideoView *videoView;
+	IBOutlet ECVVideoView *videoView;
 
 	io_service_t _device;
 	NSString *_productName;
@@ -87,16 +87,11 @@ extern NSString *const ECVSaturationKey;
 	IOUSBInterfaceInterface197 **_interfaceInterface;
 	UInt32 _frameTime;
 
-	CVPixelBufferPoolRef _imageBufferPool;
-	CVPixelBufferRef _pendingImageBuffer;
 	size_t _pendingImageLength;
 	ECVFieldType _fieldType;
 	ECVDeinterlacingMode _deinterlacingMode;
 	NSConditionLock *_playLock;
-	NSConditionLock *_drawLock;
-	NSMutableArray *_waitingBufferPointers;
-	BOOL _draw;
-	BOOL _ignoringFirstFrame;
+	BOOL _firstFrame;
 
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
@@ -105,7 +100,6 @@ extern NSString *const ECVSaturationKey;
 	QTMovie *_movie;
 	ECVSoundTrack *_soundTrack;
 	ECVVideoTrack *_videoTrack;
-	CVPixelBufferRef _previousImageBuffer;
 	BOOL volatile _soundTrackStarted;
 
 	BOOL _fullScreen;
@@ -152,8 +146,6 @@ extern NSString *const ECVSaturationKey;
 - (void)threaded_readIsochPipeAsync;
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length;
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType absoluteTime:(AbsoluteTime)time;
-- (void)threaded_drawWaitingBuffers;
-- (void)clearWaitingBuffers;
 
 - (BOOL)setAlternateInterface:(UInt8)alternateSetting;
 - (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)value index:(UInt16)index length:(UInt16)length data:(void *)data;

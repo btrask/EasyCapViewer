@@ -22,39 +22,64 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
+#import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
 
-@interface MPLVideoView : NSOpenGLView
+typedef enum {
+	ECVBufferFillGarbage,
+	ECVBufferFillClear,
+	ECVBufferFillPrevious,
+} ECVBufferFillType;
+
+@interface ECVVideoView : NSOpenGLView
 {
 	@private
+	OSType _pixelFormatType;
+	struct {
+		NSUInteger width;
+		NSUInteger height;
+	} _size;
+	size_t _bufferSize;
+	NSUInteger _numberOfBuffers;
+
+	// Access to these ivars must be @synchronized.
+	NSMutableData *_bufferData;
+	NSMutableData *_textureNames;
+	NSCountedSet *_fullBufferIndexes;
+	NSMutableArray *_readyBufferIndexQueue;
+	NSUInteger _upcomingBufferIndex;
+	NSUInteger _lastFilledBufferIndex;
+	CGFloat _frameDropStrength;
+
+	CVDisplayLinkRef _displayLink;
+	NSRect _outputRect;
+
 	IBOutlet id delegate;
-	CVImageBufferRef _imageBuffer;
-	CVOpenGLTextureRef _previousTextureBuffer;
-	CVOpenGLTextureCacheRef _cache;
-	NSSize _aspectRatio;
-	CGFloat _position;
-	NSUInteger _flushCacheCounter;
 	BOOL _blurFramesTogether;
+	NSSize _aspectRatio;
 	BOOL _vsync;
-	BOOL _showDroppedFrames;
-	float _frameDropStrength;
 	GLint _magFilter;
+	BOOL _showDroppedFrames;
 }
 
-@property(assign) id delegate;
-@property CVImageBufferRef imageBuffer;
-@property(assign) NSSize aspectRatio;
-@property(assign) BOOL blurFramesTogether;
-@property(assign) BOOL vsync;
-@property(assign) BOOL showDroppedFrames;
-@property(assign) GLint magFilter;
+- (void)configureWithPixelFormat:(OSType)formatType width:(NSUInteger)w height:(NSUInteger)h numberOfBuffers:(NSUInteger)numberOfBuffers;
 
-- (void)droppedFrame:(BOOL)flag;
+- (void)createNewBuffer:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend;
+@property(readonly) void *bufferBytes;
+@property(readonly) size_t bufferSize;
+@property(readonly) size_t bytesPerRow;
+
+@property(assign) id delegate;
+@property(assign) BOOL blurFramesTogether;
+@property(assign) NSSize aspectRatio;
+@property(assign) BOOL vsync;
+@property(assign) GLint magFilter;
+@property(assign) BOOL showDroppedFrames;
 
 @end
 
-@interface NSObject (MPLVideoViewDelegate)
+@interface NSObject (ECVVideoViewDelegate)
 
-- (BOOL)videoView:(MPLVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
+- (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
 
 @end

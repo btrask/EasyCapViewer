@@ -22,20 +22,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
-#import <QTKit/QTKit.h>
 
-@interface QTMedia(ECVAdditions)
+@interface NSMutableArray(ECVAdditions)
 
-- (void)ECV_beginEdits;
-- (void)ECV_endEdits;
-- (QTTimeRange)ECV_timeRange;
-
-@end
-
-@interface QTTrack(ECVAdditions)
-
-- (void)ECV_insertMediaInRange:(QTTimeRange)srcRange intoTrackInRange:(QTTimeRange)dstRange;
-- (void)ECV_insertMediaInRange:(QTTimeRange)range atTime:(QTTime)time;
-- (void)ECV_insertMediaAtTime:(QTTime)time;
+- (void)ECV_enqueue:(id)obj;
+- (id)ECV_dequeue;
 
 @end

@@ -22,16 +22,17 @@
 		0E78CA4F0FC9128000E9C148 /* ECVController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CA4E0FC9128000E9C148 /* ECVController.m */; };
 		0E78CAAE0FC91B6500E9C148 /* ECVSTK1160Controller.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CAAD0FC91B6500E9C148 /* ECVSTK1160Controller.m */; };
 		0E78CB980FC92D8300E9C148 /* ECVDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CB970FC92D8300E9C148 /* ECVDebug.m */; };
-		0E78CD530FC9F9C300E9C148 /* MPLVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD510FC9F9C300E9C148 /* MPLVideoView.m */; };
 		0E78CD850FC9F9E300E9C148 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CD840FC9F9E300E9C148 /* QuartzCore.framework */; };
 		0E78CDB50FC9F9EB00E9C148 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */; };
 		0E78CDC70FC9F9F100E9C148 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CDC60FC9F9F100E9C148 /* Carbon.framework */; };
 		0EC2D4EA0FDCE96500662DD8 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC2D4E90FDCE96500662DD8 /* QuickTime.framework */; };
+		0EC4C583103D23B100FCFCA0 /* NSMutableArrayAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC4C582103D23B100FCFCA0 /* NSMutableArrayAdditions.m */; };
 		0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D341101903F200CFBDFF /* CoreAudio.framework */; };
 		0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */; };
 		0EC7D4AC1019B60100CFBDFF /* ECVAudioPipe.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */; };
 		0EC7D4AF1019B67600CFBDFF /* ECVAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */; };
 		0EDF46C20FCE1B4F006630E1 /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
+		0EEFA5C2103BB79A0038C135 /* ECVVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EEFA5C1103BB79A0038C135 /* ECVVideoView.m */; };
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -77,12 +78,12 @@
 		0E78CB960FC92D8300E9C148 /* ECVDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDebug.h; sourceTree = "<group>"; };
 		0E78CB970FC92D8300E9C148 /* ECVDebug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDebug.m; sourceTree = "<group>"; };
 		0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "stk11xx-dev-0408.m"; sourceTree = "<group>"; };
-		0E78CD510FC9F9C300E9C148 /* MPLVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPLVideoView.m; sourceTree = "<group>"; };
-		0E78CD520FC9F9C300E9C148 /* MPLVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPLVideoView.h; sourceTree = "<group>"; };
 		0E78CD840FC9F9E300E9C148 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		0E78CDC60FC9F9F100E9C148 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		0EC2D4E90FDCE96500662DD8 /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
+		0EC4C581103D23B100FCFCA0 /* NSMutableArrayAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSMutableArrayAdditions.h; sourceTree = "<group>"; };
+		0EC4C582103D23B100FCFCA0 /* NSMutableArrayAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSMutableArrayAdditions.m; sourceTree = "<group>"; };
 		0EC7D341101903F200CFBDFF /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		0EC7D4AA1019B60100CFBDFF /* ECVAudioPipe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAudioPipe.h; sourceTree = "<group>"; };
@@ -90,6 +91,8 @@
 		0EC7D4AD1019B67600CFBDFF /* ECVAudioDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAudioDevice.h; sourceTree = "<group>"; };
 		0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVAudioDevice.m; sourceTree = "<group>"; };
 		0EDF451A0FCD2167006630E1 /* stk11xx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stk11xx.h; sourceTree = "<group>"; };
+		0EEFA5C0103BB79A0038C135 /* ECVVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoView.h; sourceTree = "<group>"; };
+		0EEFA5C1103BB79A0038C135 /* ECVVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoView.m; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -151,8 +154,8 @@
 			children = (
 				0E053FF50FDF1FFD003688BB /* MPLWindow.h */,
 				0E053FF40FDF1FFD003688BB /* MPLWindow.m */,
-				0E78CD520FC9F9C300E9C148 /* MPLVideoView.h */,
-				0E78CD510FC9F9C300E9C148 /* MPLVideoView.m */,
+				0EEFA5C0103BB79A0038C135 /* ECVVideoView.h */,
+				0EEFA5C1103BB79A0038C135 /* ECVVideoView.m */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -221,6 +224,8 @@
 				0E7677A01021D82F001C583E /* ECVQTAdditions.m */,
 				0E0AC91F102030CE00C12D88 /* ECVVideoTrack.h */,
 				0E0AC920102030CE00C12D88 /* ECVVideoTrack.m */,
+				0EC4C581103D23B100FCFCA0 /* NSMutableArrayAdditions.h */,
+				0EC4C582103D23B100FCFCA0 /* NSMutableArrayAdditions.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -313,7 +318,6 @@
 				0E78CA4F0FC9128000E9C148 /* ECVController.m in Sources */,
 				0E78CAAE0FC91B6500E9C148 /* ECVSTK1160Controller.m in Sources */,
 				0E78CB980FC92D8300E9C148 /* ECVDebug.m in Sources */,
-				0E78CD530FC9F9C300E9C148 /* MPLVideoView.m in Sources */,
 				0EDF46C20FCE1B4F006630E1 /* stk11xx-dev-0408.m in Sources */,
 				0E053FF60FDF1FFD003688BB /* MPLWindow.m in Sources */,
 				0E26A999100314E6002FF95A /* ECVConfigController.m in Sources */,
@@ -322,6 +326,8 @@
 				0E0AC921102030CE00C12D88 /* ECVVideoTrack.m in Sources */,
 				0E0ACAE71020993E00C12D88 /* ECVSoundTrack.m in Sources */,
 				0E7677A11021D82F001C583E /* ECVQTAdditions.m in Sources */,
+				0EEFA5C2103BB79A0038C135 /* ECVVideoView.m in Sources */,
+				0EC4C583103D23B100FCFCA0 /* NSMutableArrayAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
