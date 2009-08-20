@@ -45,9 +45,9 @@ typedef enum {
 	// Access to these ivars must be @synchronized.
 	NSMutableData *_bufferData;
 	NSMutableData *_textureNames;
-	NSCountedSet *_fullBufferIndexes;
+	NSCountedSet *_busyBufferIndexes;
 	NSMutableArray *_readyBufferIndexQueue;
-	NSUInteger _upcomingBufferIndex;
+	NSUInteger _fillingBufferIndex;
 	NSUInteger _lastFilledBufferIndex;
 	CGFloat _frameDropStrength;
 
