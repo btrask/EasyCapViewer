@@ -670,7 +670,7 @@ ECVNoDeviceError:
 	NSParameterAssert(!self.isPlaying);
 	NSSize s = self.captureSize;
 	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2.0f;
-	[videoView configureWithPixelFormat:k2vuyPixelFormat width:roundf(s.width) height:roundf(s.height) numberOfBuffers:100]; // TODO: Use a more sensible number of buffers (less than 5 should do).
+	[videoView configureWithPixelFormat:k2vuyPixelFormat width:roundf(s.width) height:roundf(s.height) numberOfBuffers:10];
 	_pendingImageLength = 0;
 }
 
