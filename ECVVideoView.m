@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glext.h>
 #import <OpenGL/glu.h>
 
+// Models
+#import "ECVFrame.h"
+
 // Other Sources
 #import "ECVDebug.h"
 #import "NSMutableArrayAdditions.h"
@@ -96,9 +99,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
 		_pixelFormatType = formatType;
-		_size = size;
+		_pixelSize = size;
 
-		_bufferSize = _size.width * _size.height * ECVPixelFormatTypeBPP(_pixelFormatType);
+		_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
 		_frameDropStrength = 0.0f;
 
 		if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
@@ -126,7 +129,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 			ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 			ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
 			ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
-			ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _size.width, _size.height, 0, format, type, [self _bufferBytesAtIndex:i]));
+			ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self _bufferBytesAtIndex:i]));
 			[self _clearBufferAtIndex:i];
 		}
 
@@ -139,16 +142,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -
 
-- (void *)bufferBytes
-{
-	return [self _bufferBytesAtIndex:_fillingBufferIndex];
-}
-@synthesize bufferSize = _bufferSize;
-- (size_t)bytesPerRow
-{
-	return _size.width * ECVPixelFormatTypeBPP(_pixelFormatType);
-}
-- (void)createNewBuffer:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend
+- (void)createNewBuffer:(ECVBufferFillType)fill time:(NSTimeInterval)time blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame
 {
 	NSUInteger const previousFullBufferIndex = _lastFilledBufferIndex;
 	NSUInteger const latestFullBufferIndex = _fillingBufferIndex;
@@ -193,11 +187,22 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 			} else _frameDropStrength *= 0.75f;
 			[_readyBufferIndexQueue ECV_enqueue:[NSNumber numberWithUnsignedInteger:bufferToDraw]];
 		}
+	}
+	if(outFrame) {
+		*outFrame = [[[ECVFrame alloc] initWithFrameReadingObject:self] autorelease];
+		(*outFrame).time = _frameStartTime;
+	}
+	_frameStartTime = time;
+	@synchronized(self) {
 		if(NSNotFound != previousFullBufferIndex) [_busyBufferIndexes removeObject:[NSNumber numberWithUnsignedInteger:previousFullBufferIndex]];
 		if(NSNotFound != newBufferIndex) [_busyBufferIndexes addObject:[NSNumber numberWithUnsignedInteger:newBufferIndex]];
 		_lastFilledBufferIndex = latestFullBufferIndex;
 		_fillingBufferIndex = newBufferIndex;
 	}
+}
+- (void *)mutableBufferBytes
+{
+	return [self _bufferBytesAtIndex:_fillingBufferIndex];
 }
 
 #pragma mark -
@@ -292,16 +297,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)_drawBuffer:(NSUInteger)index opacity:(CGFloat)opacity
 {
 	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:index]));
-	ECVglError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _size.width, _size.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self _bufferBytesAtIndex:index]));
+	ECVglError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self _bufferBytesAtIndex:index]));
 	glColor4f(1.0f, 1.0f, 1.0f, opacity);
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, _size.height);
+	glTexCoord2f(0.0f, _pixelSize.height);
 	glVertex2f(NSMinX(_outputRect), NSMinY(_outputRect));
 	glTexCoord2f(0.0f, 0.0f);
 	glVertex2f(NSMinX(_outputRect), NSMaxY(_outputRect));
-	glTexCoord2f(_size.width, 0.0f);
+	glTexCoord2f(_pixelSize.width, 0.0f);
 	glVertex2f(NSMaxX(_outputRect), NSMaxY(_outputRect));
-	glTexCoord2f(_size.width, _size.height);
+	glTexCoord2f(_pixelSize.width, _pixelSize.height);
 	glVertex2f(NSMaxX(_outputRect), NSMinY(_outputRect));
 	glEnd();
 }
@@ -489,6 +494,20 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
 	CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self);
 	[self viewDidMoveToWindow];
+}
+
+#pragma mark -<ECVFrameReading>
+
+- (NSData *)bufferData
+{
+	return [_bufferData subdataWithRange:NSMakeRange(_fillingBufferIndex * _bufferSize, _bufferSize)];
+}
+@synthesize bufferSize = _bufferSize;
+@synthesize pixelSize = _pixelSize;
+@synthesize pixelFormatType = _pixelFormatType;
+- (size_t)bytesPerRow
+{
+	return _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
 }
 
 @end

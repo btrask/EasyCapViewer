@@ -100,7 +100,6 @@ extern NSString *const ECVSaturationKey;
 	QTMovie *_movie;
 	ECVSoundTrack *_soundTrack;
 	ECVVideoTrack *_videoTrack;
-	BOOL volatile _soundTrackStarted;
 
 	BOOL _fullScreen;
 	ECVVideoFormat _videoFormat;

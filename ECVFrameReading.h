@@ -22,29 +22,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
-#import <QTKit/QTKit.h>
-#import <QuartzCore/QuartzCore.h>
 
-// Models
-@protocol ECVFrameReading;
-@class ECVFrame;
+@protocol ECVFrameReading <NSObject>
 
-@interface ECVVideoTrack : QTTrack
-{
-	@private
-	BOOL _hasPendingFrame;
-	Handle _pendingFrame;
-	ImageDescriptionHandle _pendingFrameDescription;
-	NSTimeInterval _pendingFrameStartTime;
-}
-
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)aSize;
-
-@property(readonly) BOOL hasPendingFrame;
-- (void)clearPendingFrame;
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality;
-- (void)addFrameWithDuration:(NSTimeInterval)interval;
-- (void)addFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time;
-- (void)addFrame:(ECVFrame *)frame codecType:(CodecType)type quality:(float)quality;
+@property(readonly) NSData *bufferData;
+@property(readonly) NSUInteger bufferSize;
+@property(readonly) ECVPixelSize pixelSize;
+@property(readonly) OSType pixelFormatType;
+@property(readonly) size_t bytesPerRow;
 
 @end

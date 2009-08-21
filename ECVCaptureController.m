@@ -67,24 +67,9 @@ static void ECVDeviceRemoved(ECVCaptureController *controller, io_service_t serv
 }
 static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
-@interface ECVFrameStorage : NSObject
-{
-	@public
-	CVPixelBufferRef buffer;
-	AbsoluteTime time;
-}
-@end
-@implementation ECVFrameStorage
-- (void)dealloc
-{
-	CVPixelBufferRelease(buffer);
-	[super dealloc];
-}
-@end
-
 @interface ECVCaptureController(Private)
 
-- (void)_startNewImage:(ECVFrameStorage *)frame;
+- (void)_recordFrame:(ECVFrame *)frame;
 - (void)_audioDeviceDidReceiveInput:(NSValue *)bufferListValue;
 - (void)_hideMenuBar;
 
@@ -259,7 +244,6 @@ ECVNoDeviceError:
 	[savePanel setPrompt:NSLocalizedString(@"Record", nil)];
 	if(NSFileHandlingPanelOKButton == [savePanel runModal]) {
 		_movie = [[QTMovie alloc] initToWritableFile:[savePanel filename] error:NULL];
-		_soundTrackStarted = NO;
 		ECVAudioStream *const stream = [[[_audioInput streams] objectEnumerator] nextObject];
 		NSParameterAssert(stream);
 		_soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
@@ -580,7 +564,7 @@ bail:
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
 {
 	if(!bytes || !length) return;
-	UInt8 *const dest = videoView.bufferBytes;
+	UInt8 *const dest = videoView.mutableBufferBytes;
 	if(!dest) return;
 	size_t const maxLength = videoView.bufferSize;
 	size_t const theoreticalRowLength = self.captureSize.width * 2; // YUYV is effectively 2Bpp.
@@ -618,7 +602,9 @@ bail:
 		case ECVWeave    : fill = ECVBufferFillPrevious; break;
 		case ECVAlternate: fill = ECVBufferFillClear   ; break;
 	}
-	[videoView createNewBuffer:fill blendLastTwoBuffers:ECVBlur == _deinterlacingMode];
+	ECVFrame *frame = nil;
+	[videoView createNewBuffer:fill time:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 blendLastTwoBuffers:ECVBlur == _deinterlacingMode getLastFrame:_videoTrack ? &frame : NULL];
+	if(frame) [self performSelectorOnMainThread:@selector(_recordFrame:) withObject:frame waitUntilDone:NO];
 
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
 	_fieldType = fieldType;
@@ -682,10 +668,9 @@ ECVNoDeviceError:
 
 #pragma mark -ECVCaptureController(Private)
 
-- (void)_startNewImage:(ECVFrameStorage *)frame
+- (void)_recordFrame:(ECVFrame *)frame
 {
-	if(!_videoTrack || !_soundTrackStarted) return;
-//	[_videoTrack addFrameWithPixelBuffer:_previousImageBuffer codecType:kJPEGCodecType quality:0.5f time:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(frame->time)) * 1e-9];
+	[_videoTrack addFrame:frame codecType:kJPEGCodecType quality:0.5];
 }
 - (void)_audioDeviceDidReceiveInput:(NSValue *)bufferListValue
 {
@@ -750,10 +735,7 @@ ECVNoDeviceError:
 {
 	NSParameterAssert(sender = _audioInput);
 	[_audioPipe receiveInput:bufferList atTime:time];
-	if(_soundTrack) {
-		_soundTrackStarted = YES;
-		[self performSelectorOnMainThread:@selector(_audioDeviceDidReceiveInput:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
-	}
+	if(_soundTrack) [self performSelectorOnMainThread:@selector(_audioDeviceDidReceiveInput:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
 }
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {

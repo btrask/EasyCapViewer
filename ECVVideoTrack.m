@@ -23,6 +23,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoTrack.h"
 
+// Models
+#import "ECVFrameReading.h"
+#import "ECVFrame.h"
+
 // Other Sources
 #import "ECVDebug.h"
 
@@ -50,17 +54,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	_hasPendingFrame = NO;
 }
-- (void)prepareToAddFrameWithPixelBuffer:(CVPixelBufferRef)buffer codecType:(CodecType)type quality:(float)quality
+- (void)prepareToAddFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality
 {
 	NSParameterAssert(!_hasPendingFrame);
-	CVPixelBufferLockBaseAddress(buffer, 0);
 
 	Rect r;
-	CGSize const s = CVImageBufferGetDisplaySize(buffer);
-	SetRect(&r, 0, 0, roundf(s.width), roundf(s.height));
+	ECVPixelSize const s = frame.pixelSize;
+	SetRect(&r, 0, 0, s.width, s.height);
 
 	GWorldPtr gWorld = NULL;
-	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, CVPixelBufferGetPixelFormatType(buffer), &r, NULL, NULL, 0, CVPixelBufferGetBaseAddress(buffer), CVPixelBufferGetBytesPerRow(buffer)), ECVRetryDefault);
+	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, frame.pixelFormatType, &r, NULL, NULL, 0, (void *)[frame.bufferData bytes], frame.bytesPerRow), ECVRetryDefault);
 	PixMapHandle const pixMap = GetGWorldPixMap(gWorld);
 
 	Size maxSize = 0;
@@ -77,7 +80,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	HUnlock(_pendingFrame);
 	DisposeGWorld(gWorld);
 
-	CVPixelBufferUnlockBaseAddress(buffer, 0);
 	_hasPendingFrame = YES;
 }
 - (void)addFrameWithDuration:(NSTimeInterval)interval
@@ -88,11 +90,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVOSStatus(AddMediaSample([[self media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
 	_hasPendingFrame = NO;
 }
-- (void)addFrameWithPixelBuffer:(CVPixelBufferRef)buffer codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time
+- (void)addFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time
 {
 	if(_hasPendingFrame) [self addFrameWithDuration:time - _pendingFrameStartTime];
-	if(buffer) [self prepareToAddFrameWithPixelBuffer:buffer codecType:type quality:quality];
+	if(frame) [self prepareToAddFrame:frame codecType:type quality:quality];
 	_pendingFrameStartTime = time;
+}
+- (void)addFrame:(ECVFrame *)frame codecType:(CodecType)type quality:(float)quality
+{
+	[self addFrame:frame codecType:type quality:quality time:frame.time];
 }
 
 #pragma mark -NSObject

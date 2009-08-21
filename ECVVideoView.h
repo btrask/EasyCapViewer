@@ -24,6 +24,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
+#import "ECVFrameReading.h"
+
+// Models
+@class ECVFrame;
 
 typedef enum {
 	ECVBufferFillGarbage,
@@ -31,13 +35,14 @@ typedef enum {
 	ECVBufferFillPrevious,
 } ECVBufferFillType;
 
-@interface ECVVideoView : NSOpenGLView
+@interface ECVVideoView : NSOpenGLView <ECVFrameReading>
 {
 	@private
 	OSType _pixelFormatType;
-	ECVPixelSize _size;
-	size_t _bufferSize;
+	ECVPixelSize _pixelSize;
+	NSUInteger _bufferSize;
 	NSUInteger _numberOfBuffers;
+	NSTimeInterval _frameStartTime;
 
 	// Access to these ivars must be @synchronized.
 	NSMutableData *_bufferData;
@@ -61,10 +66,8 @@ typedef enum {
 
 - (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers;
 
-- (void)createNewBuffer:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend;
-@property(readonly) void *bufferBytes;
-@property(readonly) size_t bufferSize;
-@property(readonly) size_t bytesPerRow;
+- (void)createNewBuffer:(ECVBufferFillType)fill time:(NSTimeInterval)time blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame;
+@property(readonly) void *mutableBufferBytes;
 
 @property(assign) id delegate;
 @property(assign) BOOL blurFramesTogether;

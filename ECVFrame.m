@@ -21,30 +21,54 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
-#import <QTKit/QTKit.h>
-#import <QuartzCore/QuartzCore.h>
+#import "ECVFrame.h"
 
-// Models
-@protocol ECVFrameReading;
-@class ECVFrame;
+@implementation ECVFrame
 
-@interface ECVVideoTrack : QTTrack
+#pragma mark -ECVFrame
+
+- (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize
 {
-	@private
-	BOOL _hasPendingFrame;
-	Handle _pendingFrame;
-	ImageDescriptionHandle _pendingFrameDescription;
-	NSTimeInterval _pendingFrameStartTime;
+	if((self = [super init])) {
+		_bufferData = [buffer copy];
+		_pixelSize = size;
+		_pixelFormatType = formatType;
+		_bytesPerRow = rowSize;
+	}
+	return self;
+}
+- (id)initWithFrameReadingObject:(id<ECVFrameReading>)frame
+{
+	return [self initWithData:frame.bufferData pixelSize:frame.pixelSize pixelFormatType:frame.pixelFormatType bytesPerRow:frame.bytesPerRow];
+}
+@synthesize time = _time;
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_bufferData release];
+	[super dealloc];
 }
 
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)aSize;
+#pragma mark -<ECVFrameReading>
 
-@property(readonly) BOOL hasPendingFrame;
-- (void)clearPendingFrame;
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality;
-- (void)addFrameWithDuration:(NSTimeInterval)interval;
-- (void)addFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time;
-- (void)addFrame:(ECVFrame *)frame codecType:(CodecType)type quality:(float)quality;
+@synthesize bufferData = _bufferData;
+- (NSUInteger)bufferSize
+{
+	return [_bufferData length];
+}
+@synthesize pixelSize = _pixelSize;
+@synthesize pixelFormatType = _pixelFormatType;
+@synthesize bytesPerRow = _bytesPerRow;
+
+#pragma mark -<NSCopying>
+
+- (id)copyWithZone:(NSZone *)zone
+{
+	ECVFrame *const dupe = [[[self class] alloc] initWithFrameReadingObject:self];
+	dupe.time = self.time;
+	return dupe;
+}
 
 @end

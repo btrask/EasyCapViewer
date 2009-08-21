@@ -22,29 +22,20 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
-#import <QTKit/QTKit.h>
-#import <QuartzCore/QuartzCore.h>
+#import "ECVFrameReading.h"
 
-// Models
-@protocol ECVFrameReading;
-@class ECVFrame;
-
-@interface ECVVideoTrack : QTTrack
+@interface ECVFrame : NSObject <ECVFrameReading, NSCopying>
 {
 	@private
-	BOOL _hasPendingFrame;
-	Handle _pendingFrame;
-	ImageDescriptionHandle _pendingFrameDescription;
-	NSTimeInterval _pendingFrameStartTime;
+	NSData *_bufferData;
+	ECVPixelSize _pixelSize;
+	OSType _pixelFormatType;
+	size_t _bytesPerRow;
+	NSTimeInterval _time;
 }
 
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)aSize;
-
-@property(readonly) BOOL hasPendingFrame;
-- (void)clearPendingFrame;
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality;
-- (void)addFrameWithDuration:(NSTimeInterval)interval;
-- (void)addFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time;
-- (void)addFrame:(ECVFrame *)frame codecType:(CodecType)type quality:(float)quality;
+- (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize;
+- (id)initWithFrameReadingObject:(id<ECVFrameReading>)frame;
+@property(assign) NSTimeInterval time;
 
 @end
