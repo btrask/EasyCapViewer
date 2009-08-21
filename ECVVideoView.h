@@ -35,10 +35,7 @@ typedef enum {
 {
 	@private
 	OSType _pixelFormatType;
-	struct {
-		NSUInteger width;
-		NSUInteger height;
-	} _size;
+	ECVPixelSize _size;
 	size_t _bufferSize;
 	NSUInteger _numberOfBuffers;
 
@@ -62,7 +59,7 @@ typedef enum {
 	BOOL _showDroppedFrames;
 }
 
-- (void)configureWithPixelFormat:(OSType)formatType width:(NSUInteger)w height:(NSUInteger)h numberOfBuffers:(NSUInteger)numberOfBuffers;
+- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers;
 
 - (void)createNewBuffer:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend;
 @property(readonly) void *bufferBytes;

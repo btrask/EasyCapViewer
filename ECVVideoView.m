@@ -84,7 +84,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -ECVVideoView
 
-- (void)configureWithPixelFormat:(OSType)formatType width:(NSUInteger)w height:(NSUInteger)h numberOfBuffers:(NSUInteger)numberOfBuffers
+- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers
 {
 	@synchronized(self) {
 		NSOpenGLContext *const context = [self openGLContext];
@@ -96,10 +96,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
 		_pixelFormatType = formatType;
-		_size.width = w;
-		_size.height = h;
+		_size = size;
 
-		_bufferSize = w * h * ECVPixelFormatTypeBPP(_pixelFormatType);
+		_bufferSize = _size.width * _size.height * ECVPixelFormatTypeBPP(_pixelFormatType);
 		_frameDropStrength = 0.0f;
 
 		if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));

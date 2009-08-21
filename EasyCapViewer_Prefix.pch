@@ -1,9 +1,10 @@
-//
-// Prefix header for all source files of the 'EasyCapViewer' target in the 'EasyCapViewer' project
-//
-
 #ifdef __OBJC__
     #import <Cocoa/Cocoa.h>
 #endif
 
 #define numberof(x) (sizeof(x) / sizeof(*x))
+
+typedef struct {
+	NSUInteger width;
+	NSUInteger height;
+} ECVPixelSize;
