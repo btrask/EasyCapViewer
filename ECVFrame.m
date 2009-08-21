@@ -30,6 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize
 {
 	if((self = [super init])) {
+		if(!buffer) {
+			[self release];
+			return nil;
+		}
 		_bufferData = [buffer copy];
 		_pixelSize = size;
 		_pixelFormatType = formatType;

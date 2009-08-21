@@ -44,13 +44,13 @@ typedef enum {
 	NSUInteger _numberOfBuffers;
 	NSTimeInterval _frameStartTime;
 
-	// Access to these ivars must be @synchronized.
 	NSMutableData *_bufferData;
 	NSMutableData *_textureNames;
-	NSCountedSet *_busyBufferIndexes;
-	NSMutableArray *_readyBufferIndexQueue;
 	NSUInteger _fillingBufferIndex;
 	NSUInteger _lastFilledBufferIndex;
+
+	// Access to these ivars must be @synchronized.
+	NSMutableArray *_readyBufferIndexQueue;
 	CGFloat _frameDropStrength;
 
 	CVDisplayLinkRef _displayLink;
@@ -64,10 +64,10 @@ typedef enum {
 	BOOL _showDroppedFrames;
 }
 
-- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers;
+- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers; // NOT thread safe.
 
-- (void)createNewBuffer:(ECVBufferFillType)fill time:(NSTimeInterval)time blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame;
-@property(readonly) void *mutableBufferBytes;
+- (void)createNewBuffer:(ECVBufferFillType)fill time:(NSTimeInterval)time blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame; // NOT thread safe.
+@property(readonly) void *mutableBufferBytes; // NOT thread safe.
 
 @property(assign) id delegate;
 @property(assign) BOOL blurFramesTogether;

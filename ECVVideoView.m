@@ -89,55 +89,53 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers
 {
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+
+	NSUInteger i;
+	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+
+	_pixelFormatType = formatType;
+	_pixelSize = size;
+
+	_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
+	_frameDropStrength = 0.0f;
+
+	if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
+	[_textureNames release];
+	_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * numberOfBuffers];
+	ECVglError(glGenTextures(numberOfBuffers, [_textureNames mutableBytes]));
+
+	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
+	[_bufferData release];
+	_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * numberOfBuffers];
+	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
+
+	_fillingBufferIndex = NSNotFound;
+	_lastFilledBufferIndex = NSNotFound;
+
 	@synchronized(self) {
-		NSOpenGLContext *const context = [self openGLContext];
-		CGLContextObj const contextObj = [context CGLContextObj];
-		[context makeCurrentContext];
-		CGLLockContext(contextObj);
-
-		NSUInteger i;
-		ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-
-		_pixelFormatType = formatType;
-		_pixelSize = size;
-
-		_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
-		_frameDropStrength = 0.0f;
-
-		if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
-		[_textureNames release];
-		_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * numberOfBuffers];
-		ECVglError(glGenTextures(numberOfBuffers, [_textureNames mutableBytes]));
-
-		ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
-		[_bufferData release];
-		_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * numberOfBuffers];
-		ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
-
-		[_busyBufferIndexes release];
-		_busyBufferIndexes = [[NSCountedSet alloc] initWithCapacity:numberOfBuffers];
-		_fillingBufferIndex = NSNotFound;
-		_lastFilledBufferIndex = NSNotFound;
-
 		[_readyBufferIndexQueue release];
 		_readyBufferIndexQueue = [[NSMutableArray alloc] initWithCapacity:numberOfBuffers];
-
-		GLenum const format = ECVPixelFormatTypeToGLFormat(_pixelFormatType);
-		GLenum const type = ECVPixelFormatTypeToGLType(_pixelFormatType);
-		for(i = 0; i < numberOfBuffers; i++) {
-			ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
-			ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
-			ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
-			ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
-			ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self _bufferBytesAtIndex:i]));
-			[self _clearBufferAtIndex:i];
-		}
-
-		_numberOfBuffers = numberOfBuffers;
-
-		ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
-		CGLUnlockContext(contextObj);
 	}
+
+	GLenum const format = ECVPixelFormatTypeToGLFormat(_pixelFormatType);
+	GLenum const type = ECVPixelFormatTypeToGLType(_pixelFormatType);
+	for(i = 0; i < numberOfBuffers; i++) {
+		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
+		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
+		ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
+		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
+		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self _bufferBytesAtIndex:i]));
+		[self _clearBufferAtIndex:i];
+	}
+
+	_numberOfBuffers = numberOfBuffers;
+
+	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	CGLUnlockContext(contextObj);
 }
 
 #pragma mark -
@@ -150,15 +148,18 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	NSUInteger newBufferIndex = NSNotFound;
 	NSUInteger bufferToDraw = latestFullBufferIndex;
 
+	NSArray *readyBufferIndexQueue = nil;
 	@synchronized(self) {
-		NSUInteger i;
-		for(i = 0; i < _numberOfBuffers; i++) {
-			NSNumber *const number = [NSNumber numberWithUnsignedInteger:i];
-			if([_busyBufferIndexes containsObject:number] || [_readyBufferIndexQueue containsObject:number]) continue;
-			[_busyBufferIndexes addObject:number];
-			newBufferIndex = i;
-			break;
-		}
+		readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
+	}
+
+	NSUInteger i;
+	for(i = 0; i < _numberOfBuffers; i++) {
+		if(previousFullBufferIndex == i || latestFullBufferIndex == i) continue;
+		NSNumber *const number = [NSNumber numberWithUnsignedInteger:i];
+		if([readyBufferIndexQueue containsObject:number]) continue;
+		newBufferIndex = i;
+		break;
 	}
 	switch(fill) {
 		case ECVBufferFillClear:
@@ -176,29 +177,25 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		NSUInteger i;
 		for(i = 0; i < _bufferSize; i++) dst[i] = dst[i] / 2 + src[i] / 2;
 	}
+
 	@synchronized(self) {
 		if(NSNotFound != bufferToDraw) {
 			NSUInteger const count = [_readyBufferIndexQueue count];
 			if(count > 2) {
-				NSRange const r = NSMakeRange(count % 2, count - count % 2);
-				for(NSNumber *const number in [_readyBufferIndexQueue subarrayWithRange:r]) [_busyBufferIndexes removeObject:number];
-				[_readyBufferIndexQueue removeObjectsInRange:r];
+				[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(count % 2, count - count % 2)];
 				_frameDropStrength = 1.0f;
 			} else _frameDropStrength *= 0.75f;
 			[_readyBufferIndexQueue ECV_enqueue:[NSNumber numberWithUnsignedInteger:bufferToDraw]];
 		}
 	}
+
 	if(outFrame) {
-		*outFrame = [[[ECVFrame alloc] initWithFrameReadingObject:self] autorelease];
+		*outFrame = [[[ECVFrame alloc] initWithData:[_bufferData subdataWithRange:NSMakeRange(bufferToDraw * _bufferSize, _bufferSize)] pixelSize:_pixelSize pixelFormatType:_pixelFormatType bytesPerRow:self.bytesPerRow] autorelease];
 		(*outFrame).time = _frameStartTime;
 	}
+	_lastFilledBufferIndex = latestFullBufferIndex;
+	_fillingBufferIndex = newBufferIndex;
 	_frameStartTime = time;
-	@synchronized(self) {
-		if(NSNotFound != previousFullBufferIndex) [_busyBufferIndexes removeObject:[NSNumber numberWithUnsignedInteger:previousFullBufferIndex]];
-		if(NSNotFound != newBufferIndex) [_busyBufferIndexes addObject:[NSNumber numberWithUnsignedInteger:newBufferIndex]];
-		_lastFilledBufferIndex = latestFullBufferIndex;
-		_fillingBufferIndex = newBufferIndex;
-	}
 }
 - (void *)mutableBufferBytes
 {
@@ -267,17 +264,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)_drawOneFrame
 {
-	NSUInteger index = NSNotFound;
+	NSNumber *number = nil;
 	CGFloat frameDropStrength = 0.0f;
 	@synchronized(self) {
-		NSNumber *const number = [_readyBufferIndexQueue ECV_dequeue];
-		if(number) {
-			index = [number unsignedIntegerValue];
-			[_busyBufferIndexes removeObject:number];
-		}
+		number = [_readyBufferIndexQueue ECV_dequeue];
 		frameDropStrength = _frameDropStrength;
 	}
-	if(NSNotFound == index) return;
+	if(!number) return;
+
+	NSUInteger const index = [number unsignedIntegerValue];
+	NSParameterAssert(NSNotFound != index);
 
 	NSOpenGLContext *const context = [self openGLContext];
 	CGLContextObj const contextObj = [context CGLContextObj];
@@ -471,7 +467,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
 	[_bufferData release];
 	[_textureNames release];
-	[_busyBufferIndexes release];
 	[_readyBufferIndexQueue release];
 	CVDisplayLinkRelease(_displayLink);
 	[super dealloc];
