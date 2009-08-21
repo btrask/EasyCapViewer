@@ -149,6 +149,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	NSArray *readyBufferIndexQueue = nil;
 	@synchronized(self) {
+		NSUInteger const count = [_readyBufferIndexQueue count];
+		if(count > 2) {
+			[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(count % 2, count - count % 2)];
+			_frameDropStrength = 1.0f;
+		} else _frameDropStrength *= 0.75f;
 		readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
 	}
 
@@ -178,14 +183,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 
 	@synchronized(self) {
-		if(NSNotFound != bufferToDraw) {
-			NSUInteger const count = [_readyBufferIndexQueue count];
-			if(count > 2) {
-				[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(count % 2, count - count % 2)];
-				_frameDropStrength = 1.0f;
-			} else _frameDropStrength *= 0.75f;
-			[_readyBufferIndexQueue ECV_enqueue:[NSNumber numberWithUnsignedInteger:bufferToDraw]];
-		}
+		if(NSNotFound != bufferToDraw) [_readyBufferIndexQueue ECV_enqueue:[NSNumber numberWithUnsignedInteger:bufferToDraw]];
 	}
 
 	if(outFrame) {
