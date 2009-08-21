@@ -113,13 +113,12 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * numberOfBuffers];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
 
-	_fillingBufferIndex = NSNotFound;
-	_lastFilledBufferIndex = NSNotFound;
-
 	@synchronized(self) {
 		[_readyBufferIndexQueue release];
 		_readyBufferIndexQueue = [[NSMutableArray alloc] initWithCapacity:numberOfBuffers];
 	}
+
+	[self resetFrames];
 
 	GLenum const format = ECVPixelFormatTypeToGLFormat(_pixelFormatType);
 	GLenum const type = ECVPixelFormatTypeToGLType(_pixelFormatType);
@@ -140,7 +139,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -
 
-- (void)createNewBuffer:(ECVBufferFillType)fill time:(NSTimeInterval)time blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame
+- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame
 {
 	NSUInteger const previousFullBufferIndex = _lastFilledBufferIndex;
 	NSUInteger const latestFullBufferIndex = _fillingBufferIndex;
@@ -196,6 +195,15 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_lastFilledBufferIndex = latestFullBufferIndex;
 	_fillingBufferIndex = newBufferIndex;
 	_frameStartTime = time;
+}
+- (void)resetFrames
+{
+	@synchronized(self) {
+		[_readyBufferIndexQueue removeAllObjects];
+		_frameDropStrength = 0.0f;
+	}
+	_fillingBufferIndex = NSNotFound;
+	_lastFilledBufferIndex = NSNotFound;
 }
 - (void *)mutableBufferBytes
 {
@@ -483,9 +491,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)awakeFromNib
 {
-	_fillingBufferIndex = NSNotFound;
-	_lastFilledBufferIndex = NSNotFound;
-
+	[self resetFrames];
 	CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
 	CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self);
 	[self viewDidMoveToWindow];

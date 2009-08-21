@@ -66,7 +66,8 @@ typedef enum {
 
 - (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers; // NOT thread safe.
 
-- (void)createNewBuffer:(ECVBufferFillType)fill time:(NSTimeInterval)time blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame; // NOT thread safe.
+- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame; // NOT thread safe.
+- (void)resetFrames;
 @property(readonly) void *mutableBufferBytes; // NOT thread safe.
 
 @property(assign) id delegate;

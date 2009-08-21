@@ -523,6 +523,7 @@ ECVNoDeviceError:
 
 	_pendingImageLength = 0;
 	_firstFrame = YES;
+	[videoView resetFrames];
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
@@ -602,8 +603,10 @@ bail:
 		case ECVWeave    : fill = ECVBufferFillPrevious; break;
 		case ECVAlternate: fill = ECVBufferFillClear   ; break;
 	}
+	BOOL const blend = ECVBlur == _deinterlacingMode;
 	ECVFrame *frame = nil;
-	[videoView createNewBuffer:fill time:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 blendLastTwoBuffers:ECVBlur == _deinterlacingMode getLastFrame:_videoTrack ? &frame : NULL];
+	ECVFrame **const framePtr = _videoTrack ? &frame : NULL;
+	[videoView beginNewFrameAtTime:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 fill:fill blendLastTwoBuffers:blend getLastFrame:framePtr];
 	if(frame) [self performSelectorOnMainThread:@selector(_recordFrame:) withObject:frame waitUntilDone:NO];
 
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
