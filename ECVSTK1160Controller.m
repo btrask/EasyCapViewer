@@ -210,7 +210,7 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 	T_STK11XX_RESOLUTION const r = [obj unsignedIntegerValue];
 	dev_stk0408_select_video_mode(self, stk11xx_image_sizes[r].x, stk11xx_image_sizes[r].y);
 	[self noteVideoSettingDidChange];
-	if(!self.fullScreen) [[self window] setContentSize:[self outputSize]];
+	self.windowContentSize = [self outputSize];
 	[[NSUserDefaults standardUserDefaults] setObject:obj forKey:ECVSTK1160ResolutionKey];
 }
 

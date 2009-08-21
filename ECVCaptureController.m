@@ -280,11 +280,7 @@ ECVNoDeviceError:
 }
 - (IBAction)changeScale:(id)sender
 {
-	NSRect f = [[self window] contentRectForFrameRect:[[self window] frame]];
-	NSSize const s = [self outputSizeWithScale:[sender tag]];
-	f.origin.y += NSHeight(f) - s.height;
-	f.size = s;
-	[[self window] setFrame:[[self window] frameRectForContentRect:f] display:YES];
+	self.windowContentSize = [self outputSizeWithScale:[sender tag]];
 }
 - (IBAction)changeAspectRatio:(id)sender
 {
@@ -320,12 +316,10 @@ ECVNoDeviceError:
 {
 	videoView.aspectRatio = ratio;
 	[[self window] setContentAspectRatio:ratio];
-	NSRect f = [[self window] contentRectForFrameRect:[[self window] frame]];
 	CGFloat const r = ratio.height / ratio.width;
-	CGFloat const newHeight = NSWidth(f) * r;
-	f.origin.y += NSHeight(f) - newHeight;
-	f.size.height = newHeight;
-	if(!self.fullScreen) [[self window] setFrame:[[self window] frameRectForContentRect:f] display:YES];
+	NSSize s = self.windowContentSize;
+	s.height = s.width * r;
+	self.windowContentSize = s;
 	[[self window] setMinSize:NSMakeSize(200.0f, 200.0f * r)];
 }
 @synthesize deinterlacingMode = _deinterlacingMode;
@@ -422,6 +416,20 @@ ECVNoDeviceError:
 - (void)setPALFormat:(BOOL)flag
 {
 	self.videoFormat = ECVPALFormat;
+}
+- (NSSize)windowContentSize
+{
+	NSWindow *const w = [self window];
+	return [w contentRectForFrameRect:[w frame]].size;
+}
+- (void)setWindowContentSize:(NSSize)size
+{
+	if(self.fullScreen || ![self isWindowLoaded]) return;
+	NSWindow *const w = [self window];
+	NSRect f = [w contentRectForFrameRect:[w frame]];
+	f.origin.y += NSHeight(f) - size.height;
+	f.size = size;
+	[w setFrame:[w frameRectForContentRect:f] display:YES];
 }
 - (NSSize)outputSize
 {
@@ -706,7 +714,7 @@ ECVNoDeviceError:
 }
 - (void)synchronizeWindowTitleWithDocumentName
 {
-	[[self window] setTitle:_productName];
+	[[self window] setTitle:_productName ? _productName : @""];
 }
 
 #pragma mark -NSObject
@@ -758,7 +766,7 @@ ECVNoDeviceError:
 		NSSize const s2 = videoView.aspectRatio;
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
-	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([[self window] contentRectForFrameRect:[[self window] frame]].size, [self outputSizeWithScale:[anItem tag]])];
+	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes(self.windowContentSize, [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:videoView.vsync ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
 	if(@selector(toggleSmoothing:) == action) [anItem setTitle:GL_LINEAR == videoView.magFilter ? NSLocalizedString(@"Turn Smoothing Off", nil) : NSLocalizedString(@"Turn Smoothing On", nil)];

@@ -135,6 +135,7 @@ extern NSString *const ECVSaturationKey;
 @property ECVVideoFormat videoFormat;
 @property(getter = isNTSCFormat) BOOL NTSCFormat;
 @property(getter = isPALFormat) BOOL PALFormat;
+@property(assign) NSSize windowContentSize;
 @property(readonly) NSSize outputSize;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;
