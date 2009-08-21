@@ -271,34 +271,33 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)_drawOneFrame
 {
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+
 	NSNumber *number = nil;
 	CGFloat frameDropStrength = 0.0f;
 	@synchronized(self) {
 		number = [_readyBufferIndexQueue lastObject];
 		frameDropStrength = _frameDropStrength;
 	}
-	if(!number) return;
+	if(number) {
+		NSUInteger const index = [number unsignedIntegerValue];
+		NSParameterAssert(NSNotFound != index);
 
-	NSUInteger const index = [number unsignedIntegerValue];
-	NSParameterAssert(NSNotFound != index);
-
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
-
-	glClear(GL_COLOR_BUFFER_BIT);
-	[self _drawBuffer:index];
-	[self _drawFrameDropIndicatorWithStrength:frameDropStrength];
-	[self _drawResizeHandle];
-	glFlush();
+		glClear(GL_COLOR_BUFFER_BIT);
+		[self _drawBuffer:index];
+		[self _drawFrameDropIndicatorWithStrength:frameDropStrength];
+		[self _drawResizeHandle];
+		glFlush();
+		@synchronized(self) {
+			[_readyBufferIndexQueue removeLastObject];
+			_lastDrawnBufferIndex = index;
+		}
+	}
 
 	CGLUnlockContext(contextObj);
-
-	@synchronized(self) {
-		[_readyBufferIndexQueue removeLastObject];
-		_lastDrawnBufferIndex = index;
-	}
 }
 - (void)_drawBuffer:(NSUInteger)index
 {
