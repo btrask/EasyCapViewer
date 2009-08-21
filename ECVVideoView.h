@@ -51,6 +51,7 @@ typedef enum {
 
 	// Access to these ivars must be @synchronized.
 	NSMutableArray *_readyBufferIndexQueue;
+	NSUInteger _lastDrawnBufferIndex;
 	CGFloat _frameDropStrength;
 
 	CVDisplayLinkRef _displayLink;
