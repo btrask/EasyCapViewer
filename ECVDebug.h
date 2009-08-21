@@ -42,3 +42,10 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 	for(; __i <= (retry) && noErr != (__e = (error)); __i++) usleep(100000);\
 	if(noErr != __e) NSLog(@"%s:%d (%s) %s: '%d'", __FILE__, __LINE__, __PRETTY_FUNCTION__, #error, __e);\
 } while(NO)
+
+#define ECVglError(x) \
+	do {\
+		(x);\
+		GLenum __e;\
+		while((__e = glGetError()) != GL_NO_ERROR) NSLog(@"%s:%d %s/%s glGetError(): 0x%03x", __FILE__, __LINE__, __PRETTY_FUNCTION__, #x, __e);\
+	} while(NO)

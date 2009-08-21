@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glu.h>
 
 // Other Sources
+#import "ECVDebug.h"
 #import "NSMutableArrayAdditions.h"
 
 NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
