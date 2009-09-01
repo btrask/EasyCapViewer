@@ -44,14 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[NSCursor setHiddenUntilMouseMoves:YES];
 }
 
-#pragma mark NSMenuValidation Protocol
-
-- (BOOL)validateMenuItem:(NSMenuItem *)anItem
-{
-	if([anItem action] == @selector(performClose:)) return YES;
-	return [super validateMenuItem:anItem];
-}
-
 #pragma mark NSWindow
 
 - (id)initWithContentRect:(NSRect)aRect
@@ -88,11 +80,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-- (IBAction)performClose:(id)sender
-{
-	if(NSClosableWindowMask & [self styleMask]) [super performClose:sender];
-	else [self close];
-}
 - (void)sendEvent:(NSEvent *)anEvent
 {
 	if([anEvent type] == NSMouseMoved) [self _hideCursorAfterDelay:YES];
