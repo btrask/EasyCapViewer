@@ -37,7 +37,7 @@ static ECVController *ECVSharedController;
 static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 {
 	[controllerClass deviceAddedWithIterator:iterator];
-	IOObjectRelease(iterator);
+	// Don't release the iterator because we want to continue receiving notifications.
 }
 
 @implementation ECVController
