@@ -24,14 +24,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <QTKit/QTKit.h>
 
-@interface ECVSoundTrack : QTTrack
+@interface ECVSoundTrack : NSObject
 {
 	@private
+	QTTrack *_track;
 	AudioStreamBasicDescription _basicDescription;
 	SoundDescriptionHandle _soundDescriptionHandle;
 }
 
 + (id)soundTrackWithMovie:(QTMovie *)movie volume:(float)volume description:(AudioStreamBasicDescription)desc;
+
+- (id)initWithTrack:(QTTrack *)track;
+@property(readonly) QTTrack *track;
+
 - (void)addSamples:(AudioBufferList const *)bufferList;
 
 @end

@@ -39,22 +39,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSParameterAssert([[[movie movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
 	Track const track = NewMovieTrack([movie quickTimeMovie], FixRatio(roundf(aSize.width), 1), FixRatio(roundf(aSize.height), 1), kNoVolume);
 	if(!track) return nil;
-	Media const media = NewTrackMedia(track, VideoMediaType, [[[movie movieAttributes] objectForKey:QTMovieTimeScaleAttribute] longValue], NULL, 0);
+	Media const media = NewTrackMedia(track, VideoMediaType, 600, NULL, 0);
 	if(!media) {
 		DisposeMovieTrack(track);
 		return nil;
 	}
-	return [self trackWithQuickTimeTrack:track error:nil];
+	return [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL]] autorelease];
 }
 
 #pragma mark -ECVVideoTrack
 
+- (id)initWithTrack:(QTTrack *)track
+{
+	if((self = [super init])) {
+		_track = [track retain];
+	}
+	return self;
+}
+@synthesize track = _track;
+
+#pragma mark -
+
+@synthesize codecType = _codecType;
+@synthesize quality = _quality;
 @synthesize hasPendingFrame = _hasPendingFrame;
 - (void)clearPendingFrame
 {
 	_hasPendingFrame = NO;
 }
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality
+- (void)prepareToAddFrame:(id<ECVFrameReading>)frame
 {
 	NSParameterAssert(!_hasPendingFrame);
 
@@ -67,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	PixMapHandle const pixMap = GetGWorldPixMap(gWorld);
 
 	Size maxSize = 0;
-	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, quality, type, NULL, &maxSize), ECVRetryDefault);
+	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, self.quality, self.codecType, NULL, &maxSize), ECVRetryDefault);
 	if(_pendingFrame && GetHandleSize(_pendingFrame) < maxSize) {
 		DisposeHandle(_pendingFrame);
 		_pendingFrame = NULL;
@@ -76,7 +89,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(!_pendingFrameDescription) _pendingFrameDescription = (ImageDescriptionHandle)NewHandle(sizeof(ImageDescription));
 
 	HLock(_pendingFrame);
-	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(quality * codecMaxQuality), type, _pendingFrameDescription, *_pendingFrame), ECVRetryDefault);
+	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(self.quality * codecMaxQuality), self.codecType, _pendingFrameDescription, *_pendingFrame), ECVRetryDefault);
 	HUnlock(_pendingFrame);
 	DisposeGWorld(gWorld);
 
@@ -87,24 +100,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSParameterAssert(_hasPendingFrame);
 	NSParameterAssert(_pendingFrame);
 	NSParameterAssert(_pendingFrameDescription);
-	ECVOSStatus(AddMediaSample([[self media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
+	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self.track trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
 	_hasPendingFrame = NO;
 }
-- (void)addFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time
+- (void)addFrame:(id<ECVFrameReading>)frame time:(NSTimeInterval)time
 {
 	if(_hasPendingFrame) [self addFrameWithDuration:time - _pendingFrameStartTime];
-	if(frame) [self prepareToAddFrame:frame codecType:type quality:quality];
+	if(frame) [self prepareToAddFrame:frame];
 	_pendingFrameStartTime = time;
 }
-- (void)addFrame:(ECVFrame *)frame codecType:(CodecType)type quality:(float)quality
+- (void)addFrame:(ECVFrame *)frame
 {
-	[self addFrame:frame codecType:type quality:quality time:frame.time];
+	[self addFrame:frame time:frame.time];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
+	[_track release];
 	if(_pendingFrame) DisposeHandle(_pendingFrame);
 	if(_pendingFrameDescription) DisposeHandle((Handle)_pendingFrameDescription);
 	[super dealloc];

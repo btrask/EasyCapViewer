@@ -29,9 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @protocol ECVFrameReading;
 @class ECVFrame;
 
-@interface ECVVideoTrack : QTTrack
+@interface ECVVideoTrack : NSObject
 {
 	@private
+	QTTrack *_track;
+	CodecType _codecType;
+	CGFloat _quality;
 	BOOL _hasPendingFrame;
 	Handle _pendingFrame;
 	ImageDescriptionHandle _pendingFrameDescription;
@@ -40,11 +43,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)aSize;
 
+- (id)initWithTrack:(QTTrack *)track;
+@property(readonly) QTTrack *track;
+
+@property(assign) CodecType codecType;
+@property(assign) CGFloat quality;
 @property(readonly) BOOL hasPendingFrame;
 - (void)clearPendingFrame;
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality;
+- (void)prepareToAddFrame:(id<ECVFrameReading>)frame;
 - (void)addFrameWithDuration:(NSTimeInterval)interval;
-- (void)addFrame:(id<ECVFrameReading>)frame codecType:(CodecType)type quality:(float)quality time:(NSTimeInterval)time;
-- (void)addFrame:(ECVFrame *)frame codecType:(CodecType)type quality:(float)quality;
+- (void)addFrame:(id<ECVFrameReading>)frame time:(NSTimeInterval)time;
+- (void)addFrame:(ECVFrame *)frame;
 
 @end
