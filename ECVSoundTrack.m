@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVSoundTrack(Private)
 
-@property(assign, setter = _setStreamBasicDescription) AudioStreamBasicDescription _streamBasicDescription;
+- (void)_setStreamBasicDescription:(AudioStreamBasicDescription)desc;
 
 @end
 
@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		return nil;
 	}
 	ECVSoundTrack *const obj = [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:nil]] autorelease];
-	obj._streamBasicDescription = desc;
+	[obj _setStreamBasicDescription:desc];
 	return obj;
 }
 
@@ -75,10 +75,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVSoundTrack(Private)
 
-- (AudioStreamBasicDescription)_streamBasicDescription
-{
-	return _basicDescription;
-}
 - (void)_setStreamBasicDescription:(AudioStreamBasicDescription)desc
 {
 	if(_soundDescriptionHandle) DisposeHandle((Handle)_soundDescriptionHandle);

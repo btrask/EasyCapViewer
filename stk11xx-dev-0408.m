@@ -1113,7 +1113,7 @@ int dev_stk0408_decode(ECVSTK1160Controller *dev)
 	
 	switch (dev->resolution) {
 
-/* 
+/ * 
 //Currently only 1:1 resolutions are working
 		case STK11XX_160x120:
 		case STK11XX_176x144:
@@ -1129,7 +1129,7 @@ int dev_stk0408_decode(ECVSTK1160Controller *dev)
 			break;
 * /		
 		case STK11XX_640x480:
-/*		case STK11XX_720x480:* /
+/ *		case STK11XX_720x480:* /
 		case STK11XX_720x576:
 			hfactor = 1;
 			vfactor = 1;
