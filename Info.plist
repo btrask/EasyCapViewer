@@ -37,5 +37,20 @@
 			<integer>1032</integer>
 		</dict>
 	</array>
+	<key>ECVVideoCodecs</key>
+	<array>
+		<dict>
+			<key>ECVCodecLabel</key>
+			<string>JPEG</string>
+			<key>ECVCodecType</key>
+			<string>'jpeg'</string>
+		</dict>
+		<dict>
+			<key>ECVCodecLabel</key>
+			<string>MPEG-4</string>
+			<key>ECVCodecType</key>
+			<string>'mp4v'</string>
+		</dict>
+	</array>
 </dict>
 </plist>

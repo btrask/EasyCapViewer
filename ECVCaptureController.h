@@ -78,6 +78,9 @@ extern NSString *const ECVSaturationKey;
 {
 	@private
 	IBOutlet ECVVideoView *videoView;
+	IBOutlet NSView *exportAccessoryView;
+	IBOutlet NSPopUpButton *videoCodecPopUp;
+	IBOutlet NSSlider *videoQualitySlider;
 
 	io_service_t _device;
 	NSString *_productName;

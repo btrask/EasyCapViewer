@@ -53,6 +53,8 @@ static NSString *const ECVAspectRatio2Key = @"ECVAspectRatio2";
 static NSString *const ECVVsyncKey = @"ECVVsync";
 static NSString *const ECVMagFilterKey = @"ECVMagFilter";
 static NSString *const ECVShowDroppedFramesKey = @"ECVShowDroppedFrames";
+static NSString *const ECVVideoCodecKey = @"ECVVideoCodec";
+static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 
 enum {
 	ECVNotPlaying,
@@ -96,16 +98,19 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 + (void)initialize
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithUnsignedInteger:ECV4x3AspectRatio], ECVAspectRatio2Key,
-		[NSNumber numberWithBool:NO], ECVVsyncKey,
-		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
-		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
 		[NSNumber numberWithUnsignedInteger:ECVNTSCFormat], ECVVideoFormatKey,
 		[NSNumber numberWithInteger:ECVBlur], ECVDeinterlacingModeKey,
 		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
 		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
 		[NSNumber numberWithDouble:0.5f], ECVHueKey,
 		[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
+
+		[NSNumber numberWithUnsignedInteger:ECV4x3AspectRatio], ECVAspectRatio2Key,
+		[NSNumber numberWithBool:NO], ECVVsyncKey,
+		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
+		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
+		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
+		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
 		nil]];
 }
 
@@ -242,17 +247,32 @@ ECVNoDeviceError:
 	[savePanel setCanCreateDirectories:YES];
 	[savePanel setCanSelectHiddenExtension:YES];
 	[savePanel setPrompt:NSLocalizedString(@"Record", nil)];
-	if(NSFileHandlingPanelOKButton == [savePanel runModal]) {
-		_movie = [[QTMovie alloc] initToWritableFile:[savePanel filename] error:NULL];
-		ECVAudioStream *const stream = [[[_audioInput streams] objectEnumerator] nextObject];
-		NSParameterAssert(stream);
-		_soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
-		_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize]] retain];
-		_videoTrack.codecType = kJPEGCodecType;
-		_videoTrack.quality = 0.5f;
-		[[_soundTrack.track media] ECV_beginEdits];
-		[[_videoTrack.track media] ECV_beginEdits];
+	[savePanel setAccessoryView:exportAccessoryView];
+
+	[videoCodecPopUp removeAllItems];
+	NSArray *const videoCodecs = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVVideoCodecs"];
+	for(NSDictionary *const codecDict in videoCodecs) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[codecDict objectForKey:@"ECVCodecLabel"] action:NULL keyEquivalent:@""] autorelease];
+		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType([codecDict objectForKey:@"ECVCodecType"])];
+		[[videoCodecPopUp menu] addItem:item];
 	}
+	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[NSUserDefaults standardUserDefaults] objectForKey:ECVVideoCodecKey])];
+	[videoQualitySlider setDoubleValue:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVideoQualityKey]];
+
+	NSInteger const returnCode = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)];
+	[[NSUserDefaults standardUserDefaults] setObject:NSFileTypeForHFSTypeCode((OSType)[videoCodecPopUp selectedTag]) forKey:ECVVideoCodecKey];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
+	if(NSFileHandlingPanelOKButton != returnCode) return;
+
+	_movie = [[QTMovie alloc] initToWritableFile:[savePanel filename] error:NULL];
+	ECVAudioStream *const stream = [[[_audioInput streams] objectEnumerator] nextObject];
+	NSParameterAssert(stream);
+	_soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
+	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize]] retain];
+	_videoTrack.codecType = (OSType)[videoCodecPopUp selectedTag];
+	_videoTrack.quality = [videoQualitySlider doubleValue];
+	[[_soundTrack.track media] ECV_beginEdits];
+	[[_videoTrack.track media] ECV_beginEdits];
 }
 - (IBAction)stopRecording:(id)sender
 {
