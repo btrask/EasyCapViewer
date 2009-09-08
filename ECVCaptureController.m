@@ -762,7 +762,7 @@ ECVNoDeviceError:
 	[super dealloc];
 }
 
-#pragma mark -NSObject(ECVAudioDeviceDelegate)
+#pragma mark -<ECVAudioDeviceDelegate>
 
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
@@ -808,7 +808,18 @@ ECVNoDeviceError:
 	return [self respondsToSelector:action];
 }
 
-#pragma mark -NSObject(NSWindowNotifications)
+#pragma mark -<ECVVideoViewDelegate>
+
+- (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
+{
+	if([@" " isEqualToString:[anEvent charactersIgnoringModifiers]]) {
+		[self togglePlaying:self];
+		return YES;
+	}
+	return NO;
+}
+
+#pragma mark -<NSWindowDelegate>
 
 - (void)windowDidBecomeKey:(NSNotification *)aNotif
 {
@@ -823,17 +834,6 @@ ECVNoDeviceError:
 - (void)windowDidEndSheet:(NSNotification *)aNotif
 {
 	if(_noteDeviceRemovedWhenSheetCloses) [self noteDeviceRemoved];
-}
-
-#pragma mark -NSObject(ECVVideoViewDelegate)
-
-- (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
-{
-	if([@" " isEqualToString:[anEvent charactersIgnoringModifiers]]) {
-		[self togglePlaying:self];
-		return YES;
-	}
-	return NO;
 }
 
 @end

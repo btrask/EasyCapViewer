@@ -26,10 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 
+@protocol ECVAudioDeviceDelegate;
+
 @interface ECVAudioDevice : NSObject
 {
 	@private
-	id _delegate;
+	IBOutlet NSObject<ECVAudioDeviceDelegate> *delegate;
 	AudioDeviceID _deviceID;
 	BOOL _input;
 	AudioDeviceIOProcID _procID;
@@ -42,7 +44,7 @@ extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 
 - (id)initWithDeviceID:(AudioDeviceID)deviceID input:(BOOL)flag;
 
-@property(assign) id delegate;
+@property(assign) NSObject<ECVAudioDeviceDelegate> *delegate;
 @property(readonly) AudioDeviceID deviceID;
 @property(readonly, getter = isInput) BOOL input;
 
@@ -53,8 +55,9 @@ extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 
 @end
 
-@interface NSObject(ECVAudioDeviceDelegate)
+@protocol ECVAudioDeviceDelegate <NSObject>
 
+@optional
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time;
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time;
 

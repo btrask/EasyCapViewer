@@ -35,6 +35,8 @@ typedef enum {
 	ECVBufferFillPrevious,
 } ECVBufferFillType;
 
+@protocol ECVVideoViewDelegate;
+
 @interface ECVVideoView : NSOpenGLView <ECVFrameReading>
 {
 	@private
@@ -57,7 +59,7 @@ typedef enum {
 	CVDisplayLinkRef _displayLink;
 	NSRect _outputRect;
 
-	IBOutlet id delegate;
+	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
 	BOOL _blurFramesTogether;
 	NSSize _aspectRatio;
 	BOOL _vsync;
@@ -71,7 +73,7 @@ typedef enum {
 - (void)resetFrames;
 @property(readonly) void *mutableBufferBytes; // NOT thread safe.
 
-@property(assign) id delegate;
+@property(assign) NSObject<ECVVideoViewDelegate> *delegate;
 @property(assign) BOOL blurFramesTogether;
 @property(assign) NSSize aspectRatio;
 @property(assign) BOOL vsync;
@@ -80,8 +82,9 @@ typedef enum {
 
 @end
 
-@interface NSObject (ECVVideoViewDelegate)
+@protocol ECVVideoViewDelegate <NSObject>
 
+@optional
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
 
 @end

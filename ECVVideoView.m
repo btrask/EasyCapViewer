@@ -212,7 +212,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -
 
-@synthesize delegate = delegate;
+@synthesize delegate;
 @synthesize blurFramesTogether = _blurFramesTogether;
 @synthesize aspectRatio = _aspectRatio;
 - (void)setAspectRatio:(NSSize)ratio
@@ -521,10 +521,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 @end
 
-@implementation NSObject (ECVVideoViewDelegate)
+@implementation NSObject(ECVVideoViewDelegate)
 
-- (BOOL)videoView:(ECVVideoView *)sender
-        handleKeyDown:(NSEvent *)anEvent
+- (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
 {
 	return NO;
 }

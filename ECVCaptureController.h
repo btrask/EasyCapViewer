@@ -27,13 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Views
-@class ECVVideoView;
+#import "ECVVideoView.h"
 
 // Controllers
 @class ECVCaptureController;
 
 // Other Sources
-@class ECVAudioDevice;
+#import "ECVAudioDevice.h"
 @class ECVAudioPipe;
 @class ECVSoundTrack;
 @class ECVVideoTrack;
@@ -74,7 +74,7 @@ extern NSString *const ECVContrastKey;
 extern NSString *const ECVHueKey;
 extern NSString *const ECVSaturationKey;
 
-@interface ECVCaptureController : NSWindowController 
+@interface ECVCaptureController : NSWindowController <ECVAudioDeviceDelegate, ECVVideoViewDelegate, NSWindowDelegate>
 {
 	@private
 	IBOutlet ECVVideoView *videoView;

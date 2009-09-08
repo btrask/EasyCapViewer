@@ -127,7 +127,7 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-@synthesize delegate = _delegate;
+@synthesize delegate;
 @synthesize deviceID = _deviceID;
 @synthesize input = _input;
 
