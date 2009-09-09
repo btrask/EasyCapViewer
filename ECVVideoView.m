@@ -472,6 +472,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	if(![self.delegate videoView:self handleKeyDown:anEvent]) [super keyDown:anEvent];
 }
+- (void)mouseDown:(NSEvent *)anEvent
+{
+	if(![self.delegate videoView:self handleMouseDown:anEvent]) [super mouseDown:anEvent];
+}
 
 #pragma mark -NSObject
 
@@ -524,6 +528,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 @implementation NSObject(ECVVideoViewDelegate)
 
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
+{
+	return NO;
+}
+- (BOOL)videoView:(ECVVideoView *)sender handleMouseDown:(NSEvent *)anEvent
 {
 	return NO;
 }

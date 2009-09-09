@@ -400,13 +400,16 @@ ECVNoDeviceError:
 		if(![self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStartPlaying];
 			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
-		} else [_playLock unlock];
+			[_playLock lockWhenCondition:ECVPlaying];
+		}
+		[_playLock unlock];
 	} else {
 		[self stopRecording:self];
 		[_playLock lock];
 		if([self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
+			usleep(250000); // Don't restart the device too quickly; wait 0.25 seconds.
 		}
 		[_playLock unlock];
 	}
@@ -816,6 +819,14 @@ ECVNoDeviceError:
 		[self togglePlaying:self];
 		return YES;
 	}
+	return NO;
+}
+- (BOOL)videoView:(ECVVideoView *)sender handleMouseDown:(NSEvent *)firstEvent
+{
+	NSEvent *latestEvent = nil;
+	while((latestEvent = [[sender window] nextEventMatchingMask:NSLeftMouseDraggedMask | NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp);
+	[[sender window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
+	if([[[sender window] contentView] hitTest:[latestEvent locationInWindow]] == sender) [self togglePlaying:self];
 	return NO;
 }
 

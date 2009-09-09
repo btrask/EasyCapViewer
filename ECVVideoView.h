@@ -86,5 +86,6 @@ typedef enum {
 
 @optional
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
+- (BOOL)videoView:(ECVVideoView *)sender handleMouseDown:(NSEvent *)anEvent;
 
 @end

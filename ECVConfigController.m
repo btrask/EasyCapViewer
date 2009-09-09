@@ -100,10 +100,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		if([_captureController respondsToSelector:@selector(setContrast:)]) _captureController.contrast = [contrastSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setHue:)]) _captureController.hue = [hueSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setSaturation:)]) _captureController.saturation = [saturationSlider doubleValue];
-		if(playing) {
-			usleep(500000); // Don't restart the device too quickly; wait 0.5 seconds.
-			_captureController.playing = YES;
-		}
+		if(playing) _captureController.playing = YES;
 	}
 	[[self window] close];
 	[self autorelease];
