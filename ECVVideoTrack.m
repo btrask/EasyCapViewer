@@ -81,11 +81,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	SetRect(&r, 0, 0, s.width, s.height);
 
 	GWorldPtr gWorld = NULL;
-	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, frame.pixelFormatType, &r, NULL, NULL, 0, (void *)[frame.bufferData bytes], frame.bytesPerRow), ECVRetryDefault);
+	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, frame.pixelFormatType, &r, NULL, NULL, 0, (void *)[frame.bufferData bytes], frame.bytesPerRow));
 	PixMapHandle const pixMap = GetGWorldPixMap(gWorld);
 
 	Size maxSize = 0;
-	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, self.quality, self.codecType, NULL, &maxSize), ECVRetryDefault);
+	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, self.quality, self.codecType, NULL, &maxSize));
 	if(_pendingFrame && GetHandleSize(_pendingFrame) < maxSize) {
 		DisposeHandle(_pendingFrame);
 		_pendingFrame = NULL;
@@ -94,7 +94,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(!_pendingFrameDescription) _pendingFrameDescription = (ImageDescriptionHandle)NewHandle(sizeof(ImageDescription));
 
 	HLock(_pendingFrame);
-	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(self.quality * codecMaxQuality), self.codecType, _pendingFrameDescription, *_pendingFrame), ECVRetryDefault);
+	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(self.quality * codecMaxQuality), self.codecType, _pendingFrameDescription, *_pendingFrame));
 	HUnlock(_pendingFrame);
 	DisposeGWorld(gWorld);
 
@@ -108,7 +108,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(!_hasPendingFrame) return NO;
 	NSParameterAssert(_pendingFrame);
 	NSParameterAssert(_pendingFrameDescription);
-	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self.track trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
+	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self.track trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
 	_hasPendingFrame = NO;
 	return YES;
 }

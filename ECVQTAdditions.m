@@ -35,11 +35,11 @@ static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
 
 - (void)ECV_beginEdits
 {
-	ECVOSStatus(BeginMediaEdits([self quickTimeMedia]), ECVRetryDefault);
+	ECVOSStatus(BeginMediaEdits([self quickTimeMedia]));
 }
 - (void)ECV_endEdits
 {
-	ECVOSStatus(EndMediaEdits([self quickTimeMedia]), ECVRetryDefault);
+	ECVOSStatus(EndMediaEdits([self quickTimeMedia]));
 }
 - (QTTimeRange)ECV_timeRange
 {
@@ -57,7 +57,7 @@ static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
 	long const scale = [[[[self media] mediaAttributes] objectForKey:QTMediaTimeScaleAttribute] longValue];
 	QTTimeRange const s = ECVMakeTimeRangeScaled(srcRange, scale);
 	QTTimeRange const d = ECVMakeTimeRangeScaled(dstRange, scale);
-	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], d.time.timeValue, s.time.timeValue, s.duration.timeValue, X2Fix((double)s.duration.timeValue / d.duration.timeValue)), ECVRetryDefault);
+	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], d.time.timeValue, s.time.timeValue, s.duration.timeValue, X2Fix((double)s.duration.timeValue / d.duration.timeValue)));
 }
 - (void)ECV_insertMediaInRange:(QTTimeRange)range atTime:(QTTime)time
 {

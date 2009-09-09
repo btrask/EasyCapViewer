@@ -28,18 +28,14 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 
 #define ECVRetryDefault 3
 
-#define ECVIOReturn(error, retry) do {\
-	int __i = 0;\
-	IOReturn __e;\
-	for(; __i <= (retry) && kIOReturnSuccess != (__e = (error)); __i++) usleep(100000);\
+#define ECVIOReturn(error) do {\
+	IOReturn const __e = (error);\
 	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
 	if(kIOReturnSuccess != __e) goto ECVGenericError;\
 } while(NO)
 
-#define ECVOSStatus(error, retry) do {\
-	int __i = 0;\
-	OSStatus __e;\
-	for(; __i <= (retry) && noErr != (__e = (error)); __i++) usleep(100000);\
+#define ECVOSStatus(error) do {\
+	OSStatus const __e = (error);\
 	if(noErr != __e) NSLog(@"%s:%d (%s) %s: '%d'", __FILE__, __LINE__, __PRETTY_FUNCTION__, #error, __e);\
 } while(NO)
 

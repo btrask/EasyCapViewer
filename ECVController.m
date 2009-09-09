@@ -79,7 +79,7 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 		[match setObject:[type objectForKey:@"ECVVendorID"] forKey:[NSString stringWithUTF8String:kUSBVendorID]];
 		[match setObject:[type objectForKey:@"ECVProductID"] forKey:[NSString stringWithUTF8String:kUSBProductID]];
 		io_iterator_t iterator = IO_OBJECT_NULL;
-		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)match, (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator), 0);
+		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)match, (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
 ECVGenericError:
 ECVNoDeviceError:
 		if([class deviceAddedWithIterator:iterator]) found = YES;

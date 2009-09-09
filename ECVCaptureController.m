@@ -123,29 +123,29 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	if(outError) *outError = nil;
 	if(!(self = [self initWithWindowNibName:@"ECVCapture"])) return nil;
 
-	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], device, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification), ECVRetryDefault);
+	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], device, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 
 	_device = device;
 	IOObjectRetain(_device);
 
 	io_name_t productName = "";
-	ECVIOReturn(IORegistryEntryGetName(device, productName), ECVRetryDefault);
+	ECVIOReturn(IORegistryEntryGetName(device, productName));
 	_productName = [[NSString alloc] initWithUTF8String:productName];
 
 	SInt32 ignored = 0;
 	IOCFPlugInInterface **devicePlugInInterface = NULL;
-	ECVIOReturn(IOCreatePlugInInterfaceForService(device, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored), ECVRetryDefault);
+	ECVIOReturn(IOCreatePlugInInterfaceForService(device, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored));
 
-	ECVIOReturn((*devicePlugInInterface)->QueryInterface(devicePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID), (LPVOID)&_deviceInterface), ECVRetryDefault);
+	ECVIOReturn((*devicePlugInInterface)->QueryInterface(devicePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID), (LPVOID)&_deviceInterface));
 	(*devicePlugInInterface)->Release(devicePlugInInterface);
 	devicePlugInInterface = NULL;
 
-	ECVIOReturn((*_deviceInterface)->USBDeviceOpen(_deviceInterface), ECVRetryDefault);
-	ECVIOReturn((*_deviceInterface)->ResetDevice(_deviceInterface), ECVRetryDefault);
+	ECVIOReturn((*_deviceInterface)->USBDeviceOpen(_deviceInterface));
+	ECVIOReturn((*_deviceInterface)->ResetDevice(_deviceInterface));
 
 	IOUSBConfigurationDescriptorPtr configurationDescription = NULL;
-	ECVIOReturn((*_deviceInterface)->GetConfigurationDescriptorPtr(_deviceInterface, 0, &configurationDescription), ECVRetryDefault);
-	ECVIOReturn((*_deviceInterface)->SetConfiguration(_deviceInterface, configurationDescription->bConfigurationValue), ECVRetryDefault);
+	ECVIOReturn((*_deviceInterface)->GetConfigurationDescriptorPtr(_deviceInterface, 0, &configurationDescription));
+	ECVIOReturn((*_deviceInterface)->SetConfiguration(_deviceInterface, configurationDescription->bConfigurationValue));
 
 	IOUSBFindInterfaceRequest interfaceRequest = {
 		kIOUSBFindInterfaceDontCare,
@@ -154,12 +154,12 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		kIOUSBFindInterfaceDontCare
 	};
 	io_iterator_t interfaceIterator = IO_OBJECT_NULL;
-	ECVIOReturn((*_deviceInterface)->CreateInterfaceIterator(_deviceInterface, &interfaceRequest, &interfaceIterator), ECVRetryDefault);
+	ECVIOReturn((*_deviceInterface)->CreateInterfaceIterator(_deviceInterface, &interfaceRequest, &interfaceIterator));
 	io_service_t const interface = IOIteratorNext(interfaceIterator);
 	NSParameterAssert(interface);
 
 	IOCFPlugInInterface **interfacePlugInInterface = NULL;
-	ECVIOReturn(IOCreatePlugInInterfaceForService(interface, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored), ECVRetryDefault);
+	ECVIOReturn(IOCreatePlugInInterfaceForService(interface, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored));
 
 	CFUUIDRef const refs[] = {
 		kIOUSBInterfaceInterfaceID300,
@@ -170,9 +170,9 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	NSUInteger i;
 	for(i = 0; i < numberof(refs); i++) if(SUCCEEDED((*interfacePlugInInterface)->QueryInterface(interfacePlugInInterface, CFUUIDGetUUIDBytes(refs[i]), (LPVOID)&_interfaceInterface))) break;
 	NSParameterAssert(_interfaceInterface);
-	ECVIOReturn((*_interfaceInterface)->USBInterfaceOpenSeize(_interfaceInterface), ECVRetryDefault);
+	ECVIOReturn((*_interfaceInterface)->USBInterfaceOpenSeize(_interfaceInterface));
 
-	ECVIOReturn((*_interfaceInterface)->GetFrameListTime(_interfaceInterface, &_frameTime), ECVRetryDefault);
+	ECVIOReturn((*_interfaceInterface)->GetFrameListTime(_interfaceInterface, &_frameTime));
 	if(self.requiresHighSpeed && kUSBHighSpeedMicrosecondsInFrame != _frameTime) {
 		if(outError) *outError = [NSError errorWithDomain:ECVGeneralErrorDomain code:0 userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
 			NSLocalizedString(@"This device requires a USB 2.0 High Speed port in order to operate.", nil), NSLocalizedDescriptionKey,
@@ -183,7 +183,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		return nil;
 	}
 
-	ECVIOReturn((*_interfaceInterface)->CreateInterfaceAsyncEventSource(_interfaceInterface, NULL), ECVRetryDefault);
+	ECVIOReturn((*_interfaceInterface)->CreateInterfaceAsyncEventSource(_interfaceInterface, NULL));
 	_playLock = [[NSConditionLock alloc] initWithCondition:ECVNotPlaying];
 
 	return self;
@@ -515,11 +515,11 @@ ECVNoDeviceError:
 
 	UInt16 frameRequestSize = 0;
 	UInt8 ignored1 = 0, ignored2 = 0, ignored3 = 0 , ignored4 = 0;
-	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipe, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4), ECVRetryDefault);
+	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipe, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4));
 	NSParameterAssert(frameRequestSize);
 
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyReadBuffer), ECVRetryDefault);
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyFrameListBuffer), ECVRetryDefault);
+	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyReadBuffer));
+	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyFrameListBuffer));
 	for(i = 0; i < microframesPerTransfer * simultaneousTransfers; i++) {
 		fullFrameList[i].frStatus = kIOReturnInvalid; // Ignore them to start out.
 		fullFrameList[i].frReqCount = frameRequestSize;
@@ -527,7 +527,7 @@ ECVNoDeviceError:
 
 	UInt64 currentFrame = 0;
 	AbsoluteTime ignored;
-	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored), ECVRetryDefault);
+	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored));
 	currentFrame += 10;
 
 	_pendingImageLength = 0;
@@ -553,7 +553,7 @@ ECVNoDeviceError:
 				scanner(self, scanSelector, frameList + i, frameData + i * frameRequestSize);
 				frameList[i].frStatus = kUSBLowLatencyIsochTransferKey;
 			}
-			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipe, frameData, currentFrame, microframesPerTransfer, 1, frameList, ECVDoNothing, NULL), 0);
+			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipe, frameData, currentFrame, microframesPerTransfer, 1, frameList, ECVDoNothing, NULL));
 			currentFrame += microframesPerTransfer / (kUSBFullSpeedMicrosecondsInFrame / _frameTime);
 		}
 		[innerPool drain];
@@ -631,7 +631,7 @@ bail:
 		case kIOReturnNoDevice:
 		case kIOReturnNotResponding: return NO;
 	}
-	ECVIOReturn(error, 0);
+	ECVIOReturn(error);
 ECVGenericError:
 ECVNoDeviceError:
 	return NO;
@@ -642,10 +642,10 @@ ECVNoDeviceError:
 	IOReturn const error = (*_interfaceInterface)->ControlRequest(_interfaceInterface, 0, &r);
 	switch(error) {
 		case kIOReturnSuccess: return YES;
-		case kIOUSBPipeStalled: ECVIOReturn((*_interfaceInterface)->ClearPipeStall(_interfaceInterface, 0), ECVRetryDefault); return YES;
+		case kIOUSBPipeStalled: ECVIOReturn((*_interfaceInterface)->ClearPipeStall(_interfaceInterface, 0)); return YES;
 		case kIOReturnNotResponding: return NO;
 	}
-	ECVIOReturn(error, 0);
+	ECVIOReturn(error);
 ECVGenericError:
 ECVNoDeviceError:
 	return NO;
