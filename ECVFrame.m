@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVFrame
 
-- (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize
+- (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize time:(NSTimeInterval)time
 {
 	if((self = [super init])) {
 		if(!buffer) {
@@ -38,14 +38,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_pixelSize = size;
 		_pixelFormatType = formatType;
 		_bytesPerRow = rowSize;
+		_time = time;
 	}
 	return self;
 }
 - (id)initWithFrameReadingObject:(id<ECVFrameReading>)frame
 {
-	return [self initWithData:frame.bufferData pixelSize:frame.pixelSize pixelFormatType:frame.pixelFormatType bytesPerRow:frame.bytesPerRow];
+	return [self initWithData:frame.bufferData pixelSize:frame.pixelSize pixelFormatType:frame.pixelFormatType bytesPerRow:frame.bytesPerRow time:frame.time];
 }
-@synthesize time = _time;
 
 #pragma mark -NSObject
 
@@ -65,14 +65,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @synthesize pixelSize = _pixelSize;
 @synthesize pixelFormatType = _pixelFormatType;
 @synthesize bytesPerRow = _bytesPerRow;
+@synthesize time = _time;
 
 #pragma mark -<NSCopying>
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	ECVFrame *const dupe = [[[self class] alloc] initWithFrameReadingObject:self];
-	dupe.time = self.time;
-	return dupe;
+	return [[[self class] alloc] initWithFrameReadingObject:self];
 }
 
 @end

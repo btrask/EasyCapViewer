@@ -30,5 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) ECVPixelSize pixelSize;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) size_t bytesPerRow;
+@property(readonly) NSTimeInterval time;
 
 @end

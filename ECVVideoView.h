@@ -67,11 +67,11 @@ typedef enum {
 	BOOL _showDroppedFrames;
 }
 
-- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers; // NOT thread safe.
-
-- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame; // NOT thread safe.
+// These methods must be called from the same thread.
+- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers;
+- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame;
 - (void)resetFrames;
-@property(readonly) void *mutableBufferBytes; // NOT thread safe.
+@property(readonly) void *mutableBufferBytes;
 
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
 @property(assign) BOOL blurFramesTogether;

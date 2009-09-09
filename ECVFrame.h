@@ -34,8 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSTimeInterval _time;
 }
 
-- (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize;
+- (id)initWithData:(NSData *)buffer pixelSize:(ECVPixelSize)size pixelFormatType:(OSType)formatType bytesPerRow:(size_t)rowSize time:(NSTimeInterval)time;
 - (id)initWithFrameReadingObject:(id<ECVFrameReading>)frame;
-@property(assign) NSTimeInterval time;
 
 @end

@@ -135,10 +135,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
-
-#pragma mark -
-
-- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill blendLastTwoBuffers:(BOOL)blend getLastFrame:(out ECVFrame **)outFrame
+- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame
 {
 	NSUInteger const previousFullBufferIndex = _lastFilledBufferIndex;
 	NSUInteger const latestFullBufferIndex = _fillingBufferIndex;
@@ -175,7 +172,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 			else memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:latestFullBufferIndex], self.bufferSize);
 			break;
 	}
-	if(blend && NSNotFound != latestFullBufferIndex && NSNotFound != previousFullBufferIndex) {
+	if(self.blurFramesTogether && NSNotFound != latestFullBufferIndex && NSNotFound != previousFullBufferIndex) {
 		bufferToDraw = previousFullBufferIndex;
 		UInt8 *const dst = [self _bufferBytesAtIndex:bufferToDraw];
 		UInt8 *const src = [self _bufferBytesAtIndex:latestFullBufferIndex];
@@ -187,10 +184,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		if(NSNotFound != bufferToDraw) [_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
 	}
 
-	if(outFrame) {
-		*outFrame = [[[ECVFrame alloc] initWithData:[_bufferData subdataWithRange:NSMakeRange(bufferToDraw * _bufferSize, _bufferSize)] pixelSize:_pixelSize pixelFormatType:_pixelFormatType bytesPerRow:self.bytesPerRow] autorelease];
-		(*outFrame).time = _frameStartTime;
-	}
+	if(outFrame) *outFrame = [[[ECVFrame alloc] initWithData:[_bufferData subdataWithRange:NSMakeRange(bufferToDraw * _bufferSize, _bufferSize)] pixelSize:_pixelSize pixelFormatType:_pixelFormatType bytesPerRow:self.bytesPerRow time:_frameStartTime] autorelease];
 	_lastFilledBufferIndex = latestFullBufferIndex;
 	_fillingBufferIndex = newBufferIndex;
 	_frameStartTime = time;
@@ -199,11 +193,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	@synchronized(self) {
 		[_readyBufferIndexQueue removeAllObjects];
+		_lastDrawnBufferIndex = NSNotFound;
 		_frameDropStrength = 0.0f;
 	}
 	_fillingBufferIndex = NSNotFound;
 	_lastFilledBufferIndex = NSNotFound;
-	_lastDrawnBufferIndex = NSNotFound;
 }
 - (void *)mutableBufferBytes
 {
@@ -522,6 +516,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	return _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
 }
+@synthesize time = _frameStartTime;
 
 @end
 

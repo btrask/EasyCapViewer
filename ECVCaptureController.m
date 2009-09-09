@@ -608,10 +608,9 @@ bail:
 		case ECVWeave    : fill = ECVBufferFillPrevious; break;
 		case ECVAlternate: fill = ECVBufferFillClear   ; break;
 	}
-	BOOL const blend = ECVBlur == _deinterlacingMode;
 	ECVFrame *frame = nil;
 	ECVFrame **const framePtr = _videoTrack ? &frame : NULL;
-	[videoView beginNewFrameAtTime:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 fill:fill blendLastTwoBuffers:blend getLastFrame:framePtr];
+	[videoView beginNewFrameAtTime:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 fill:fill getLastFrame:framePtr];
 	if(frame) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
 
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
