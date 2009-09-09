@@ -47,7 +47,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	struct stk11xx_coord image;
 	int view_size;
 	int image_size;
+
+	@private
 	BOOL _sVideo;
+	BOOL _PAL;
 }
 
 @property(readonly, getter = isSVideo) BOOL sVideo;

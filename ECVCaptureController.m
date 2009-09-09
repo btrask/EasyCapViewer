@@ -42,7 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVQTAdditions.h"
 #import "ECVVideoTrack.h"
 
-NSString *const ECVVideoFormatKey = @"ECVVideoFormat";
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";
 NSString *const ECVBrightnessKey = @"ECVBrightness";
 NSString *const ECVContrastKey = @"ECVContrast";
@@ -98,7 +97,6 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 + (void)initialize
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithUnsignedInteger:ECVNTSCFormat], ECVVideoFormatKey,
 		[NSNumber numberWithInteger:ECVBlur], ECVDeinterlacingModeKey,
 		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
 		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
@@ -416,34 +414,6 @@ ECVNoDeviceError:
 		[_playLock unlock];
 	}
 }
-@synthesize videoFormat = _videoFormat;
-- (void)setVideoFormat:(ECVVideoFormat)format
-{
-	if(![self supportsVideoFormat:format]) {
-		self.videoFormat = [self defaultVideoFormat];
-		return;
-	}
-	if(format == _videoFormat) return;
-	_videoFormat = format;
-	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVVideoFormatKey];
-	self.playing = NO;
-}
-- (BOOL)isNTSCFormat
-{
-	return ECVNTSCFormat == self.videoFormat;
-}
-- (void)setNTSCFormat:(BOOL)flag
-{
-	self.videoFormat = ECVNTSCFormat;
-}
-- (BOOL)isPALFormat
-{
-	return ECVPALFormat == self.videoFormat;
-}
-- (void)setPALFormat:(BOOL)flag
-{
-	self.videoFormat = ECVPALFormat;
-}
 - (NSSize)windowContentSize
 {
 	NSWindow *const w = [self window];
@@ -729,7 +699,6 @@ ECVNoDeviceError:
 	[w setFrame:[w frameRectForContentRect:(NSRect){NSZeroPoint, self.captureSize}] display:NO];
 	self.aspectRatio = [self sizeWithAspectRatio:[[[NSUserDefaults standardUserDefaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]];
 
-	self.videoFormat = [[NSUserDefaults standardUserDefaults] integerForKey:ECVVideoFormatKey];
 	self.deinterlacingMode = [[NSUserDefaults standardUserDefaults] integerForKey:ECVDeinterlacingModeKey];
 	videoView.vsync = [[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey];
 	videoView.showDroppedFrames = [[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey];

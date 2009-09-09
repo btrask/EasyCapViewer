@@ -39,7 +39,7 @@ enum {
 };
 
 static NSString *const ECVSTK1160VideoSourceKey = @"ECVSTK1160VideoSource";
-static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
+static NSString *const ECVSTK1160PALKey = @"ECVSTK1160PAL";
 
 @implementation ECVSTK1160Controller
 
@@ -49,7 +49,7 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input], ECVSTK1160VideoSourceKey,
-		[NSNumber numberWithUnsignedInteger:STK11XX_720x480], ECVSTK1160ResolutionKey,
+		[NSNumber numberWithBool:NO], ECVSTK1160PALKey,
 		nil]];
 }
 
@@ -60,7 +60,7 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 	if((self = [super initWithDevice:device error:outError])) {
 		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
 		self.videoSource = [d objectForKey:ECVSTK1160VideoSourceKey];
-		self.resolution = [d objectForKey:ECVSTK1160ResolutionKey];
+		self.videoMode = [d objectForKey:ECVSTK1160PALKey];
 		self.brightness = [[d objectForKey:ECVBrightnessKey] doubleValue];
 		self.contrast = [[d objectForKey:ECVContrastKey] doubleValue];
 		self.hue = [[d objectForKey:ECVHueKey] doubleValue];
@@ -71,6 +71,17 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 @synthesize sVideo = _sVideo;
 
 #pragma mark -ECVCaptureController(ECVAbstract)
+
+- (BOOL)isNTSCFormat
+{
+	return !_PAL;
+}
+- (BOOL)isPALFormat
+{
+	return _PAL;
+}
+
+#pragma mark -
 
 - (BOOL)requiresHighSpeed
 {
@@ -91,18 +102,6 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 - (UInt8)isochReadingPipe
 {
 	return 2;
-}
-- (ECVVideoFormat)defaultVideoFormat
-{
-	return ECVNTSCFormat;
-}
-- (BOOL)supportsVideoFormat:(ECVVideoFormat)format
-{
-	switch(format) {
-		case ECVNTSCFormat: return YES;
-		case ECVPALFormat: return YES;
-		default: return NO;
-	}
 }
 
 #pragma mark -
@@ -188,30 +187,32 @@ static NSString *const ECVSTK1160ResolutionKey = @"ECVSTK1160Resolution";
 
 #pragma mark -
 
-- (NSArray *)allResolutions
+- (NSArray *)allVideoModes
 {
 	return [NSArray arrayWithObjects:
-		[NSNumber numberWithUnsignedInteger:STK11XX_640x480],
-		[NSNumber numberWithUnsignedInteger:STK11XX_720x480],
-		[NSNumber numberWithUnsignedInteger:STK11XX_720x576],
+		[NSNumber numberWithBool:NO],
+		[NSNumber numberWithBool:YES],
 		nil];
 }
-- (NSString *)localizedStringForResolution:(id)obj
+- (NSString *)localizedStringForVideoMode:(id)obj
 {
-	T_STK11XX_RESOLUTION const r = [obj unsignedIntegerValue];
-	return [NSString localizedStringWithFormat:NSLocalizedString(@"%dx%d", nil), stk11xx_image_sizes[r].x, stk11xx_image_sizes[r].y];
+	BOOL const PAL = [obj boolValue];
+	NSString *const formatString = PAL ? NSLocalizedString(@"PAL / %ux%u" , nil) : NSLocalizedString(@"NTSC / %ux%u", nil);
+	T_STK11XX_RESOLUTION const r = PAL ? STK11XX_720x576 : STK11XX_720x480;
+	return [NSString localizedStringWithFormat:formatString, stk11xx_image_sizes[r].x, stk11xx_image_sizes[r].y];
 }
-- (id)resolution
+- (id)videoMode
 {
-	return [NSNumber numberWithUnsignedInteger:resolution];
+	return [NSNumber numberWithBool:_PAL];
 }
-- (void)setResolution:(id)obj
+- (void)setVideoMode:(id)obj
 {
-	T_STK11XX_RESOLUTION const r = [obj unsignedIntegerValue];
+	_PAL = [obj boolValue];
+	T_STK11XX_RESOLUTION const r = _PAL ? STK11XX_720x576 : STK11XX_720x480;
 	dev_stk0408_select_video_mode(self, stk11xx_image_sizes[r].x, stk11xx_image_sizes[r].y);
 	[self noteVideoSettingDidChange];
-	self.windowContentSize = [self outputSize];
-	[[NSUserDefaults standardUserDefaults] setObject:obj forKey:ECVSTK1160ResolutionKey];
+	self.windowContentSize = self.outputSize;
+	[[NSUserDefaults standardUserDefaults] setObject:obj forKey:ECVSTK1160PALKey];
 }
 
 #pragma mark -

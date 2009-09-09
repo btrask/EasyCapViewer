@@ -44,8 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	(void)[self window]; // Load.
 
 	_captureController = c;
-	[inputTypeMatrix selectCellWithTag:[_captureController videoFormat]];
-	for(NSButtonCell *const cell in [inputTypeMatrix cells]) [cell setEnabled:[_captureController supportsVideoFormat:[cell tag]]];
 
 	[sourcePopUp removeAllItems];
 	if([_captureController respondsToSelector:@selector(allVideoSources)]) for(id const source in _captureController.allVideoSources) {
@@ -56,14 +54,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[sourcePopUp setEnabled:[_captureController respondsToSelector:@selector(videoSource)]];
 	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:_captureController.videoSource]];
 
-	[resolutionPopUp removeAllItems];
-	if([_captureController respondsToSelector:@selector(allResolutions)]) for(id const resolution in _captureController.allResolutions) {
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForResolution:resolution] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:resolution];
-		[[resolutionPopUp menu] addItem:item];
+	[videoModePopUp removeAllItems];
+	if([_captureController respondsToSelector:@selector(allVideoModes)]) for(id const videoMode in _captureController.allVideoModes) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoMode:videoMode] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:videoMode];
+		[[videoModePopUp menu] addItem:item];
 	}
-	[resolutionPopUp setEnabled:[_captureController respondsToSelector:@selector(resolution)]];
-	if([resolutionPopUp isEnabled]) [resolutionPopUp selectItemAtIndex:[resolutionPopUp indexOfItemWithRepresentedObject:_captureController.resolution]];
+	[videoModePopUp setEnabled:[_captureController respondsToSelector:@selector(videoMode)]];
+	if([videoModePopUp isEnabled]) [videoModePopUp selectItemAtIndex:[videoModePopUp indexOfItemWithRepresentedObject:_captureController.videoMode]];
 
 	[deinterlacePopUp selectItemWithTag:_captureController.deinterlacingMode];
 
@@ -92,10 +90,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(NSOKButton == returnCode) {
 		BOOL const playing = _captureController.playing;
 		if(playing) _captureController.playing = NO;
-		_captureController.videoFormat = [inputTypeMatrix selectedTag];
 		_captureController.deinterlacingMode = [deinterlacePopUp selectedTag];
 		if([_captureController respondsToSelector:@selector(setVideoSource:)]) _captureController.videoSource = [[sourcePopUp selectedItem] representedObject];
-		if([_captureController respondsToSelector:@selector(setResolution:)]) _captureController.resolution = [[resolutionPopUp selectedItem] representedObject];
+		if([_captureController respondsToSelector:@selector(setVideoMode:)]) _captureController.videoMode = [[videoModePopUp selectedItem] representedObject];
 		if([_captureController respondsToSelector:@selector(setBrightness:)]) _captureController.brightness = [brightnessSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setContrast:)]) _captureController.contrast = [contrastSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setHue:)]) _captureController.hue = [hueSlider doubleValue];

@@ -19,4 +19,5 @@
 "Composite 3" = "Composite 3";
 "Composite 4" = "Composite 4";
 "S-Video" = "S-Video";
-"%dx%d" = "%dx%d";
+"NTSC / %ux%u" = "NTSC / %ux%u";
+"PAL / %ux%u" = "PAL / %ux%u";

@@ -29,9 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVConfigController : NSWindowController
 {
 	@private
-	IBOutlet NSMatrix *inputTypeMatrix;
 	IBOutlet NSPopUpButton *sourcePopUp;
-	IBOutlet NSPopUpButton *resolutionPopUp;
+	IBOutlet NSPopUpButton *videoModePopUp;
 	IBOutlet NSPopUpButton *deinterlacePopUp;
 	IBOutlet NSSlider *brightnessSlider;
 	IBOutlet NSSlider *contrastSlider;
@@ -54,9 +53,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (NSString *)localizedStringForVideoSource:(id)obj;
 @property(assign) id videoSource;
 
-@property(readonly) NSArray *allResolutions;
-- (NSString *)localizedStringForResolution:(id)obj;
-@property(assign) id resolution;
+@property(readonly) NSArray *allVideoModes;
+- (NSString *)localizedStringForVideoMode:(id)obj;
+@property(assign) id videoMode;
 
 @property(assign) CGFloat brightness;
 @property(assign) CGFloat contrast;

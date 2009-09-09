@@ -47,12 +47,6 @@ enum {
 typedef NSUInteger ECVAspectRatio;
 
 enum {
-	ECVNTSCFormat = 0,
-	ECVPALFormat = 1
-};
-typedef NSInteger ECVVideoFormat;
-
-enum {
 	ECVFullFrame = 0,
 	ECVHighField = 1,
 	ECVLowField = 2
@@ -67,7 +61,6 @@ enum {
 };
 typedef NSInteger ECVDeinterlacingMode;
 
-extern NSString *const ECVVideoFormatKey;
 extern NSString *const ECVDeinterlacingModeKey;
 extern NSString *const ECVBrightnessKey;
 extern NSString *const ECVContrastKey;
@@ -105,7 +98,6 @@ extern NSString *const ECVSaturationKey;
 	ECVVideoTrack *_videoTrack;
 
 	BOOL _fullScreen;
-	ECVVideoFormat _videoFormat;
 	BOOL _noteDeviceRemovedWhenSheetCloses;
 }
 
@@ -131,13 +123,10 @@ extern NSString *const ECVSaturationKey;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
-@property NSSize aspectRatio;
-@property ECVDeinterlacingMode deinterlacingMode;
-@property(getter = isFullScreen) BOOL fullScreen;
-@property(getter = isPlaying) BOOL playing;
-@property ECVVideoFormat videoFormat;
-@property(getter = isNTSCFormat) BOOL NTSCFormat;
-@property(getter = isPALFormat) BOOL PALFormat;
+@property(assign) NSSize aspectRatio;
+@property(assign) ECVDeinterlacingMode deinterlacingMode;
+@property(assign, getter = isFullScreen) BOOL fullScreen;
+@property(assign, getter = isPlaying) BOOL playing;
 @property(assign) NSSize windowContentSize;
 @property(readonly) NSSize outputSize;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
@@ -162,13 +151,14 @@ extern NSString *const ECVSaturationKey;
 
 @interface ECVCaptureController(ECVAbstract)
 
+@property(readonly) BOOL isNTSCFormat;
+@property(readonly) BOOL isPALFormat;
+
 @property(readonly) BOOL requiresHighSpeed;
 @property(readonly) NSSize captureSize;
 @property(readonly) NSUInteger simultaneousTransfers;
 @property(readonly) NSUInteger microframesPerTransfer;
 @property(readonly) UInt8 isochReadingPipe;
-@property(readonly) ECVVideoFormat defaultVideoFormat;
-- (BOOL)supportsVideoFormat:(ECVVideoFormat)format;
 
 - (BOOL)threaded_play;
 - (BOOL)threaded_pause;
