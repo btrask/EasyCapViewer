@@ -47,16 +47,18 @@ typedef enum {
 	NSUInteger _fillingBufferIndex;
 	NSUInteger _lastFilledBufferIndex;
 
-	// Access to these ivars must be @synchronized.
+	// Access to these ivars must be @synchronized(self).
 	NSMutableArray *_readyBufferIndexQueue;
-	NSMutableSet *_attachedFrames;
-	NSMutableIndexSet *_attachedFrameIndexes;
 	NSUInteger _lastDrawnBufferIndex;
 	CGFloat _frameDropStrength;
 	OSType _pixelFormatType;
 	ECVPixelSize _pixelSize;
 	NSUInteger _bufferSize;
 	NSTimeInterval _frameStartTime;
+
+	// Access to these ivars must be @synchronized(_attachedFrames).
+	NSMutableSet *_attachedFrames;
+	NSMutableIndexSet *_attachedFrameIndexes;
 
 	CVDisplayLinkRef _displayLink;
 	NSRect _outputRect;

@@ -180,8 +180,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 			[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
 			if(outFrame) {
 				ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:bufferToDraw time:_frameStartTime] autorelease];
-				[_attachedFrames addObject:frame];
-				[_attachedFrameIndexes addIndex:bufferToDraw];
+				@synchronized(_attachedFrames) {
+					[_attachedFrames addObject:frame];
+					[_attachedFrameIndexes addIndex:bufferToDraw];
+				}
 				*outFrame = frame;
 			}
 		}
@@ -266,15 +268,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)_detachAllFrames
 {
-	NSMutableSet *const retainedAttachedFrames = [NSMutableSet set];
-	@synchronized(self) {
-		[retainedAttachedFrames unionSet:_attachedFrames];
+	@synchronized(_attachedFrames) {
+		[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
 	}
-	[retainedAttachedFrames makeObjectsPerformSelector:@selector(detach)];
 }
 - (void)_detachFrame:(ECVAttachedFrame *)frame
 {
-	@synchronized(self) {
+	@synchronized(_attachedFrames) {
 		[_attachedFrames removeObject:frame];
 		[_attachedFrameIndexes removeIndex:frame.bufferIndex];
 	}
