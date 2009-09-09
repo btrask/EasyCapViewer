@@ -57,6 +57,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -<ECVFrameReading>
 
+- (BOOL)isValid
+{
+	return YES;
+}
 @synthesize bufferData = _bufferData;
 - (NSUInteger)bufferSize
 {

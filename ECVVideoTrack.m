@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVFrameReading.h"
-#import "ECVFrame.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -67,11 +66,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	_hasPendingFrame = NO;
 }
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame
+- (BOOL)prepareToAddFrame:(id<ECVFrameReading>)frame
 {
 	NSParameterAssert(!_hasPendingFrame);
 
 	[frame lock];
+	if(!frame.isValid) {
+		[frame unlock];
+		return NO;
+	}
 
 	Rect r;
 	ECVPixelSize const s = frame.pixelSize;
@@ -98,20 +101,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[frame unlock];
 
 	_hasPendingFrame = YES;
+	return YES;
 }
-- (void)addFrameWithDuration:(NSTimeInterval)interval
+- (BOOL)addFrameWithDuration:(NSTimeInterval)interval
 {
-	NSParameterAssert(_hasPendingFrame);
+	if(!_hasPendingFrame) return NO;
 	NSParameterAssert(_pendingFrame);
 	NSParameterAssert(_pendingFrameDescription);
 	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self.track trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
 	_hasPendingFrame = NO;
+	return YES;
 }
-- (void)addFrame:(id<ECVFrameReading>)frame
+- (BOOL)addFrame:(id<ECVFrameReading>)frame
 {
 	if(_hasPendingFrame) [self addFrameWithDuration:frame.time - _pendingFrameStartTime];
-	if(frame) [self prepareToAddFrame:frame];
-	_pendingFrameStartTime = frame.time;
+	BOOL const newFramePending = frame && [self prepareToAddFrame:frame];
+	if(newFramePending) _pendingFrameStartTime = frame.time;
+	return newFramePending;
 }
 
 #pragma mark -NSObject

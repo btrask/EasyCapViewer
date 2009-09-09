@@ -26,9 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glext.h>
 #import <OpenGL/glu.h>
 
-// Models
-#import "ECVFrame.h"
-
 // Other Sources
 #import "ECVDebug.h"
 
@@ -68,7 +65,6 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 	NSUInteger _bufferIndex;
 	NSTimeInterval _time;
 	NSLock *_lock;
-	ECVFrame *_detachedFrame;
 }
 
 - (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index time:(NSTimeInterval)time;
@@ -82,6 +78,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
 - (void *)_bufferBytesAtIndex:(NSUInteger)index;
 - (void)_clearBufferAtIndex:(NSUInteger)index;
+- (void)_detachAllFrames;
 - (void)_detachFrame:(ECVAttachedFrame *)frame;
 - (NSUInteger)_unusedBufferIndex;
 
@@ -156,9 +153,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	NSUInteger bufferToDraw = latestFullBufferIndex;
 	NSUInteger newBufferIndex = self._unusedBufferIndex;
 	if(NSNotFound == newBufferIndex) {
-		@synchronized(self) {
-			[_attachedFrames makeObjectsPerformSelector:@selector(detach)];
-		}
+		[self _detachAllFrames];
 		newBufferIndex = self._unusedBufferIndex;
 		NSAssert(NSNotFound != newBufferIndex, @"Unable to find an unused buffer!");
 	}
@@ -181,24 +176,26 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 
 	@synchronized(self) {
-		if(NSNotFound != bufferToDraw) [_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
-		if(outFrame) {
-			ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:bufferToDraw time:_frameStartTime] autorelease];
-			[_attachedFrames addObject:frame];
-			[_attachedFrameIndexes addIndex:bufferToDraw];
-			*outFrame = frame;
+		if(NSNotFound != bufferToDraw) {
+			[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
+			if(outFrame) {
+				ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:bufferToDraw time:_frameStartTime] autorelease];
+				[_attachedFrames addObject:frame];
+				[_attachedFrameIndexes addIndex:bufferToDraw];
+				*outFrame = frame;
+			}
 		}
+		_frameStartTime = time;
 	}
 
 	_lastFilledBufferIndex = latestFullBufferIndex;
 	_fillingBufferIndex = newBufferIndex;
-	_frameStartTime = time;
 }
 - (void)resetFrames
 {
+	[self _detachAllFrames];
 	@synchronized(self) {
 		[_readyBufferIndexQueue removeAllObjects];
-		[_attachedFrames makeObjectsPerformSelector:@selector(detach)];
 		_lastDrawnBufferIndex = NSNotFound;
 		_frameDropStrength = 0.0f;
 	}
@@ -208,37 +205,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void *)mutableBufferBytes
 {
 	return [self _bufferBytesAtIndex:_fillingBufferIndex];
-}
-
-#pragma mark -
-
-- (NSUInteger)bufferSize
-{
-	@synchronized(self) {
-		return _bufferSize;
-	}
-	return 0;
-}
-- (ECVPixelSize)pixelSize
-{
-	@synchronized(self) {
-		return _pixelSize;
-	}
-	return (ECVPixelSize){0, 0};
-}
-- (OSType)pixelFormatType
-{
-	@synchronized(self) {
-		return _pixelFormatType;
-	}
-	return 0;
-}
-- (size_t)bytesPerRow
-{
-	@synchronized(self) {
-		return _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
-	}
-	return 0;
 }
 
 #pragma mark -
@@ -297,6 +263,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(NSNotFound == index) return;
 	uint64_t const val = ECVPixelFormatBlackPattern(_pixelFormatType);
 	memset_pattern8([self _bufferBytesAtIndex:index], &val, self.bufferSize);
+}
+- (void)_detachAllFrames
+{
+	NSMutableSet *const retainedAttachedFrames = [NSMutableSet set];
+	@synchronized(self) {
+		[retainedAttachedFrames unionSet:_attachedFrames];
+	}
+	[retainedAttachedFrames makeObjectsPerformSelector:@selector(detach)];
 }
 - (void)_detachFrame:(ECVAttachedFrame *)frame
 {
@@ -544,7 +518,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)dealloc
 {
 	CVDisplayLinkStop(_displayLink);
-	[_attachedFrames makeObjectsPerformSelector:@selector(detach)];
+	[self _detachAllFrames];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
 	[_bufferData release];
@@ -575,6 +549,52 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
 	CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self);
 	[self viewDidMoveToWindow];
+}
+
+#pragma mark -<ECVFrameReading>
+
+- (BOOL)isValid
+{
+	return NO;
+}
+- (NSData *)bufferData
+{
+	return nil;
+}
+- (NSUInteger)bufferSize
+{
+	@synchronized(self) {
+		return _bufferSize;
+	}
+	return 0;
+}
+- (ECVPixelSize)pixelSize
+{
+	@synchronized(self) {
+		return _pixelSize;
+	}
+	return (ECVPixelSize){0, 0};
+}
+- (OSType)pixelFormatType
+{
+	@synchronized(self) {
+		return _pixelFormatType;
+	}
+	return 0;
+}
+- (size_t)bytesPerRow
+{
+	@synchronized(self) {
+		return _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
+	}
+	return 0;
+}
+- (NSTimeInterval)time
+{
+	@synchronized(self) {
+		return _frameStartTime;
+	}
+	return 0.0f;
 }
 
 #pragma mark -<NSLocking>
@@ -618,9 +638,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)detach
 {
 	[_lock lock];
-	NSParameterAssert(_videoView);
-	NSParameterAssert(!_detachedFrame);
-	_detachedFrame = [[ECVFrame alloc] initWithFrameReadingObject:self];
 	[_videoView _detachFrame:self];
 	_videoView = nil;
 	[_lock unlock];
@@ -631,32 +648,35 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)dealloc
 {
 	[_videoView _detachFrame:self];
-	[_detachedFrame release];
 	[_lock release];
 	[super dealloc];
 }
 
 #pragma mark -<ECVFrameReading>
 
+- (BOOL)isValid
+{
+	return !!_videoView;
+}
 - (NSData *)bufferData
 {
-	return _videoView ? [NSData dataWithBytesNoCopy:[_videoView _bufferBytesAtIndex:_bufferIndex] length:self.bufferSize freeWhenDone:NO] : _detachedFrame.bufferData;
+	return _videoView ? [NSMutableData dataWithBytesNoCopy:[_videoView _bufferBytesAtIndex:_bufferIndex] length:self.bufferSize freeWhenDone:NO] : nil;
 }
 - (NSUInteger)bufferSize
 {
-	return [(_videoView ? (id)_videoView : (id)_detachedFrame) bufferSize];
+	return _videoView.bufferSize;
 }
 - (ECVPixelSize)pixelSize
 {
-	return [(_videoView ? (id)_videoView : (id)_detachedFrame) pixelSize];
+	return _videoView.pixelSize;
 }
 - (OSType)pixelFormatType
 {
-	return [(_videoView ? (id)_videoView : (id)_detachedFrame) pixelFormatType];
+	return _videoView.pixelFormatType;
 }
 - (size_t)bytesPerRow
 {
-	return [(_videoView ? (id)_videoView : (id)_detachedFrame) bytesPerRow];
+	return _videoView.bytesPerRow;
 }
 @synthesize time = _time;
 
@@ -665,11 +685,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)lock
 {
 	[_lock lock];
-	[_detachedFrame lock];
 }
 - (void)unlock
 {
-	[_detachedFrame unlock];
 	[_lock unlock];
 }
 

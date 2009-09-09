@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @protocol ECVFrameReading <NSLocking, NSObject>
 
 // May require locking:
+@property(readonly) BOOL isValid;
 @property(readonly) NSData *bufferData;
 @property(readonly) NSUInteger bufferSize;
 @property(readonly) ECVPixelSize pixelSize;
