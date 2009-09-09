@@ -101,7 +101,7 @@ extern NSString *const ECVSaturationKey;
 	BOOL _noteDeviceRemovedWhenSheetCloses;
 }
 
-+ (void)deviceAddedWithIterator:(io_iterator_t)iterator;
++ (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator;
 
 - (id)initWithDevice:(io_service_t)device error:(out NSError **)outError;
 - (void)noteDeviceRemoved;

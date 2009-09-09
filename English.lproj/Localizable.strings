@@ -1,3 +1,6 @@
+"No supported capture hardware was found." = "No supported capture hardware was found.";
+"Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported." = "Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported.";
+"OK" = "OK";
 "This device requires a USB 2.0 High Speed port in order to operate." = "This device requires a USB 2.0 High Speed port in order to operate.";
 "Make sure it is plugged into a port that supports high speed." = "Make sure it is plugged into a port that supports high speed.";
 "Exit Full Screen" = "Exit Full Screen";

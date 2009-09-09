@@ -36,7 +36,7 @@ static ECVController *ECVSharedController;
 
 static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 {
-	[controllerClass deviceAddedWithIterator:iterator];
+	(void)[controllerClass deviceAddedWithIterator:iterator];
 	// Don't release the iterator because we want to continue receiving notifications.
 }
 
@@ -68,8 +68,9 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 {
 	if(!ECVSharedController) ECVSharedController = [self retain];
 	_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
-	CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
+	CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopDefaultMode);
 	NSArray *const types = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVCaptureTypes"];
+	BOOL found = NO;
 	for(NSDictionary *const type in types) {
 		Class const class = NSClassFromString([type objectForKey:@"ECVCaptureClass"]);
 		if(!class) continue;
@@ -81,8 +82,14 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)match, (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator), 0);
 ECVGenericError:
 ECVNoDeviceError:
-		ECVDeviceAdded(class, iterator);
+		if([class deviceAddedWithIterator:iterator]) found = YES;
 	}
+	if(found) return;
+	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
+	[alert setMessageText:NSLocalizedString(@"No supported capture hardware was found.", nil)];
+	[alert setInformativeText:NSLocalizedString(@"Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported.", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+	[alert runModal];
 }
 
 @end

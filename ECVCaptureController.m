@@ -80,16 +80,20 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 #pragma mark +ECVCaptureController
 
-+ (void)deviceAddedWithIterator:(io_iterator_t)iterator
++ (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator
 {
 	io_service_t device = IO_OBJECT_NULL;
+	BOOL created = NO;
 	while((device = IOIteratorNext(iterator))) {
 		NSError *error = nil;
 		ECVCaptureController *const controller = [[self alloc] initWithDevice:device error:&error];
-		if(controller) [controller showWindow:nil];
-		else if(error) [[NSAlert alertWithError:error] runModal];
+		if(controller) {
+			[controller showWindow:nil];
+			created = YES;
+		} else if(error) [[NSAlert alertWithError:error] runModal];
 		IOObjectRelease(device);
 	}
+	return created;
 }
 
 #pragma mark +NSObject
