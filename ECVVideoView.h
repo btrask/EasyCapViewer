@@ -57,7 +57,7 @@ typedef enum {
 	NSTimeInterval _frameStartTime;
 
 	// Access to these ivars must be @synchronized(_attachedFrames).
-	NSMutableSet *_attachedFrames;
+	NSMutableArray *_attachedFrames;
 	NSMutableIndexSet *_attachedFrameIndexes;
 
 	CVDisplayLinkRef _displayLink;
@@ -72,7 +72,7 @@ typedef enum {
 }
 
 // These methods must be called from the same thread.
-- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers;
+- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
 - (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame;
 - (void)resetFrames;
 @property(readonly) void *mutableBufferBytes;

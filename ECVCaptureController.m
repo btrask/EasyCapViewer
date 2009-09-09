@@ -228,14 +228,16 @@ ECVNoDeviceError:
 		case ECVStopPlaying:
 			[_playLock unlockWithCondition:ECVStartPlaying];
 			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
+			[_playLock lockWhenCondition:ECVPlaying];
 			break;
 		case ECVStartPlaying:
 		case ECVPlaying:
+			[self stopRecording:self];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
-			[_playLock unlock];
 			break;
 	}
+	[_playLock unlock];
 }
 
 #pragma mark -
@@ -399,24 +401,22 @@ ECVNoDeviceError:
 }
 - (void)setPlaying:(BOOL)flag
 {
+	[_playLock lock];
 	if(flag) {
-		[_playLock lock];
 		if(![self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStartPlaying];
 			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
 			[_playLock lockWhenCondition:ECVPlaying];
 		}
-		[_playLock unlock];
 	} else {
-		[self stopRecording:self];
-		[_playLock lock];
 		if([self isPlaying]) {
+			[self stopRecording:self];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
 			usleep(250000); // Don't restart the device too quickly; wait 0.25 seconds.
 		}
-		[_playLock unlock];
 	}
+	[_playLock unlock];
 }
 - (NSSize)windowContentSize
 {
@@ -488,10 +488,11 @@ ECVNoDeviceError:
 
 - (void)threaded_readIsochPipeAsync
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+
 	UInt8 *fullFrameData = NULL;
 	IOUSBLowLatencyIsocFrame *fullFrameList = NULL;
 
-	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[_playLock lock];
 	if([_playLock condition] != ECVStartPlaying) {
 		[_playLock unlock];
@@ -673,7 +674,7 @@ ECVNoDeviceError:
 	NSParameterAssert(!self.isPlaying);
 	NSSize s = self.captureSize;
 	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2.0f;
-	[videoView configureWithPixelFormat:k2vuyPixelFormat size:(ECVPixelSize){roundf(s.width), roundf(s.height)} numberOfBuffers:60];
+	[videoView configureWithPixelFormat:k2vuyPixelFormat size:(ECVPixelSize){roundf(s.width), roundf(s.height)}];
 	_pendingImageLength = 0;
 }
 
@@ -681,7 +682,9 @@ ECVNoDeviceError:
 
 - (void)_recordVideoFrame:(id<ECVFrameReading>)frame
 {
-	[_videoTrack addFrame:frame];
+	[frame lock];
+	if(frame.isValid) [_videoTrack addFrame:frame];
+	[frame unlock];
 }
 - (void)_recordAudioBufferList:(NSValue *)bufferListValue
 {

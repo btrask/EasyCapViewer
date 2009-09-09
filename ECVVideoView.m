@@ -29,6 +29,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+#define ECVMaxPendingDisplayFrames 1
+#define ECVMaxPendingAttachedFrames 2
+#define ECVMaxPendingDisplayFields (2 * ECVMaxPendingDisplayFrames)
+#define ECVMaxPendingAttachedFields (2 * ECVMaxPendingAttachedFrames)
+#define ECVRequiredBufferCount (ECVMaxPendingDisplayFields + ECVMaxPendingAttachedFields + 3) // 3 = _fillingBufferIndex, _lastFilledBufferIndex, & _lastDrawnBufferIndex.
+
 NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
 {
 	switch(t) {
@@ -78,7 +84,6 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
 - (void *)_bufferBytesAtIndex:(NSUInteger)index;
 - (void)_clearBufferAtIndex:(NSUInteger)index;
-- (void)_detachAllFrames;
 - (void)_detachFrame:(ECVAttachedFrame *)frame;
 - (NSUInteger)_unusedBufferIndex;
 
@@ -101,7 +106,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -ECVVideoView
 
-- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size numberOfBuffers:(NSUInteger)numberOfBuffers
+- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size
 {
 	[self resetFrames];
 
@@ -121,17 +126,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
 	[_textureNames release];
-	_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * numberOfBuffers];
-	ECVglError(glGenTextures(numberOfBuffers, [_textureNames mutableBytes]));
+	_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * ECVRequiredBufferCount];
+	ECVglError(glGenTextures(ECVRequiredBufferCount, [_textureNames mutableBytes]));
 
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	[_bufferData release];
-	_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * numberOfBuffers];
+	_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * ECVRequiredBufferCount];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
 
 	GLenum const format = ECVPixelFormatTypeToGLFormat(_pixelFormatType);
 	GLenum const type = ECVPixelFormatTypeToGLType(_pixelFormatType);
-	for(i = 0; i < numberOfBuffers; i++) {
+	for(i = 0; i < ECVRequiredBufferCount; i++) {
 		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
@@ -140,7 +145,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		[self _clearBufferAtIndex:i];
 	}
 
-	_numberOfBuffers = numberOfBuffers;
+	_numberOfBuffers = ECVRequiredBufferCount;
 
 	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
@@ -151,12 +156,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	NSUInteger const latestFullBufferIndex = _fillingBufferIndex;
 
 	NSUInteger bufferToDraw = latestFullBufferIndex;
-	NSUInteger newBufferIndex = self._unusedBufferIndex;
-	if(NSNotFound == newBufferIndex) {
-		[self _detachAllFrames];
-		newBufferIndex = self._unusedBufferIndex;
-		NSAssert(NSNotFound != newBufferIndex, @"Unable to find an unused buffer!");
-	}
+	NSUInteger const newBufferIndex = self._unusedBufferIndex;
 
 	switch(fill) {
 		case ECVBufferFillClear:
@@ -195,7 +195,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)resetFrames
 {
-	[self _detachAllFrames];
 	@synchronized(self) {
 		[_readyBufferIndexQueue removeAllObjects];
 		_lastDrawnBufferIndex = NSNotFound;
@@ -266,12 +265,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	uint64_t const val = ECVPixelFormatBlackPattern(_pixelFormatType);
 	memset_pattern8([self _bufferBytesAtIndex:index], &val, self.bufferSize);
 }
-- (void)_detachAllFrames
-{
-	@synchronized(_attachedFrames) {
-		[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
-	}
-}
 - (void)_detachFrame:(ECVAttachedFrame *)frame
 {
 	@synchronized(_attachedFrames) {
@@ -281,13 +274,20 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (NSUInteger)_unusedBufferIndex
 {
+	@synchronized(_attachedFrames) {
+		NSUInteger const count = [_attachedFrames count];
+		NSUInteger const keep = count % ECVMaxPendingAttachedFields;
+		if(count > ECVMaxPendingAttachedFields) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, count - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
+		NSAssert([_attachedFrames count] <= ECVMaxPendingAttachedFields, @"Failed to clear enough attached frames.");
+	}
 	NSArray *readyBufferIndexQueue = nil;
 	NSIndexSet *attachedFrameIndexes = nil;
 	NSUInteger lastDrawnBufferIndex = NSNotFound;
 	@synchronized(self) {
 		NSUInteger const count = [_readyBufferIndexQueue count];
-		if(count > 2) {
-			[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(count % 2, count - count % 2)];
+		if(count > ECVMaxPendingDisplayFields) {
+			NSUInteger const keep = count % ECVMaxPendingDisplayFields;
+			[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, count - keep)];
 			_frameDropStrength = 1.0f;
 		} else _frameDropStrength *= 0.75f;
 		readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
@@ -301,6 +301,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		if([readyBufferIndexQueue containsObject:[NSNumber numberWithUnsignedInteger:i]]) continue;
 		return i;
 	}
+	ECVAssertNotReached(@"Unable to assign an unused buffer; all are filled.");
 	return NSNotFound;
 }
 
@@ -518,7 +519,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)dealloc
 {
 	CVDisplayLinkStop(_displayLink);
-	[self _detachAllFrames];
+	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
 	[_bufferData release];
@@ -543,7 +544,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	_magFilter = GL_LINEAR;
 	_readyBufferIndexQueue = [[NSMutableArray alloc] init];
-	_attachedFrames = (NSMutableSet *)CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
+	_attachedFrames = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
 	[self resetFrames];
 	CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
@@ -635,6 +636,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	return _bufferIndex;
 }
+- (void)tryToDetach
+{
+	if([_lock tryLock]) {
+		[_videoView _detachFrame:self];
+		_videoView = nil;
+		[_lock unlock];
+	}
+}
 - (void)detach
 {
 	[_lock lock];
@@ -647,7 +656,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)dealloc
 {
-	[_videoView _detachFrame:self];
+	[self detach];
 	[_lock release];
 	[super dealloc];
 }

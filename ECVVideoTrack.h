@@ -50,8 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat quality;
 @property(readonly) BOOL hasPendingFrame;
 - (void)clearPendingFrame;
-- (BOOL)prepareToAddFrame:(id<ECVFrameReading>)frame;
-- (BOOL)addFrameWithDuration:(NSTimeInterval)interval;
-- (BOOL)addFrame:(id<ECVFrameReading>)frame;
+- (void)prepareToAddFrame:(id<ECVFrameReading>)frame;
+- (void)addFrameWithDuration:(NSTimeInterval)interval;
+- (void)addFrame:(id<ECVFrameReading>)frame;
 
 @end

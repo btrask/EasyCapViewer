@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+#define ECVVideoTrackTimeScale (TimeValue)1000
+
 @implementation ECVVideoTrack
 
 #pragma mark +ECVVideoTrack
@@ -38,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSParameterAssert([[[movie movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
 	Track const track = NewMovieTrack([movie quickTimeMovie], FixRatio(roundf(aSize.width), 1), FixRatio(roundf(aSize.height), 1), kNoVolume);
 	if(!track) return nil;
-	Media const media = NewTrackMedia(track, VideoMediaType, 600, NULL, 0);
+	Media const media = NewTrackMedia(track, VideoMediaType, ECVVideoTrackTimeScale, NULL, 0);
 	if(!media) {
 		DisposeMovieTrack(track);
 		return nil;
@@ -66,15 +68,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	_hasPendingFrame = NO;
 }
-- (BOOL)prepareToAddFrame:(id<ECVFrameReading>)frame
+- (void)prepareToAddFrame:(id<ECVFrameReading>)frame
 {
 	NSParameterAssert(!_hasPendingFrame);
-
-	[frame lock];
-	if(!frame.isValid) {
-		[frame unlock];
-		return NO;
-	}
 
 	Rect r;
 	ECVPixelSize const s = frame.pixelSize;
@@ -85,7 +81,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	PixMapHandle const pixMap = GetGWorldPixMap(gWorld);
 
 	Size maxSize = 0;
-	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, self.quality, self.codecType, NULL, &maxSize));
+	CodecQ const quality = (CodecQ)roundf(self.quality * codecMaxQuality);
+	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, quality, self.codecType, NULL, &maxSize));
 	if(_pendingFrame && GetHandleSize(_pendingFrame) < maxSize) {
 		DisposeHandle(_pendingFrame);
 		_pendingFrame = NULL;
@@ -94,30 +91,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(!_pendingFrameDescription) _pendingFrameDescription = (ImageDescriptionHandle)NewHandle(sizeof(ImageDescription));
 
 	HLock(_pendingFrame);
-	ECVOSStatus(CompressImage(pixMap, &r, (CodecQ)roundf(self.quality * codecMaxQuality), self.codecType, _pendingFrameDescription, *_pendingFrame));
+	ECVOSStatus(CompressImage(pixMap, &r, quality, self.codecType, _pendingFrameDescription, *_pendingFrame));
 	HUnlock(_pendingFrame);
 	DisposeGWorld(gWorld);
 
-	[frame unlock];
-
 	_hasPendingFrame = YES;
-	return YES;
 }
-- (BOOL)addFrameWithDuration:(NSTimeInterval)interval
+- (void)addFrameWithDuration:(NSTimeInterval)interval
 {
-	if(!_hasPendingFrame) return NO;
-	NSParameterAssert(_pendingFrame);
+	if(!_pendingFrame) return;
 	NSParameterAssert(_pendingFrameDescription);
-	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self.track trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
+	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, (TimeValue)round(interval * ECVVideoTrackTimeScale), (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
 	_hasPendingFrame = NO;
-	return YES;
 }
-- (BOOL)addFrame:(id<ECVFrameReading>)frame
+- (void)addFrame:(id<ECVFrameReading>)frame
 {
-	if(_hasPendingFrame) [self addFrameWithDuration:frame.time - _pendingFrameStartTime];
-	BOOL const newFramePending = frame && [self prepareToAddFrame:frame];
-	if(newFramePending) _pendingFrameStartTime = frame.time;
-	return newFramePending;
+	[self addFrameWithDuration:frame.time - _pendingFrameStartTime];
+	[self prepareToAddFrame:frame];
+	_pendingFrameStartTime = frame.time;
 }
 
 #pragma mark -NSObject

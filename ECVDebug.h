@@ -26,8 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 extern NSString *ECVIOKitErrorToString(IOReturn error);
 
-#define ECVRetryDefault 3
-
 #define ECVIOReturn(error) do {\
 	IOReturn const __e = (error);\
 	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
