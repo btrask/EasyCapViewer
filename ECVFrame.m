@@ -74,4 +74,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return [[[self class] alloc] initWithFrameReadingObject:self];
 }
 
+#pragma mark -<NSLocking>
+
+- (void)lock {}
+- (void)unlock {}
+
 @end

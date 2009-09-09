@@ -71,6 +71,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	NSParameterAssert(!_hasPendingFrame);
 
+	[frame lock];
+
 	Rect r;
 	ECVPixelSize const s = frame.pixelSize;
 	SetRect(&r, 0, 0, s.width, s.height);
@@ -93,6 +95,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	HUnlock(_pendingFrame);
 	DisposeGWorld(gWorld);
 
+	[frame unlock];
+
 	_hasPendingFrame = YES;
 }
 - (void)addFrameWithDuration:(NSTimeInterval)interval
@@ -103,15 +107,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, interval * [[[self.track trackAttributes] objectForKey:QTTrackTimeScaleAttribute] longValue], (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL), ECVRetryDefault);
 	_hasPendingFrame = NO;
 }
-- (void)addFrame:(id<ECVFrameReading>)frame time:(NSTimeInterval)time
+- (void)addFrame:(id<ECVFrameReading>)frame
 {
-	if(_hasPendingFrame) [self addFrameWithDuration:time - _pendingFrameStartTime];
+	if(_hasPendingFrame) [self addFrameWithDuration:frame.time - _pendingFrameStartTime];
 	if(frame) [self prepareToAddFrame:frame];
-	_pendingFrameStartTime = time;
-}
-- (void)addFrame:(ECVFrame *)frame
-{
-	[self addFrame:frame time:frame.time];
+	_pendingFrameStartTime = frame.time;
 }
 
 #pragma mark -NSObject

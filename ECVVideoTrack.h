@@ -52,7 +52,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)clearPendingFrame;
 - (void)prepareToAddFrame:(id<ECVFrameReading>)frame;
 - (void)addFrameWithDuration:(NSTimeInterval)interval;
-- (void)addFrame:(id<ECVFrameReading>)frame time:(NSTimeInterval)time;
-- (void)addFrame:(ECVFrame *)frame;
+- (void)addFrame:(id<ECVFrameReading>)frame;
 
 @end

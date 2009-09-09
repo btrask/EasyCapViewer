@@ -70,7 +70,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 @interface ECVCaptureController(Private)
 
-- (void)_recordVideoFrame:(ECVFrame *)frame;
+- (void)_recordVideoFrame:(id<ECVFrameReading>)frame;
 - (void)_recordAudioBufferList:(NSValue *)bufferListValue;
 - (void)_hideMenuBar;
 
@@ -608,8 +608,8 @@ bail:
 		case ECVWeave    : fill = ECVBufferFillPrevious; break;
 		case ECVAlternate: fill = ECVBufferFillClear   ; break;
 	}
-	ECVFrame *frame = nil;
-	ECVFrame **const framePtr = _videoTrack ? &frame : NULL;
+	id<ECVFrameReading> frame = nil;
+	id<ECVFrameReading> *const framePtr = _videoTrack ? &frame : NULL;
 	[videoView beginNewFrameAtTime:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 fill:fill getLastFrame:framePtr];
 	if(frame) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
 
@@ -669,13 +669,13 @@ ECVNoDeviceError:
 	NSParameterAssert(!self.isPlaying);
 	NSSize s = self.captureSize;
 	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2.0f;
-	[videoView configureWithPixelFormat:k2vuyPixelFormat size:(ECVPixelSize){roundf(s.width), roundf(s.height)} numberOfBuffers:10];
+	[videoView configureWithPixelFormat:k2vuyPixelFormat size:(ECVPixelSize){roundf(s.width), roundf(s.height)} numberOfBuffers:60];
 	_pendingImageLength = 0;
 }
 
 #pragma mark -ECVCaptureController(Private)
 
-- (void)_recordVideoFrame:(ECVFrame *)frame
+- (void)_recordVideoFrame:(id<ECVFrameReading>)frame
 {
 	[_videoTrack addFrame:frame];
 }

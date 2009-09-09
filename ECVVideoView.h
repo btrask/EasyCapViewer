@@ -37,12 +37,9 @@ typedef enum {
 
 @protocol ECVVideoViewDelegate;
 
-@interface ECVVideoView : NSOpenGLView <ECVFrameReading>
+@interface ECVVideoView : NSOpenGLView
 {
 	@private
-	OSType _pixelFormatType;
-	ECVPixelSize _pixelSize;
-	NSUInteger _bufferSize;
 	NSUInteger _numberOfBuffers;
 	NSTimeInterval _frameStartTime;
 
@@ -53,8 +50,13 @@ typedef enum {
 
 	// Access to these ivars must be @synchronized.
 	NSMutableArray *_readyBufferIndexQueue;
+	NSMutableSet *_attachedFrames;
+	NSMutableIndexSet *_attachedFrameIndexes;
 	NSUInteger _lastDrawnBufferIndex;
 	CGFloat _frameDropStrength;
+	OSType _pixelFormatType;
+	ECVPixelSize _pixelSize;
+	NSUInteger _bufferSize;
 
 	CVDisplayLinkRef _displayLink;
 	NSRect _outputRect;
@@ -72,6 +74,11 @@ typedef enum {
 - (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame;
 - (void)resetFrames;
 @property(readonly) void *mutableBufferBytes;
+
+@property(readonly) NSUInteger bufferSize;
+@property(readonly) ECVPixelSize pixelSize;
+@property(readonly) OSType pixelFormatType;
+@property(readonly) size_t bytesPerRow;
 
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
 @property(assign) BOOL blurFramesTogether;
