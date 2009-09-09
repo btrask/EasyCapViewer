@@ -385,11 +385,13 @@ ECVNoDeviceError:
 {
 	switch([_playLock condition]) {
 		case ECVNotPlaying:
-		case ECVStopPlaying:
 			return NO;
-		case ECVStartPlaying:
 		case ECVPlaying:
 			return YES;
+		case ECVStopPlaying:
+		case ECVStartPlaying:
+			ECVAssertNotReached(@"The main thread should never see ECVStopPlaying or ECVStartPlaying.");
+			break;
 	}
 	return NO;
 }

@@ -49,3 +49,5 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 		GLenum __e;\
 		while((__e = glGetError()) != GL_NO_ERROR) NSLog(@"%s:%d %s/%s glGetError(): 0x%03x", __FILE__, __LINE__, __PRETTY_FUNCTION__, #x, __e);\
 	} while(NO)
+
+#define ECVAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]
