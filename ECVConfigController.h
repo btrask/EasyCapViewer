@@ -59,7 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @property(assign) CGFloat brightness;
 @property(assign) CGFloat contrast;
-@property(assign) CGFloat hue;
 @property(assign) CGFloat saturation;
+@property(assign) CGFloat hue;
 
 @end

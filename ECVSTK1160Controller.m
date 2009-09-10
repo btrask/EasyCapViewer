@@ -37,8 +37,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 static NSString *ECVSTK116VideoFormatToLocalizedString(ECVSTK1160VideoFormat f)
 {
 	switch(f) {
-		case ECVSTK1160NTSCFormat: return NSLocalizedString(@"NTSC" , nil);
-		case ECVSTK1160PALFormat : return NSLocalizedString(@"PAL"  , nil);
+		case ECVSTK1160NTSCFormat: return NSLocalizedString(@"NTSC", nil);
+		case ECVSTK1160PALFormat : return NSLocalizedString(@"PAL" , nil);
 		default: return nil;
 	}
 }
@@ -227,39 +227,39 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 
 - (CGFloat)brightness
 {
-	return (CGFloat)vsettings.brightness / 0xFFFF;
+	return _brightness;
 }
 - (void)setBrightness:(CGFloat)val
 {
-	vsettings.brightness = val * 0xFFFF;
+	_brightness = val;
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
-	return (CGFloat)vsettings.contrast / 0xFFFF;
+	return _contrast;
 }
 - (void)setContrast:(CGFloat)val
 {
-	vsettings.contrast = val * 0xFFFF;
+	_contrast = val;
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
-}
-- (CGFloat)hue
-{
-	return (CGFloat)vsettings.colour / 0xFFFF;
-}
-- (void)setHue:(CGFloat)val
-{
-	vsettings.colour = val * 0xFFFF;
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 - (CGFloat)saturation
 {
-	return (CGFloat)vsettings.hue / 0xFFFF;
+	return _saturation;
 }
 - (void)setSaturation:(CGFloat)val
 {
-	vsettings.hue = val * 0xFFFF;
+	_saturation = val;
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
+}
+- (CGFloat)hue
+{
+	return _hue;
+}
+- (void)setHue:(CGFloat)val
+{
+	_hue = val;
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 @end

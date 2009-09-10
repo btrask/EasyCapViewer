@@ -67,16 +67,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	[brightnessSlider setEnabled:[_captureController respondsToSelector:@selector(brightness)]];
 	[contrastSlider setEnabled:[_captureController respondsToSelector:@selector(contrast)]];
-	[hueSlider setEnabled:[_captureController respondsToSelector:@selector(hue)]];
 	[saturationSlider setEnabled:[_captureController respondsToSelector:@selector(saturation)]];
+	[hueSlider setEnabled:[_captureController respondsToSelector:@selector(hue)]];
 	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? _captureController.brightness : 0.5f];
 	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? _captureController.contrast : 0.5f];
-	[hueSlider setDoubleValue:[hueSlider isEnabled] ? _captureController.hue : 0.5f];
 	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? _captureController.saturation : 0.5f];
+	[hueSlider setDoubleValue:[hueSlider isEnabled] ? _captureController.hue : 0.5f];
 	[self snapSlider:brightnessSlider];
 	[self snapSlider:contrastSlider];
-	[self snapSlider:hueSlider];
 	[self snapSlider:saturationSlider];
+	[self snapSlider:hueSlider];
 
 	(void)[self retain];
 	if(c.fullScreen) {
@@ -95,8 +95,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		if([_captureController respondsToSelector:@selector(setVideoFormatObject:)]) _captureController.videoFormatObject = [[formatPopUp selectedItem] representedObject];
 		if([_captureController respondsToSelector:@selector(setBrightness:)]) _captureController.brightness = [brightnessSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setContrast:)]) _captureController.contrast = [contrastSlider doubleValue];
-		if([_captureController respondsToSelector:@selector(setHue:)]) _captureController.hue = [hueSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setSaturation:)]) _captureController.saturation = [saturationSlider doubleValue];
+		if([_captureController respondsToSelector:@selector(setHue:)]) _captureController.hue = [hueSlider doubleValue];
 		if(playing) _captureController.playing = YES;
 	}
 	[[self window] close];

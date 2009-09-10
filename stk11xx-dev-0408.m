@@ -537,8 +537,6 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 
 		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
 
-		dev_stk0408_select_input(dev, dev->vsettings.input);
-
 		dev_stk0408_start_stream(dev);
 
 		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
@@ -580,31 +578,6 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 	
 	return 0;
 }
-
-
-int dev_stk0408_select_input(ECVSTK1160Controller *dev, int input)
-{
-	switch (input)
-	{
-		case 1:
-			usb_stk11xx_write_registry(dev, 0x0000, 0x0098);
-			break;
-		case 2:
-			usb_stk11xx_write_registry(dev, 0x0000, 0x0090);
-			break;
-		case 3:
-			usb_stk11xx_write_registry(dev, 0x0000, 0x0088);
-			break;
-		case 4:
-			usb_stk11xx_write_registry(dev, 0x0000, 0x0080);
-			break;
-	}
-	usb_stk11xx_write_registry(dev, 0x0002, 0x0093);
-
-	return 0;
-	
-}
-
 
 /** 
  * @param dev Device structure

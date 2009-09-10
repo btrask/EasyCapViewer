@@ -94,7 +94,6 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev);
 int dev_stk0408_init_camera(ECVSTK1160Controller *dev);
 
 int dev_stk0408_check_device(ECVSTK1160Controller *dev);
-int dev_stk0408_select_input(ECVSTK1160Controller *dev, int input);
 int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val);
 
 static void usb_stk11xx_write_registry(ECVSTK1160Controller *dev, u_int16_t index, u_int16_t value)

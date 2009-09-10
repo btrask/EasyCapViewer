@@ -48,24 +48,15 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 @interface ECVSTK1160Controller : ECVCaptureController
 {
 	@public
-	struct stk11xx_video {
-		int brightness;
-		int contrast;
-		int colour;
-		int palette;
-		int hue;
-		int input;
-	} vsettings;
 	int resolution;
-	int frame_size;
-	struct stk11xx_coord view;
-	struct stk11xx_coord image;
-	int view_size;
-	int image_size;
 
 	@private
 	ECVSTK1160VideoSource _videoSource;
 	ECVSTK1160VideoFormat _videoFormat;
+	CGFloat _brightness;
+	CGFloat _contrast;
+	CGFloat _saturation;
+	CGFloat _hue;
 }
 
 @property(assign) ECVSTK1160VideoSource videoSource;
