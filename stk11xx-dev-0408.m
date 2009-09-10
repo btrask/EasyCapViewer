@@ -43,6 +43,38 @@
 // STK1160
 #import "stk11xx.h"
 
+// SAA7115 datasheet: http://www.datasheetarchive.com/pdf-datasheets/Datasheets-26/DSA-502343.pdf
+
+enum {
+	SAA7115MODECompositeAI11 = 0,
+	SAA7115MODECompositeAI12 = 1,
+	SAA7115MODECompositeAI21 = 2,
+	SAA7115MODECompositeAI22 = 3,
+	SAA7115MODECompositeAI23 = 4,
+	SAA7115MODECompositeAI24 = 5,
+	SAA7115MODESVideoAI11_GAI2 = 6,
+	SAA7115MODESVideoAI12_GAI2 = 7,
+	SAA7115MODESVideoAI11_YGain = 8,
+	SAA7115MODESVideoAI12_YGain = 9,
+	SAA7115FUSE0Antialias = 1 << 6,
+	SAA7115FUSE1Amplifier = 1 << 7
+};
+enum {
+	SAA7115YCOMBAdaptiveLuminanceComb = 1 << 6,
+	SAA7115BYPSChrominanceTrapCombBypass = 1 << 7,
+};
+static u_int8_t SAA7115ModeForVideoSource(ECVSTK1160VideoSource s)
+{
+	switch(s) {
+		case ECVSTK1160SVideoInput: return SAA7115MODESVideoAI12_YGain;
+		case ECVSTK1160Composite1Input: return SAA7115MODECompositeAI11;
+		case ECVSTK1160Composite2Input: return SAA7115MODECompositeAI21;
+		case ECVSTK1160Composite3Input: return SAA7115MODECompositeAI23;
+		case ECVSTK1160Composite4Input: return SAA7115MODECompositeAI24;
+		default: return 0;
+	}
+}
+
 /** 
  * @param dev Device structure
  * 
@@ -761,7 +793,7 @@ int dev_stk0408_set_camera_quality(ECVSTK1160Controller *dev)
 
 int dev_stk0408_set_camera_input(ECVSTK1160Controller *dev)
 {
-	dev_stk0408_write_saa(dev, 0x02, dev.SVideo ? 0x89 : 0x80);
+	dev_stk0408_write_saa(dev, 0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | SAA7115ModeForVideoSource(dev.videoSource));
 	dev_stk0408_write_208(dev, 0x09);
 	return 1;
 }
