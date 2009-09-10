@@ -682,7 +682,7 @@ ECVNoDeviceError:
 - (void)_recordVideoFrame:(id<ECVFrameReading>)frame
 {
 	[frame lock];
-	if(frame.isValid) [_videoTrack addFrame:frame];
+	[_videoTrack addFrame:frame];
 	[frame unlock];
 }
 - (void)_recordAudioBufferList:(NSValue *)bufferListValue

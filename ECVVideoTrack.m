@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
-#define ECVVideoTrackTimeScale (TimeValue)1000
+#define ECVVideoTrackTimeScale (TimeValue)600
 
 @implementation ECVVideoTrack
 
@@ -71,6 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)prepareToAddFrame:(id<ECVFrameReading>)frame
 {
 	NSParameterAssert(!_hasPendingFrame);
+	if(!frame.isValid) return;
 
 	Rect r;
 	ECVPixelSize const s = frame.pixelSize;
@@ -101,7 +102,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if(!_pendingFrame) return;
 	NSParameterAssert(_pendingFrameDescription);
-	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, (TimeValue)round(interval * ECVVideoTrackTimeScale), (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
+	ImageDescription tempDesc = **_pendingFrameDescription;
+	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, /*(TimeValue)round(interval * ECVVideoTrackTimeScale)*/10, (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
+	**_pendingFrameDescription = tempDesc;
 	_hasPendingFrame = NO;
 }
 - (void)addFrame:(id<ECVFrameReading>)frame
