@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #define ECVMaxPendingAttachedFrames 2
 #define ECVMaxPendingDisplayFields (2 * ECVMaxPendingDisplayFrames)
 #define ECVMaxPendingAttachedFields (2 * ECVMaxPendingAttachedFrames)
-#define ECVRequiredBufferCount (ECVMaxPendingDisplayFields + ECVMaxPendingAttachedFields + 3) // 3 = _fillingBufferIndex, _lastFilledBufferIndex, & _lastDrawnBufferIndex.
+#define ECVRequiredBufferCount (ECVMaxPendingDisplayFields + ECVMaxPendingAttachedFields + 4) // 4 = _fillingBufferIndex, _lastFilledBufferIndex, _lastDrawnBufferIndex, & the new buffer we want to assign.
 
 NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
 {
@@ -45,7 +45,7 @@ NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	switch(t) {
-		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010LL);
+		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
 	}
 	return 0;
 }
