@@ -46,22 +46,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	_captureController = c;
 
 	[sourcePopUp removeAllItems];
-	if([_captureController respondsToSelector:@selector(allVideoSources)]) for(id const source in _captureController.allVideoSources) {
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoSource:source] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:source];
+	if([_captureController respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in _captureController.allVideoSourceObjects) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:videoSourceObject];
 		[[sourcePopUp menu] addItem:item];
 	}
-	[sourcePopUp setEnabled:[_captureController respondsToSelector:@selector(videoSource)]];
-	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:_captureController.videoSource]];
+	[sourcePopUp setEnabled:[_captureController respondsToSelector:@selector(videoSourceObject)]];
+	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:_captureController.videoSourceObject]];
 
-	[videoModePopUp removeAllItems];
-	if([_captureController respondsToSelector:@selector(allVideoModes)]) for(id const videoMode in _captureController.allVideoModes) {
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoMode:videoMode] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:videoMode];
-		[[videoModePopUp menu] addItem:item];
+	[formatPopUp removeAllItems];
+	if([_captureController respondsToSelector:@selector(allVideoFormatObjects)]) for(id const videoFormatObject in _captureController.allVideoFormatObjects) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoFormatObject:videoFormatObject] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:videoFormatObject];
+		[[formatPopUp menu] addItem:item];
 	}
-	[videoModePopUp setEnabled:[_captureController respondsToSelector:@selector(videoMode)]];
-	if([videoModePopUp isEnabled]) [videoModePopUp selectItemAtIndex:[videoModePopUp indexOfItemWithRepresentedObject:_captureController.videoMode]];
+	[formatPopUp setEnabled:[_captureController respondsToSelector:@selector(videoFormatObject)]];
+	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:_captureController.videoFormatObject]];
 
 	[deinterlacePopUp selectItemWithTag:_captureController.deinterlacingMode];
 
@@ -91,8 +91,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		BOOL const playing = _captureController.playing;
 		if(playing) _captureController.playing = NO;
 		_captureController.deinterlacingMode = [deinterlacePopUp selectedTag];
-		if([_captureController respondsToSelector:@selector(setVideoSource:)]) _captureController.videoSource = [[sourcePopUp selectedItem] representedObject];
-		if([_captureController respondsToSelector:@selector(setVideoMode:)]) _captureController.videoMode = [[videoModePopUp selectedItem] representedObject];
+		if([_captureController respondsToSelector:@selector(setVideoSourceObject:)]) _captureController.videoSourceObject = [[sourcePopUp selectedItem] representedObject];
+		if([_captureController respondsToSelector:@selector(setVideoFormatObject:)]) _captureController.videoFormatObject = [[formatPopUp selectedItem] representedObject];
 		if([_captureController respondsToSelector:@selector(setBrightness:)]) _captureController.brightness = [brightnessSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setContrast:)]) _captureController.contrast = [contrastSlider doubleValue];
 		if([_captureController respondsToSelector:@selector(setHue:)]) _captureController.hue = [hueSlider doubleValue];

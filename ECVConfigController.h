@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	IBOutlet NSPopUpButton *sourcePopUp;
-	IBOutlet NSPopUpButton *videoModePopUp;
+	IBOutlet NSPopUpButton *formatPopUp;
 	IBOutlet NSPopUpButton *deinterlacePopUp;
 	IBOutlet NSSlider *brightnessSlider;
 	IBOutlet NSSlider *contrastSlider;
@@ -49,13 +49,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVCaptureController(ECVConfigOptional)
 
-@property(readonly) NSArray *allVideoSources;
-- (NSString *)localizedStringForVideoSource:(id)obj;
-@property(assign) id videoSource;
+@property(readonly) NSArray *allVideoSourceObjects;
+- (NSString *)localizedStringForVideoSourceObject:(id)obj;
+@property(assign) id videoSourceObject;
 
-@property(readonly) NSArray *allVideoModes;
-- (NSString *)localizedStringForVideoMode:(id)obj;
-@property(assign) id videoMode;
+@property(readonly) NSArray *allVideoFormatObjects;
+- (NSString *)localizedStringForVideoFormatObject:(id)obj;
+@property(assign) id videoFormatObject;
 
 @property(assign) CGFloat brightness;
 @property(assign) CGFloat contrast;

@@ -30,13 +30,6 @@ enum {
 	ECVHighFieldFlag = 1 << 6,
 	ECVNewImageFlag = 1 << 7
 };
-enum {
-	ECVSTK1160SVideoInput = 0,
-	ECVSTK1160Composite1Input = 1,
-	ECVSTK1160Composite2Input = 2,
-	ECVSTK1160Composite3Input = 3,
-	ECVSTK1160Composite4Input = 4
-};
 
 static NSString *const ECVSTK1160VideoSourceKey = @"ECVSTK1160VideoSource";
 static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
@@ -80,8 +73,8 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 {
 	if((self = [super initWithDevice:device error:outError])) {
 		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
-		self.videoSource = [d objectForKey:ECVSTK1160VideoSourceKey];
-		self.videoMode = [d objectForKey:ECVSTK1160VideoFormatKey];
+		self.videoSourceObject = [d objectForKey:ECVSTK1160VideoSourceKey];
+		self.videoFormatObject = [d objectForKey:ECVSTK1160VideoFormatKey];
 		self.brightness = [[d objectForKey:ECVBrightnessKey] doubleValue];
 		self.contrast = [[d objectForKey:ECVContrastKey] doubleValue];
 		self.hue = [[d objectForKey:ECVHueKey] doubleValue];
@@ -89,10 +82,24 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 	}
 	return self;
 }
-@synthesize SVideo = _SVideo;
-- (ECVSTK1160VideoFormat)videoFormat
+@synthesize videoSource = _videoSource;
+- (void)setVideoSoruce:(ECVSTK1160VideoSource)source
 {
-	return _videoFormat;
+	_videoSource = source;
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:source] forKey:ECVSTK1160VideoSourceKey];
+}
+- (BOOL)SVideo
+{
+	return ECVSTK1160SVideoInput == self.videoSource;
+}
+@synthesize videoFormat = _videoFormat;
+- (void)setVideoFormat:(ECVSTK1160VideoFormat)format
+{
+	_videoFormat = format;
+	resolution = ECVSTK1160VideoFormatToResolution(format);
+	[self noteVideoSettingDidChange];
+	self.windowContentSize = self.outputSize;
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:format] forKey:ECVSTK1160VideoFormatKey];
 }
 - (BOOL)isNTSCFormat
 {
@@ -115,7 +122,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 }
 - (NSSize)captureSize
 {
-	return NSMakeSize(view.x, view.y);
+	return NSMakeSize(stk11xx_image_sizes[resolution].x, stk11xx_image_sizes[resolution].y);
 }
 - (NSUInteger)simultaneousTransfers
 {
@@ -169,7 +176,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 
 #pragma mark -ECVCaptureController(ECVConfigOptional)
 
-- (NSArray *)allVideoSources
+- (NSArray *)allVideoSourceObjects
 {
 	return [NSArray arrayWithObjects:
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160SVideoInput],
@@ -179,7 +186,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite4Input],
 		nil];
 }
-- (NSString *)localizedStringForVideoSource:(id)obj
+- (NSString *)localizedStringForVideoSourceObject:(id)obj
 {
 	switch([obj unsignedIntegerValue]) {
 		case ECVSTK1160SVideoInput: return NSLocalizedString(@"S-Video", nil);
@@ -190,30 +197,18 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 	}
 	return nil;
 }
-- (id)videoSource
+- (id)videoSourceObject
 {
-	return [NSNumber numberWithUnsignedInteger:_SVideo ? ECVSTK1160SVideoInput : vsettings.input];
+	return [NSNumber numberWithUnsignedInteger:self.videoSource];
 }
-- (void)setVideoSource:(id)obj
+- (void)setVideoSourceObject:(id)obj
 {
-	NSUInteger const s = [obj unsignedIntegerValue];
-	_SVideo = NO;
-	switch(s) {
-		case ECVSTK1160SVideoInput:
-			_SVideo = YES;
-			vsettings.input = 1;
-			break;
-		case ECVSTK1160Composite2Input: vsettings.input = 2; break;
-		case ECVSTK1160Composite3Input: vsettings.input = 3; break;
-		case ECVSTK1160Composite4Input: vsettings.input = 4; break;
-		default: vsettings.input = 1; break;
-	}
-	[[NSUserDefaults standardUserDefaults] setObject:obj forKey:ECVSTK1160VideoSourceKey];
+	self.videoSource = [obj unsignedIntegerValue];
 }
 
 #pragma mark -
 
-- (NSArray *)allVideoModes
+- (NSArray *)allVideoFormatObjects
 {
 	return [NSArray arrayWithObjects:
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCFormat],
@@ -221,25 +216,20 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALNFormat],
 		nil];
 }
-- (NSString *)localizedStringForVideoMode:(id)obj
+- (NSString *)localizedStringForVideoFormatObject:(id)obj
 {
 	ECVSTK1160VideoFormat const f = [obj unsignedIntegerValue];
 	NSString *const s = ECVSTK116VideoFormatToLocalizedString(f);
 	T_STK11XX_RESOLUTION const r = ECVSTK1160VideoFormatToResolution(f);
 	return [NSString localizedStringWithFormat:NSLocalizedString(@"%@ / %ux%u", nil), s, stk11xx_image_sizes[r].x, stk11xx_image_sizes[r].y];
 }
-- (id)videoMode
+- (id)videoFormatObject
 {
 	return [NSNumber numberWithUnsignedInteger:self.videoFormat];
 }
-- (void)setVideoMode:(id)obj
+- (void)setVideoFormatObject:(id)obj
 {
-	_videoFormat = [obj unsignedIntegerValue];
-	T_STK11XX_RESOLUTION const r = ECVSTK1160VideoFormatToResolution(_videoFormat);
-	dev_stk0408_select_video_mode(self, stk11xx_image_sizes[r].x, stk11xx_image_sizes[r].y);
-	[self noteVideoSettingDidChange];
-	self.windowContentSize = self.outputSize;
-	[[NSUserDefaults standardUserDefaults] setObject:obj forKey:ECVSTK1160VideoFormatKey];
+	self.videoFormat = [obj unsignedIntegerValue];
 }
 
 #pragma mark -

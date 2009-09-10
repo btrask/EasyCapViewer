@@ -31,6 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "stk11xx.h"
 
 enum {
+	ECVSTK1160SVideoInput = 0,
+	ECVSTK1160Composite1Input = 1,
+	ECVSTK1160Composite2Input = 2,
+	ECVSTK1160Composite3Input = 3,
+	ECVSTK1160Composite4Input = 4
+};
+typedef NSUInteger ECVSTK1160VideoSource;
+
+enum {
 	ECVSTK1160NTSCFormat,
 	ECVSTK1160PALFormat,
 	ECVSTK1160PALNFormat
@@ -56,12 +65,13 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 	int image_size;
 
 	@private
-	BOOL _SVideo;
+	ECVSTK1160VideoSource _videoSource;
 	ECVSTK1160VideoFormat _videoFormat;
 }
 
+@property(assign) ECVSTK1160VideoSource videoSource;
 @property(readonly) BOOL SVideo;
-@property(readonly) ECVSTK1160VideoFormat videoFormat;
+@property(assign) ECVSTK1160VideoFormat videoFormat;
 @property(readonly) BOOL isNTSCFormat;
 @property(readonly) BOOL isPALFormat;
 @property(readonly) BOOL isPALNFormat;

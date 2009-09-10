@@ -92,7 +92,6 @@ int dev_stk0408_start_stream(ECVSTK1160Controller *dev);
 int dev_stk0408_write_208(ECVSTK1160Controller *dev, int val);
 int dev_stk0408_write_saa(ECVSTK1160Controller *dev, int reg, int val);
 int dev_stk0408_stop_stream(ECVSTK1160Controller *dev);
-int dev_stk0408_select_video_mode(ECVSTK1160Controller *dev, int width, int height);
 int dev_stk0408_initialize_device(ECVSTK1160Controller *dev);
 int dev_stk0408_init_camera(ECVSTK1160Controller *dev);
 int dev_stk0408_reconf_camera(ECVSTK1160Controller *dev);
