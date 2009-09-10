@@ -30,6 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVSTK1160Controller;
 #import "stk11xx.h"
 
+enum {
+	ECVSTK1160NTSCFormat,
+	ECVSTK1160PALFormat,
+	ECVSTK1160PALNFormat
+};
+typedef NSUInteger ECVSTK1160VideoFormat;
+
 @interface ECVSTK1160Controller : ECVCaptureController
 {
 	@public
@@ -49,10 +56,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	int image_size;
 
 	@private
-	BOOL _sVideo;
-	BOOL _PAL;
+	BOOL _SVideo;
+	ECVSTK1160VideoFormat _videoFormat;
 }
 
-@property(readonly, getter = isSVideo) BOOL sVideo;
+@property(readonly) BOOL SVideo;
+@property(readonly) ECVSTK1160VideoFormat videoFormat;
+@property(readonly) BOOL isNTSCFormat;
+@property(readonly) BOOL isPALFormat;
+@property(readonly) BOOL isPALNFormat;
 
 @end

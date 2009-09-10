@@ -151,9 +151,6 @@ extern NSString *const ECVSaturationKey;
 
 @interface ECVCaptureController(ECVAbstract)
 
-@property(readonly) BOOL isNTSCFormat;
-@property(readonly) BOOL isPALFormat;
-
 @property(readonly) BOOL requiresHighSpeed;
 @property(readonly) NSSize captureSize;
 @property(readonly) NSUInteger simultaneousTransfers;

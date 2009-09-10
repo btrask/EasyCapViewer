@@ -134,9 +134,9 @@
 				0E78CA4E0FC9128000E9C148 /* ECVController.m */,
 				0E78C93C0FC8F98100E9C148 /* ECVCaptureController.h */,
 				0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */,
+				0E78CD500FC9F8E500E9C148 /* STK1160 */,
 				0E26A997100314E6002FF95A /* ECVConfigController.h */,
 				0E26A998100314E6002FF95A /* ECVConfigController.m */,
-				0E78CD500FC9F8E500E9C148 /* STK1160 */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
