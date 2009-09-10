@@ -692,10 +692,6 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		{0x07, 0xe0},
 		{0x08, 0xb0},
 		{0x09, dev.SVideo ? SAA7115BYPSChrominanceTrapCombBypass : SAA7115YCOMBAdaptiveLuminanceComb},
-		{0x0a, (u_int8_t)round(dev.brightness * 0xff)},
-		{0x0b, (u_int8_t)round(dev.contrast * 0x88)},
-		{0x0c, (u_int8_t)round(dev.saturation * 0x80)},
-		{0x0d, round((dev.hue - 0.5f) * 0xff)},
 		{0x0e, 0x07},
 		{0x0f, 0x2a},
 		{0x10, 0x06},
@@ -718,7 +714,27 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 	NSUInteger i;
 	for(i = 0; i < numberof(settings); i++) dev_stk0408_write_saa(dev, settings[i].reg, settings[i].val);
 	for(i = 0x41; i <= 0x57; i++) dev_stk0408_write_saa(dev, i, 0xff);
+	(void)dev_stk0408_set_brightness(dev, dev.brightness);
+	(void)dev_stk0408_set_contrast(dev, dev.contrast);
+	(void)dev_stk0408_set_saturation(dev, dev.saturation);
+	(void)dev_stk0408_set_hue(dev, dev.hue);
 	return 0;
+}
+int dev_stk0408_set_brightness(ECVSTK1160Controller *dev, CGFloat brightness)
+{
+	return dev_stk0408_write_saa(dev, 0x0a, round(brightness * 0xff));
+}
+int dev_stk0408_set_contrast(ECVSTK1160Controller *dev, CGFloat contrast)
+{
+	return dev_stk0408_write_saa(dev, 0x0b, round(contrast * 0x88));
+}
+int dev_stk0408_set_saturation(ECVSTK1160Controller *dev, CGFloat saturation)
+{
+	return dev_stk0408_write_saa(dev, 0x0c, round(saturation * 0x80));
+}
+int dev_stk0408_set_hue(ECVSTK1160Controller *dev, CGFloat hue)
+{
+	return dev_stk0408_write_saa(dev, 0x0d, round((dev.hue - 0.5f) * 0xff));
 }
 
 

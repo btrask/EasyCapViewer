@@ -23,9 +23,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVSTK1160Controller.h"
 
-// Controllers
-#import "ECVConfigController.h"
-
 enum {
 	ECVHighFieldFlag = 1 << 6,
 	ECVNewImageFlag = 1 << 7
@@ -166,7 +163,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 	if(length > skip) [self threaded_readImageBytes:bytes + skip length:length - skip];
 }
 
-#pragma mark -ECVCaptureController(ECVConfigOptional)
+#pragma mark -<ECVCaptureControllerConfiguring>
 
 - (NSArray *)allVideoSourceObjects
 {
@@ -232,6 +229,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 - (void)setBrightness:(CGFloat)val
 {
 	_brightness = val;
+	if(self.playing) dev_stk0408_set_brightness(self, val);
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
@@ -241,6 +239,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 - (void)setContrast:(CGFloat)val
 {
 	_contrast = val;
+	if(self.playing) dev_stk0408_set_contrast(self, val);
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
@@ -250,6 +249,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 - (void)setSaturation:(CGFloat)val
 {
 	_saturation = val;
+	if(self.playing) dev_stk0408_set_saturation(self, val);
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
@@ -259,6 +259,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 - (void)setHue:(CGFloat)val
 {
 	_hue = val;
+	if(self.playing) dev_stk0408_set_hue(self, val);
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 

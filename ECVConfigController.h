@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVCaptureController.h"
 
+@protocol ECVCaptureControllerConfiguring;
+
 @interface ECVConfigController : NSWindowController
 {
 	@private
@@ -36,19 +38,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSSlider *contrastSlider;
 	IBOutlet NSSlider *hueSlider;
 	IBOutlet NSSlider *saturationSlider;
-	ECVCaptureController *_captureController;
+	ECVCaptureController<ECVCaptureControllerConfiguring> *_captureController;
+	CGFloat _initialBrightness;
+	CGFloat _initialContrast;
+	CGFloat _initialSaturation;
+	CGFloat _initialHue;
 }
 
-- (IBAction)snapSlider:(id)sender;
+- (IBAction)changeBrightness:(id)sender;
+- (IBAction)changeContrast:(id)sender;
+- (IBAction)changeSaturation:(id)sender;
+- (IBAction)changeHue:(id)sender;
 - (IBAction)dismiss:(id)sender; // Uses the return code from [sender tag].
 
-- (void)beginSheetForCaptureController:(ECVCaptureController *)c;
+- (void)beginSheetForCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)c;
 - (void)sheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
 
 @end
 
-@interface ECVCaptureController(ECVConfigOptional)
+@protocol ECVCaptureControllerConfiguring <NSObject>
 
+@optional
 @property(readonly) NSArray *allVideoSourceObjects;
 - (NSString *)localizedStringForVideoSourceObject:(id)obj;
 @property(assign) id videoSourceObject;
@@ -61,5 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat contrast;
 @property(assign) CGFloat saturation;
 @property(assign) CGFloat hue;
+- (void)setTemporaryBrightness:(CGFloat)brightness contrast:(CGFloat)contrast saturation:(CGFloat)saturation hue:(CGFloat)hue;
+- (void)clearTemporarySettings;
 
 @end

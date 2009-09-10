@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Controllers
 #import "ECVCaptureController.h"
+#import "ECVConfigController.h"
 
 // STK1160
 @class ECVSTK1160Controller;
@@ -45,7 +46,7 @@ enum {
 };
 typedef NSUInteger ECVSTK1160VideoFormat;
 
-@interface ECVSTK1160Controller : ECVCaptureController
+@interface ECVSTK1160Controller : ECVCaptureController <ECVCaptureControllerConfiguring>
 {
 	@public
 	int resolution;

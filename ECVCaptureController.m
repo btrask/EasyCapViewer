@@ -207,7 +207,7 @@ ECVNoDeviceError:
 
 - (IBAction)configureDevice:(id)sender
 {
-	[[[[ECVConfigController alloc] init] autorelease] beginSheetForCaptureController:self];
+	if([self conformsToProtocol:@protocol(ECVCaptureControllerConfiguring)]) [[[[ECVConfigController alloc] init] autorelease] beginSheetForCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)self];
 }
 
 #pragma mark -
@@ -773,6 +773,9 @@ ECVNoDeviceError:
 	if(@selector(toggleSmoothing:) == action) [anItem setTitle:GL_LINEAR == videoView.magFilter ? NSLocalizedString(@"Turn Smoothing Off", nil) : NSLocalizedString(@"Turn Smoothing On", nil)];
 	if(@selector(toggleShowDroppedFrames:) == action) [anItem setTitle:videoView.showDroppedFrames ? NSLocalizedString(@"Hide Dropped Frames", nil) : NSLocalizedString(@"Show Dropped Frames", nil)];
 
+	if(![self conformsToProtocol:@protocol(ECVCaptureControllerConfiguring)]) {
+		if(@selector(configureDevice:) == action) return NO;
+	}
 	if(self.fullScreen) {
 		if(@selector(changeScale:) == action) return NO;
 	}
