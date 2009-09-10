@@ -59,7 +59,11 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLFormat(OSType t)
 NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 {
 	switch(t) {
+#if LITTLE_ENDIAN
 		case k2vuyPixelFormat: return GL_UNSIGNED_SHORT_8_8_APPLE;
+#else
+		case k2vuyPixelFormat: return GL_UNSIGNED_SHORT_8_8_REV_APPLE;
+#endif
 	}
 	return 0;
 }
@@ -228,7 +232,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 				[self windowDidChangeScreenProfile:nil];
 			}
 			ECVCVReturn(CVDisplayLinkStart(_displayLink));
-		} else ECVCVReturn(CVDisplayLinkStop(_displayLink));
+		} else if(_displayLink) ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	}
 }
 @synthesize blurFramesTogether = _blurFramesTogether;
