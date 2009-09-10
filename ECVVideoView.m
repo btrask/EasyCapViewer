@@ -211,6 +211,26 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 #pragma mark -
 
 @synthesize delegate;
+- (BOOL)isDrawing
+{
+	@synchronized(self) {
+		return CVDisplayLinkIsRunning(_displayLink);
+	}
+	return NO;
+}
+- (void)setDrawing:(BOOL)flag
+{
+	@synchronized(self) {
+		if(flag) {
+			if(!_displayLink) {
+				ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
+				ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
+				[self windowDidChangeScreenProfile:nil];
+			}
+			ECVCVReturn(CVDisplayLinkStart(_displayLink));
+		} else ECVCVReturn(CVDisplayLinkStop(_displayLink));
+	}
+}
 @synthesize blurFramesTogether = _blurFramesTogether;
 @synthesize aspectRatio = _aspectRatio;
 - (void)setAspectRatio:(NSSize)ratio
@@ -491,12 +511,20 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	CGLUnlockContext(contextObj);
 }
+- (void)viewWillMoveToWindow:(NSWindow *)aWindow
+{
+	if([self window]) {
+		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeScreenNotification object:[self window]];
+		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeScreenProfileNotification object:[self window]];
+	}
+	if(aWindow) {
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidChangeScreen:) name:NSWindowDidChangeScreenNotification object:aWindow];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidChangeScreenProfile:) name:NSWindowDidChangeScreenProfileNotification object:aWindow];
+	}
+}
 - (void)viewDidMoveToWindow
 {
-	CVDisplayLinkStop(_displayLink);
-	if(![self window]) return;
-	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(_displayLink, [[self openGLContext] CGLContextObj], [[self pixelFormat] CGLPixelFormatObj]);
-	CVDisplayLinkStart(_displayLink);
+	[self windowDidChangeScreenProfile:nil];
 }
 
 #pragma mark -NSResponder
@@ -518,7 +546,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)dealloc
 {
-	CVDisplayLinkStop(_displayLink);
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
@@ -547,9 +576,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_attachedFrames = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
 	[self resetFrames];
-	CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
-	CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self);
-	[self viewDidMoveToWindow];
 }
 
 #pragma mark -<ECVFrameReading>
@@ -602,6 +628,19 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)lock {}
 - (void)unlock {}
+
+#pragma mark -<NSWindowDelegate>
+
+- (void)windowDidChangeScreen:(NSNotification *)aNotif
+{
+	[self windowDidChangeScreenProfile:nil];
+}
+- (void)windowDidChangeScreenProfile:(NSNotification *)aNotif
+{
+	@synchronized(self) {
+		if(_displayLink) ECVCVReturn(CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(_displayLink, [[self openGLContext] CGLContextObj], [[self pixelFormat] CGLPixelFormatObj]));
+	}
+}
 
 @end
 

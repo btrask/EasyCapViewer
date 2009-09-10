@@ -37,7 +37,7 @@ typedef enum {
 
 @protocol ECVVideoViewDelegate;
 
-@interface ECVVideoView : NSOpenGLView <ECVFrameReading>
+@interface ECVVideoView : NSOpenGLView <ECVFrameReading, NSWindowDelegate>
 {
 	@private
 	NSUInteger _numberOfBuffers;
@@ -78,6 +78,7 @@ typedef enum {
 @property(readonly) void *mutableBufferBytes;
 
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
+@property(assign, getter = isDrawing) BOOL drawing;
 @property(assign) BOOL blurFramesTogether;
 @property(assign) NSSize aspectRatio;
 @property(assign) BOOL vsync;

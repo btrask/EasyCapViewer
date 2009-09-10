@@ -37,6 +37,11 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 	if(noErr != __e) NSLog(@"%s:%d (%s) %s: '%d'", __FILE__, __LINE__, __PRETTY_FUNCTION__, #error, __e);\
 } while(NO)
 
+#define ECVCVReturn(error) do {\
+	CVReturn const __e = (error);\
+	if(kCVReturnSuccess != __e) NSLog(@"%s:%d (%s) %s: '%d'", __FILE__, __LINE__, __PRETTY_FUNCTION__, #error, __e);\
+} while(NO)
+
 #define ECVglError(x) \
 	do {\
 		(x);\
