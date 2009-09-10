@@ -531,7 +531,7 @@ ECVNoDeviceError:
 	_pendingImageLength = 0;
 	_firstFrame = YES;
 	[videoView resetFrames];
-	videoView.drawing = YES;
+	[videoView performSelectorOnMainThread:@selector(startDrawing) withObject:nil waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
@@ -562,7 +562,7 @@ ECVNoDeviceError:
 ECVGenericError:
 ECVNoDeviceError:
 	[self stopAudio];
-	videoView.drawing = NO;
+	[videoView performSelectorOnMainThread:@selector(stopDrawing) withObject:nil waitUntilDone:NO];
 	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);
 	if(fullFrameList) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameList);
 	[_playLock lock];

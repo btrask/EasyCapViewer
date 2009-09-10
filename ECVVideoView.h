@@ -77,8 +77,12 @@ typedef enum {
 - (void)resetFrames;
 @property(readonly) void *mutableBufferBytes;
 
+// These mthods must be called from the main thread.
+- (void)startDrawing;
+- (void)stopDrawing;
+
+// These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(assign, getter = isDrawing) BOOL drawing;
 @property(assign) BOOL blurFramesTogether;
 @property(assign) NSSize aspectRatio;
 @property(assign) BOOL vsync;

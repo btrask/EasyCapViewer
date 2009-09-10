@@ -215,26 +215,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 #pragma mark -
 
 @synthesize delegate;
-- (BOOL)isDrawing
-{
-	@synchronized(self) {
-		return CVDisplayLinkIsRunning(_displayLink);
-	}
-	return NO;
-}
-- (void)setDrawing:(BOOL)flag
-{
-	@synchronized(self) {
-		if(flag) {
-			if(!_displayLink) {
-				ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
-				ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
-				[self windowDidChangeScreenProfile:nil];
-			}
-			ECVCVReturn(CVDisplayLinkStart(_displayLink));
-		} else if(_displayLink) ECVCVReturn(CVDisplayLinkStop(_displayLink));
-	}
-}
 @synthesize blurFramesTogether = _blurFramesTogether;
 @synthesize aspectRatio = _aspectRatio;
 - (void)setAspectRatio:(NSSize)ratio
@@ -270,6 +250,22 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLUnlockContext(contextObj);
 }
 @synthesize showDroppedFrames = _showDroppedFrames;
+
+#pragma mark -
+
+- (void)startDrawing
+{
+	if(!_displayLink) {
+		ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
+		ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
+		[self windowDidChangeScreenProfile:nil];
+	}
+	ECVCVReturn(CVDisplayLinkStart(_displayLink));
+}
+- (void)stopDrawing
+{
+	ECVCVReturn(CVDisplayLinkStop(_displayLink));
+}
 
 #pragma mark -ECVVideoView(Private)
 
@@ -641,9 +637,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)windowDidChangeScreenProfile:(NSNotification *)aNotif
 {
-	@synchronized(self) {
-		if(_displayLink) ECVCVReturn(CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(_displayLink, [[self openGLContext] CGLContextObj], [[self pixelFormat] CGLPixelFormatObj]));
-	}
+	if(!_displayLink) return;
+	BOOL const drawing = CVDisplayLinkIsRunning(_displayLink);
+	if(drawing) [self stopDrawing];
+	ECVCVReturn(CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(_displayLink, [[self openGLContext] CGLContextObj], [[self pixelFormat] CGLPixelFormatObj]));
+	if(drawing) [self startDrawing];
 }
 
 @end
