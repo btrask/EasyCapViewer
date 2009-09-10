@@ -217,16 +217,6 @@ int dev_stk0408_write_saa(ECVSTK1160Controller *dev, int reg, int val)
 
 int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 {
-//	usb_stk11xx_write_registry(dev, 0x0110, 0x0000);
-//	usb_stk11xx_write_registry(dev, 0x0111, 0x0000);
-//	usb_stk11xx_write_registry(dev, 0x0112, 0x0003);
-//	usb_stk11xx_write_registry(dev, 0x0113, 0x0000);
-//	usb_stk11xx_write_registry(dev, 0x0114, 0x05a0);
-//	usb_stk11xx_write_registry(dev, 0x0115, 0x0005);
-//	usb_stk11xx_write_registry(dev, 0x0116, 0x00f3);
-//	usb_stk11xx_write_registry(dev, 0x0117, 0x0000);
-//	return 0;
-
 /*
  * These registers control the resolution of the capture buffer.
  * 

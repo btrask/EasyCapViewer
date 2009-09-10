@@ -413,7 +413,7 @@ ECVNoDeviceError:
 			[self stopRecording:self];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
-			usleep(250000); // Don't restart the device too quickly; wait 0.25 seconds.
+			usleep(500000); // Don't restart the device too quickly; wait 0.5 seconds.
 		}
 	}
 	[_playLock unlock];
