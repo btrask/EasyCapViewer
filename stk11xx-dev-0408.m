@@ -68,7 +68,7 @@ static u_int8_t SAA7115ModeForVideoSource(ECVSTK1160VideoSource s)
 	switch(s) {
 		case ECVSTK1160SVideoInput: return SAA7115MODESVideoAI12_YGain;
 		case ECVSTK1160Composite1Input: return SAA7115MODECompositeAI11;
-		case ECVSTK1160Composite2Input: return SAA7115MODECompositeAI21;
+		case ECVSTK1160Composite2Input: return SAA7115MODECompositeAI21; // The rest are guesses.
 		case ECVSTK1160Composite3Input: return SAA7115MODECompositeAI23;
 		case ECVSTK1160Composite4Input: return SAA7115MODECompositeAI24;
 		default: return 0;
