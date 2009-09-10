@@ -228,16 +228,16 @@ ECVNoDeviceError:
 		case ECVStopPlaying:
 			[_playLock unlockWithCondition:ECVStartPlaying];
 			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
-			[_playLock lockWhenCondition:ECVPlaying];
 			break;
 		case ECVStartPlaying:
 		case ECVPlaying:
 			[self stopRecording:self];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
+			usleep(500000); // Don't restart the device too quickly; wait 0.5 seconds.
+			[_playLock unlock];
 			break;
 	}
-	[_playLock unlock];
 }
 
 #pragma mark -
@@ -389,13 +389,11 @@ ECVNoDeviceError:
 {
 	switch([_playLock condition]) {
 		case ECVNotPlaying:
+		case ECVStopPlaying:
 			return NO;
 		case ECVPlaying:
-			return YES;
-		case ECVStopPlaying:
 		case ECVStartPlaying:
-			ECVAssertNotReached(@"The main thread should never see ECVStopPlaying or ECVStartPlaying.");
-			break;
+			return YES;
 	}
 	return NO;
 }
@@ -406,7 +404,6 @@ ECVNoDeviceError:
 		if(![self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStartPlaying];
 			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
-			[_playLock lockWhenCondition:ECVPlaying];
 		}
 	} else {
 		if([self isPlaying]) {
@@ -414,9 +411,9 @@ ECVNoDeviceError:
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
 			usleep(500000); // Don't restart the device too quickly; wait 0.5 seconds.
+			[_playLock unlock];
 		}
 	}
-	[_playLock unlock];
 }
 - (NSSize)windowContentSize
 {
