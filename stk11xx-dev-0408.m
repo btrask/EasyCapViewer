@@ -31,17 +31,10 @@
  *   $Author$
  *   $HeadURL$
  */
-
-/*
- * note currently only supporting 720x576, 704x576 and 640x480 PAL
- * other resolutions should work but aren't
- */
-
 #import "ECVSTK1160Controller.h"
-#import <unistd.h>
-
-// STK1160
 #import "stk11xx.h"
+#import "ECVConfigController.h"
+#import <unistd.h>
 
 // SAA7115 datasheet: http://www.datasheetarchive.com/pdf-datasheets/Datasheets-26/DSA-502343.pdf
 
@@ -63,7 +56,16 @@ enum {
 	SAA7115YCOMBAdaptiveLuminanceComb = 1 << 6,
 	SAA7115BYPSChrominanceTrapCombBypass = 1 << 7,
 };
-static u_int8_t SAA7115ModeForVideoSource(ECVSTK1160VideoSource s)
+enum {
+	SAA7115RTP0OutputPolarityInverted = 1 << 3
+};
+enum {
+	SAA7115SLM1ScalerDisabled = 1 << 1,
+	SAA7115SLM3AudioClockGenerationDisabled = 1 << 3,
+	SAA7115CH1ENAD1XEnabled = 1 << 6,
+	SAA7115CH2ENAD2XEnabled = 1 << 7
+};
+static u_int8_t SAA7115MODEForVideoSource(ECVSTK1160VideoSource s)
 {
 	switch(s) {
 		case ECVSTK1160SVideoInput: return SAA7115MODESVideoAI12_YGain;
@@ -72,6 +74,26 @@ static u_int8_t SAA7115ModeForVideoSource(ECVSTK1160VideoSource s)
 		case ECVSTK1160Composite3Input: return SAA7115MODECompositeAI23;
 		case ECVSTK1160Composite4Input: return SAA7115MODECompositeAI24;
 		default: return 0;
+	}
+}
+static u_int8_t SAA7115CHXENForMODE(u_int8_t m)
+{
+	switch(m) {
+		case SAA7115MODECompositeAI11:
+		case SAA7115MODECompositeAI12:
+			return SAA7115CH1ENAD1XEnabled;
+		case SAA7115MODECompositeAI21:
+		case SAA7115MODECompositeAI22:
+		case SAA7115MODECompositeAI23:
+		case SAA7115MODECompositeAI24:
+			return SAA7115CH2ENAD2XEnabled;
+		case SAA7115MODESVideoAI11_GAI2:
+		case SAA7115MODESVideoAI12_GAI2:
+		case SAA7115MODESVideoAI11_YGain:
+		case SAA7115MODESVideoAI12_YGain:
+			return SAA7115CH1ENAD1XEnabled | SAA7115CH2ENAD2XEnabled;
+		default:
+			return 0;
 	}
 }
 
@@ -441,24 +463,12 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 			break;
 			
 		case 5:
-/*			if ((dev->resolution == STK11XX_320x240)||
-				(dev->resolution == STK11XX_352x288))
-			{
-				usb_stk11xx_write_registry(dev, 0x0104, 0x0000);
-				usb_stk11xx_write_registry(dev, 0x0105, 0x0000);
-				} */
-		
 			usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
-
-			dev_stk0408_set_camera_input(dev);
-
 			break;
 	}
 
 	if (step == 3)
 	{
-		dev_stk0408_set_camera_input(dev);
-
 		//test and set?
 		usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
 		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
@@ -506,20 +516,15 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 		usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
 		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
-
-		dev_stk0408_set_camera_input(dev);
-
 	}
 
 	if ((step == 4 )|| (step == 6))
 	{
-		dev_stk0408_set_camera_input(dev);
 		dev_stk0408_write_208(dev,0x0e);
 
 		dev_stk0408_set_resolution(dev);
 
 		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-		dev_stk0408_set_camera_quality(dev);
 	}
 
 	if (step == 6)
@@ -699,119 +704,47 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
  */
 int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 {
-	int i;
-	int retok;
-	int asize;
-	
-// PAL registers
-	int const registers[] = {
-		0x01,0x03,0x04,0x05,0x06,0x07,
-		0x08,
-		0x0a,0x0b,0x0c,0x0d,
-		0x0e,
-		0x0f,0x10,0x11,0x12,
-		0x13,0x15,0x16,0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4a,0x4b,0x4c,
-		0x4d,0x4e,0x4f,0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,0x58,0x59,
-		0x5a,
-		0x5b };
-
-	int const values[] = {
-		0x08,0x33,0x00,0x00,0xe9,0x0d,
-		(dev.isNTSCFormat ? 0x78 : 0x38),
-		0x80,0x47,0x40,0x00,
-		(dev.isPALNFormat ? 0x20 : 0x01),
-		0x2a,0x00,0x0c,0xe7,
-		0x00,0x00,0x00,0x02,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
-		0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x55,0xff,0xff,0xff,0x40,0x54,
-		(dev.isNTSCFormat ? 0x0a : 0x07),
-		0x83 };
-
-	asize = ARRAY_SIZE(values);
-
-	for(i=0; i<asize; i++) {
-		retok = dev_stk0408_write_saa(dev, registers[i], values[i]);
-		
-		if (retok != 1) {
-			STK_ERROR("Load default sensor settings fail !\n");
-			return -1;
-		}
-	}
-	
-	return 0;
-}
-
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- ' * @brief This function permits to modify the settings of the camera.
- *
- * This functions permits to modify the settings :
- *   - brightness
- *   - contrast
- *   - white balance
- *   - ...
- */
-int dev_stk0408_camera_settings(ECVSTK1160Controller *dev)
-{
-	dev_stk0408_set_camera_quality(dev);
-
-	return 0;
-}
-
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief This function permits to modify the settings of the camera.
- *
- */
-int dev_stk0408_set_camera_quality(ECVSTK1160Controller *dev)
-{
-	usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-
-//brightness
-	dev_stk0408_write_saa(dev, 0x0a, dev->vsettings.brightness >> 8); //80
-//contrast
-	dev_stk0408_write_saa(dev, 0x0b, dev->vsettings.contrast >> 9); //40
-//hue
-	dev_stk0408_write_saa(dev, 0x0d, (dev->vsettings.colour - 32768) >> 8); //00
-//saturation
-	dev_stk0408_write_saa(dev, 0x0c, (dev->vsettings.hue) >> 9); //40
-	
-	STK_DEBUG("Set colour : %d\n", dev->vsettings.colour);
-	STK_DEBUG("Set contrast : %d\n", dev->vsettings.contrast);
-	STK_DEBUG("Set hue : %d\n", dev->vsettings.hue);
-	STK_DEBUG("Set brightness : %d\n", dev->vsettings.brightness);
-
-	return 1;
-}
-
-int dev_stk0408_set_camera_input(ECVSTK1160Controller *dev)
-{
-	dev_stk0408_write_saa(dev, 0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | SAA7115ModeForVideoSource(dev.videoSource));
-	dev_stk0408_write_208(dev, 0x09);
-	return 1;
-}
-
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief This function permits to modify the settings of the camera.
- *
- * This functions permits to modify the frame rate per second.
- *
- */
-int dev_stk0408_set_camera_fps(ECVSTK1160Controller *dev)
-{
-	//Unknown, setting FPS seems to have no effect
+	// Based on Table 184 in the above PDF.
+	u_int8_t const MODE = SAA7115MODEForVideoSource(dev.videoSource);
+	struct {
+		u_int8_t reg;
+		int32_t val;
+	} settings[] = {
+		{0x01, 0x08},
+		{0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | MODE},
+		{0x03, 0x20},
+		{0x04, 0x90},
+		{0x05, 0x90},
+		{0x06, 0xeb},
+		{0x07, 0xe0},
+		{0x08, 0xb0},
+		{0x09, dev.SVideo ? SAA7115BYPSChrominanceTrapCombBypass : SAA7115YCOMBAdaptiveLuminanceComb},
+		{0x0a, (u_int8_t)round(dev.brightness * 0xff)},
+		{0x0b, (u_int8_t)round(dev.contrast * 0x88)},
+		{0x0c, (u_int8_t)round(dev.saturation * 0x80)},
+		{0x0d, round((dev.hue - 0.5f) * 0xff)},
+		{0x0e, 0x07},
+		{0x0f, 0x2a},
+		{0x10, 0x06},
+		{0x11, SAA7115RTP0OutputPolarityInverted},
+		{0x12, 0x00},
+		{0x13, 0x00},
+		{0x14, 0x01},
+		{0x15, 0x11},
+		{0x16, 0xfe},
+		{0x17, 0xd8},
+		{0x18, 0x40},
+		{0x19, 0x80},
+		{0x1a, 0x77},
+		{0x1b, 0x42},
+		{0x1c, 0xa9},
+		{0x1d, 0x01},
+		{0x83, 0x31},
+		{0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENForMODE(MODE)}
+	};
+	NSUInteger i;
+	for(i = 0; i < numberof(settings); i++) dev_stk0408_write_saa(dev, settings[i].reg, settings[i].val);
+	for(i = 0x41; i <= 0x57; i++) dev_stk0408_write_saa(dev, i, 0xff);
 	return 0;
 }
 
@@ -846,26 +779,6 @@ int dev_stk0408_start_stream(ECVSTK1160Controller *dev)
 	
 	usb_stk11xx_write_registry(dev, 0x0116, value_116);
 	usb_stk11xx_write_registry(dev, 0x0117, value_117);
-
-	return 0;
-}
-
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief Reconfigure the camera before the stream.
- *
- * Before enabling the video stream, you have to reconfigure the device.
- */
-int dev_stk0408_reconf_camera(ECVSTK1160Controller *dev)
-{
-
-	dev_stk0408_configure_device(dev, 6);
-
-	dev_stk0408_camera_settings(dev);
 
 	return 0;
 }

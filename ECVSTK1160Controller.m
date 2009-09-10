@@ -39,7 +39,6 @@ static NSString *ECVSTK116VideoFormatToLocalizedString(ECVSTK1160VideoFormat f)
 	switch(f) {
 		case ECVSTK1160NTSCFormat: return NSLocalizedString(@"NTSC" , nil);
 		case ECVSTK1160PALFormat : return NSLocalizedString(@"PAL"  , nil);
-		case ECVSTK1160PALNFormat: return NSLocalizedString(@"PAL-N", nil);
 		default: return nil;
 	}
 }
@@ -49,7 +48,6 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 		case ECVSTK1160NTSCFormat:
 			return STK11XX_720x480;
 		case ECVSTK1160PALFormat :
-		case ECVSTK1160PALNFormat:
 			return STK11XX_720x576;
 		default: return 0;
 	}
@@ -109,10 +107,6 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 {
 	return ECVSTK1160PALFormat == self.videoFormat;
 }
-- (BOOL)isPALNFormat
-{
-	return ECVSTK1160PALNFormat == self.videoFormat;
-}
 
 #pragma mark -ECVCaptureController(ECVAbstract)
 
@@ -144,9 +138,7 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 	dev_stk0408_initialize_device(self);
 	dev_stk0408_init_camera(self);
 	dev_stk11xx_camera_on(self);
-	dev_stk0408_reconf_camera(self);
 	dev_stk0408_start_stream(self);
-	dev_stk0408_camera_settings(self);
 	return YES;
 }
 - (BOOL)threaded_pause
@@ -213,7 +205,6 @@ static T_STK11XX_RESOLUTION ECVSTK1160VideoFormatToResolution(ECVSTK1160VideoFor
 	return [NSArray arrayWithObjects:
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALNFormat],
 		nil];
 }
 - (NSString *)localizedStringForVideoFormatObject:(id)obj

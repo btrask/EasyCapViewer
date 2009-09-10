@@ -41,8 +41,7 @@ typedef NSUInteger ECVSTK1160VideoSource;
 
 enum {
 	ECVSTK1160NTSCFormat,
-	ECVSTK1160PALFormat,
-	ECVSTK1160PALNFormat
+	ECVSTK1160PALFormat
 };
 typedef NSUInteger ECVSTK1160VideoFormat;
 
@@ -74,6 +73,5 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 @property(assign) ECVSTK1160VideoFormat videoFormat;
 @property(readonly) BOOL isNTSCFormat;
 @property(readonly) BOOL isPALFormat;
-@property(readonly) BOOL isPALNFormat;
 
 @end
