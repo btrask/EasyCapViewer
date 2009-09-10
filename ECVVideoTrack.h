@@ -27,7 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 @protocol ECVFrameReading;
-@class ECVFrame;
 
 @interface ECVVideoTrack : NSObject
 {
