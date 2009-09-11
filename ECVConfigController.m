@@ -69,6 +69,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	[sourcePopUp removeAllItems];
 	if([_captureController respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in _captureController.allVideoSourceObjects) {
+		if([NSNull null] == videoSourceObject) {
+			[[sourcePopUp menu] addItem:[NSMenuItem separatorItem]];
+			continue;
+		}
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:videoSourceObject];
 		[[sourcePopUp menu] addItem:item];
@@ -78,6 +82,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	[formatPopUp removeAllItems];
 	if([_captureController respondsToSelector:@selector(allVideoFormatObjects)]) for(id const videoFormatObject in _captureController.allVideoFormatObjects) {
+		if([NSNull null] == videoFormatObject) {
+			[[formatPopUp menu] addItem:[NSMenuItem separatorItem]];
+			continue;
+		}
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoFormatObject:videoFormatObject] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:videoFormatObject];
 		[[formatPopUp menu] addItem:item];

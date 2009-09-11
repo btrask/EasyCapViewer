@@ -36,8 +36,6 @@
 #import "ECVConfigController.h"
 #import <unistd.h>
 
-// SAA7115 datasheet: http://www.datasheetarchive.com/pdf-datasheets/Datasheets-26/DSA-502343.pdf
-
 enum {
 	SAA7115MODECompositeAI11 = 0,
 	SAA7115MODECompositeAI12 = 1,
@@ -65,7 +63,24 @@ enum {
 	SAA7115CH1ENAD1XEnabled = 1 << 6,
 	SAA7115CH2ENAD2XEnabled = 1 << 7
 };
-static u_int8_t SAA7115MODEForVideoSource(ECVSTK1160VideoSource s)
+enum {
+	SAA7115CCOMBAdaptiveChrominanceComb = 1 << 0,
+	SAA7115FCTCFastColorTimeConstant = 1 << 2,
+
+	SAA7115AUTO0AutomaticChrominanceStandardDetection = 1 << 1,
+	SAA7115CSTDPAL_BGDHI   = 0 << 4,
+	SAA7115CSTDNTSC44350Hz = 1 << 4,
+	SAA7115CSTDPALN        = 2 << 4,
+	SAA7115CSTDNTSCN       = 3 << 4,
+	SAA7115CSTDNTSCJ       = 4 << 4,
+	SAA7115CSTDSECAM       = 5 << 4,
+
+	SAA7115CSTDNTSCM       = SAA7115CSTDPAL_BGDHI,
+	SAA7115CSTDPAL60Hz     = SAA7115CSTDNTSC44350Hz,
+	SAA7115CSTDNTSC44360Hz = SAA7115CSTDPALN,
+	SAA7115CSTDPALM        = SAA7115CSTDNTSCN
+};
+static u_int8_t SAA7115MODEModeSelectForVideoSource(ECVSTK1160VideoSource s)
 {
 	switch(s) {
 		case ECVSTK1160SVideoInput: return SAA7115MODESVideoAI12_YGain;
@@ -76,7 +91,7 @@ static u_int8_t SAA7115MODEForVideoSource(ECVSTK1160VideoSource s)
 		default: return 0;
 	}
 }
-static u_int8_t SAA7115CHXENForMODE(u_int8_t m)
+static u_int8_t SAA7115CHXENOutputControlForMODE(u_int8_t m)
 {
 	switch(m) {
 		case SAA7115MODECompositeAI11:
@@ -94,6 +109,20 @@ static u_int8_t SAA7115CHXENForMODE(u_int8_t m)
 			return SAA7115CH1ENAD1XEnabled | SAA7115CH2ENAD2XEnabled;
 		default:
 			return 0;
+	}
+}
+static u_int8_t SAA7115CSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoFormat f)
+{
+	switch(f) {
+		case ECVSTK1160Auto60HzFormat:
+		case ECVSTK1160Auto50HzFormat:    return SAA7115AUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160PAL60Format:       return SAA7115CSTDPAL60Hz;
+		case ECVSTK1160PALMFormat:        return SAA7115CSTDPALM;
+		case ECVSTK1160PALNFormat:        return SAA7115CSTDPALN;
+		case ECVSTK1160NTSCNFormat:       return SAA7115CSTDNTSCN;
+		case ECVSTK1160NTSC44360HzFormat: return SAA7115CSTDNTSC44360Hz;
+		case ECVSTK1160NTSC44350HzFormat: return SAA7115CSTDNTSC44350Hz;
+		default: return 0;
 	}
 }
 
@@ -315,8 +344,8 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 			break;
 
 		case 480:
-			y = dev.isNTSCFormat ? 0xf3 : 0x110; // Not sure these are tied to NTSC, but 0xf3 and 0x03 are the values I get.
-			ysub= dev.isNTSCFormat ? 0x03 : 0x20;
+			y = dev.is60HzFormat ? 0xf3 : 0x110;
+			ysub= dev.is60HzFormat ? 0x03 : 0x20;
 			break;
 		
 		case 120:
@@ -336,7 +365,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0114, x    ); // X
 	usb_stk11xx_write_registry(dev, 0x0115, 5    );
 	usb_stk11xx_write_registry(dev, 0x0116, y    ); // Y
-	usb_stk11xx_write_registry(dev, 0x0117, dev.isNTSCFormat ? 0 : 1); // Not sure this is tied to NTSC either, but I get 0 and 1 doesn't work.
+	usb_stk11xx_write_registry(dev, 0x0117, dev.is60HzFormat ? 0 : 1);
 	
 	return 0;
 }
@@ -377,14 +406,14 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 	int const values[] = {
 		0x04a,0x000,0x002,0x000,0x000,0x00e,0x046,0x014,0x000,
 		0x012,0x02d,0x001,0x000,0x000,0x080,0x010,0x00f,
-		(dev.isNTSCFormat ? 0x038 : 0x008),
+		(dev.is60HzFormat ? 0x038 : 0x008),
 		0x000,
-		(dev.isNTSCFormat ? 0x003 : 0x013),
+		(dev.is60HzFormat ? 0x003 : 0x013),
 		0x000,
-		(dev.isNTSCFormat ? 0x038 : 0x008),
+		(dev.is60HzFormat ? 0x038 : 0x008),
 		0x005,
-		(dev.isNTSCFormat ? 0x0f3 : 0x003),
-		(dev.isNTSCFormat ? 0x000 : 0x001)
+		(dev.is60HzFormat ? 0x0f3 : 0x003),
+		(dev.is60HzFormat ? 0x000 : 0x001)
 	};
 
 	if (step != 1)
@@ -675,10 +704,11 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
  * We set some registers in using a I2C bus.
  * WARNING, the sensor settings can be different following the situation.
  */
+
 int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 {
 	// Based on Table 184 in the above PDF.
-	u_int8_t const MODE = SAA7115MODEForVideoSource(dev.videoSource);
+	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
 	struct {
 		u_int8_t reg;
 		int32_t val;
@@ -692,7 +722,7 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		{0x07, 0xe0},
 		{0x08, 0xb0},
 		{0x09, dev.SVideo ? SAA7115BYPSChrominanceTrapCombBypass : SAA7115YCOMBAdaptiveLuminanceComb},
-		{0x0e, 0x07},
+		{0x0e, SAA7115CCOMBAdaptiveChrominanceComb | SAA7115FCTCFastColorTimeConstant | SAA7115CSTDColorStandardSelectionForVideoFormat(dev.videoFormat)},
 		{0x0f, 0x2a},
 		{0x10, 0x06},
 		{0x11, SAA7115RTP0OutputPolarityInverted},
@@ -709,7 +739,7 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		{0x1c, 0xa9},
 		{0x1d, 0x01},
 		{0x83, 0x31},
-		{0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENForMODE(MODE)}
+		{0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENOutputControlForMODE(MODE)}
 	};
 	NSUInteger i;
 	for(i = 0; i < numberof(settings); i++) dev_stk0408_write_saa(dev, settings[i].reg, settings[i].val);
