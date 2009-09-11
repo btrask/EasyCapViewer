@@ -167,8 +167,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 			[self _clearBufferAtIndex:newBufferIndex];
 			break;
 		case ECVBufferFillPrevious:
-			if(NSNotFound == latestFullBufferIndex) [self _clearBufferAtIndex:newBufferIndex];
-			else memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:latestFullBufferIndex], self.bufferSize);
+			if(NSNotFound == latestFullBufferIndex) {
+				BOOL hasDrawnBuffer = NO;
+				@synchronized(self) {
+					hasDrawnBuffer = NSNotFound != _lastDrawnBufferIndex;
+					if(hasDrawnBuffer) memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:_lastDrawnBufferIndex], self.bufferSize);
+				}
+				if(!hasDrawnBuffer) [self _clearBufferAtIndex:newBufferIndex];
+			} else memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:latestFullBufferIndex], self.bufferSize);
 			break;
 	}
 	if(self.blurFramesTogether && NSNotFound != latestFullBufferIndex && NSNotFound != previousFullBufferIndex) {
@@ -201,7 +207,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	@synchronized(self) {
 		[_readyBufferIndexQueue removeAllObjects];
-		_lastDrawnBufferIndex = NSNotFound;
 		_frameDropStrength = 0.0f;
 	}
 	_fillingBufferIndex = NSNotFound;
