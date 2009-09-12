@@ -707,7 +707,7 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
 
 int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 {
-	// Based on Table 184 in the above PDF.
+	// Based on Table 184 in the datasheet.
 	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
 	struct {
 		u_int8_t reg;
