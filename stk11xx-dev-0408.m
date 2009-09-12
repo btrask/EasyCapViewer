@@ -711,7 +711,7 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
 	struct {
 		u_int8_t reg;
-		int32_t val;
+		int val;
 	} settings[] = {
 		{0x01, 0x08},
 		{0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | MODE},
