@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
-#define ECVVideoTrackTimeScale (TimeValue)600
+#define ECVVideoTrackTimeScale (TimeValue)30000
 
 @implementation ECVVideoTrack
 
