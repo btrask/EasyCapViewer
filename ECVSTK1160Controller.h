@@ -55,7 +55,7 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 @interface ECVSTK1160Controller : ECVCaptureController <ECVCaptureControllerConfiguring>
 {
 	@public
-	int resolution;
+	T_STK11XX_RESOLUTION resolution;
 
 	@private
 	ECVSTK1160VideoSource _videoSource;
