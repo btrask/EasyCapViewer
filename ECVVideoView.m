@@ -31,9 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVMaxPendingDisplayFrames 1
 #define ECVMaxPendingAttachedFrames 2
-#define ECVMaxPendingDisplayFields (2 * ECVMaxPendingDisplayFrames)
-#define ECVMaxPendingAttachedFields (2 * ECVMaxPendingAttachedFrames)
-#define ECVRequiredBufferCount (ECVMaxPendingDisplayFields + ECVMaxPendingAttachedFields + 4) // 4 = _fillingBufferIndex, _lastFilledBufferIndex, _lastDrawnBufferIndex, & the new buffer we want to assign.
+#define ECVMaxPendingDisplayBuffers (2 * ECVMaxPendingDisplayFrames)
+#define ECVMaxPendingAttachedBuffers (2 * ECVMaxPendingAttachedFrames)
+#define ECVRequiredBufferCount (ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers + 4) // 4 = _fillingBufferIndex, _lastFilledBufferIndex, _lastDrawnBufferIndex, & the new buffer we want to assign.
 
 NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
 {
@@ -154,14 +154,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
-- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame
+- (BOOL)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame
 {
 	NSUInteger const previousFullBufferIndex = _lastFilledBufferIndex;
 	NSUInteger const latestFullBufferIndex = _fillingBufferIndex;
+	NSUInteger const newBufferIndex = self._unusedBufferIndex;
+	if(NSNotFound == newBufferIndex) {
+		_fillingBufferIndex = NSNotFound;
+		return NO;
+	}
 
 	NSUInteger bufferToDraw = latestFullBufferIndex;
-	NSUInteger const newBufferIndex = self._unusedBufferIndex;
-
 	switch(fill) {
 		case ECVBufferFillClear:
 			[self _clearBufferAtIndex:newBufferIndex];
@@ -202,6 +205,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	_lastFilledBufferIndex = latestFullBufferIndex;
 	_fillingBufferIndex = newBufferIndex;
+	return YES;
 }
 - (void)resetFrames
 {
@@ -301,17 +305,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	@synchronized(_attachedFrames) {
 		NSUInteger const count = [_attachedFrames count];
-		NSUInteger const keep = count % ECVMaxPendingAttachedFields;
-		if(count > ECVMaxPendingAttachedFields) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, count - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
-		NSAssert([_attachedFrames count] <= ECVMaxPendingAttachedFields, @"Failed to clear enough attached frames.");
+		NSUInteger const keep = count % ECVMaxPendingAttachedBuffers;
+		if(count > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, count - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
 	}
 	NSArray *readyBufferIndexQueue = nil;
 	NSIndexSet *attachedFrameIndexes = nil;
 	NSUInteger lastDrawnBufferIndex = NSNotFound;
 	@synchronized(self) {
 		NSUInteger const count = [_readyBufferIndexQueue count];
-		if(count > ECVMaxPendingDisplayFields) {
-			NSUInteger const keep = count % ECVMaxPendingDisplayFields;
+		if(count > ECVMaxPendingDisplayBuffers) {
+			NSUInteger const keep = count % ECVMaxPendingDisplayBuffers;
 			[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, count - keep)];
 			_frameDropStrength = 1.0f;
 		} else _frameDropStrength *= 0.75f;
@@ -326,7 +329,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		if([readyBufferIndexQueue containsObject:[NSNumber numberWithUnsignedInteger:i]]) continue;
 		return i;
 	}
-	ECVAssertNotReached(@"Unable to assign an unused buffer; all are filled.");
 	return NSNotFound;
 }
 

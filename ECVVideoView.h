@@ -70,7 +70,7 @@ typedef enum {
 
 // These methods must be called from the same thread.
 - (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
-- (void)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame;
+- (BOOL)beginNewFrameAtTime:(NSTimeInterval)time fill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame;
 - (void)resetFrames;
 @property(readonly) void *mutableBufferBytes;
 
