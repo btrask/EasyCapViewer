@@ -102,7 +102,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if(!_pendingFrame) return;
 	NSParameterAssert(_pendingFrameDescription);
-	ImageDescription tempDesc = **_pendingFrameDescription;
+	ImageDescription const tempDesc = **_pendingFrameDescription;
 	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, (TimeValue)round(interval * ECVVideoTrackTimeScale), (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
 	**_pendingFrameDescription = tempDesc;
 	_hasPendingFrame = NO;
