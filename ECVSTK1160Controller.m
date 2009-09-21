@@ -84,14 +84,18 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	switch(self.videoFormat) {
 		case ECVSTK1160Auto60HzFormat:
+		case ECVSTK1160NTSCMFormat:
 		case ECVSTK1160PAL60Format:
 		case ECVSTK1160PALMFormat:
 		case ECVSTK1160NTSC44360HzFormat:
+		case ECVSTK1160NTSCJFormat:
 			return YES;
 		case ECVSTK1160Auto50HzFormat:
+		case ECVSTK1160PALBGDHIFormat:
 		case ECVSTK1160PALNFormat:
 		case ECVSTK1160NTSCNFormat:
 		case ECVSTK1160NTSC44350HzFormat:
+		case ECVSTK1160SECAMFormat:
 			return NO;
 		default:
 			ECVAssertNotReached(@"Invalid video format.");
@@ -169,6 +173,14 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite4Input],
 		nil];
 }
+- (id)videoSourceObject
+{
+	return [NSNumber numberWithUnsignedInteger:self.videoSource];
+}
+- (void)setVideoSourceObject:(id)obj
+{
+	self.videoSource = [obj unsignedIntegerValue];
+}
 - (NSString *)localizedStringForVideoSourceObject:(id)obj
 {
 	switch([obj unsignedIntegerValue]) {
@@ -180,13 +192,13 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	}
 	return nil;
 }
-- (id)videoSourceObject
+- (BOOL)isValidVideoSourceObject:(id)obj
 {
-	return [NSNumber numberWithUnsignedInteger:self.videoSource];
+	return YES;
 }
-- (void)setVideoSourceObject:(id)obj
+- (NSInteger)indentationLevelForVideoSourceObject:(id)obj
 {
-	self.videoSource = [obj unsignedIntegerValue];
+	return 0;
 }
 
 #pragma mark -
@@ -194,30 +206,21 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (NSArray *)allVideoFormatObjects
 {
 	return [NSArray arrayWithObjects:
+		NSLocalizedString(@"60Hz", nil),
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Auto60HzFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Auto50HzFormat],
-		[NSNull null],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PAL60Format],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALMFormat],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44360HzFormat],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCJFormat],
+		NSLocalizedString(@"50Hz", nil),
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160Auto50HzFormat],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALBGDHIFormat],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44350HzFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALNFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCNFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44360HzFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44350HzFormat],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160SECAMFormat],
 		nil];
-}
-- (NSString *)localizedStringForVideoFormatObject:(id)obj
-{
-	switch([obj unsignedIntegerValue]) {
-		case ECVSTK1160Auto60HzFormat   : return NSLocalizedString(@"Auto-detect (60Hz)", nil);
-		case ECVSTK1160Auto50HzFormat   : return NSLocalizedString(@"Auto-detect (50Hz)", nil);
-		case ECVSTK1160PAL60Format      : return NSLocalizedString(@"PAL-60Hz", nil);
-		case ECVSTK1160PALMFormat       : return NSLocalizedString(@"PAL-M", nil);
-		case ECVSTK1160PALNFormat       : return NSLocalizedString(@"PAL-N", nil);
-		case ECVSTK1160NTSCNFormat      : return NSLocalizedString(@"NTSC-N", nil);
-		case ECVSTK1160NTSC44360HzFormat: return NSLocalizedString(@"NTSC 4.43 (60Hz)", nil);
-		case ECVSTK1160NTSC44350HzFormat: return NSLocalizedString(@"NTSC 4.43 (50Hz)", nil);
-		default: return nil;
-	}
 }
 - (id)videoFormatObject
 {
@@ -226,6 +229,34 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setVideoFormatObject:(id)obj
 {
 	self.videoFormat = [obj unsignedIntegerValue];
+}
+- (NSString *)localizedStringForVideoFormatObject:(id)obj
+{
+	if(![obj isKindOfClass:[NSNumber class]]) return [obj description];
+	switch([obj unsignedIntegerValue]) {
+		case ECVSTK1160Auto60HzFormat   : return NSLocalizedString(@"Auto-detect", nil);
+		case ECVSTK1160NTSCMFormat      : return NSLocalizedString(@"NTSC", nil);
+		case ECVSTK1160PAL60Format      : return NSLocalizedString(@"PAL-60", nil);
+		case ECVSTK1160PALMFormat       : return NSLocalizedString(@"PAL-M", nil);
+		case ECVSTK1160NTSC44360HzFormat: return NSLocalizedString(@"NTSC 4.43", nil);
+		case ECVSTK1160NTSCJFormat      : return NSLocalizedString(@"NTSC-J", nil);
+
+		case ECVSTK1160Auto50HzFormat   : return NSLocalizedString(@"Auto-detect", nil);
+		case ECVSTK1160PALBGDHIFormat   : return NSLocalizedString(@"PAL", nil);
+		case ECVSTK1160PALNFormat       : return NSLocalizedString(@"PAL-N", nil);
+		case ECVSTK1160NTSC44350HzFormat: return NSLocalizedString(@"NTSC 4.43", nil);
+		case ECVSTK1160NTSCNFormat      : return NSLocalizedString(@"NTSC-N", nil);
+		case ECVSTK1160SECAMFormat      : return NSLocalizedString(@"SECAM", nil);
+		default: return nil;
+	}
+}
+- (BOOL)isValidVideoFormatObject:(id)obj
+{
+	return [obj isKindOfClass:[NSNumber class]];
+}
+- (NSInteger)indentationLevelForVideoFormatObject:(id)obj
+{
+	return [self isValidVideoFormatObject:obj] ? 1 : 0;
 }
 
 #pragma mark -

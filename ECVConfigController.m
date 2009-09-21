@@ -75,6 +75,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		}
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:videoSourceObject];
+		[item setEnabled:[_captureController isValidVideoSourceObject:videoSourceObject]];
+		[item setIndentationLevel:[_captureController indentationLevelForVideoSourceObject:videoSourceObject]];
 		[[sourcePopUp menu] addItem:item];
 	}
 	[sourcePopUp setEnabled:[_captureController respondsToSelector:@selector(videoSourceObject)]];
@@ -88,6 +90,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		}
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureController localizedStringForVideoFormatObject:videoFormatObject] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:videoFormatObject];
+		[item setEnabled:[_captureController isValidVideoFormatObject:videoFormatObject]];
+		[item setIndentationLevel:[_captureController indentationLevelForVideoFormatObject:videoFormatObject]];
 		[[formatPopUp menu] addItem:item];
 	}
 	[formatPopUp setEnabled:[_captureController respondsToSelector:@selector(videoFormatObject)]];

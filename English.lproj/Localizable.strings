@@ -23,11 +23,13 @@
 "Composite 4" = "Composite 4";
 "S-Video" = "S-Video";
 
-"Auto-detect (60Hz)" = "Auto-detect (60Hz)";
-"Auto-detect (50Hz)" = "Auto-detect (50Hz)";
-"PAL-60Hz" = "PAL-60Hz";
+"Auto-detect" = "Auto-detect";
+"NTSC 4.43" = "NTSC 4.43";
+"NTSC" = "NTSC";
+"PAL-60" = "PAL-60";
 "PAL-M" = "PAL-M";
+"NTSC-J" = "NTSC-J";
+"PAL" = "PAL";
 "PAL-N" = "PAL-N";
 "NTSC-N" = "NTSC-N";
-"NTSC 4.43 (60Hz)" = "NTSC 4.43 (60Hz)";
-"NTSC 4.43 (50Hz)" = "NTSC 4.43 (50Hz)";
+"SECAM" = "SECAM";

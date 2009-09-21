@@ -129,14 +129,19 @@ static u_int8_t SAA7115CHXENOutputControlForMODE(u_int8_t m)
 static u_int8_t SAA7115CSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoFormat f)
 {
 	switch(f) {
-		case ECVSTK1160Auto60HzFormat:
-		case ECVSTK1160Auto50HzFormat:    return SAA7115AUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160Auto60HzFormat:    return SAA7115AUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160NTSCMFormat:       return SAA7115CSTDNTSCM;
 		case ECVSTK1160PAL60Format:       return SAA7115CSTDPAL60Hz;
 		case ECVSTK1160PALMFormat:        return SAA7115CSTDPALM;
-		case ECVSTK1160PALNFormat:        return SAA7115CSTDPALN;
-		case ECVSTK1160NTSCNFormat:       return SAA7115CSTDNTSCN;
 		case ECVSTK1160NTSC44360HzFormat: return SAA7115CSTDNTSC44360Hz;
+		case ECVSTK1160NTSCJFormat:       return SAA7115CSTDNTSCJ;
+
+		case ECVSTK1160Auto50HzFormat:    return SAA7115AUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160PALBGDHIFormat:    return SAA7115CSTDPAL_BGDHI;
+		case ECVSTK1160PALNFormat:        return SAA7115CSTDPALN;
 		case ECVSTK1160NTSC44350HzFormat: return SAA7115CSTDNTSC44350Hz;
+		case ECVSTK1160NTSCNFormat:       return SAA7115CSTDNTSCN;
+		case ECVSTK1160SECAMFormat:       return SAA7115CSTDSECAM;
 		default: return 0;
 	}
 }

@@ -60,18 +60,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @optional
 @property(readonly) NSArray *allVideoSourceObjects;
-- (NSString *)localizedStringForVideoSourceObject:(id)obj;
 @property(assign) id videoSourceObject;
+- (NSString *)localizedStringForVideoSourceObject:(id)obj;
+- (BOOL)isValidVideoSourceObject:(id)obj;
+- (NSInteger)indentationLevelForVideoSourceObject:(id)obj;
 
 @property(readonly) NSArray *allVideoFormatObjects;
-- (NSString *)localizedStringForVideoFormatObject:(id)obj;
 @property(assign) id videoFormatObject;
+- (NSString *)localizedStringForVideoFormatObject:(id)obj;
+- (BOOL)isValidVideoFormatObject:(id)obj;
+- (NSInteger)indentationLevelForVideoFormatObject:(id)obj;
 
 @property(assign) CGFloat brightness;
 @property(assign) CGFloat contrast;
 @property(assign) CGFloat saturation;
 @property(assign) CGFloat hue;
-- (void)setTemporaryBrightness:(CGFloat)brightness contrast:(CGFloat)contrast saturation:(CGFloat)saturation hue:(CGFloat)hue;
-- (void)clearTemporarySettings;
 
 @end
