@@ -157,8 +157,6 @@ static u_int8_t SAA7115CSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoF
 int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 {
 	int i;
-	int retok;
-	int value;
 
 	STK_INFO("Initialize USB2.0 Syntek Capture device\n");
 
@@ -169,8 +167,8 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0003, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0002, 0x0007);
 
-	usb_stk11xx_read_registry(dev, 0x0002, &value);
-	usb_stk11xx_read_registry(dev, 0x0000, &value);
+	usb_stk11xx_read_registry(dev, 0x0002, NULL);
+	usb_stk11xx_read_registry(dev, 0x0000, NULL);
 
 	dev_stk0408_write0(dev, 7, 4);
 	dev_stk0408_write0(dev, 7, 4);
@@ -202,14 +200,14 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
 	usb_stk11xx_write_registry(dev, 0x0000, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0203, 0x00a0);
-	usb_stk11xx_read_registry(dev, 0x0003, &value);
+	usb_stk11xx_read_registry(dev, 0x0003, NULL);
 	usb_stk11xx_write_registry(dev, 0x0003, 0x0000);
 
-	usb_stk11xx_read_registry(dev, 0x0002, &value); //78?
+	usb_stk11xx_read_registry(dev, 0x0002, NULL); //78?
 	usb_stk11xx_write_registry(dev, 0x0002, 0x007f);
 
-	usb_stk11xx_read_registry(dev, 0x0002, &value); //7f?
-	usb_stk11xx_read_registry(dev, 0x0000, &value); //0?
+	usb_stk11xx_read_registry(dev, 0x0002, NULL); //7f?
+	usb_stk11xx_read_registry(dev, 0x0000, NULL); //0?
 
 	dev_stk0408_write0(dev, 0x07f, 0x004);
 	dev_stk0408_write0(dev, 0x07f, 0x004);
@@ -243,7 +241,7 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0002, 0x007f);
 	usb_stk11xx_write_registry(dev, 0x0000, 0x0001);
 
-	retok = dev_stk11xx_check_device(dev, 500);
+	(void)dev_stk11xx_check_device(dev, 500);
 
 	usb_stk11xx_set_feature(dev, 1); 
 
@@ -255,13 +253,10 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 
 int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val)
 {
-	int value;
-
 	usb_stk11xx_write_registry(dev, 0x0002, mask);
 	usb_stk11xx_write_registry(dev, 0x0000, val);
-	usb_stk11xx_read_registry(dev, 0x0002, &value);
-	usb_stk11xx_read_registry(dev, 0x0000, &value);
-
+	usb_stk11xx_read_registry(dev, 0x0002, NULL);
+	usb_stk11xx_read_registry(dev, 0x0000, NULL);
 	return 0;
 }
 
@@ -368,12 +363,33 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
  */
 int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 {
-	int value;
-	int asize;
-	int i;
-	
+	if (step != 1)
+	{
+		usb_stk11xx_read_registry(dev, 0x0003, NULL);
+		usb_stk11xx_read_registry(dev, 0x0001, NULL);
+		usb_stk11xx_read_registry(dev, 0x0002, NULL);
+		usb_stk11xx_read_registry(dev, 0x0000, NULL);
+		usb_stk11xx_read_registry(dev, 0x0003, NULL);
+		usb_stk11xx_read_registry(dev, 0x0001, NULL);
+		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
+		usb_stk11xx_write_registry(dev, 0x0000, 0x0000);
+		usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
+		usb_stk11xx_write_registry(dev, 0x0001, 0x0003);
 
-	const const int ids[] = {
+		usb_stk11xx_read_registry(dev, 0x0002, NULL);
+		usb_stk11xx_read_registry(dev, 0x0000, NULL);
+		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
+		usb_stk11xx_read_registry(dev, 0x0000, NULL);
+		usb_stk11xx_read_registry(dev, 0x0002, NULL);
+		usb_stk11xx_read_registry(dev, 0x0000, NULL);
+		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
+		usb_stk11xx_write_registry(dev, 0x0000, 0x0030);
+		usb_stk11xx_read_registry(dev, 0x0002, NULL);
+		usb_stk11xx_read_registry(dev, 0x0002, NULL);
+		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
+	}
+
+	const int ids[] = {
 		0x203,0x00d,0x00f,0x103,0x018,0x01b,0x01c,0x01a,0x019,
 		0x300,0x350,0x351,0x352,0x353,0x300,0x018,0x202,
 		0x110,
@@ -385,8 +401,7 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 		0x116,
 		0x117
 	};
-	
-	int const values[] = {
+	const int values[] = {
 		0x04a,0x000,0x002,0x000,0x000,0x00e,0x046,0x014,0x000,
 		0x012,0x02d,0x001,0x000,0x000,0x080,0x010,0x00f,
 		(dev.is60HzFormat ? 0x038 : 0x008),
@@ -398,47 +413,17 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 		(dev.is60HzFormat ? 0x0f3 : 0x003),
 		(dev.is60HzFormat ? 0x000 : 0x001)
 	};
-
-	if (step != 1)
-	{
-		usb_stk11xx_read_registry(dev, 0x0003, &value);
-		usb_stk11xx_read_registry(dev, 0x0001, &value);
-		usb_stk11xx_read_registry(dev, 0x0002, &value);
-		usb_stk11xx_read_registry(dev, 0x0000, &value);
-		usb_stk11xx_read_registry(dev, 0x0003, &value);
-		usb_stk11xx_read_registry(dev, 0x0001, &value);
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-		usb_stk11xx_write_registry(dev, 0x0000, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0001, 0x0003);
-
-		usb_stk11xx_read_registry(dev, 0x0002, &value);
-		usb_stk11xx_read_registry(dev, 0x0000, &value);
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-		usb_stk11xx_read_registry(dev, 0x0000, &value);
-		usb_stk11xx_read_registry(dev, 0x0002, &value);
-		usb_stk11xx_read_registry(dev, 0x0000, &value);
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-		usb_stk11xx_write_registry(dev, 0x0000, 0x0030);
-		usb_stk11xx_read_registry(dev, 0x0002, &value);
-		usb_stk11xx_read_registry(dev, 0x0002, &value);
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-	}
-	
-	asize = ARRAY_SIZE(values);
-	
-	for(i=0; i<asize; i++) {
-		usb_stk11xx_write_registry(dev, ids[i], values[i]);
-	}
+	int i = 0;
+	for(; i < numberof(values); i++) usb_stk11xx_write_registry(dev, ids[i], values[i]);
 
 	if (step == 1)
 	{
-		usb_stk11xx_read_registry(dev, 0x0100, &value);
+		usb_stk11xx_read_registry(dev, 0x0100, NULL);
 		usb_stk11xx_write_registry(dev, 0x0100, 0x0000);
 	}
 	else
 	{
-		usb_stk11xx_read_registry(dev, 0x0100, &value);
+		usb_stk11xx_read_registry(dev, 0x0100, NULL);
 		usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
 	}
 
@@ -452,7 +437,7 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 		dev_stk0408_sensor_settings(dev);
 	}
 
-	usb_stk11xx_read_registry(dev, 0x0100, &value);
+	usb_stk11xx_read_registry(dev, 0x0100, NULL);
 	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
 	usb_stk11xx_write_registry(dev, 0x0103, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
@@ -545,8 +530,6 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 
 		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
 
-		dev_stk0408_start_stream(dev);
-
 		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
 		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
 		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
@@ -574,9 +557,6 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 		usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
 		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-		dev_stk0408_start_stream(dev);
-
 	}
 
 	if (step==4)
@@ -598,26 +578,23 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
  */
 int dev_stk0408_camera_asleep(ECVSTK1160Controller *dev)
 {
+
+	usb_stk11xx_read_registry(dev, 0x0104, NULL);
+	usb_stk11xx_read_registry(dev, 0x0105, NULL);
+	usb_stk11xx_read_registry(dev, 0x0106, NULL);
+
 	int value;
-	int value0;
-
-	usb_stk11xx_read_registry(dev, 0x0104, &value);
-	usb_stk11xx_read_registry(dev, 0x0105, &value);
-	usb_stk11xx_read_registry(dev, 0x0106, &value);
-
 	usb_stk11xx_read_registry(dev, 0x0100, &value);
-	
-	value = value & 0x7f;
-	usb_stk11xx_write_registry(dev, 0x0100, value);
+	usb_stk11xx_write_registry(dev, 0x0100, value & 0x7f);
 
 	usb_stk11xx_write_registry(dev, 0x0116, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0117, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0018, 0x0000);
 
-	usb_stk11xx_read_registry(dev, 0x0002, &value);
-	usb_stk11xx_read_registry(dev, 0x0000, &value0);
+	usb_stk11xx_read_registry(dev, 0x0002, NULL);
+	usb_stk11xx_read_registry(dev, 0x0000, NULL);
 	usb_stk11xx_write_registry(dev, 0x0002, value);
-	usb_stk11xx_read_registry(dev, 0x0000, &value0);
+	usb_stk11xx_read_registry(dev, 0x0000, NULL);
 
 	return 0;
 }
@@ -746,60 +723,15 @@ int dev_stk0408_set_hue(ECVSTK1160Controller *dev, CGFloat hue)
 	return dev_stk0408_write_saa(dev, 0x0d, round((dev.hue - 0.5f) * 0xff));
 }
 
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief This function sets the device to start the stream.
- *
- * After the initialization of the device and the initialization of the video stream,
- * this function permits to enable the stream.
- */
-int dev_stk0408_start_stream(ECVSTK1160Controller *dev)
+enum {
+	STK0408Streaming = 1 << 7,
+};
+int dev_stk0408_set_streaming(ECVSTK1160Controller *dev, int streaming)
 {
 	int value;
-	int value_116, value_117;
-
-	usb_stk11xx_read_registry(dev, 0x0116, &value_116);
-	usb_stk11xx_read_registry(dev, 0x0117, &value_117);
-
-	usb_stk11xx_write_registry(dev, 0x0116, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0117, 0x0000);
-
 	usb_stk11xx_read_registry(dev, 0x0100, &value);
-	value |= 0x80;
-	
-//	msleep(0x1f4);
+	if(streaming) value |= STK0408Streaming;
+	else value &= ~STK0408Streaming;
 	usb_stk11xx_write_registry(dev, 0x0100, value);
-//	msleep(0x64);
-	
-	usb_stk11xx_write_registry(dev, 0x0116, value_116);
-	usb_stk11xx_write_registry(dev, 0x0117, value_117);
-
-	return 0;
-}
-
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief This function sets the device to stop the stream.
- *
- * You use the function start_stream to enable the video stream. So you
- * have to use the function stop_strem to disable the video stream.
- */
-int dev_stk0408_stop_stream(ECVSTK1160Controller *dev)
-{
-	int value;
-
-	usb_stk11xx_read_registry(dev, 0x0100, &value);
-	value &= 0x7f;
-	usb_stk11xx_write_registry(dev, 0x0100, value);
-	msleep(5);
-	
 	return 0;
 }
