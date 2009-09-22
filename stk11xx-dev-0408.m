@@ -8,6 +8,7 @@
  *
  * @note Copyright (C) Nicolas VIVIEN
  *       Copyright (C) Ivor Hewitt
+ *       Copyright (C) Ben Trask
  *
  * @par Licences
  *
@@ -24,12 +25,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- *
- * @par SubVersion
- *   $Date$
- *   $Revision$
- *   $Author$
- *   $HeadURL$
  */
 #import "ECVSTK1160Controller.h"
 #import "stk11xx.h"
@@ -270,48 +265,16 @@ int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val)
 	return 0;
 }
 
-int dev_stk0408_write_208(ECVSTK1160Controller *dev, int val)
-{
-	int value;
-	int retok;
-	
-	usb_stk11xx_read_registry(dev, 0x02ff, &value);
-	usb_stk11xx_write_registry(dev, 0x02ff, 0x0000);
-
-	usb_stk11xx_write_registry(dev, 0x0208, val);
-	usb_stk11xx_write_registry(dev, 0x0200, 0x0020);
-
-	retok = dev_stk0408_check_device(dev);
-
-	if (retok != 1) {
-		return -1;
-	}
-
-	usb_stk11xx_read_registry(dev, 0x0209, &value);
-	usb_stk11xx_write_registry(dev, 0x02ff, 0x0000);
-
-	dev_stk0408_write_saa(dev, val, value);
-
-	return 1;
-}
-
 int dev_stk0408_write_saa(ECVSTK1160Controller *dev, int reg, int val)
 {
-	int value;
-	int retok;
-	
-	usb_stk11xx_read_registry(dev, 0x02ff, &value);
+	usb_stk11xx_read_registry(dev, 0x02ff, NULL);
 	usb_stk11xx_write_registry(dev, 0x02ff, 0x0000);
 
 	usb_stk11xx_write_registry(dev, 0x0204, reg);
 	usb_stk11xx_write_registry(dev, 0x0205, val);
 	usb_stk11xx_write_registry(dev, 0x0200, 0x0001);
 
-	retok = dev_stk0408_check_device(dev);
-
-	if (retok != 1) {
-		return -1;
-	}
+	if(1 != dev_stk0408_check_device(dev)) return -1;
 
 	usb_stk11xx_write_registry(dev, 0x02ff, 0x0000);
 
@@ -569,8 +532,6 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 
 	if ((step == 4 )|| (step == 6))
 	{
-		dev_stk0408_write_208(dev,0x0e);
-
 		dev_stk0408_set_resolution(dev);
 
 		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
@@ -579,8 +540,6 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 	if (step == 6)
 	{
 		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-
-		dev_stk0408_write_208(dev,0x0e);
 
 		dev_stk0408_set_resolution(dev);
 
