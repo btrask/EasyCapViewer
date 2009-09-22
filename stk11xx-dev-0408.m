@@ -60,7 +60,7 @@ enum {
 };
 enum {
 	SAA7115CGAINChromaGainValueMinimum = 0x00,
-	SAA7115CGAINChromaGainValueNominal = 0x24,
+	SAA7115CGAINChromaGainValueNominal = 0x2a,
 	SAA7115CGAINChromaGainValueMaximum = 0x7f,
 	SAA7115ACGCAutomaticChromaGainControlDisabled = 1 << 7
 };
@@ -260,7 +260,7 @@ int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val)
 	return 0;
 }
 
-int dev_stk0408_write_saa(ECVSTK1160Controller *dev, int reg, int val)
+int dev_stk0408_write_saa(ECVSTK1160Controller *dev, u_int8_t reg, int16_t val)
 {
 	usb_stk11xx_read_registry(dev, 0x02ff, NULL);
 	usb_stk11xx_write_registry(dev, 0x02ff, 0x0000);
@@ -667,11 +667,11 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
 	struct {
 		u_int8_t reg;
-		int val;
+		int16_t val;
 	} settings[] = {
 		{0x01, 0x08},
 		{0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | MODE},
-		{0x03, SAA7115GAI18StaticGainControl1 | SAA7115GAI28StaticGainControl2 | SAA7115CPOFFColorPeakControlDisabled | SAA7115VBSLLongVerticalBlanking},
+		{0x03, SAA7115GAI18StaticGainControl1 | SAA7115GAI28StaticGainControl2 | SAA7115HOLDGAutomaticGainControlDisabled},
 		{0x04, 0x90},
 		{0x05, 0x90},
 		{0x06, 0xeb},
@@ -679,7 +679,7 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		{0x08, 0xb0},
 		{0x09, dev.SVideo ? SAA7115BYPSChrominanceTrapCombBypass : SAA7115YCOMBAdaptiveLuminanceComb},
 		{0x0e, SAA7115CCOMBAdaptiveChrominanceComb | SAA7115FCTCFastColorTimeConstant | SAA7115CSTDColorStandardSelectionForVideoFormat(dev.videoFormat)},
-		{0x0f, 0},
+		{0x0f, SAA7115CGAINChromaGainValueNominal | SAA7115ACGCAutomaticChromaGainControlDisabled},
 		{0x10, 0x06},
 		{0x11, SAA7115RTP0OutputPolarityInverted},
 		{0x12, 0x00},
@@ -698,8 +698,8 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		{0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENOutputControlForMODE(MODE)}
 	};
 	NSUInteger i;
-	for(i = 0; i < numberof(settings); i++) dev_stk0408_write_saa(dev, settings[i].reg, settings[i].val);
-	for(i = 0x41; i <= 0x57; i++) dev_stk0408_write_saa(dev, i, 0xff);
+	for(i = 0; i < numberof(settings); i++) (void)dev_stk0408_write_saa(dev, settings[i].reg, settings[i].val);
+	for(i = 0x41; i <= 0x57; i++) (void)dev_stk0408_write_saa(dev, i, 0xff);
 	(void)dev_stk0408_set_brightness(dev, dev.brightness);
 	(void)dev_stk0408_set_contrast(dev, dev.contrast);
 	(void)dev_stk0408_set_saturation(dev, dev.saturation);

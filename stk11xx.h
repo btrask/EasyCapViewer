@@ -84,7 +84,7 @@ static const struct stk11xx_coord stk11xx_image_sizes[STK11XX_NBR_SIZES] = {
 
 int dev_stk0408_camera_asleep(ECVSTK1160Controller *);
 int dev_stk0408_configure_device(ECVSTK1160Controller *, int);
-int dev_stk0408_write_saa(ECVSTK1160Controller *dev, int reg, int val);
+int dev_stk0408_write_saa(ECVSTK1160Controller *dev, u_int8_t reg, int16_t val);
 int dev_stk0408_initialize_device(ECVSTK1160Controller *dev);
 int dev_stk0408_init_camera(ECVSTK1160Controller *dev);
 int dev_stk0408_check_device(ECVSTK1160Controller *dev);
