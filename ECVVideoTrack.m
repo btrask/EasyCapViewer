@@ -28,9 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVFrameReading.h"
 
-#define ECVVideoTrackTimeScale (TimeValue64)60000
-#define ECVVideoTrack5994Hz (TimeValue64)1001
-
 @interface ECVVideoTrack(Private)
 
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
@@ -62,12 +59,12 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		DisposeMovieTrack(track);
 		return nil;
 	}
-	return [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL]  size:size codec:codec quality:quality timeValue:frameRate.timeValue] autorelease];
+	return [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL]  size:size codec:codec quality:quality frameRate:frameRate] autorelease];
 }
 
 #pragma mark -ECVVideoTrack
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality timeValue:(TimeValue64)timeValue
+- (id)initWithTrack:(QTTrack *)track size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
 		_track = [track retain];
@@ -75,8 +72,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		callback.frameDataAllocator = kCFAllocatorDefault;
 		callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
 		callback.encodedFrameOutputRefCon = self;
-		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, roundf(size.width), roundf(size.height), codec, ECVVideoTrackTimeScale, NULL, NULL, &callback, &_compressionSession));
-		_timeValue = timeValue;
+		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, roundf(size.width), roundf(size.height), codec, frameRate.timeScale, NULL, NULL, &callback, &_compressionSession));
+		_timeValue = frameRate.timeValue;
 	}
 	return self;
 }
