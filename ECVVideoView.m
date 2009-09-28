@@ -30,10 +30,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 
 #define ECVMaxPendingDisplayFrames 1
-#define ECVMaxPendingAttachedFrames 2
-#define ECVMaxPendingDisplayBuffers (2 * ECVMaxPendingDisplayFrames)
-#define ECVMaxPendingAttachedBuffers (2 * ECVMaxPendingAttachedFrames)
-#define ECVRequiredBufferCount (ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers + 4) // 4 = _fillingBufferIndex, _lastFilledBufferIndex, _lastDrawnBufferIndex, & the new buffer we want to assign.
+#define ECVMaxPendingAttachedFrames 1
+#define ECVFillingBuffers 1
+#define ECVLastFilledBuffers 1
+#define ECVLastDrawnBuffers 1
+#define ECVUnassignedBuffers 1
+
+#define ECVFieldBuffersPerFrame 2
+#define ECVMaxPendingDisplayBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingDisplayFrames)
+#define ECVMaxPendingAttachedBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingAttachedFrames)
+#define ECVRequiredBufferCount (ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers + ECVFillingBuffers + ECVLastFilledBuffers + ECVLastDrawnBuffers + ECVUnassignedBuffers)
 
 NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
 {
@@ -74,12 +80,13 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 	ECVVideoView *_videoView;
 	NSUInteger _bufferIndex;
 	NSTimeInterval _time;
-	NSLock *_lock;
+	NSLock *_videoViewLock;
 }
 
 - (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index time:(NSTimeInterval)time;
 @property(readonly) NSUInteger bufferIndex;
-- (void)detach;
+- (void)tryToDetach;
+- (void)detachWait:(BOOL)wait;
 
 @end
 
@@ -122,11 +129,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	NSUInteger i;
 	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
-	@synchronized(self) {
-		_pixelFormatType = formatType;
-		_pixelSize = size;
-		_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
-	}
+	[_bufferPoolLock lock];
+	_pixelFormatType = formatType;
+	_pixelSize = size;
+	_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
+	[_bufferPoolLock unlock];
 
 	if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
 	[_textureNames release];
@@ -171,11 +178,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 			break;
 		case ECVBufferFillPrevious:
 			if(NSNotFound == latestFullBufferIndex) {
-				BOOL hasDrawnBuffer = NO;
-				@synchronized(self) {
-					hasDrawnBuffer = NSNotFound != _lastDrawnBufferIndex;
-					if(hasDrawnBuffer) memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:_lastDrawnBufferIndex], self.bufferSize);
-				}
+				[_bufferPoolLock lock];
+				BOOL const hasDrawnBuffer = NSNotFound != _lastDrawnBufferIndex;
+				if(hasDrawnBuffer) memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:_lastDrawnBufferIndex], _bufferSize);
+				[_bufferPoolLock unlock];
 				if(!hasDrawnBuffer) [self _clearBufferAtIndex:newBufferIndex];
 			} else memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:latestFullBufferIndex], self.bufferSize);
 			break;
@@ -188,20 +194,20 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		for(i = 0; i < _bufferSize; i++) dst[i] = dst[i] / 2 + src[i] / 2;
 	}
 
-	@synchronized(self) {
-		if(NSNotFound != bufferToDraw) {
-			[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
-			if(outFrame) {
-				ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:bufferToDraw time:_frameStartTime] autorelease];
-				@synchronized(_attachedFrames) {
-					[_attachedFrames addObject:frame];
-					[_attachedFrameIndexes addIndex:bufferToDraw];
-				}
-				*outFrame = frame;
-			}
+	[_bufferPoolLock lock];
+	if(NSNotFound != bufferToDraw) {
+		[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
+		if(outFrame) {
+			ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:bufferToDraw time:_frameStartTime] autorelease];
+			[_attachedFrameLock lock];
+			[_attachedFrames addObject:frame];
+			[_attachedFrameIndexes addIndex:bufferToDraw];
+			[_attachedFrameLock unlock];
+			*outFrame = frame;
 		}
-		_frameStartTime = time;
 	}
+	_frameStartTime = time;
+	[_bufferPoolLock unlock];
 
 	_lastFilledBufferIndex = latestFullBufferIndex;
 	_fillingBufferIndex = newBufferIndex;
@@ -209,10 +215,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)resetFrames
 {
-	@synchronized(self) {
-		[_readyBufferIndexQueue removeAllObjects];
-		_frameDropStrength = 0.0f;
-	}
+	[_bufferPoolLock lock];
+	[_readyBufferIndexQueue removeAllObjects];
+	_frameDropStrength = 0.0f;
+	[_bufferPoolLock unlock];
 	_fillingBufferIndex = NSNotFound;
 	_lastFilledBufferIndex = NSNotFound;
 }
@@ -296,32 +302,31 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)_detachFrame:(ECVAttachedFrame *)frame
 {
-	@synchronized(_attachedFrames) {
-		[_attachedFrames removeObject:frame];
-		[_attachedFrameIndexes removeIndex:frame.bufferIndex];
-	}
+	[_attachedFrameLock lock];
+	[_attachedFrames removeObject:frame];
+	[_attachedFrameIndexes removeIndex:frame.bufferIndex];
+	[_attachedFrameLock unlock];
 }
 - (NSUInteger)_unusedBufferIndex
 {
-	@synchronized(_attachedFrames) {
-		NSUInteger const count = [_attachedFrames count];
-		NSUInteger const keep = count % ECVMaxPendingAttachedBuffers;
-		if(count > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, count - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
-	}
-	NSArray *readyBufferIndexQueue = nil;
-	NSIndexSet *attachedFrameIndexes = nil;
-	NSUInteger lastDrawnBufferIndex = NSNotFound;
-	@synchronized(self) {
-		NSUInteger const count = [_readyBufferIndexQueue count];
-		if(count > ECVMaxPendingDisplayBuffers) {
-			NSUInteger const keep = count % ECVMaxPendingDisplayBuffers;
-			[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, count - keep)];
-			_frameDropStrength = 1.0f;
-		} else _frameDropStrength *= 0.75f;
-		readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
-		attachedFrameIndexes = [[_attachedFrameIndexes copy] autorelease];
-		lastDrawnBufferIndex = _lastDrawnBufferIndex;
-	}
+	[_attachedFrameLock lock];
+	NSUInteger const attachedFrameCount = [_attachedFrames count];
+	NSUInteger const keep = attachedFrameCount % ECVMaxPendingAttachedBuffers;
+	if(attachedFrameCount > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, attachedFrameCount - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
+	NSIndexSet *const attachedFrameIndexes = [[_attachedFrameIndexes copy] autorelease];
+	[_attachedFrameLock unlock];
+
+	[_bufferPoolLock lock];
+	NSUInteger const readyBufferCount = [_readyBufferIndexQueue count];
+	if(readyBufferCount > ECVMaxPendingDisplayBuffers) {
+		NSUInteger const keep = readyBufferCount % ECVMaxPendingDisplayBuffers;
+		[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, readyBufferCount - keep)];
+		_frameDropStrength = 1.0f;
+	} else _frameDropStrength *= 0.75f;
+	NSArray *const readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
+	NSUInteger const lastDrawnBufferIndex = _lastDrawnBufferIndex;
+	[_bufferPoolLock unlock];
+
 	NSUInteger i;
 	for(i = 0; i < _numberOfBuffers; i++) {
 		if(_lastFilledBufferIndex == i || _fillingBufferIndex == i || lastDrawnBufferIndex == i) continue;
@@ -341,12 +346,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[context makeCurrentContext];
 	CGLLockContext(contextObj);
 
-	NSNumber *number = nil;
-	CGFloat frameDropStrength = 0.0f;
-	@synchronized(self) {
-		number = [_readyBufferIndexQueue lastObject];
-		frameDropStrength = _frameDropStrength;
-	}
+	[_bufferPoolLock lock];
+	NSNumber *const number = [_readyBufferIndexQueue lastObject];
+	CGFloat const frameDropStrength = _frameDropStrength;
+	[_bufferPoolLock unlock];
+
 	if(number) {
 		NSUInteger const index = [number unsignedIntegerValue];
 		NSParameterAssert(NSNotFound != index);
@@ -356,10 +360,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		[self _drawFrameDropIndicatorWithStrength:frameDropStrength];
 		[self _drawResizeHandle];
 		glFlush();
-		@synchronized(self) {
-			[_readyBufferIndexQueue removeLastObject];
-			_lastDrawnBufferIndex = index;
-		}
+
+		[_bufferPoolLock lock];
+		[_readyBufferIndexQueue removeLastObject];
+		_lastDrawnBufferIndex = index;
+		[_bufferPoolLock unlock];
 	}
 
 	CGLUnlockContext(contextObj);
@@ -510,9 +515,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	@synchronized(self) {
-		if(NSNotFound != _lastDrawnBufferIndex) [self _drawBuffer:_lastDrawnBufferIndex];
-	}
+	[_bufferPoolLock lock];
+	if(NSNotFound != _lastDrawnBufferIndex) [self _drawBuffer:_lastDrawnBufferIndex];
+	[_bufferPoolLock unlock];
 	[self _drawResizeHandle];
 	glFlush();
 
@@ -558,9 +563,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
+	[_bufferPoolLock release];
 	[_bufferData release];
 	[_textureNames release];
 	[_readyBufferIndexQueue release];
+	[_attachedFrameLock release];
 	[_attachedFrames release];
 	[_attachedFrameIndexes release];
 	CVDisplayLinkRelease(_displayLink);
@@ -578,6 +585,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)awakeFromNib
 {
+	_bufferPoolLock = [[NSLock alloc] init];
+	_attachedFrameLock = [[NSRecursiveLock alloc] init];
 	_magFilter = GL_LINEAR;
 	_readyBufferIndexQueue = [[NSMutableArray alloc] init];
 	_attachedFrames = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
@@ -587,6 +596,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -<ECVFrameReading>
 
+- (NSTimeInterval)time
+{
+	[_bufferPoolLock lock];
+	NSTimeInterval const t = _frameStartTime;
+	[_bufferPoolLock unlock];
+	return t;
+}
 - (BOOL)isValid
 {
 	return NO;
@@ -597,44 +613,43 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (NSUInteger)bufferSize
 {
-	@synchronized(self) {
-		return _bufferSize;
-	}
-	return 0;
+	[_bufferPoolLock lock];
+	NSUInteger const b = _bufferSize;
+	[_bufferPoolLock unlock];
+	return b;
 }
 - (ECVPixelSize)pixelSize
 {
-	@synchronized(self) {
-		return _pixelSize;
-	}
-	return (ECVPixelSize){0, 0};
+	[_bufferPoolLock lock];
+	ECVPixelSize const p = _pixelSize;
+	[_bufferPoolLock unlock];
+	return p;
 }
 - (OSType)pixelFormatType
 {
-	@synchronized(self) {
-		return _pixelFormatType;
-	}
-	return 0;
+	[_bufferPoolLock lock];
+	OSType const t = _pixelFormatType;
+	[_bufferPoolLock unlock];
+	return t;
 }
 - (size_t)bytesPerRow
 {
-	@synchronized(self) {
-		return _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
-	}
-	return 0;
-}
-- (NSTimeInterval)time
-{
-	@synchronized(self) {
-		return _frameStartTime;
-	}
-	return 0.0f;
+	[_bufferPoolLock lock];
+	size_t const bpr = _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
+	[_bufferPoolLock unlock];
+	return bpr;
 }
 
 #pragma mark -<NSLocking>
 
-- (void)lock {}
-- (void)unlock {}
+- (void)lock
+{
+	[_bufferPoolLock lock];
+}
+- (void)unlock
+{
+	[_bufferPoolLock unlock];
+}
 
 #pragma mark -<NSWindowDelegate>
 
@@ -676,7 +691,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		_videoView = view;
 		_bufferIndex = index;
 		_time = time;
-		_lock = [[NSLock alloc] init];
+		_videoViewLock = [[NSLock alloc] init];
 	}
 	return self;
 }
@@ -686,31 +701,29 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)tryToDetach
 {
-	if([_lock tryLock]) {
-		[_videoView _detachFrame:self];
-		_videoView = nil;
-		[_lock unlock];
-	}
+	[self detachWait:NO];
 }
-- (void)detach
+- (void)detachWait:(BOOL)wait
 {
-	[_lock lock];
+	if(wait) [_videoViewLock lock];
+	else if(![_videoViewLock tryLock]) return;
 	[_videoView _detachFrame:self];
 	_videoView = nil;
-	[_lock unlock];
+	[_videoViewLock unlock];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[self detach];
-	[_lock release];
+	[self detachWait:YES];
+	[_videoViewLock release];
 	[super dealloc];
 }
 
 #pragma mark -<ECVFrameReading>
 
+@synthesize time = _time;
 - (BOOL)isValid
 {
 	return !!_videoView;
@@ -735,17 +748,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	return _videoView.bytesPerRow;
 }
-@synthesize time = _time;
 
 #pragma mark -<NSLocking>
 
 - (void)lock
 {
-	[_lock lock];
+	[_videoViewLock lock];
 }
 - (void)unlock
 {
-	[_lock unlock];
+	[_videoViewLock unlock];
 }
 
 @end

@@ -24,6 +24,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
+
+// Other Sources
 #import "ECVFrameReading.h"
 
 typedef enum {
@@ -44,7 +46,7 @@ typedef enum {
 	NSUInteger _fillingBufferIndex;
 	NSUInteger _lastFilledBufferIndex;
 
-	// Access to these ivars must be @synchronized(self).
+	NSLock *_bufferPoolLock;
 	NSMutableArray *_readyBufferIndexQueue;
 	NSUInteger _lastDrawnBufferIndex;
 	CGFloat _frameDropStrength;
@@ -53,7 +55,7 @@ typedef enum {
 	NSUInteger _bufferSize;
 	NSTimeInterval _frameStartTime;
 
-	// Access to these ivars must be @synchronized(_attachedFrames).
+	NSRecursiveLock *_attachedFrameLock;
 	NSMutableArray *_attachedFrames;
 	NSMutableIndexSet *_attachedFrameIndexes;
 

@@ -23,11 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoTrack.h"
 
-// Models
-#import "ECVFrameReading.h"
-
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVFrameReading.h"
 
 #define ECVVideoTrackTimeScale (TimeValue)30000
 

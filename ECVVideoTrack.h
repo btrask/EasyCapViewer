@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 #import <QuartzCore/QuartzCore.h>
 
-// Models
+// Other Sources
 @protocol ECVFrameReading;
 
 @interface ECVVideoTrack : NSObject

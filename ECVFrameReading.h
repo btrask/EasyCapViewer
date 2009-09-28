@@ -25,12 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @protocol ECVFrameReading <NSLocking, NSObject>
 
+@property(readonly) NSTimeInterval time;
 @property(readonly) BOOL isValid;
 @property(readonly) NSData *bufferData;
 @property(readonly) NSUInteger bufferSize;
 @property(readonly) ECVPixelSize pixelSize;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) size_t bytesPerRow;
-@property(readonly) NSTimeInterval time;
 
 @end

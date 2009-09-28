@@ -160,15 +160,6 @@
 			name = Views;
 			sourceTree = "<group>";
 		};
-		0EC4C80B103E94DC00FCFCA0 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				0EC4C80F103E9B5E00FCFCA0 /* ECVFrameReading.h */,
-				0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */,
-			);
-			name = Models;
-			sourceTree = "<group>";
-		};
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -206,7 +197,6 @@
 		29B97314FDCFA39411CA2CEA /* EasyCapViewer */ = {
 			isa = PBXGroup;
 			children = (
-				0EC4C80B103E94DC00FCFCA0 /* Models */,
 				0E78CE870FC9FA5F00E9C148 /* Views */,
 				080E96DDFE201D6D7F000001 /* Controllers */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
@@ -228,6 +218,8 @@
 				0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */,
 				0E78CB960FC92D8300E9C148 /* ECVDebug.h */,
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
+				0EC4C80F103E9B5E00FCFCA0 /* ECVFrameReading.h */,
+				0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */,
 				0E0ACAE51020993E00C12D88 /* ECVSoundTrack.h */,
 				0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */,
 				0E76779F1021D82F001C583E /* ECVQTAdditions.h */,

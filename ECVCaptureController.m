@@ -531,7 +531,7 @@ ECVNoDeviceError:
 	_pendingImageLength = 0;
 	_firstFrame = YES;
 	[videoView resetFrames];
-	[videoView performSelectorOnMainThread:@selector(startDrawing) withObject:nil waitUntilDone:YES];
+	[videoView performSelectorOnMainThread:@selector(startDrawing) withObject:nil waitUntilDone:NO];
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
