@@ -23,7 +23,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <QTKit/QTKit.h>
-#import <QuartzCore/QuartzCore.h>
 
 // Other Sources
 @protocol ECVFrameReading;
@@ -32,25 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	QTTrack *_track;
-	CodecType _codecType;
-	CGFloat _quality;
-	BOOL _hasPendingFrame;
-	Handle _pendingFrame;
-	ImageDescriptionHandle _pendingFrameDescription;
-	NSTimeInterval _pendingFrameStartTime;
+	ICMCompressionSessionRef _compressionSession;
+	ICMEncodedFrameRef _encodedFrame;
+	TimeValue64 _timeValue;
 }
 
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)aSize;
++ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
 
-- (id)initWithTrack:(QTTrack *)track;
+- (id)initWithTrack:(QTTrack *)track size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality timeValue:(TimeValue64)timeValue;
 @property(readonly) QTTrack *track;
-
-@property(assign) CodecType codecType;
-@property(assign) CGFloat quality;
-@property(readonly) BOOL hasPendingFrame;
-- (void)clearPendingFrame;
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame;
-- (void)addFrameWithDuration:(NSTimeInterval)interval;
 - (void)addFrame:(id<ECVFrameReading>)frame;
 
 @end

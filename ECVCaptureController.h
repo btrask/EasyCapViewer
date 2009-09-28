@@ -137,7 +137,7 @@ extern NSString *const ECVSaturationKey;
 
 - (void)threaded_readIsochPipeAsync;
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length;
-- (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType absoluteTime:(AbsoluteTime)time;
+- (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType;
 
 - (BOOL)setAlternateInterface:(UInt8)alternateSetting;
 - (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)value index:(UInt16)index length:(UInt16)length data:(void *)data;
@@ -156,6 +156,7 @@ extern NSString *const ECVSaturationKey;
 @property(readonly) NSUInteger simultaneousTransfers;
 @property(readonly) NSUInteger microframesPerTransfer;
 @property(readonly) UInt8 isochReadingPipe;
+@property(readonly) QTTime frameRate;
 
 - (BOOL)threaded_play;
 - (BOOL)threaded_pause;

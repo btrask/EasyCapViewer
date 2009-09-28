@@ -272,9 +272,7 @@ ECVNoDeviceError:
 	ECVAudioStream *const stream = [[[_audioInput streams] objectEnumerator] nextObject];
 	NSParameterAssert(stream);
 	_soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
-	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize]] retain];
-	_videoTrack.codecType = (OSType)[videoCodecPopUp selectedTag];
-	_videoTrack.quality = [videoQualitySlider doubleValue];
+	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize] codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 	[[_soundTrack.track media] ECV_beginEdits];
 	[[_videoTrack.track media] ECV_beginEdits];
 }
@@ -600,7 +598,7 @@ bail:
 		rowOffset = 0;
 	}
 }
-- (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType absoluteTime:(AbsoluteTime)time
+- (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType
 {
 	if(_firstFrame) {
 		_firstFrame = NO;
@@ -614,7 +612,7 @@ bail:
 	}
 	id<ECVFrameReading> frame = nil;
 	id<ECVFrameReading> *const framePtr = _videoTrack ? &frame : NULL;
-	[videoView beginNewFrameAtTime:(NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(time)) * 1e-9 fill:fill getLastFrame:framePtr];
+	[videoView beginNewFrameWithFill:fill getLastFrame:framePtr];
 	if(frame) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
 
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
@@ -681,9 +679,7 @@ ECVNoDeviceError:
 
 - (void)_recordVideoFrame:(id<ECVFrameReading>)frame
 {
-	[frame lock];
 	[_videoTrack addFrame:frame];
-	[frame unlock];
 }
 - (void)_recordAudioBufferList:(NSValue *)bufferListValue
 {

@@ -125,6 +125,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return 2;
 }
+- (QTTime)frameRate
+{
+	return self.is60HzFormat ? QTMakeTime(1001, 60000) : QTMakeTime(1, 25);
+}
 
 #pragma mark -
 
@@ -155,7 +159,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(!length) return;
 	size_t skip = 4;
 	if(ECVNewImageFlag & bytes[0]) {
-		[self threaded_startNewImageWithFieldType:ECVHighFieldFlag & bytes[0] ? ECVHighField : ECVLowField absoluteTime:frame->frTimeStamp];
+		[self threaded_startNewImageWithFieldType:ECVHighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
 		skip = 8;
 	}
 	if(length > skip) [self threaded_readImageBytes:bytes + skip length:length - skip];

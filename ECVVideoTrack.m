@@ -22,36 +22,61 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoTrack.h"
+#import <CoreVideo/CoreVideo.h>
 
 // Other Sources
 #import "ECVDebug.h"
 #import "ECVFrameReading.h"
 
-#define ECVVideoTrackTimeScale (TimeValue)30000
+#define ECVVideoTrackTimeScale (TimeValue64)60000
+#define ECVVideoTrack5994Hz (TimeValue64)1001
+
+@interface ECVVideoTrack(Private)
+
+- (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
+
+@end
+
+static void ECVPixelBufferReleaseBytesCallback(id<ECVFrameReading> frame, const void *baseAddress)
+{
+	[frame unlock];
+	[frame release];
+}
+static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMCompressionSessionRef session, OSStatus error, ICMEncodedFrameRef frame)
+{
+	if(noErr == error) [videoTrack _addEncodedFrame:frame];
+	return noErr;
+}
 
 @implementation ECVVideoTrack
 
 #pragma mark +ECVVideoTrack
 
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)aSize
++ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
 {
 	NSParameterAssert([[[movie movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
-	Track const track = NewMovieTrack([movie quickTimeMovie], FixRatio(roundf(aSize.width), 1), FixRatio(roundf(aSize.height), 1), kNoVolume);
+	Track const track = NewMovieTrack([movie quickTimeMovie], FixRatio(roundf(size.width), 1), FixRatio(roundf(size.height), 1), kNoVolume);
 	if(!track) return nil;
-	Media const media = NewTrackMedia(track, VideoMediaType, ECVVideoTrackTimeScale, NULL, 0);
+	Media const media = NewTrackMedia(track, VideoMediaType, frameRate.timeScale, NULL, 0);
 	if(!media) {
 		DisposeMovieTrack(track);
 		return nil;
 	}
-	return [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL]] autorelease];
+	return [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL]  size:size codec:codec quality:quality timeValue:frameRate.timeValue] autorelease];
 }
 
 #pragma mark -ECVVideoTrack
 
-- (id)initWithTrack:(QTTrack *)track
+- (id)initWithTrack:(QTTrack *)track size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality timeValue:(TimeValue64)timeValue
 {
 	if((self = [super init])) {
 		_track = [track retain];
+		ICMEncodedFrameOutputRecord callback = {};
+		callback.frameDataAllocator = kCFAllocatorDefault;
+		callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
+		callback.encodedFrameOutputRefCon = self;
+		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, roundf(size.width), roundf(size.height), codec, ECVVideoTrackTimeScale, NULL, NULL, &callback, &_compressionSession));
+		_timeValue = timeValue;
 	}
 	return self;
 }
@@ -59,57 +84,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-@synthesize codecType = _codecType;
-@synthesize quality = _quality;
-@synthesize hasPendingFrame = _hasPendingFrame;
-- (void)clearPendingFrame
-{
-	_hasPendingFrame = NO;
-}
-- (void)prepareToAddFrame:(id<ECVFrameReading>)frame
-{
-	NSParameterAssert(!_hasPendingFrame);
-	if(!frame.isValid) return;
-
-	Rect r;
-	ECVPixelSize const s = frame.pixelSize;
-	SetRect(&r, 0, 0, s.width, s.height);
-
-	GWorldPtr gWorld = NULL;
-	ECVOSStatus(QTNewGWorldFromPtr(&gWorld, frame.pixelFormatType, &r, NULL, NULL, 0, (void *)[frame.bufferData bytes], frame.bytesPerRow));
-	PixMapHandle const pixMap = GetGWorldPixMap(gWorld);
-
-	Size maxSize = 0;
-	CodecQ const quality = (CodecQ)roundf(self.quality * codecMaxQuality);
-	ECVOSStatus(GetMaxCompressionSize(pixMap, &r, 24, quality, self.codecType, NULL, &maxSize));
-	if(_pendingFrame && GetHandleSize(_pendingFrame) < maxSize) {
-		DisposeHandle(_pendingFrame);
-		_pendingFrame = NULL;
-	}
-	if(!_pendingFrame) _pendingFrame = NewHandle(maxSize);
-	if(!_pendingFrameDescription) _pendingFrameDescription = (ImageDescriptionHandle)NewHandle(sizeof(ImageDescription));
-
-	HLock(_pendingFrame);
-	ECVOSStatus(CompressImage(pixMap, &r, quality, self.codecType, _pendingFrameDescription, *_pendingFrame));
-	HUnlock(_pendingFrame);
-	DisposeGWorld(gWorld);
-
-	_hasPendingFrame = YES;
-}
-- (void)addFrameWithDuration:(NSTimeInterval)interval
-{
-	if(!_pendingFrame) return;
-	NSParameterAssert(_pendingFrameDescription);
-	ImageDescription const tempDesc = **_pendingFrameDescription;
-	ECVOSStatus(AddMediaSample([[self.track media] quickTimeMedia], _pendingFrame, 0, (**_pendingFrameDescription).dataSize, (TimeValue)round(interval * ECVVideoTrackTimeScale), (SampleDescriptionHandle)_pendingFrameDescription, 1, kNilOptions, NULL));
-	**_pendingFrameDescription = tempDesc;
-	_hasPendingFrame = NO;
-}
 - (void)addFrame:(id<ECVFrameReading>)frame
 {
-	[self addFrameWithDuration:frame.time - _pendingFrameStartTime];
-	[self prepareToAddFrame:frame];
-	_pendingFrameStartTime = frame.time;
+	[frame lock];
+	if(frame.isValid) {
+		[frame retain];
+		ECVPixelSize const size = frame.pixelSize;
+		CVPixelBufferRef pixelBuffer = NULL;
+		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, frame.pixelFormatType, (void *)frame.bufferData, frame.bytesPerRow, (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, _timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+		CVPixelBufferRelease(pixelBuffer);
+	} else {
+		[frame unlock];
+		[self _addEncodedFrame:_encodedFrame];
+	}
+}
+
+#pragma mark -ECVVideoTrack(Private)
+
+- (void)_addEncodedFrame:(ICMEncodedFrameRef)frame
+{
+	ImageDescriptionHandle desc = NULL;
+	ECVOSStatus(ICMEncodedFrameGetImageDescription(frame, &desc));
+	ECVOSStatus(AddMediaSample2([[_track media] quickTimeMedia], ICMEncodedFrameGetDataPtr(frame), ICMEncodedFrameGetDataSize(frame), _timeValue, 0, (SampleDescriptionHandle)desc, 1, ICMEncodedFrameGetMediaSampleFlags(frame), NULL));
+	if(frame == _encodedFrame) return;
+	ICMEncodedFrameRelease(_encodedFrame);
+	_encodedFrame = ICMEncodedFrameRetain(frame);
 }
 
 #pragma mark -NSObject
@@ -117,8 +117,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)dealloc
 {
 	[_track release];
-	if(_pendingFrame) DisposeHandle(_pendingFrame);
-	if(_pendingFrameDescription) DisposeHandle((Handle)_pendingFrameDescription);
+	ICMCompressionSessionRelease(_compressionSession);
+	ICMEncodedFrameRelease(_encodedFrame);
 	[super dealloc];
 }
 
