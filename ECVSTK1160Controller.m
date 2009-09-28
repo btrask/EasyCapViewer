@@ -52,8 +52,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	if((self = [super initWithDevice:device error:outError])) {
 		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
-		self.videoSourceObject = [d objectForKey:ECVSTK1160VideoSourceKey];
-		self.videoFormatObject = [d objectForKey:ECVSTK1160VideoFormatKey];
+		self.videoSource = [d integerForKey:ECVSTK1160VideoSourceKey];
+		self.videoFormat = [d integerForKey:ECVSTK1160VideoFormatKey];
 		self.brightness = [[d objectForKey:ECVBrightnessKey] doubleValue];
 		self.contrast = [[d objectForKey:ECVContrastKey] doubleValue];
 		self.hue = [[d objectForKey:ECVHueKey] doubleValue];
@@ -62,10 +62,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	return self;
 }
 @synthesize videoSource = _videoSource;
-- (void)setVideoSoruce:(ECVSTK1160VideoSource)source
+- (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
 	_videoSource = source;
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:source] forKey:ECVSTK1160VideoSourceKey];
+	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
 }
 - (BOOL)SVideo
 {
@@ -78,7 +78,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	resolution = self.is60HzFormat ? STK11XX_720x480 : STK11XX_720x576;
 	[self noteVideoSettingDidChange];
 	self.windowContentSize = self.outputSize;
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:format] forKey:ECVSTK1160VideoFormatKey];
+	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
 }
 - (BOOL)is60HzFormat
 {
