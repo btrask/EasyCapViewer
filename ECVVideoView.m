@@ -253,45 +253,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -
 
-@synthesize delegate;
-@synthesize blurFramesTogether = _blurFramesTogether;
-@synthesize aspectRatio = _aspectRatio;
-- (void)setAspectRatio:(NSSize)ratio
-{
-	_aspectRatio = ratio;
-	[self reshape];
-}
-@synthesize vsync = _vsync;
-- (void)setVsync:(BOOL)flag
-{
-	_vsync = flag;
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
-	GLint params[] = {!!flag};
-	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, params);
-	CGLUnlockContext(contextObj);
-}
-@synthesize magFilter = _magFilter;
-- (void)setMagFilter:(GLint)filter
-{
-	_magFilter = filter;
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
-	NSUInteger i = 0;
-	for(i = 0; i < _numberOfBuffers; i++) {
-		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
-		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
-	}
-	CGLUnlockContext(contextObj);
-}
-@synthesize showDroppedFrames = _showDroppedFrames;
-
-#pragma mark -
-
 - (void)startDrawing
 {
 	if(!_displayLink) {
@@ -305,6 +266,44 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
 }
+@synthesize aspectRatio = _aspectRatio;
+- (void)setAspectRatio:(NSSize)ratio
+{
+	_aspectRatio = ratio;
+	[self reshape];
+}
+
+#pragma mark -
+
+@synthesize delegate;
+@synthesize vsync = _vsync;
+- (void)setVsync:(BOOL)flag
+{
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+	_vsync = flag;
+	GLint params[] = {!!flag};
+	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, params);
+	CGLUnlockContext(contextObj);
+}
+@synthesize magFilter = _magFilter;
+- (void)setMagFilter:(GLint)filter
+{
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+	_magFilter = filter;
+	NSUInteger i = 0;
+	for(i = 0; i < _numberOfBuffers; i++) {
+		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
+		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
+	}
+	CGLUnlockContext(contextObj);
+}
+@synthesize showDroppedFrames = _showDroppedFrames;
 
 #pragma mark -ECVVideoView(Private)
 

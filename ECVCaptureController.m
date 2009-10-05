@@ -350,7 +350,6 @@ ECVNoDeviceError:
 - (void)setDeinterlacingMode:(ECVDeinterlacingMode)mode
 {
 	_deinterlacingMode = mode;
-	videoView.blurFramesTogether = ECVBlur == mode;
 	[self noteVideoSettingDidChange];
 	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
 }

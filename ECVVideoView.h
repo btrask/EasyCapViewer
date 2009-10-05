@@ -56,7 +56,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSRect _outputRect;
 
 	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
-	BOOL _blurFramesTogether;
 	NSSize _aspectRatio;
 	BOOL _vsync;
 	GLint _magFilter;
@@ -77,11 +76,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // These mthods must be called from the main thread.
 - (void)startDrawing;
 - (void)stopDrawing;
+@property(assign, nonatomic) NSSize aspectRatio;
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(assign) BOOL blurFramesTogether;
-@property(assign) NSSize aspectRatio;
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
