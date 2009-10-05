@@ -624,10 +624,9 @@ bail:
 	}
 	videoView.currentFillBufferIndex = nextFillBufferIndex;
 
-	id<ECVFrameReading> frame = nil;
-	id<ECVFrameReading> *const framePtr = _videoTrack ? &frame : NULL;
-	[videoView drawBufferIndex:bufferToDraw getCompletedFrame:framePtr];
-	if(frame) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
+	[videoView drawBufferIndex:bufferToDraw];
+
+	if(_videoTrack) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:[videoView frameWithBufferAtIndex:bufferToDraw] waitUntilDone:NO];
 
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
 	_fieldType = fieldType;

@@ -31,15 +31,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVMaxPendingDisplayFrames 1
 #define ECVMaxPendingAttachedFrames 1
-#define ECVFillingBuffers 1
-#define ECVLastFilledBuffers 1
-#define ECVLastDrawnBuffers 1
-#define ECVUnassignedBuffers 1
-
 #define ECVFieldBuffersPerFrame 2
+
+#define ECVCurrentFillBuffers 1
+#define ECVPreviousFillBuffers 1
+#define ECVCurrentDrawBuffers 1
+#define ECVUnassignedBuffers 1
 #define ECVMaxPendingDisplayBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingDisplayFrames)
 #define ECVMaxPendingAttachedBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingAttachedFrames)
-#define ECVRequiredBufferCount (ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers + ECVFillingBuffers + ECVLastFilledBuffers + ECVLastDrawnBuffers + ECVUnassignedBuffers)
+
+#define ECVRequiredBufferCount (ECVCurrentFillBuffers + ECVPreviousFillBuffers + ECVCurrentDrawBuffers + ECVUnassignedBuffers + ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers)
 
 NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
 {
@@ -205,23 +206,22 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 	return NSNotFound;
 }
-- (void)drawBufferIndex:(NSUInteger)index getCompletedFrame:(out id<ECVFrameReading> *)outFrame
+- (void)drawBufferIndex:(NSUInteger)index
 {
-	if(NSNotFound == index) {
-		if(outFrame) *outFrame = nil;
-		return;
-	}
+	if(NSNotFound == index) return;
 	[_bufferPoolLock lock];
 	[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:index] atIndex:0];
 	[_bufferPoolLock unlock];
-	if(outFrame) {
-		ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
-		[_attachedFrameLock lock];
-		[_attachedFrames addObject:frame];
-		[_attachedFrameIndexes addIndex:index];
-		[_attachedFrameLock unlock];
-		*outFrame = frame;
-	}
+}
+- (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index
+{
+	if(NSNotFound == index) return nil;
+	ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
+	[_attachedFrameLock lock];
+	[_attachedFrames addObject:frame];
+	[_attachedFrameIndexes addIndex:index];
+	[_attachedFrameLock unlock];
+	return frame;
 }
 - (void *)bufferBytesAtIndex:(NSUInteger)index
 {

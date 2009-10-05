@@ -64,14 +64,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods must be called from the same thread.
 - (void)setPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
+
+@property(assign, nonatomic) NSUInteger currentFillBufferIndex;
+@property(readonly, nonatomic) NSUInteger currentDrawBufferIndex;
 - (NSUInteger)bufferIndexByBlurringPastFrames;
 - (NSUInteger)nextFillBufferIndex:(NSUInteger)bufferToDraw;
-- (void)drawBufferIndex:(NSUInteger)index getCompletedFrame:(out id<ECVFrameReading> *)outFrame;
+- (void)resetFrames;
+
 - (void *)bufferBytesAtIndex:(NSUInteger)index;
 - (void)clearBufferAtIndex:(NSUInteger)index;
-- (void)resetFrames;
-@property(assign) NSUInteger currentFillBufferIndex;
-@property(readonly) NSUInteger currentDrawBufferIndex;
+- (void)drawBufferIndex:(NSUInteger)index;
+- (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index;
 
 // These mthods must be called from the main thread.
 - (void)startDrawing;
