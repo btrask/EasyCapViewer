@@ -140,7 +140,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_attachedFrames makeObjectsPerformSelector:@selector(detach)];
 	[_attachedFrameLock unlock];
 
-	if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
+	if(_textureNames) ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
 	[_textureNames release];
 	_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * ECVRequiredBufferCount];
 	ECVglError(glGenTextures(ECVRequiredBufferCount, [_textureNames mutableBytes]));
@@ -160,8 +160,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
 		[self clearBufferAtIndex:i];
 	}
-
-	_numberOfBuffers = ECVRequiredBufferCount;
 
 	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
@@ -198,7 +196,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_bufferPoolLock unlock];
 
 	NSUInteger i;
-	for(i = 0; i < _numberOfBuffers; i++) {
+	for(i = 0; i < ECVRequiredBufferCount; i++) {
 		if(_currentFillBufferIndex == i || bufferToDraw == i || lastDrawnBufferIndex == i) continue;
 		if([attachedFrameIndexes containsIndex:i]) continue;
 		if([readyBufferIndexQueue containsObject:[NSNumber numberWithUnsignedInteger:i]]) continue;
@@ -297,7 +295,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 	_magFilter = filter;
 	NSUInteger i = 0;
-	for(i = 0; i < _numberOfBuffers; i++) {
+	for(i = 0; i < ECVRequiredBufferCount; i++) {
 		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
 	}
@@ -545,7 +543,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
-	ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
+	ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
 	[_bufferPoolLock release];
 	[_bufferData release];
 	[_textureNames release];

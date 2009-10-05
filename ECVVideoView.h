@@ -33,8 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVVideoView : NSOpenGLView <ECVFrameReading, NSWindowDelegate>
 {
 	@private
-	NSUInteger _numberOfBuffers;
-
 	NSMutableData *_bufferData;
 	NSMutableData *_textureNames;
 	NSUInteger _currentFillBufferIndex;
