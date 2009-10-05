@@ -42,24 +42,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVRequiredBufferCount (ECVCurrentFillBuffers + ECVPreviousFillBuffers + ECVCurrentDrawBuffers + ECVUnassignedBuffers + ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers)
 
-NS_INLINE size_t ECVPixelFormatTypeBPP(OSType t)
+#define ECVPlayButtonSize 75
+
+NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 {
 	switch(t) {
-		case k2vuyPixelFormat: return 2;
+		case kCVPixelFormatType_422YpCbCr8: return 2;
 	}
 	return 0;
 }
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	switch(t) {
-		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
+		case kCVPixelFormatType_422YpCbCr8: return CFSwapInt64HostToBig(0x8010801080108010ULL);
 	}
 	return 0;
 }
 NS_INLINE GLenum ECVPixelFormatTypeToGLFormat(OSType t)
 {
 	switch(t) {
-		case k2vuyPixelFormat: return GL_YCBCR_422_APPLE;
+		case kCVPixelFormatType_422YpCbCr8: return GL_YCBCR_422_APPLE;
 	}
 	return 0;
 }
@@ -67,9 +69,9 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 {
 	switch(t) {
 #if LITTLE_ENDIAN
-		case k2vuyPixelFormat: return GL_UNSIGNED_SHORT_8_8_APPLE;
+		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_APPLE;
 #else
-		case k2vuyPixelFormat: return GL_UNSIGNED_SHORT_8_8_REV_APPLE;
+		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_REV_APPLE;
 #endif
 	}
 	return 0;
@@ -93,13 +95,15 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 
 @interface ECVVideoView(Private)
 
+- (void)_generatePlayButton;
+
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
 - (void)_detachFrame:(ECVAttachedFrame *)frame;
-- (NSUInteger)_unusedBufferIndex;
 
 - (void)_drawOneFrame;
 - (void)_drawBuffer:(NSUInteger)index;
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength;
+- (void)_drawPlayButton;
 - (void)_drawResizeHandle;
 
 @end
@@ -124,16 +128,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLContextObj const contextObj = [context CGLContextObj];
 	[context makeCurrentContext];
 	CGLLockContext(contextObj);
+	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
 	NSUInteger i;
-	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+
+	_blurredBufferIndex = NSNotFound;
 
 	[_bufferPoolLock lock];
 	_pixelFormatType = formatType;
 	_pixelSize = size;
-	_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
+	_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
 	_currentDrawBufferIndex = NSNotFound;
-	_blurredBufferIndex = NSNotFound;
 	[_bufferPoolLock unlock];
 
 	[_attachedFrameLock lock];
@@ -157,7 +162,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
-		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
+		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
 		[self clearBufferAtIndex:i];
 	}
 
@@ -263,6 +268,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)stopDrawing
 {
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
+	[self setNeedsDisplay:YES];
 }
 @synthesize aspectRatio = _aspectRatio;
 - (void)setAspectRatio:(NSSize)ratio
@@ -274,6 +280,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 #pragma mark -
 
 @synthesize delegate;
+@synthesize target;
+@synthesize action;
 @synthesize vsync = _vsync;
 - (void)setVsync:(BOOL)flag
 {
@@ -304,6 +312,43 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 @synthesize showDroppedFrames = _showDroppedFrames;
 
 #pragma mark -ECVVideoView(Private)
+
+- (void)_generatePlayButton
+{
+	if(_playButtonTextureName) ECVglError(glDeleteTextures(1, &_playButtonTextureName));
+	[_playButton release];
+	_playButton = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVPlayButtonSize pixelsHigh:ECVPlayButtonSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVPlayButtonSize * 4 bitsPerPixel:32];
+	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:_playButton]];
+
+	[[NSColor clearColor] set];
+	NSRect const b = NSMakeRect(0.0f, 0.0f, ECVPlayButtonSize, ECVPlayButtonSize);
+	NSRectFill(b);
+	[[NSColor colorWithDeviceWhite:0.5f alpha:0.67f] set];
+	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
+
+	NSBezierPath *const iconPath = [NSBezierPath bezierPath];
+	[iconPath moveToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.75f), round(NSMidY(b)))];
+	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.7f))];
+	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.3f))];
+	[iconPath closePath];
+	[[NSColor whiteColor] set];
+	[iconPath fill];
+
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+
+	ECVglError(glGenTextures(1, &_playButtonTextureName));
+	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _playButtonTextureName));
+	ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, [_playButton pixelsWide], [_playButton pixelsHigh], 0, GL_RGBA, GL_UNSIGNED_BYTE, [_playButton bitmapData]));
+
+	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	CGLUnlockContext(contextObj);
+}
+
+#pragma mark -
 
 - (GLuint)_textureNameAtIndex:(NSUInteger)index
 {
@@ -396,6 +441,30 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	glVertex2f(NSMaxX(b) - t, NSMinY(b) + t);
 	glVertex2f(NSMaxX(b) - t, NSMinY(b)    );
 	glEnd();
+}
+- (void)_drawPlayButton
+{
+	if(_displayLink && CVDisplayLinkIsRunning(_displayLink)) return;
+	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _playButtonTextureName));
+
+	NSRect const b = [self bounds];
+	NSRect const playButtonRect = NSMakeRect(round(NSMidX(b) - ECVPlayButtonSize / 2.0f), round(NSMinY(b) + (NSHeight(b) - ECVPlayButtonSize) / 3.0f), ECVPlayButtonSize, ECVPlayButtonSize);
+
+	GLfloat const c = _highlighted ? 0.67f : 1.0f;
+	glColor4f(c, c, c, 1.0f);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, ECVPlayButtonSize);
+	glVertex2f(NSMinX(playButtonRect), NSMinY(playButtonRect));
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex2f(NSMinX(playButtonRect), NSMaxY(playButtonRect));
+	glTexCoord2f(ECVPlayButtonSize, 0.0f);
+	glVertex2f(NSMaxX(playButtonRect), NSMaxY(playButtonRect));
+	glTexCoord2f(ECVPlayButtonSize, ECVPlayButtonSize);
+	glVertex2f(NSMaxX(playButtonRect), NSMinY(playButtonRect));
+	glEnd();
+
+	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 - (void)_drawResizeHandle
 {
@@ -499,6 +568,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_bufferPoolLock lock];
 	if(NSNotFound != _currentDrawBufferIndex) [self _drawBuffer:_currentDrawBufferIndex];
 	[_bufferPoolLock unlock];
+	[self _drawPlayButton];
 	[self _drawResizeHandle];
 	glFlush();
 
@@ -532,7 +602,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)mouseDown:(NSEvent *)anEvent
 {
-	if(![self.delegate videoView:self handleMouseDown:anEvent]) [super mouseDown:anEvent];
+	_highlighted = YES;
+	[self setNeedsDisplay:YES];
+	NSEvent *latestEvent = nil;
+	while((latestEvent = [[self window] nextEventMatchingMask:NSLeftMouseDraggedMask | NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp) {
+		_highlighted = [[[self window] contentView] hitTest:[latestEvent locationInWindow]] == self;
+		[self setNeedsDisplay:YES];
+	}
+	[[self window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
+	if(_highlighted) [NSApp sendAction:self.action to:self.target from:self];
+	_highlighted = NO;
+	[self setNeedsDisplay:YES];
 }
 
 #pragma mark -NSObject
@@ -542,8 +622,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
+
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
+	ECVglError(glDeleteTextures(1, &_playButtonTextureName));
+
 	[_bufferPoolLock release];
 	[_bufferData release];
 	[_textureNames release];
@@ -552,6 +635,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_attachedFrames release];
 	[_attachedFrameIndexes release];
 	CVDisplayLinkRelease(_displayLink);
+	[_playButton release];
 	[super dealloc];
 }
 
@@ -572,6 +656,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_readyBufferIndexQueue = [[NSMutableArray alloc] init];
 	_attachedFrames = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
+	[self _generatePlayButton];
 	[self resetFrames];
 }
 
@@ -609,7 +694,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (size_t)bytesPerRow
 {
 	[_bufferPoolLock lock];
-	size_t const bpr = _pixelSize.width * ECVPixelFormatTypeBPP(_pixelFormatType);
+	size_t const bpr = _pixelSize.width * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
 	[_bufferPoolLock unlock];
 	return bpr;
 }
@@ -645,10 +730,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 @implementation NSObject(ECVVideoViewDelegate)
 
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
-{
-	return NO;
-}
-- (BOOL)videoView:(ECVVideoView *)sender handleMouseDown:(NSEvent *)anEvent
 {
 	return NO;
 }

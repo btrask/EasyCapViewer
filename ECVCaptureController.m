@@ -684,7 +684,7 @@ ECVNoDeviceError:
 	NSParameterAssert(!self.isPlaying);
 	ECVPixelSize s = self.captureSize;
 	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
-	[videoView setPixelFormat:k2vuyPixelFormat size:s];
+	[videoView setPixelFormat:kCVPixelFormatType_422YpCbCr8 size:s]; // AKA k2vuyPixelFormat.
 	_pendingImageLength = 0;
 }
 
@@ -718,6 +718,8 @@ ECVNoDeviceError:
 	videoView.vsync = [[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey];
 	videoView.showDroppedFrames = [[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey];
 	videoView.magFilter = [[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey];
+	videoView.target = self;
+	videoView.action = @selector(togglePlaying:);
 
 	[w center];
 	[self noteVideoSettingDidChange];
@@ -808,14 +810,6 @@ ECVNoDeviceError:
 		[self togglePlaying:self];
 		return YES;
 	}
-	return NO;
-}
-- (BOOL)videoView:(ECVVideoView *)sender handleMouseDown:(NSEvent *)firstEvent
-{
-	NSEvent *latestEvent = nil;
-	while((latestEvent = [[sender window] nextEventMatchingMask:NSLeftMouseDraggedMask | NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp);
-	[[sender window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
-	if([[[sender window] contentView] hitTest:[latestEvent locationInWindow]] == sender) [self togglePlaying:self];
 	return NO;
 }
 

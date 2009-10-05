@@ -52,8 +52,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	CVDisplayLinkRef _displayLink;
 	NSRect _outputRect;
+	NSBitmapImageRep *_playButton;
+	GLuint _playButtonTextureName;
+	BOOL _highlighted;
 
 	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
+	IBOutlet id target;
+	SEL action;
 	NSSize _aspectRatio;
 	BOOL _vsync;
 	GLint _magFilter;
@@ -81,6 +86,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
+@property(assign) id target;
+@property(assign) SEL action;
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
@@ -91,6 +98,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @optional
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
-- (BOOL)videoView:(ECVVideoView *)sender handleMouseDown:(NSEvent *)anEvent;
 
 @end
