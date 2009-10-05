@@ -101,7 +101,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 + (void)initialize
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithInteger:ECVBlur], ECVDeinterlacingModeKey,
+		[NSNumber numberWithInteger:ECVWeave], ECVDeinterlacingModeKey,
 		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
 		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
 		[NSNumber numberWithDouble:0.5f], ECVHueKey,
@@ -430,7 +430,7 @@ ECVNoDeviceError:
 - (NSSize)outputSize
 {
 	NSSize const ratio = videoView.aspectRatio;
-	NSSize const s = self.captureSize;
+	ECVPixelSize const s = self.captureSize;
 	return NSMakeSize(s.width, s.width / ratio.width * ratio.height);
 }
 - (NSSize)outputSizeWithScale:(NSInteger)scale
@@ -572,7 +572,7 @@ bail:
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
 {
 	if(!bytes || !length) return;
-	UInt8 *const dest = videoView.mutableBufferBytes;
+	UInt8 *const dest = [videoView bufferBytesAtIndex:videoView.currentFillBufferIndex];
 	if(!dest) return;
 	size_t const maxLength = videoView.bufferSize;
 	size_t const theoreticalRowLength = self.captureSize.width * 2; // YUYV is effectively 2Bpp.
@@ -605,14 +605,29 @@ bail:
 		return;
 	}
 
-	ECVBufferFillType fill = ECVBufferFillGarbage;
+	NSUInteger const bufferToDraw = ECVBlur == _deinterlacingMode ? [videoView bufferIndexByBlurringPastFrames] : videoView.currentFillBufferIndex;
+
+	NSUInteger const nextFillBufferIndex = [videoView nextFillBufferIndex:bufferToDraw];
 	switch(_deinterlacingMode) {
-		case ECVWeave    : fill = ECVBufferFillPrevious; break;
-		case ECVAlternate: fill = ECVBufferFillClear   ; break;
+		case ECVWeave:
+		{
+			NSUInteger sourceIndex = videoView.currentFillBufferIndex;
+			if(NSNotFound == sourceIndex) sourceIndex = videoView.currentDrawBufferIndex;
+			void *const dst = [videoView bufferBytesAtIndex:nextFillBufferIndex];
+			void *const src = [videoView bufferBytesAtIndex:sourceIndex];
+			if(dst && src) memcpy(dst, src, videoView.bufferSize);
+			else [videoView clearBufferAtIndex:nextFillBufferIndex];
+			break;
+		}
+		case ECVAlternate:
+			[videoView clearBufferAtIndex:nextFillBufferIndex];
+			break;
 	}
+	videoView.currentFillBufferIndex = nextFillBufferIndex;
+
 	id<ECVFrameReading> frame = nil;
 	id<ECVFrameReading> *const framePtr = _videoTrack ? &frame : NULL;
-	[videoView beginNewFrameWithFill:fill getLastFrame:framePtr];
+	[videoView drawBufferIndex:bufferToDraw getCompletedFrame:framePtr];
 	if(frame) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
 
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
@@ -669,9 +684,9 @@ ECVNoDeviceError:
 - (void)noteVideoSettingDidChange
 {
 	NSParameterAssert(!self.isPlaying);
-	NSSize s = self.captureSize;
-	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2.0f;
-	[videoView configureWithPixelFormat:k2vuyPixelFormat size:(ECVPixelSize){roundf(s.width), roundf(s.height)}];
+	ECVPixelSize s = self.captureSize;
+	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
+	[videoView setPixelFormat:k2vuyPixelFormat size:s];
 	_pendingImageLength = 0;
 }
 
@@ -697,7 +712,8 @@ ECVNoDeviceError:
 - (void)windowDidLoad
 {
 	NSWindow *const w = [self window];
-	[w setFrame:[w frameRectForContentRect:(NSRect){NSZeroPoint, self.captureSize}] display:NO];
+	ECVPixelSize const s = self.captureSize;
+	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 	self.aspectRatio = [self sizeWithAspectRatio:[[[NSUserDefaults standardUserDefaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]];
 
 	self.deinterlacingMode = [[NSUserDefaults standardUserDefaults] integerForKey:ECVDeinterlacingModeKey];

@@ -88,7 +88,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		[frame retain];
 		ECVPixelSize const size = frame.pixelSize;
 		CVPixelBufferRef pixelBuffer = NULL;
-		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, frame.pixelFormatType, (void *)frame.bufferData, frame.bytesPerRow, (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, frame.pixelFormatType, frame.bufferBytes, frame.bytesPerRow, (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
 		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, _timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 		CVPixelBufferRelease(pixelBuffer);
 	} else {

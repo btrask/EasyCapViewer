@@ -85,6 +85,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 - (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index;
 @property(readonly) NSUInteger bufferIndex;
 - (void)tryToDetach;
+- (void)detach;
 - (void)detachWait:(BOOL)wait;
 
 @end
@@ -92,8 +93,6 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 @interface ECVVideoView(Private)
 
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
-- (void *)_bufferBytesAtIndex:(NSUInteger)index;
-- (void)_clearBufferAtIndex:(NSUInteger)index;
 - (void)_detachFrame:(ECVAttachedFrame *)frame;
 - (NSUInteger)_unusedBufferIndex;
 
@@ -116,7 +115,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -ECVVideoView
 
-- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size
+- (void)setPixelFormat:(OSType)formatType size:(ECVPixelSize)size
 {
 	[self resetFrames];
 
@@ -132,7 +131,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_pixelFormatType = formatType;
 	_pixelSize = size;
 	_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBPP(_pixelFormatType);
+	_currentDrawBufferIndex = NSNotFound;
+	_blurredBufferIndex = NSNotFound;
 	[_bufferPoolLock unlock];
+
+	[_attachedFrameLock lock];
+	[_attachedFrames makeObjectsPerformSelector:@selector(detach)];
+	[_attachedFrameLock unlock];
 
 	if(_textureNames) ECVglError(glDeleteTextures(_numberOfBuffers, [_textureNames bytes]));
 	[_textureNames release];
@@ -151,8 +156,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
-		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self _bufferBytesAtIndex:i]));
-		[self _clearBufferAtIndex:i];
+		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
+		[self clearBufferAtIndex:i];
 	}
 
 	_numberOfBuffers = ECVRequiredBufferCount;
@@ -160,56 +165,74 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
-- (BOOL)beginNewFrameWithFill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame
+- (NSUInteger)bufferIndexByBlurringPastFrames
 {
-	NSUInteger const previousFullBufferIndex = _lastFilledBufferIndex;
-	NSUInteger const latestFullBufferIndex = _fillingBufferIndex;
-	NSUInteger const newBufferIndex = self._unusedBufferIndex;
-	if(NSNotFound == newBufferIndex) {
-		_fillingBufferIndex = NSNotFound;
-		return NO;
-	}
-
-	NSUInteger bufferToDraw = latestFullBufferIndex;
-	switch(fill) {
-		case ECVBufferFillClear:
-			[self _clearBufferAtIndex:newBufferIndex];
-			break;
-		case ECVBufferFillPrevious:
-			if(NSNotFound == latestFullBufferIndex) {
-				[_bufferPoolLock lock];
-				BOOL const hasDrawnBuffer = NSNotFound != _lastDrawnBufferIndex;
-				if(hasDrawnBuffer) memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:_lastDrawnBufferIndex], _bufferSize);
-				[_bufferPoolLock unlock];
-				if(!hasDrawnBuffer) [self _clearBufferAtIndex:newBufferIndex];
-			} else memcpy([self _bufferBytesAtIndex:newBufferIndex], [self _bufferBytesAtIndex:latestFullBufferIndex], self.bufferSize);
-			break;
-	}
-	if(self.blurFramesTogether && NSNotFound != latestFullBufferIndex && NSNotFound != previousFullBufferIndex) {
-		bufferToDraw = previousFullBufferIndex;
-		UInt8 *const dst = [self _bufferBytesAtIndex:bufferToDraw];
-		UInt8 *const src = [self _bufferBytesAtIndex:latestFullBufferIndex];
-		NSUInteger i;
-		for(i = 0; i < _bufferSize; i++) dst[i] = dst[i] / 2 + src[i] / 2;
-	}
+	NSUInteger const blurredBufferIndex = _blurredBufferIndex;
+	_blurredBufferIndex = _currentFillBufferIndex;
+	if(NSNotFound == _currentFillBufferIndex || NSNotFound == blurredBufferIndex) return _currentFillBufferIndex;
+	UInt8 *const src = [self bufferBytesAtIndex:_currentFillBufferIndex];
+	UInt8 *const dst = [self bufferBytesAtIndex:blurredBufferIndex];
+	NSUInteger i;
+	for(i = 0; i < _bufferSize; i++) dst[i] = dst[i] / 2 + src[i] / 2;
+	return blurredBufferIndex;
+}
+- (NSUInteger)nextFillBufferIndex:(NSUInteger)bufferToDraw
+{
+	[_attachedFrameLock lock];
+	NSUInteger const attachedFrameCount = [_attachedFrames count];
+	NSUInteger const keep = attachedFrameCount % ECVMaxPendingAttachedBuffers;
+	if(attachedFrameCount > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, attachedFrameCount - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
+	NSIndexSet *const attachedFrameIndexes = [[_attachedFrameIndexes copy] autorelease];
+	[_attachedFrameLock unlock];
 
 	[_bufferPoolLock lock];
-	if(NSNotFound != bufferToDraw) {
-		[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:bufferToDraw] atIndex:0];
-		if(outFrame) {
-			ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:bufferToDraw] autorelease];
-			[_attachedFrameLock lock];
-			[_attachedFrames addObject:frame];
-			[_attachedFrameIndexes addIndex:bufferToDraw];
-			[_attachedFrameLock unlock];
-			*outFrame = frame;
-		}
-	}
+	NSUInteger const readyBufferCount = [_readyBufferIndexQueue count];
+	if(readyBufferCount > ECVMaxPendingDisplayBuffers) {
+		NSUInteger const keep = readyBufferCount % ECVMaxPendingDisplayBuffers;
+		[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, readyBufferCount - keep)];
+		_frameDropStrength = 1.0f;
+	} else _frameDropStrength *= 0.75f;
+	NSArray *const readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
+	NSUInteger const lastDrawnBufferIndex = _currentDrawBufferIndex;
 	[_bufferPoolLock unlock];
 
-	_lastFilledBufferIndex = latestFullBufferIndex;
-	_fillingBufferIndex = newBufferIndex;
-	return YES;
+	NSUInteger i;
+	for(i = 0; i < _numberOfBuffers; i++) {
+		if(_currentFillBufferIndex == i || bufferToDraw == i || lastDrawnBufferIndex == i) continue;
+		if([attachedFrameIndexes containsIndex:i]) continue;
+		if([readyBufferIndexQueue containsObject:[NSNumber numberWithUnsignedInteger:i]]) continue;
+		return i;
+	}
+	return NSNotFound;
+}
+- (void)drawBufferIndex:(NSUInteger)index getCompletedFrame:(out id<ECVFrameReading> *)outFrame
+{
+	if(NSNotFound == index) {
+		if(outFrame) *outFrame = nil;
+		return;
+	}
+	[_bufferPoolLock lock];
+	[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:index] atIndex:0];
+	[_bufferPoolLock unlock];
+	if(outFrame) {
+		ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
+		[_attachedFrameLock lock];
+		[_attachedFrames addObject:frame];
+		[_attachedFrameIndexes addIndex:index];
+		[_attachedFrameLock unlock];
+		*outFrame = frame;
+	}
+}
+- (void *)bufferBytesAtIndex:(NSUInteger)index
+{
+	if(NSNotFound == index) return NULL;
+	return (char *)[_bufferData mutableBytes] + _bufferSize * index;
+}
+- (void)clearBufferAtIndex:(NSUInteger)index
+{
+	if(NSNotFound == index) return;
+	uint64_t const val = ECVPixelFormatBlackPattern(_pixelFormatType);
+	memset_pattern8([self bufferBytesAtIndex:index], &val, self.bufferSize);
 }
 - (void)resetFrames
 {
@@ -217,12 +240,15 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_readyBufferIndexQueue removeAllObjects];
 	_frameDropStrength = 0.0f;
 	[_bufferPoolLock unlock];
-	_fillingBufferIndex = NSNotFound;
-	_lastFilledBufferIndex = NSNotFound;
+	_currentFillBufferIndex = NSNotFound;
 }
-- (void *)mutableBufferBytes
+@synthesize currentFillBufferIndex = _currentFillBufferIndex;
+- (NSUInteger)currentDrawBufferIndex
 {
-	return [self _bufferBytesAtIndex:_fillingBufferIndex];
+	[_bufferPoolLock lock];
+	NSUInteger const i = _currentDrawBufferIndex;
+	[_bufferPoolLock unlock];
+	return i;
 }
 
 #pragma mark -
@@ -287,52 +313,12 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(NSNotFound == index) return 0;
 	return ((GLuint *)[_textureNames mutableBytes])[index];
 }
-- (void *)_bufferBytesAtIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return NULL;
-	return (char *)[_bufferData mutableBytes] + _bufferSize * index;
-}
-- (void)_clearBufferAtIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return;
-	uint64_t const val = ECVPixelFormatBlackPattern(_pixelFormatType);
-	memset_pattern8([self _bufferBytesAtIndex:index], &val, self.bufferSize);
-}
 - (void)_detachFrame:(ECVAttachedFrame *)frame
 {
 	[_attachedFrameLock lock];
 	[_attachedFrames removeObject:frame];
 	[_attachedFrameIndexes removeIndex:frame.bufferIndex];
 	[_attachedFrameLock unlock];
-}
-- (NSUInteger)_unusedBufferIndex
-{
-	[_attachedFrameLock lock];
-	NSUInteger const attachedFrameCount = [_attachedFrames count];
-	NSUInteger const keep = attachedFrameCount % ECVMaxPendingAttachedBuffers;
-	if(attachedFrameCount > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, attachedFrameCount - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
-	NSIndexSet *const attachedFrameIndexes = [[_attachedFrameIndexes copy] autorelease];
-	[_attachedFrameLock unlock];
-
-	[_bufferPoolLock lock];
-	NSUInteger const readyBufferCount = [_readyBufferIndexQueue count];
-	if(readyBufferCount > ECVMaxPendingDisplayBuffers) {
-		NSUInteger const keep = readyBufferCount % ECVMaxPendingDisplayBuffers;
-		[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, readyBufferCount - keep)];
-		_frameDropStrength = 1.0f;
-	} else _frameDropStrength *= 0.75f;
-	NSArray *const readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
-	NSUInteger const lastDrawnBufferIndex = _lastDrawnBufferIndex;
-	[_bufferPoolLock unlock];
-
-	NSUInteger i;
-	for(i = 0; i < _numberOfBuffers; i++) {
-		if(_lastFilledBufferIndex == i || _fillingBufferIndex == i || lastDrawnBufferIndex == i) continue;
-		if([attachedFrameIndexes containsIndex:i]) continue;
-		if([readyBufferIndexQueue containsObject:[NSNumber numberWithUnsignedInteger:i]]) continue;
-		return i;
-	}
-	return NSNotFound;
 }
 
 #pragma mark -
@@ -361,7 +347,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 		[_bufferPoolLock lock];
 		[_readyBufferIndexQueue removeLastObject];
-		_lastDrawnBufferIndex = index;
+		_currentDrawBufferIndex = index;
 		[_bufferPoolLock unlock];
 	}
 
@@ -371,7 +357,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:index]));
-	ECVglError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self _bufferBytesAtIndex:index]));
+	ECVglError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self bufferBytesAtIndex:index]));
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, _pixelSize.height);
@@ -514,7 +500,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	[_bufferPoolLock lock];
-	if(NSNotFound != _lastDrawnBufferIndex) [self _drawBuffer:_lastDrawnBufferIndex];
+	if(NSNotFound != _currentDrawBufferIndex) [self _drawBuffer:_currentDrawBufferIndex];
 	[_bufferPoolLock unlock];
 	[self _drawResizeHandle];
 	glFlush();
@@ -598,7 +584,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	return NO;
 }
-- (void const *)bufferData
+- (void *)bufferBytes
 {
 	return NULL;
 }
@@ -693,6 +679,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	[self detachWait:NO];
 }
+- (void)detach
+{
+	[self detachWait:YES];
+}
 - (void)detachWait:(BOOL)wait
 {
 	if(wait) [_videoViewLock lock];
@@ -717,9 +707,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	return !!_videoView;
 }
-- (void const *)bufferData
+- (void *)bufferBytes
 {
-	return [_videoView _bufferBytesAtIndex:_bufferIndex];
+	return [_videoView bufferBytesAtIndex:_bufferIndex];
 }
 - (NSUInteger)bufferSize
 {

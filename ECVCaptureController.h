@@ -152,7 +152,7 @@ extern NSString *const ECVSaturationKey;
 @interface ECVCaptureController(ECVAbstract)
 
 @property(readonly) BOOL requiresHighSpeed;
-@property(readonly) NSSize captureSize;
+@property(readonly) ECVPixelSize captureSize;
 @property(readonly) NSUInteger simultaneousTransfers;
 @property(readonly) NSUInteger microframesPerTransfer;
 @property(readonly) UInt8 isochReadingPipe;

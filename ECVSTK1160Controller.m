@@ -109,9 +109,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return YES;
 }
-- (NSSize)captureSize
+- (ECVPixelSize)captureSize
 {
-	return NSMakeSize(stk11xx_image_sizes[resolution].x, stk11xx_image_sizes[resolution].y);
+	return (ECVPixelSize){stk11xx_image_sizes[resolution].x, stk11xx_image_sizes[resolution].y};
 }
 - (NSUInteger)simultaneousTransfers
 {

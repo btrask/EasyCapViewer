@@ -28,12 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVFrameReading.h"
 
-typedef enum {
-	ECVBufferFillGarbage,
-	ECVBufferFillClear,
-	ECVBufferFillPrevious,
-} ECVBufferFillType;
-
 @protocol ECVVideoViewDelegate;
 
 @interface ECVVideoView : NSOpenGLView <ECVFrameReading, NSWindowDelegate>
@@ -43,12 +37,12 @@ typedef enum {
 
 	NSMutableData *_bufferData;
 	NSMutableData *_textureNames;
-	NSUInteger _fillingBufferIndex;
-	NSUInteger _lastFilledBufferIndex;
+	NSUInteger _currentFillBufferIndex;
+	NSUInteger _blurredBufferIndex;
 
 	NSLock *_bufferPoolLock;
 	NSMutableArray *_readyBufferIndexQueue;
-	NSUInteger _lastDrawnBufferIndex;
+	NSUInteger _currentDrawBufferIndex;
 	CGFloat _frameDropStrength;
 	OSType _pixelFormatType;
 	ECVPixelSize _pixelSize;
@@ -70,10 +64,15 @@ typedef enum {
 }
 
 // These methods must be called from the same thread.
-- (void)configureWithPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
-- (BOOL)beginNewFrameWithFill:(ECVBufferFillType)fill getLastFrame:(out id<ECVFrameReading> *)outFrame;
+- (void)setPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
+- (NSUInteger)bufferIndexByBlurringPastFrames;
+- (NSUInteger)nextFillBufferIndex:(NSUInteger)bufferToDraw;
+- (void)drawBufferIndex:(NSUInteger)index getCompletedFrame:(out id<ECVFrameReading> *)outFrame;
+- (void *)bufferBytesAtIndex:(NSUInteger)index;
+- (void)clearBufferAtIndex:(NSUInteger)index;
 - (void)resetFrames;
-@property(readonly) void *mutableBufferBytes;
+@property(assign) NSUInteger currentFillBufferIndex;
+@property(readonly) NSUInteger currentDrawBufferIndex;
 
 // These mthods must be called from the main thread.
 - (void)startDrawing;
