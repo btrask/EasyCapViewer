@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (void)_delayedHideCursor
 {
-	if([self isMainWindow]) [NSCursor setHiddenUntilMouseMoves:YES];
+	if([self isKeyWindow]) [NSCursor setHiddenUntilMouseMoves:YES];
 }
 
 #pragma mark NSWindow
@@ -67,9 +67,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return YES;
 }
-- (void)becomeMainWindow
+- (void)becomeKeyWindow
 {
-	[super becomeMainWindow];
+	[super becomeKeyWindow];
 	[self _hideCursorAfterDelay];
 }
 
