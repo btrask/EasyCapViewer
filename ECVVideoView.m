@@ -326,12 +326,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[[NSColor colorWithDeviceWhite:0.5f alpha:0.67f] set];
 	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
 
+	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
+	[shadow setShadowBlurRadius:4.0f];
+	[shadow setShadowOffset:NSMakeSize(0.0f, -2.0f)];
+	[shadow set];
+	[[NSColor whiteColor] set];
+
 	NSBezierPath *const iconPath = [NSBezierPath bezierPath];
 	[iconPath moveToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.75f), round(NSMidY(b)))];
 	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.7f))];
 	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.3f))];
 	[iconPath closePath];
-	[[NSColor whiteColor] set];
 	[iconPath fill];
 
 	NSOpenGLContext *const context = [self openGLContext];
