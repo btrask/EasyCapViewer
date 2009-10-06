@@ -287,7 +287,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
  */
 	int x,y,xsub,ysub;
 	
-	switch (stk11xx_image_sizes[dev->resolution].x)
+	switch (dev.captureSize.width)
 	{
 		case 720:
 			x = 0x5a0;
@@ -312,7 +312,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 			return -1;
 	}
 
-	switch (stk11xx_image_sizes[dev->resolution].y)
+	switch (dev.captureSize.height)
 	{
 		case 576:
 		case 288:
@@ -664,13 +664,11 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
 int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 {
 	// Based on Table 184 in the datasheet.
-	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
 	struct {
 		u_int8_t reg;
 		int16_t val;
 	} settings[] = {
 		{0x01, 0x08},
-		{0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | MODE},
 		{0x03, SAA7115GAI18StaticGainControl1 | SAA7115GAI28StaticGainControl2 | SAA7115HOLDGAutomaticGainControlDisabled},
 		{0x04, 0x90},
 		{0x05, 0x90},
@@ -695,16 +693,23 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		{0x1c, 0xa9},
 		{0x1d, 0x01},
 		{0x83, 0x31},
-		{0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENOutputControlForMODE(MODE)}
 	};
 	NSUInteger i;
 	for(i = 0; i < numberof(settings); i++) (void)dev_stk0408_write_saa(dev, settings[i].reg, settings[i].val);
 	for(i = 0x41; i <= 0x57; i++) (void)dev_stk0408_write_saa(dev, i, 0xff);
+	(void)dev_stk0408_set_source(dev, dev.videoSource);
 	(void)dev_stk0408_set_brightness(dev, dev.brightness);
 	(void)dev_stk0408_set_contrast(dev, dev.contrast);
 	(void)dev_stk0408_set_saturation(dev, dev.saturation);
 	(void)dev_stk0408_set_hue(dev, dev.hue);
 	return 0;
+}
+int dev_stk0408_set_source(ECVSTK1160Controller *dev, ECVSTK1160VideoSource source)
+{
+	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
+	dev_stk0408_write_saa(dev, 0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | MODE);
+	dev_stk0408_write_saa(dev, 0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENOutputControlForMODE(MODE));
+	return 1;
 }
 int dev_stk0408_set_brightness(ECVSTK1160Controller *dev, CGFloat brightness)
 {

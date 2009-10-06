@@ -44,43 +44,14 @@ struct stk11xx_coord {
 	int y;
 };
 
-typedef enum {
-	STK11XX_PALETTE_RGB24,
-	STK11XX_PALETTE_RGB32,
-	STK11XX_PALETTE_BGR24,
-	STK11XX_PALETTE_BGR32,
-	STK11XX_PALETTE_UYVY,
-	STK11XX_PALETTE_YUYV
-} T_STK11XX_PALETTE;
-
-typedef enum {
-	STK11XX_80x60,
-	STK11XX_128x96,
-	STK11XX_160x120,
-	STK11XX_213x160,
-	STK11XX_320x240,
-	STK11XX_640x480,
-	STK11XX_720x480,
-	STK11XX_720x576,
-	STK11XX_800x600,
-	STK11XX_1024x768,
-	STK11XX_1280x1024,
-	STK11XX_NBR_SIZES
-} T_STK11XX_RESOLUTION;
-
-static const struct stk11xx_coord stk11xx_image_sizes[STK11XX_NBR_SIZES] = {
-	{   80,   60 },
-	{  128,   96 },
-	{  160,  120 },
-	{  213,  160 },
-	{  320,  240 },
-	{  640,  480 },
-	{  720,  480 },
-	{  720,  576 },
-	{  800,  600 },
-	{ 1024,  768 },
-	{ 1280, 1024 }
+enum {
+	ECVSTK1160SVideoInput = 0,
+	ECVSTK1160Composite1Input = 1,
+	ECVSTK1160Composite2Input = 2,
+	ECVSTK1160Composite3Input = 3,
+	ECVSTK1160Composite4Input = 4
 };
+typedef NSUInteger ECVSTK1160VideoSource;
 
 int dev_stk0408_camera_asleep(ECVSTK1160Controller *);
 int dev_stk0408_configure_device(ECVSTK1160Controller *, int);
@@ -92,6 +63,7 @@ int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val);
 int dev_stk0408_set_streaming(ECVSTK1160Controller *dev, int streaming);
 
 int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev);
+int dev_stk0408_set_source(ECVSTK1160Controller *dev, ECVSTK1160VideoSource source);
 int dev_stk0408_set_brightness(ECVSTK1160Controller *dev, CGFloat brightness);
 int dev_stk0408_set_contrast(ECVSTK1160Controller *dev, CGFloat contrast);
 int dev_stk0408_set_saturation(ECVSTK1160Controller *dev, CGFloat saturation);

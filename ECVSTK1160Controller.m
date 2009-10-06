@@ -65,6 +65,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
 	_videoSource = source;
+	if(self.playing) dev_stk0408_set_source(self, source);
 	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
 }
 - (BOOL)SVideo
@@ -75,7 +76,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format
 {
 	_videoFormat = format;
-	resolution = self.is60HzFormat ? STK11XX_720x480 : STK11XX_720x576;
 	[self noteVideoSettingDidChange];
 	self.windowContentSize = self.outputSize;
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
@@ -111,7 +111,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (ECVPixelSize)captureSize
 {
-	return (ECVPixelSize){stk11xx_image_sizes[resolution].x, stk11xx_image_sizes[resolution].y};
+	return (ECVPixelSize){720, self.is60HzFormat ? 480 : 576};
 }
 - (NSUInteger)simultaneousTransfers
 {

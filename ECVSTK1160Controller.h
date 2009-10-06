@@ -32,15 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "stk11xx.h"
 
 enum {
-	ECVSTK1160SVideoInput = 0,
-	ECVSTK1160Composite1Input = 1,
-	ECVSTK1160Composite2Input = 2,
-	ECVSTK1160Composite3Input = 3,
-	ECVSTK1160Composite4Input = 4
-};
-typedef NSUInteger ECVSTK1160VideoSource;
-
-enum {
 	ECVSTK1160Auto60HzFormat = 0,
 	ECVSTK1160NTSCMFormat = 8,
 	ECVSTK1160PAL60Format = 2,
@@ -59,9 +50,6 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 
 @interface ECVSTK1160Controller : ECVCaptureController <ECVCaptureControllerConfiguring>
 {
-	@public
-	T_STK11XX_RESOLUTION resolution;
-
 	@private
 	ECVSTK1160VideoSource _videoSource;
 	ECVSTK1160VideoFormat _videoFormat;

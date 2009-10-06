@@ -51,10 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (IBAction)changeSource:(id)sender
 {
-	BOOL const playing = _captureController.playing;
-	if(playing) _captureController.playing = NO;
 	_captureController.videoSourceObject = [[sender selectedItem] representedObject];
-	if(playing) _captureController.playing = YES;
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
