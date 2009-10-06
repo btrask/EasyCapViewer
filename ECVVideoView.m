@@ -246,13 +246,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_currentFillBufferIndex = NSNotFound;
 }
 @synthesize currentFillBufferIndex = _currentFillBufferIndex;
-- (NSUInteger)currentDrawBufferIndex
-{
-	[_bufferPoolLock lock];
-	NSUInteger const i = _currentDrawBufferIndex;
-	[_bufferPoolLock unlock];
-	return i;
-}
 
 #pragma mark -
 
@@ -310,6 +303,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLUnlockContext(contextObj);
 }
 @synthesize showDroppedFrames = _showDroppedFrames;
+
+#pragma mark -
+
+- (NSUInteger)currentDrawBufferIndex
+{
+	[_bufferPoolLock lock];
+	NSUInteger const i = _currentDrawBufferIndex;
+	[_bufferPoolLock unlock];
+	return i;
+}
 
 #pragma mark -ECVVideoView(Private)
 

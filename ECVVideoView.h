@@ -69,7 +69,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)setPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
 
 @property(assign, nonatomic) NSUInteger currentFillBufferIndex;
-@property(readonly, nonatomic) NSUInteger currentDrawBufferIndex;
 - (NSUInteger)bufferIndexByBlurringPastFrames;
 - (NSUInteger)nextFillBufferIndex:(NSUInteger)bufferToDraw;
 - (void)resetFrames;
@@ -91,6 +90,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
+
+@property(readonly) NSUInteger currentDrawBufferIndex;
 
 @end
 
