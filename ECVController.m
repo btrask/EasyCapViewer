@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Controllers
 #import "ECVCaptureController.h"
+#import "ECVConfigController.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -50,6 +51,13 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 }
 
 #pragma mark -ECVController
+
+- (IBAction)configureDevice:(id)sender
+{
+	[[ECVConfigController sharedConfigController] showWindow:sender];
+}
+
+#pragma mark -
 
 @synthesize notificationPort = _notificationPort;
 

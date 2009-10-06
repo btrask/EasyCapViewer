@@ -106,8 +106,6 @@ extern NSString *const ECVSaturationKey;
 - (id)initWithDevice:(io_service_t)device error:(out NSError **)outError;
 - (void)noteDeviceRemoved;
 
-- (IBAction)configureDevice:(id)sender;
-
 - (IBAction)play:(id)sender;
 - (IBAction)pause:(id)sender;
 - (IBAction)togglePlaying:(id)sender;

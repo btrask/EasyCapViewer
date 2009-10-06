@@ -205,13 +205,6 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-- (IBAction)configureDevice:(id)sender
-{
-	if([self conformsToProtocol:@protocol(ECVCaptureControllerConfiguring)]) [[[[ECVConfigController alloc] init] autorelease] beginSheetForCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)self];
-}
-
-#pragma mark -
-
 - (IBAction)play:(id)sender
 {
 	self.playing = YES;
@@ -735,6 +728,9 @@ ECVNoDeviceError:
 
 - (void)dealloc
 {
+	ECVConfigController *const config = [ECVConfigController sharedConfigController];
+	if([config captureController] == self) [config setCaptureController:nil];
+
 	if(_deviceInterface) (*_deviceInterface)->USBDeviceClose(_deviceInterface);
 	if(_deviceInterface) (*_deviceInterface)->Release(_deviceInterface);
 	if(_interfaceInterface) (*_interfaceInterface)->Release(_interfaceInterface);
@@ -819,6 +815,7 @@ ECVNoDeviceError:
 - (void)windowDidBecomeMain:(NSNotification *)aNotif
 {
 	if(self.fullScreen) [self performSelector:@selector(_hideMenuBar) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]];
+	[[ECVConfigController sharedConfigController] setCaptureController:self];
 }
 - (void)windowDidResignMain:(NSNotification *)aNotif
 {

@@ -39,20 +39,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSSlider *hueSlider;
 	IBOutlet NSSlider *saturationSlider;
 	ECVCaptureController<ECVCaptureControllerConfiguring> *_captureController;
-	CGFloat _initialBrightness;
-	CGFloat _initialContrast;
-	CGFloat _initialSaturation;
-	CGFloat _initialHue;
 }
 
++ (id)sharedConfigController;
+
+- (IBAction)changeFormat:(id)sender;
+- (IBAction)changeSource:(id)sender;
+- (IBAction)changeDeinterlacing:(id)sender;
 - (IBAction)changeBrightness:(id)sender;
 - (IBAction)changeContrast:(id)sender;
 - (IBAction)changeSaturation:(id)sender;
 - (IBAction)changeHue:(id)sender;
-- (IBAction)dismiss:(id)sender; // Uses the return code from [sender tag].
 
-- (void)beginSheetForCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)c;
-- (void)sheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
+@property(assign) ECVCaptureController<ECVCaptureControllerConfiguring> *captureController;
 
 @end
 

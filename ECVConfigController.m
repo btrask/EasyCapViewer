@@ -31,8 +31,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVConfigController
 
+#pragma mark +ECVConfigController
+
++ (id)sharedConfigController
+{
+	static ECVConfigController *c;
+	if(!c) c = [[self alloc] init];
+	return [[c retain] autorelease];
+}
+
 #pragma mark -ECVConfigController
 
+- (IBAction)changeFormat:(id)sender
+{
+	BOOL const playing = _captureController.playing;
+	if(playing) _captureController.playing = NO;
+	_captureController.videoFormatObject = [[sender selectedItem] representedObject];
+	if(playing) _captureController.playing = YES;
+}
+- (IBAction)changeSource:(id)sender
+{
+	BOOL const playing = _captureController.playing;
+	if(playing) _captureController.playing = NO;
+	_captureController.videoSourceObject = [[sender selectedItem] representedObject];
+	if(playing) _captureController.playing = YES;
+}
+- (IBAction)changeDeinterlacing:(id)sender
+{
+	BOOL const playing = _captureController.playing;
+	if(playing) _captureController.playing = NO;
+	_captureController.deinterlacingMode = [sender selectedTag];
+	if(playing) _captureController.playing = YES;
+}
 - (IBAction)changeBrightness:(id)sender
 {
 	[self _snapSlider:sender];
@@ -53,16 +83,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:sender];
 	_captureController.hue = [sender doubleValue];
 }
-- (IBAction)dismiss:(id)sender
-{
-	[NSApp endSheet:[self window] returnCode:[sender tag]];
-}
 
 #pragma mark -
 
-- (void)beginSheetForCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)c
+@synthesize captureController = _captureController;
+- (void)setCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)c
 {
-	NSParameterAssert(c);
 	(void)[self window]; // Load.
 
 	_captureController = c;
@@ -98,48 +124,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:_captureController.videoFormatObject]];
 
 	[deinterlacePopUp selectItemWithTag:_captureController.deinterlacingMode];
+	[deinterlacePopUp setEnabled:!!_captureController];
 
 	[brightnessSlider setEnabled:[_captureController respondsToSelector:@selector(brightness)]];
 	[contrastSlider setEnabled:[_captureController respondsToSelector:@selector(contrast)]];
 	[saturationSlider setEnabled:[_captureController respondsToSelector:@selector(saturation)]];
 	[hueSlider setEnabled:[_captureController respondsToSelector:@selector(hue)]];
-	_initialBrightness = [brightnessSlider isEnabled] ? _captureController.brightness : 0.5f;
-	_initialContrast = [contrastSlider isEnabled] ? _captureController.contrast : 0.5f;
-	_initialSaturation = [saturationSlider isEnabled] ? _captureController.saturation : 0.5f;
-	_initialHue = [hueSlider isEnabled] ? _captureController.hue : 0.5f;
-	[brightnessSlider setDoubleValue:_initialBrightness];
-	[contrastSlider setDoubleValue:_initialContrast];
-	[saturationSlider setDoubleValue:_initialSaturation];
-	[hueSlider setDoubleValue:_initialHue];
+	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? _captureController.brightness : 0.5f];
+	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? _captureController.contrast : 0.5f];
+	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? _captureController.saturation : 0.5f];
+	[hueSlider setDoubleValue:[hueSlider isEnabled] ? _captureController.hue : 0.5f];
 	[self _snapSlider:brightnessSlider];
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];
 	[self _snapSlider:hueSlider];
-
-	(void)[self retain];
-	if(c.fullScreen) {
-		[self sheetDidEnd:[self window] returnCode:[NSApp runModalForWindow:[self window]] contextInfo:NULL];
-	} else {
-		[NSApp beginSheet:[self window] modalForWindow:[c window] modalDelegate:self didEndSelector:@selector(sheetDidEnd:returnCode:contextInfo:) contextInfo:NULL];
-	}
-}
-- (void)sheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
-{
-	if(NSOKButton == returnCode) {
-		BOOL const playing = _captureController.playing;
-		if(playing) _captureController.playing = NO;
-		_captureController.deinterlacingMode = [deinterlacePopUp selectedTag];
-		if([_captureController respondsToSelector:@selector(setVideoSourceObject:)]) _captureController.videoSourceObject = [[sourcePopUp selectedItem] representedObject];
-		if([_captureController respondsToSelector:@selector(setVideoFormatObject:)]) _captureController.videoFormatObject = [[formatPopUp selectedItem] representedObject];
-		if(playing) _captureController.playing = YES;
-	} else {
-		if([_captureController respondsToSelector:@selector(setBrightness:)]) _captureController.brightness = _initialBrightness;
-		if([_captureController respondsToSelector:@selector(setContrast:)]) _captureController.contrast = _initialContrast;
-		if([_captureController respondsToSelector:@selector(setSaturation:)]) _captureController.saturation = _initialSaturation;
-		if([_captureController respondsToSelector:@selector(setHue:)]) _captureController.hue = _initialHue;
-	}
-	[[self window] close];
-	[self autorelease];
 }
 
 #pragma mark -ECVConfigController(Private)
@@ -147,6 +145,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)_snapSlider:(NSSlider *)slider
 {
 	if(ABS([slider doubleValue] - 0.5f) < 0.03f) [slider setDoubleValue:0.5f];
+}
+
+#pragma mark -NSWindowController
+
+- (void)windowDidLoad
+{
+	[super windowDidLoad];
+	[(NSPanel *)[self window] setBecomesKeyOnlyIfNeeded:YES];
+	[[self window] center];
 }
 
 #pragma mark -NSObject
