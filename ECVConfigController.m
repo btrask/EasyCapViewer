@@ -44,10 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (IBAction)changeFormat:(id)sender
 {
-	BOOL const playing = _captureController.playing;
-	if(playing) _captureController.playing = NO;
 	_captureController.videoFormatObject = [[sender selectedItem] representedObject];
-	if(playing) _captureController.playing = YES;
 }
 - (IBAction)changeSource:(id)sender
 {
@@ -55,10 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
-	BOOL const playing = _captureController.playing;
-	if(playing) _captureController.playing = NO;
 	_captureController.deinterlacingMode = [sender selectedTag];
-	if(playing) _captureController.playing = YES;
 }
 - (IBAction)changeBrightness:(id)sender
 {

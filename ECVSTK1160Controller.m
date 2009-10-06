@@ -64,6 +64,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 @synthesize videoSource = _videoSource;
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
+	if(source == _videoSource) return;
 	_videoSource = source;
 	if(self.playing) dev_stk0408_set_source(self, source);
 	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
@@ -75,10 +76,14 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 @synthesize videoFormat = _videoFormat;
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format
 {
+	if(format == _videoFormat) return;
+	BOOL const playing = self.playing;
+	if(playing) self.playing = NO;
 	_videoFormat = format;
 	[self noteVideoSettingDidChange];
 	self.windowContentSize = self.outputSize;
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
+	if(playing) self.playing = YES;
 }
 - (BOOL)is60HzFormat
 {

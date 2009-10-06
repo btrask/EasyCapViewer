@@ -342,9 +342,13 @@ ECVNoDeviceError:
 @synthesize deinterlacingMode = _deinterlacingMode;
 - (void)setDeinterlacingMode:(ECVDeinterlacingMode)mode
 {
+	if(mode == _deinterlacingMode) return;
+	BOOL const playing = self.playing;
+	if(playing) self.playing = NO;
 	_deinterlacingMode = mode;
 	[self noteVideoSettingDidChange];
 	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
+	if(playing) self.playing = YES;
 }
 @synthesize fullScreen = _fullScreen;
 - (void)setFullScreen:(BOOL)flag

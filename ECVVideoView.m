@@ -296,7 +296,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 	_magFilter = filter;
 	NSUInteger i = 0;
-	for(i = 0; i < ECVRequiredBufferCount; i++) {
+	if(_textureNames) for(; i < ECVRequiredBufferCount; i++) {
 		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
 	}
