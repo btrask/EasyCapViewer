@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVAppKitAdditions.h"
 
-#define ECVMarginLeft 2.5f
-#define ECVMarginRight 2.5f
+#define ECVMarginLeft 4.5f
+#define ECVMarginRight 4.5f
 #define ECVMarginHorz (ECVMarginLeft + ECVMarginRight)
 #define ECVMarginTop 1.5f
 #define ECVMarginBottom 3.5f
@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #define ECVArrowSpacing 2.0f
 #define ECVArrowCenterlineDistance (ECVArrowSpacing / 2.0f)
 #define ECVArrowMarginVert (ECVArrowCenterlineDistance + 4.0f)
-#define ECVArrowMarginRight 5.0f
+#define ECVArrowMarginRight 6.0f
 #define ECVArrowWidthRatio 1.25f
 
 static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, CGFloat *out)
@@ -63,6 +63,8 @@ static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, 
 }
 - (void)drawBorderAndBackgroundWithFrame:(NSRect)r inView:(NSView *)controlView
 {
+	[NSGraphicsContext saveGraphicsState];
+
 	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
 	[shadow setShadowOffset:NSMakeSize(0.0f, -1.0f)];
 	[shadow setShadowBlurRadius:2.0f];
@@ -90,8 +92,7 @@ static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, 
 	[[NSColor colorWithDeviceWhite:0.75f alpha:0.9f] set];
 	[p stroke];
 
-	[shadow setShadowColor:nil];
-	[shadow set];
+	[NSGraphicsContext restoreGraphicsState];
 
 	CGFloat const arrowHeight = round((NSHeight(r) - ECVMarginVert) / 2.0f - ECVArrowMarginVert);
 	CGFloat const arrowWidth = round(arrowHeight * ECVArrowWidthRatio);
