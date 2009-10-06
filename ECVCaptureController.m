@@ -816,11 +816,11 @@ ECVNoDeviceError:
 
 #pragma mark -<NSWindowDelegate>
 
-- (void)windowDidBecomeKey:(NSNotification *)aNotif
+- (void)windowDidBecomeMain:(NSNotification *)aNotif
 {
 	if(self.fullScreen) [self performSelector:@selector(_hideMenuBar) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]];
 }
-- (void)windowDidResignKey:(NSNotification *)aNotif
+- (void)windowDidResignMain:(NSNotification *)aNotif
 {
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_hideMenuBar) object:nil];
 	SetSystemUIMode(kUIModeNormal, kNilOptions);
