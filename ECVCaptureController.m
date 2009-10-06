@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAudioPipe.h"
 #import "ECVDebug.h"
 #import "ECVSoundTrack.h"
-#import "ECVQTAdditions.h"
+#import "ECVQTKitAdditions.h"
 #import "ECVVideoTrack.h"
 
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";

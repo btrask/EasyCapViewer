@@ -21,7 +21,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVQTAdditions.h"
+#import "ECVQTKitAdditions.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -31,7 +31,7 @@ static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
 	return QTMakeTimeRange(QTMakeTimeScaled(r.time, s), QTMakeTimeScaled(r.duration, s));
 }
 
-@implementation QTMedia(ECVQTAdditions)
+@implementation QTMedia(ECVQTKitAdditions)
 
 - (void)ECV_beginEdits
 {
@@ -50,7 +50,7 @@ static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
 
 @end
 
-@implementation QTTrack(ECVQTAdditions)
+@implementation QTTrack(ECVQTKitAdditions)
 
 - (void)ECV_insertMediaInRange:(QTTimeRange)srcRange intoTrackInRange:(QTTimeRange)dstRange
 {
