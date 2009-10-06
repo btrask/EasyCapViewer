@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface MPLWindow (Private)
 
-- (void)_hideCursorAfterDelay:(BOOL)flag;
+- (void)_hideCursorAfterDelay;
 - (void)_delayedHideCursor;
 
 @end
@@ -34,14 +34,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark Private Protocol
 
-- (void)_hideCursorAfterDelay:(BOOL)flag
+- (void)_hideCursorAfterDelay
 {
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_delayedHideCursor) object:nil];
-	if([self isKeyWindow]) [self performSelector:@selector(_delayedHideCursor) withObject:nil afterDelay:3.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopDefaultMode]];
+	[self performSelector:@selector(_delayedHideCursor) withObject:nil afterDelay:3.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopDefaultMode]];
 }
 - (void)_delayedHideCursor
 {
-	[NSCursor setHiddenUntilMouseMoves:YES];
+	if([self isMainWindow]) [NSCursor setHiddenUntilMouseMoves:YES];
 }
 
 #pragma mark NSWindow
@@ -67,22 +67,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return YES;
 }
-- (void)resignKeyWindow
+- (void)becomeMainWindow
 {
-	[super resignKeyWindow];
-	[self _hideCursorAfterDelay:NO];
-}
-- (void)becomeKeyWindow
-{
-	[super becomeKeyWindow];
-	[self _hideCursorAfterDelay:YES];
+	[super becomeMainWindow];
+	[self _hideCursorAfterDelay];
 }
 
 #pragma mark -
 
 - (void)sendEvent:(NSEvent *)anEvent
 {
-	if([anEvent type] == NSMouseMoved) [self _hideCursorAfterDelay:YES];
+	if([anEvent type] == NSMouseMoved) [self _hideCursorAfterDelay];
 	[super sendEvent:anEvent];
 }
 

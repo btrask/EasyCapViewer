@@ -359,6 +359,7 @@ ECVNoDeviceError:
 	if(flag == _fullScreen) return;
 	_fullScreen = flag;
 	NSDisableScreenUpdates();
+	[[self window] close];
 	NSUInteger styleMask = NSBorderlessWindowMask;
 	NSRect frame = NSZeroRect;
 	if(flag) {
