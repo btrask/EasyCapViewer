@@ -31,9 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	QTTrack *_track;
+	TimeValue64 _frameDuration;
 	ICMCompressionSessionRef _compressionSession;
-	ICMEncodedFrameRef _encodedFrame;
-	TimeValue64 _timeValue;
 }
 
 + (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;

@@ -221,7 +221,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(NSNotFound == index) return nil;
 	ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
 	[_attachedFrameLock lock];
-	[_attachedFrames addObject:frame];
+	[_attachedFrames insertObject:frame atIndex:0];
 	[_attachedFrameIndexes addIndex:index];
 	[_attachedFrameLock unlock];
 	return frame;
@@ -366,7 +366,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)_detachFrame:(ECVAttachedFrame *)frame
 {
 	[_attachedFrameLock lock];
-	[_attachedFrames removeObject:frame];
+	[_attachedFrames removeObjectIdenticalTo:frame];
 	[_attachedFrameIndexes removeIndex:frame.bufferIndex];
 	[_attachedFrameLock unlock];
 }

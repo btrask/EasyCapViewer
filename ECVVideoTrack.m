@@ -73,7 +73,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
 		callback.encodedFrameOutputRefCon = self;
 		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, roundf(size.width), roundf(size.height), codec, frameRate.timeScale, NULL, NULL, &callback, &_compressionSession));
-		_timeValue = frameRate.timeValue;
+		_frameDuration = frameRate.timeValue;
 	}
 	return self;
 }
@@ -84,29 +84,23 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 - (void)addFrame:(id<ECVFrameReading>)frame
 {
 	[frame lock];
-	if(frame.isValid) {
-		[frame retain];
-		ECVPixelSize const size = frame.pixelSize;
-		CVPixelBufferRef pixelBuffer = NULL;
-		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, frame.pixelFormatType, frame.bufferBytes, frame.bytesPerRow, (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
-		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, _timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
-		CVPixelBufferRelease(pixelBuffer);
-	} else {
+	if(!frame.isValid) {
 		[frame unlock];
-		[self _addEncodedFrame:_encodedFrame];
+		return;
 	}
+	[frame retain];
+	ECVPixelSize const size = frame.pixelSize;
+	CVPixelBufferRef pixelBuffer = NULL;
+	ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, frame.pixelFormatType, frame.bufferBytes, frame.bytesPerRow, (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, _frameDuration, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+	CVPixelBufferRelease(pixelBuffer);
 }
 
 #pragma mark -ECVVideoTrack(Private)
 
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame
 {
-	ImageDescriptionHandle desc = NULL;
-	ECVOSStatus(ICMEncodedFrameGetImageDescription(frame, &desc));
-	ECVOSStatus(AddMediaSample2([[_track media] quickTimeMedia], ICMEncodedFrameGetDataPtr(frame), ICMEncodedFrameGetDataSize(frame), _timeValue, 0, (SampleDescriptionHandle)desc, 1, ICMEncodedFrameGetMediaSampleFlags(frame), NULL));
-	if(frame == _encodedFrame) return;
-	ICMEncodedFrameRelease(_encodedFrame);
-	_encodedFrame = ICMEncodedFrameRetain(frame);
+	ECVOSStatus(AddMediaSampleFromEncodedFrame([[_track media] quickTimeMedia], frame, NULL));
 }
 
 #pragma mark -NSObject
@@ -115,7 +109,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 {
 	[_track release];
 	ICMCompressionSessionRelease(_compressionSession);
-	ICMEncodedFrameRelease(_encodedFrame);
 	[super dealloc];
 }
 

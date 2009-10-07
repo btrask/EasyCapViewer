@@ -54,10 +54,11 @@ static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
 
 - (void)ECV_insertMediaInRange:(QTTimeRange)srcRange intoTrackInRange:(QTTimeRange)dstRange
 {
-	long const scale = [[[[self media] mediaAttributes] objectForKey:QTMediaTimeScaleAttribute] longValue];
-	QTTimeRange const s = ECVMakeTimeRangeScaled(srcRange, scale);
-	QTTimeRange const d = ECVMakeTimeRangeScaled(dstRange, scale);
-	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], d.time.timeValue, s.time.timeValue, s.duration.timeValue, X2Fix((double)s.duration.timeValue / d.duration.timeValue)));
+	long const movieScale = [[[[self movie] movieAttributes] objectForKey:QTMovieTimeScaleAttribute] longValue];
+	long const mediaScale = [[[[self media] mediaAttributes] objectForKey:QTMediaTimeScaleAttribute] longValue];
+	QTTimeRange const s = ECVMakeTimeRangeScaled(srcRange, mediaScale);
+	QTTimeRange const d = ECVMakeTimeRangeScaled(dstRange, mediaScale);
+	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], QTMakeTimeScaled(dstRange.time, movieScale).timeValue, s.time.timeValue, s.duration.timeValue, X2Fix((double)s.duration.timeValue / d.duration.timeValue)));
 }
 - (void)ECV_insertMediaInRange:(QTTimeRange)range atTime:(QTTime)time
 {
