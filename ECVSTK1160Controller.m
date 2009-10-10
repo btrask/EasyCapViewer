@@ -42,7 +42,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input], ECVSTK1160VideoSourceKey,
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Auto60HzFormat], ECVSTK1160VideoFormatKey,
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat], ECVSTK1160VideoFormatKey,
 		nil]];
 }
 
@@ -216,18 +216,16 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return [NSArray arrayWithObjects:
 		NSLocalizedString(@"60Hz", nil),
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Auto60HzFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PAL60Format],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALMFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44360HzFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCJFormat],
 		NSLocalizedString(@"50Hz", nil),
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Auto50HzFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALBGDHIFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44350HzFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160PALNFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCNFormat],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSC44350HzFormat],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160SECAMFormat],
 		nil];
 }
