@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)_hideCursorAfterDelay
 {
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_delayedHideCursor) object:nil];
+	[NSObject cancelPreviousPerformRequestsWithTarget:[[self retain] autorelease] selector:@selector(_delayedHideCursor) object:nil];
 	[self performSelector:@selector(_delayedHideCursor) withObject:nil afterDelay:3.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopDefaultMode]];
 }
 - (void)_delayedHideCursor
