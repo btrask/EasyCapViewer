@@ -39,18 +39,33 @@
 	</array>
 	<key>ECVVideoCodecs</key>
 	<array>
+		<string>'jpeg'</string>
+		<string>'mp4v'</string>
+		<string>'raw '</string>
+	</array>
+	<key>ECVInfoByVideoCodec</key>
+	<dict>
+		<key>'jpeg'</key>
 		<dict>
 			<key>ECVCodecLabel</key>
 			<string>JPEG</string>
-			<key>ECVCodecType</key>
-			<string>'jpeg'</string>
+			<key>ECVConfigurableQuality</key>
+			<true/>
 		</dict>
+		<key>'mp4v'</key>
 		<dict>
 			<key>ECVCodecLabel</key>
 			<string>MPEG-4</string>
-			<key>ECVCodecType</key>
-			<string>'mp4v'</string>
+			<key>ECVConfigurableQuality</key>
+			<true/>
 		</dict>
-	</array>
+		<key>'raw '</key>
+		<dict>
+			<key>ECVCodecLabel</key>
+			<string>RAW</string>
+			<key>ECVConfigurableQuality</key>
+			<false/>
+		</dict>
+	</dict>
 </dict>
 </plist>

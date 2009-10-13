@@ -248,16 +248,19 @@ ECVNoDeviceError:
 
 	[videoCodecPopUp removeAllItems];
 	NSArray *const videoCodecs = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVVideoCodecs"];
-	for(NSDictionary *const codecDict in videoCodecs) {
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[codecDict objectForKey:@"ECVCodecLabel"] action:NULL keyEquivalent:@""] autorelease];
-		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType([codecDict objectForKey:@"ECVCodecType"])];
+	NSDictionary *const infoByVideoCodec = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"];
+	for(NSString *const codec in videoCodecs) {
+		NSDictionary *const codecInfo = [infoByVideoCodec objectForKey:codec];
+		if(!codecInfo) continue;
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[codecInfo objectForKey:@"ECVCodecLabel"] action:NULL keyEquivalent:@""] autorelease];
+		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType(codec)];
 		[[videoCodecPopUp menu] addItem:item];
 	}
 	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[NSUserDefaults standardUserDefaults] objectForKey:ECVVideoCodecKey])];
+	[self changeCodec:videoCodecPopUp];
 	[videoQualitySlider setDoubleValue:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVideoQualityKey]];
 
 	NSInteger const returnCode = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)];
-	[[NSUserDefaults standardUserDefaults] setObject:NSFileTypeForHFSTypeCode((OSType)[videoCodecPopUp selectedTag]) forKey:ECVVideoCodecKey];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
 	if(NSFileHandlingPanelOKButton != returnCode) return;
 
@@ -283,6 +286,13 @@ ECVNoDeviceError:
 	[_movie updateMovieFile];
 	[_movie release];
 	_movie = nil;
+}
+- (IBAction)changeCodec:(id)sender
+{
+	NSString *const codec = NSFileTypeForHFSTypeCode((OSType)[sender selectedTag]);
+	[[NSUserDefaults standardUserDefaults] setObject:codec forKey:ECVVideoCodecKey];
+	NSNumber *const configurableQuality = [[[[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"] objectForKey:codec] objectForKey:@"ECVConfigurableQuality"];
+	[videoQualitySlider setEnabled:configurableQuality && [configurableQuality boolValue]];
 }
 
 #pragma mark -

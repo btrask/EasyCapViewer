@@ -112,6 +112,7 @@ extern NSString *const ECVSaturationKey;
 
 - (IBAction)startRecording:(id)sender;
 - (IBAction)stopRecording:(id)sender;
+- (IBAction)changeCodec:(id)sender;
 
 - (IBAction)toggleFullScreen:(id)sender;
 - (IBAction)changeScale:(id)sender;
