@@ -275,6 +275,7 @@ ECVNoDeviceError:
 - (IBAction)stopRecording:(id)sender
 {
 	if(!_movie) return;
+	[_videoTrack finish];
 	[_soundTrack.track ECV_insertMediaAtTime:QTZeroTime];
 	[_videoTrack.track ECV_insertMediaAtTime:QTZeroTime];
 	[[_soundTrack.track media] ECV_endEdits];

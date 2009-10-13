@@ -87,9 +87,9 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 
 - (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index;
 @property(readonly) NSUInteger bufferIndex;
-- (void)tryToDetach;
-- (void)detach;
-- (void)detachWait:(BOOL)wait;
+- (void)invalidateWait:(BOOL)wait;
+- (void)invalidate;
+- (void)tryToInvalidate;
 
 @end
 
@@ -98,7 +98,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 - (void)_generatePlayButton;
 
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
-- (void)_detachFrame:(ECVAttachedFrame *)frame;
+- (void)_invalidateFrame:(ECVAttachedFrame *)frame;
 
 - (void)_drawOneFrame;
 - (void)_drawBuffer:(NSUInteger)index;
@@ -142,7 +142,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_bufferPoolLock unlock];
 
 	[_attachedFrameLock lock];
-	[_attachedFrames makeObjectsPerformSelector:@selector(detach)];
+	[_attachedFrames makeObjectsPerformSelector:@selector(invalidate)];
 	[_attachedFrameLock unlock];
 
 	if(_textureNames) ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
@@ -185,7 +185,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_attachedFrameLock lock];
 	NSUInteger const attachedFrameCount = [_attachedFrames count];
 	NSUInteger const keep = attachedFrameCount % ECVMaxPendingAttachedBuffers;
-	if(attachedFrameCount > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, attachedFrameCount - keep)] makeObjectsPerformSelector:@selector(tryToDetach)];
+	if(attachedFrameCount > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, attachedFrameCount - keep)] makeObjectsPerformSelector:@selector(tryToInvalidate)];
 	NSIndexSet *const attachedFrameIndexes = [[_attachedFrameIndexes copy] autorelease];
 	[_attachedFrameLock unlock];
 
@@ -363,7 +363,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(NSNotFound == index) return 0;
 	return ((GLuint *)[_textureNames mutableBytes])[index];
 }
-- (void)_detachFrame:(ECVAttachedFrame *)frame
+- (void)_invalidateFrame:(ECVAttachedFrame *)frame
 {
 	[_attachedFrameLock lock];
 	[_attachedFrames removeObjectIdenticalTo:frame];
@@ -629,7 +629,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
-	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(detach)];
+	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(invalidate)];
 
 	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
@@ -662,7 +662,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_attachedFrameLock = [[NSRecursiveLock alloc] init];
 	_magFilter = GL_LINEAR;
 	_readyBufferIndexQueue = [[NSMutableArray alloc] init];
-	_attachedFrames = (NSMutableArray *)CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+	_attachedFrames = [[NSMutableArray alloc] init];
 	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
 	[self _generatePlayButton];
 	[self resetFrames];
@@ -706,6 +706,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_bufferPoolLock unlock];
 	return bpr;
 }
+- (void)markAsInvalid {}
 
 #pragma mark -<NSLocking>
 
@@ -761,28 +762,27 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	return _bufferIndex;
 }
-- (void)tryToDetach
-{
-	[self detachWait:NO];
-}
-- (void)detach
-{
-	[self detachWait:YES];
-}
-- (void)detachWait:(BOOL)wait
+- (void)invalidateWait:(BOOL)wait
 {
 	if(wait) [_videoViewLock lock];
 	else if(![_videoViewLock tryLock]) return;
-	[_videoView _detachFrame:self];
-	_videoView = nil;
+	[self markAsInvalid];
 	[_videoViewLock unlock];
+}
+- (void)invalidate
+{
+	[self invalidateWait:YES];
+}
+- (void)tryToInvalidate
+{
+	[self invalidateWait:NO];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[self detachWait:YES];
+	NSParameterAssert(!_videoView);
 	[_videoViewLock release];
 	[super dealloc];
 }
@@ -812,6 +812,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (size_t)bytesPerRow
 {
 	return _videoView.bytesPerRow;
+}
+- (void)markAsInvalid
+{
+	[_videoView _invalidateFrame:self];
+	_videoView = nil;
 }
 
 #pragma mark -<NSLocking>

@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static void ECVPixelBufferReleaseBytesCallback(id<ECVFrameReading> frame, const void *baseAddress)
 {
+	[frame markAsInvalid];
 	[frame unlock];
 	[frame release];
 }
@@ -113,6 +114,10 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		[frame unlock];
 		[self _addEncodedFrame:NULL];
 	}
+}
+- (void)finish
+{
+	ECVOSStatus(ICMCompressionSessionCompleteFrames(_compressionSession, true, 0, 0));
 }
 
 #pragma mark -ECVVideoTrack(Private)

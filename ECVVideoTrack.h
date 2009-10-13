@@ -41,5 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithTrack:(QTTrack *)track size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
 @property(readonly) QTTrack *track;
 - (void)addFrame:(id<ECVFrameReading>)frame;
+- (void)finish;
 
 @end
