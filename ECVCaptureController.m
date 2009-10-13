@@ -276,7 +276,7 @@ ECVNoDeviceError:
 {
 	if(!_movie) return;
 	[_soundTrack.track ECV_insertMediaAtTime:QTZeroTime];
-	[_videoTrack.track ECV_insertMediaInRange:[[_videoTrack.track media] ECV_timeRange] intoTrackInRange:[[_soundTrack.track media] ECV_timeRange]];
+	[_videoTrack.track ECV_insertMediaAtTime:QTZeroTime];
 	[[_soundTrack.track media] ECV_endEdits];
 	[[_videoTrack.track media] ECV_endEdits];
 	[_soundTrack release];

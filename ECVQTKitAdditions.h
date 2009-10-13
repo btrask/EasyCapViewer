@@ -28,14 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)ECV_beginEdits;
 - (void)ECV_endEdits;
-- (QTTimeRange)ECV_timeRange;
 
 @end
 
 @interface QTTrack(ECVQTKitAdditions)
 
-- (void)ECV_insertMediaInRange:(QTTimeRange)srcRange intoTrackInRange:(QTTimeRange)dstRange;
-- (void)ECV_insertMediaInRange:(QTTimeRange)range atTime:(QTTime)time;
 - (void)ECV_insertMediaAtTime:(QTTime)time;
 
 @end

@@ -41,32 +41,17 @@ static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
 {
 	ECVOSStatus(EndMediaEdits([self quickTimeMedia]));
 }
-- (QTTimeRange)ECV_timeRange
-{
-	Media const m = [self quickTimeMedia];
-	long const s = [[[self mediaAttributes] objectForKey:QTMediaTimeScaleAttribute] longValue];
-	return QTMakeTimeRange(QTMakeTime(GetMediaDisplayStartTime(m), s), QTMakeTime(GetMediaDisplayDuration(m), s));
-}
 
 @end
 
 @implementation QTTrack(ECVQTKitAdditions)
 
-- (void)ECV_insertMediaInRange:(QTTimeRange)srcRange intoTrackInRange:(QTTimeRange)dstRange
-{
-	long const movieScale = [[[[self movie] movieAttributes] objectForKey:QTMovieTimeScaleAttribute] longValue];
-	long const mediaScale = [[[[self media] mediaAttributes] objectForKey:QTMediaTimeScaleAttribute] longValue];
-	QTTimeRange const s = ECVMakeTimeRangeScaled(srcRange, mediaScale);
-	QTTimeRange const d = ECVMakeTimeRangeScaled(dstRange, mediaScale);
-	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], QTMakeTimeScaled(dstRange.time, movieScale).timeValue, s.time.timeValue, s.duration.timeValue, X2Fix((double)s.duration.timeValue / d.duration.timeValue)));
-}
-- (void)ECV_insertMediaInRange:(QTTimeRange)range atTime:(QTTime)time
-{
-	[self ECV_insertMediaInRange:range intoTrackInRange:QTMakeTimeRange(time, range.duration)];
-}
 - (void)ECV_insertMediaAtTime:(QTTime)time
 {
-	[self ECV_insertMediaInRange:[[self media] ECV_timeRange] atTime:time];
+	long const movieScale = [[[[self movie] movieAttributes] objectForKey:QTMovieTimeScaleAttribute] longValue];
+	QTTime const t = QTMakeTimeScaled(time, movieScale);
+	Media const m = [[self media] quickTimeMedia];
+	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], t.timeValue, GetMediaDisplayStartTime(m), GetMediaDisplayDuration(m), fixed1));
 }
 
 @end
