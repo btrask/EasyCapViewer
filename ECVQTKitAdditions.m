@@ -26,11 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
-static QTTimeRange ECVMakeTimeRangeScaled(QTTimeRange r, long s)
-{
-	return QTMakeTimeRange(QTMakeTimeScaled(r.time, s), QTMakeTimeScaled(r.duration, s));
-}
-
 @implementation QTMedia(ECVQTKitAdditions)
 
 - (void)ECV_beginEdits
