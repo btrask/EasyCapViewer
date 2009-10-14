@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #define ECVMillisecondTimeScale 1000
 #define ECVMicrosecondTimeScale (ECVMillisecondTimeScale * 1000)
 
+#if !__LP64__
 @interface ECVVideoTrack(Private)
 
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
@@ -48,8 +49,10 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 	[videoTrack _addEncodedFrame:noErr == error ? frame : NULL];
 	return noErr;
 }
+#endif
 
 @implementation ECVVideoTrack
+#if !__LP64__
 
 #pragma mark +ECVVideoTrack
 
@@ -141,4 +144,5 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 	[super dealloc];
 }
 
+#endif
 @end

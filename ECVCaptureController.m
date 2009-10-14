@@ -237,6 +237,13 @@ ECVNoDeviceError:
 
 - (IBAction)startRecording:(id)sender
 {
+#if __LP64__
+	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
+	[alert setMessageText:NSLocalizedString(@"Recording is not supported in 64-bit mode.", nil)];
+	[alert setInformativeText:NSLocalizedString(@"Relaunch EasyCapViewer in 32-bit mode to record.", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+	[alert runModal];
+#else
 	NSParameterAssert(!_movie);
 	NSParameterAssert(!_videoTrack);
 	NSSavePanel *const savePanel = [NSSavePanel savePanel];
@@ -271,9 +278,11 @@ ECVNoDeviceError:
 	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize] codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 	[[_soundTrack.track media] ECV_beginEdits];
 	[[_videoTrack.track media] ECV_beginEdits];
+#endif
 }
 - (IBAction)stopRecording:(id)sender
 {
+#if !__LP64__
 	if(!_movie) return;
 	[_videoTrack finish];
 	[_soundTrack.track ECV_insertMediaAtTime:QTZeroTime];
@@ -287,6 +296,7 @@ ECVNoDeviceError:
 	[_movie updateMovieFile];
 	[_movie release];
 	_movie = nil;
+#endif
 }
 - (IBAction)changeCodec:(id)sender
 {
@@ -701,17 +711,25 @@ ECVNoDeviceError:
 
 - (void)_recordVideoFrame:(id<ECVFrameReading>)frame
 {
+#if !__LP64__
 	[_videoTrack addFrame:frame];
+#endif
 }
 - (void)_recordAudioBufferList:(NSValue *)bufferListValue
 {
+#if !__LP64__
 	AudioBufferList *const bufferList = [bufferListValue pointerValue];
 	[_soundTrack addSamples:bufferList];
 	free(bufferList);
+#endif
 }
 - (void)_hideMenuBar
 {
+#if __LP64__
+	[NSApp setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationAutoHideDock];
+#else
 	SetSystemUIMode(kUIModeAllSuppressed, kNilOptions);
+#endif
 }
 
 #pragma mark -NSWindowController
@@ -835,7 +853,11 @@ ECVNoDeviceError:
 - (void)windowDidResignMain:(NSNotification *)aNotif
 {
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(_hideMenuBar) object:nil];
+#if __LP64__
+	[NSApp setPresentationOptions:NSApplicationPresentationDefault];
+#else
 	SetSystemUIMode(kUIModeNormal, kNilOptions);
+#endif
 }
 
 - (void)windowDidEndSheet:(NSNotification *)aNotif

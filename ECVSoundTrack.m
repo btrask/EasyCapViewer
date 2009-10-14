@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @end
 
 @implementation ECVSoundTrack
+#if !__LP64__
 
 #pragma mark +ECVSoundTrack
 
@@ -92,4 +93,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[super dealloc];
 }
 
+#endif
 @end

@@ -24,6 +24,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <QTKit/QTKit.h>
 
+#if __LP64__
+
+@interface ECVSoundTrack : NSObject
+@end
+
+#else
+
 @interface ECVSoundTrack : NSObject
 {
 	@private
@@ -40,3 +47,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)addSamples:(AudioBufferList const *)bufferList;
 
 @end
+
+#endif

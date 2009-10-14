@@ -23,12 +23,12 @@
 		0E78CB980FC92D8300E9C148 /* ECVDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CB970FC92D8300E9C148 /* ECVDebug.m */; };
 		0E78CD850FC9F9E300E9C148 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CD840FC9F9E300E9C148 /* QuartzCore.framework */; };
 		0E78CDB50FC9F9EB00E9C148 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */; };
-		0E78CDC70FC9F9F100E9C148 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CDC60FC9F9F100E9C148 /* Carbon.framework */; };
 		0E8CE0CC107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */; };
 		0E8CE152107BE511004F05A7 /* ECVQTKitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE151107BE511004F05A7 /* ECVQTKitAdditions.m */; };
 		0E8CE155107BE51C004F05A7 /* ECVAppKitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE154107BE51C004F05A7 /* ECVAppKitAdditions.m */; };
 		0E8CE1D1107BE953004F05A7 /* ECVHUDSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */; };
 		0E8CE218107BF845004F05A7 /* ECVTickMarkView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */; };
+		0E9F5E631085D06F00375752 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E9F5E621085D06F00375752 /* Carbon.framework */; };
 		0EC4C811103E9B5E00FCFCA0 /* ECVFrameReading.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */; };
 		0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D341101903F200CFBDFF /* CoreAudio.framework */; };
 		0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */; };
@@ -83,7 +83,6 @@
 		0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "stk11xx-dev-0408.m"; sourceTree = "<group>"; };
 		0E78CD840FC9F9E300E9C148 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		0E78CDC60FC9F9F100E9C148 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		0E8CE0CA107BCE12004F05A7 /* ECVHUDPopUpButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDPopUpButtonCell.h; sourceTree = "<group>"; };
 		0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDPopUpButtonCell.m; sourceTree = "<group>"; };
 		0E8CE150107BE511004F05A7 /* ECVQTKitAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVQTKitAdditions.h; sourceTree = "<group>"; };
@@ -94,6 +93,7 @@
 		0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDSliderCell.m; sourceTree = "<group>"; };
 		0E8CE216107BF845004F05A7 /* ECVTickMarkView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVTickMarkView.h; sourceTree = "<group>"; };
 		0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVTickMarkView.m; sourceTree = "<group>"; };
+		0E9F5E621085D06F00375752 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		0EC4C80F103E9B5E00FCFCA0 /* ECVFrameReading.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameReading.h; sourceTree = "<group>"; };
 		0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameReading.m; sourceTree = "<group>"; };
 		0EC7D341101903F200CFBDFF /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -127,12 +127,12 @@
 				0E78C9F30FC8FA1000E9C148 /* IOKit.framework in Frameworks */,
 				0E78CD850FC9F9E300E9C148 /* QuartzCore.framework in Frameworks */,
 				0E78CDB50FC9F9EB00E9C148 /* OpenGL.framework in Frameworks */,
-				0E78CDC70FC9F9F100E9C148 /* Carbon.framework in Frameworks */,
 				0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */,
 				0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */,
 				0E0AC92410203FB300C12D88 /* QTKit.framework in Frameworks */,
 				0EE547941070F34C00F003AF /* CoreVideo.framework in Frameworks */,
 				0EE5483A1071019600F003AF /* QuickTime.framework in Frameworks */,
+				0E9F5E631085D06F00375752 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -185,7 +185,7 @@
 			isa = PBXGroup;
 			children = (
 				0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */,
-				0E78CDC60FC9F9F100E9C148 /* Carbon.framework */,
+				0E9F5E621085D06F00375752 /* Carbon.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 				0EC7D341101903F200CFBDFF /* CoreAudio.framework */,
 				0EE547931070F34C00F003AF /* CoreVideo.framework */,

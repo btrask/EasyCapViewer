@@ -25,14 +25,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 @interface QTMedia(ECVQTKitAdditions)
+#if !__LP64__
 
 - (void)ECV_beginEdits;
 - (void)ECV_endEdits;
 
+#endif
 @end
 
 @interface QTTrack(ECVQTKitAdditions)
+#if !__LP64__
 
 - (void)ECV_insertMediaAtTime:(QTTime)time;
 
+#endif
 @end

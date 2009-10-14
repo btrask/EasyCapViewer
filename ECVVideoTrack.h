@@ -27,6 +27,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 @protocol ECVFrameReading;
 
+#if __LP64__
+
+enum {
+	kJPEGCodecType = 'jpeg',
+};
+@interface ECVVideoTrack : NSObject
+@end
+
+#else
+
 @interface ECVVideoTrack : NSObject
 {
 	@private
@@ -44,3 +54,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)finish;
 
 @end
+
+#endif
