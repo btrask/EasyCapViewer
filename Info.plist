@@ -41,7 +41,6 @@
 	<array>
 		<string>'jpeg'</string>
 		<string>'mp4v'</string>
-		<string>'raw '</string>
 	</array>
 	<key>ECVInfoByVideoCodec</key>
 	<dict>
@@ -58,13 +57,6 @@
 			<string>MPEG-4</string>
 			<key>ECVConfigurableQuality</key>
 			<true/>
-		</dict>
-		<key>'raw '</key>
-		<dict>
-			<key>ECVCodecLabel</key>
-			<string>RAW</string>
-			<key>ECVConfigurableQuality</key>
-			<false/>
 		</dict>
 	</dict>
 </dict>

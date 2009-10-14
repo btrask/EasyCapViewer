@@ -128,7 +128,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		ICMEncodedFrameRelease(_encodedFrame);
 		_encodedFrame = ICMEncodedFrameRetain(frame);
 	}
-	ECVOSStatus(AddMediaSampleFromEncodedFrame([[_track media] quickTimeMedia], _encodedFrame, NULL));
+	if(_encodedFrame) ECVOSStatus(AddMediaSampleFromEncodedFrame([[_track media] quickTimeMedia], _encodedFrame, NULL));
 }
 
 #pragma mark -NSObject
