@@ -462,6 +462,7 @@ ECVNoDeviceError:
 	switch(ratio) {
 		case ECV1x1AspectRatio:   return NSMakeSize( 1.0f,  1.0f);
 		case ECV4x3AspectRatio:   return NSMakeSize( 4.0f,  3.0f);
+		case ECV3x2AspectRatio:   return NSMakeSize( 3.0f,  2.0f);
 		case ECV16x10AspectRatio: return NSMakeSize(16.0f, 10.0f);
 		case ECV16x9AspectRatio:  return NSMakeSize(16.0f,  9.0f);
 	}

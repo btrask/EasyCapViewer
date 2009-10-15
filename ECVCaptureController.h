@@ -41,15 +41,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 enum {
 	ECV1x1AspectRatio = 3,
 	ECV4x3AspectRatio = 0,
+	ECV3x2AspectRatio = 4,
 	ECV16x10AspectRatio = 2,
-	ECV16x9AspectRatio = 1
+	ECV16x9AspectRatio = 1,
 };
 typedef NSUInteger ECVAspectRatio;
 
 enum {
 	ECVFullFrame = 0,
 	ECVHighField = 1,
-	ECVLowField = 2
+	ECVLowField = 2,
 };
 typedef NSUInteger ECVFieldType;
 
@@ -57,7 +58,7 @@ enum {
 	ECVWeave = 0,
 	ECVLineDouble = 1,
 	ECVAlternate = 2,
-	ECVBlur = 3
+	ECVBlur = 3,
 };
 typedef NSInteger ECVDeinterlacingMode;
 

@@ -12,7 +12,7 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="57"/>
+			<integer value="452"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -408,16 +408,6 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="35465992"/>
 									<reference key="NSMixedImage" ref="502551668"/>
-								</object>
-								<object class="NSMenuItem" id="631670798">
-									<reference key="NSMenu" ref="319393256"/>
-									<int key="NSIndent">1</int>
-									<string key="NSTitle">1:1</string>
-									<string key="NSKeyEquiv"/>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<reference key="NSOnImage" ref="35465992"/>
-									<reference key="NSMixedImage" ref="502551668"/>
-									<int key="NSTag">3</int>
 								</object>
 								<object class="NSMenuItem" id="1036903925">
 									<reference key="NSMenu" ref="319393256"/>
@@ -837,14 +827,6 @@
 					<object class="IBActionConnection" key="connection">
 						<string key="label">changeAspectRatio:</string>
 						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="631670798"/>
-					</object>
-					<int key="connectionID">534</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">changeAspectRatio:</string>
-						<reference key="source" ref="1014"/>
 						<reference key="destination" ref="259521319"/>
 					</object>
 					<int key="connectionID">535</int>
@@ -1152,7 +1134,6 @@
 							<reference ref="778901078"/>
 							<reference ref="782967254"/>
 							<reference ref="160363616"/>
-							<reference ref="631670798"/>
 							<reference ref="259521319"/>
 						</object>
 						<reference key="parent" ref="624253446"/>
@@ -1287,11 +1268,6 @@
 						<reference key="parent" ref="319393256"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">532</int>
-						<reference key="object" ref="631670798"/>
-						<reference key="parent" ref="319393256"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">533</int>
 						<reference key="object" ref="259521319"/>
 						<reference key="parent" ref="319393256"/>
@@ -1398,7 +1374,6 @@
 					<string>523.IBPluginDependency</string>
 					<string>525.IBPluginDependency</string>
 					<string>527.IBPluginDependency</string>
-					<string>532.IBPluginDependency</string>
 					<string>533.IBPluginDependency</string>
 					<string>56.IBPluginDependency</string>
 					<string>56.ImportedFromIB2</string>
@@ -1451,7 +1426,7 @@
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{304, 712}, {154, 153}}</string>
+					<string>{{253, 620}, {151, 153}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{187, 434}, {243, 243}}</string>
@@ -1479,7 +1454,7 @@
 					<string>{74, 862}</string>
 					<string>{{6, 978}, {478, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{460, 702}, {227, 343}}</string>
+					<string>{{297, 450}, {227, 323}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1502,7 +1477,6 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1539,7 +1513,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">536</int>
+			<int key="maxID">538</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1552,6 +1526,7 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>changeAspectRatio:</string>
+							<string>changeCodec:</string>
 							<string>changeScale:</string>
 							<string>pause:</string>
 							<string>play:</string>
@@ -1566,6 +1541,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
