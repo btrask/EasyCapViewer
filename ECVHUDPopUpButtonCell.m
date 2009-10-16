@@ -92,8 +92,6 @@ static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, 
 	[[NSColor colorWithDeviceWhite:0.75f alpha:0.9f] set];
 	[p stroke];
 
-	[NSGraphicsContext restoreGraphicsState];
-
 	CGFloat const arrowHeight = round((NSHeight(r) - ECVMarginVert) / 2.0f - ECVArrowMarginVert);
 	CGFloat const arrowWidth = round(arrowHeight * ECVArrowWidthRatio);
 	NSPoint const o = NSMakePoint(round(NSMaxX(r) - ECVMarginRight - arrowWidth / 2.0f - ECVArrowMarginRight) + 0.5f, round(NSMinY(r) + (NSHeight(r) + ECVMarginTop - ECVMarginBottom) / 2.0f));
@@ -113,6 +111,7 @@ static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, 
 	[arrows fill];
 
 	CGContextEndTransparencyLayer(context);
+	[NSGraphicsContext restoreGraphicsState];
 }
 
 @end
