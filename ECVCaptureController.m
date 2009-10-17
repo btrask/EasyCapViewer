@@ -111,7 +111,9 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		[NSNumber numberWithBool:NO], ECVVsyncKey,
 		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
 		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
+#if !__LP64__
 		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
+#endif
 		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
 		nil]];
 }

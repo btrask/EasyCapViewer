@@ -26,8 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
-@implementation QTMedia(ECVQTKitAdditions)
 #if !__LP64__
+
+@implementation QTMedia(ECVQTKitAdditions)
 
 - (void)ECV_beginEdits
 {
@@ -38,11 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVOSStatus(EndMediaEdits([self quickTimeMedia]));
 }
 
-#endif
 @end
 
 @implementation QTTrack(ECVQTKitAdditions)
-#if !__LP64__
 
 - (void)ECV_insertMediaAtTime:(QTTime)time
 {
@@ -52,5 +51,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], t.timeValue, GetMediaDisplayStartTime(m), GetMediaDisplayDuration(m), fixed1));
 }
 
-#endif
 @end
+
+#endif

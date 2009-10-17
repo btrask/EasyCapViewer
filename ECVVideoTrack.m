@@ -49,10 +49,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 	[videoTrack _addEncodedFrame:noErr == error ? frame : NULL];
 	return noErr;
 }
-#endif
 
 @implementation ECVVideoTrack
-#if !__LP64__
 
 #pragma mark +ECVVideoTrack
 
@@ -144,5 +142,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 	[super dealloc];
 }
 
-#endif
 @end
+
+#endif

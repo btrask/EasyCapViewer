@@ -24,12 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <QTKit/QTKit.h>
 
-#if __LP64__
-
-@interface ECVSoundTrack : NSObject
-@end
-
-#else
+#if !__LP64__
 
 @interface ECVSoundTrack : NSObject
 {
