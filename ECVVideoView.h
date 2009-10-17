@@ -78,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)drawBufferIndex:(NSUInteger)index;
 - (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index;
 
-// These mthods must be called from the main thread.
+// These methods must be called from the main thread.
 - (void)startDrawing;
 - (void)stopDrawing;
 @property(assign, nonatomic) NSSize aspectRatio;

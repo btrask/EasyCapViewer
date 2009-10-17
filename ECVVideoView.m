@@ -528,13 +528,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)reshape
 {
 	NSRect const b = [self bounds];
-
 	NSSize const aspectRatio = self.aspectRatio;
-	_outputRect = b;
-	CGFloat const r = (aspectRatio.width / aspectRatio.height) / (NSWidth(b) / NSHeight(b));
-	if(r > 1.0f) _outputRect.size.height *= 1.0f / r;
-	else _outputRect.size.width *= r;
-	_outputRect.origin = NSMakePoint(NSMidX(b) - NSWidth(_outputRect) / 2.0f, NSMidY(b) - NSHeight(_outputRect) / 2.0f);
 
 	NSOpenGLContext *const context = [self openGLContext];
 	CGLContextObj const contextObj = [context CGLContextObj];
@@ -542,6 +536,12 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	[super reshape];
+
+	_outputRect = b;
+	CGFloat const r = (aspectRatio.width / aspectRatio.height) / (NSWidth(b) / NSHeight(b));
+	if(r > 1.0f) _outputRect.size.height *= 1.0f / r;
+	else _outputRect.size.width *= r;
+	_outputRect.origin = NSMakePoint(NSMidX(b) - NSWidth(_outputRect) / 2.0f, NSMidY(b) - NSHeight(_outputRect) / 2.0f);
 
 	glViewport(NSMinX(b), NSMinY(b), NSWidth(b), NSHeight(b));
 	glLoadIdentity();
