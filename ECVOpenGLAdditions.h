@@ -21,16 +21,5 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
-
-@interface NSBezierPath(ECVAppKitAdditions)
-
-+ (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius;
-
-@end
-
-@interface NSBitmapImageRep(ECVAppKitAdditions)
-
-- (GLuint)ECV_textureName;
-
-@end
+extern void ECVGLDrawTexture(NSRect frame, NSRect bounds);
+extern void ECVGLDrawBorder(NSRect inner, NSRect outer);

@@ -21,16 +21,19 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
+// Views
+#import "ECVVideoView.h"
 
-@interface NSBezierPath(ECVAppKitAdditions)
+@interface ECVPlayButtonCell : NSButtonCell <ECVVideoViewCell>
+{
+	@private
+	NSOpenGLContext *_context;
+	NSBitmapImageRep *_imageRep;
+	GLuint _textureName;
+}
 
-+ (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius;
++ (NSImage *)playButtonImage;
 
-@end
-
-@interface NSBitmapImageRep(ECVAppKitAdditions)
-
-- (GLuint)ECV_textureName;
+- (id)initWithOpenGLContext:(NSOpenGLContext *)context;
 
 @end

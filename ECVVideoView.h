@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVFrameReading.h"
 
-@protocol ECVVideoViewDelegate;
+@protocol ECVVideoViewCell, ECVVideoViewDelegate;
 
 @interface ECVVideoView : NSOpenGLView <ECVFrameReading, NSWindowDelegate>
 {
@@ -52,17 +52,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	CVDisplayLinkRef _displayLink;
 	NSRect _outputRect;
-	NSBitmapImageRep *_playButton;
-	GLuint _playButtonTextureName;
-	BOOL _highlighted;
 
 	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
-	IBOutlet id target;
-	SEL action;
 	NSSize _aspectRatio;
+	NSRect _cropRect;
 	BOOL _vsync;
 	GLint _magFilter;
 	BOOL _showDroppedFrames;
+	NSCell<ECVVideoViewCell> *_cell;
 }
 
 // These methods must be called from the same thread.
@@ -84,20 +81,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(assign) id target;
-@property(assign) SEL action;
 @property(assign) NSSize aspectRatio;
+@property(assign) NSRect cropRect;
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
+@property(retain) NSCell<ECVVideoViewCell> *cell;
 
 @property(readonly) NSUInteger currentDrawBufferIndex;
 
 @end
 
-@protocol ECVVideoViewDelegate <NSObject>
+@protocol ECVVideoViewCell <NSObject>
+@required
+- (void)drawWithFrame:(NSRect)r inVideoView:(ECVVideoView *)v playing:(BOOL)flag;
+@end
 
+@protocol ECVVideoViewDelegate <NSObject>
 @optional
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
-
 @end

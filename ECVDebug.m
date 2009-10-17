@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 NSString *ECVIOKitErrorToString(IOReturn error)
 {
-#define ErrorCase(val) case (val): return [NSString stringWithUTF8String:(#val)]
+#define ErrorCase(val) case (val): return [NSString stringWithUTF8String:#val]
 	switch(error) {
 		ErrorCase(kIOReturnSuccess);
 		ErrorCase(kIOReturnError);

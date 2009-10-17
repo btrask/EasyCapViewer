@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVOpenGLAdditions.h"
 
 #define ECVMaxPendingDisplayFrames 1
 #define ECVMaxPendingAttachedFrames 1
@@ -41,8 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #define ECVMaxPendingAttachedBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingAttachedFrames)
 
 #define ECVRequiredBufferCount (ECVCurrentFillBuffers + ECVPreviousFillBuffers + ECVCurrentDrawBuffers + ECVUnassignedBuffers + ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers)
-
-#define ECVPlayButtonSize 75
 
 NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 {
@@ -95,15 +94,13 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 
 @interface ECVVideoView(Private)
 
-- (void)_generatePlayButton;
-
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
 - (void)_invalidateFrame:(ECVAttachedFrame *)frame;
 
 - (void)_drawOneFrame;
 - (void)_drawBuffer:(NSUInteger)index;
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength;
-- (void)_drawPlayButton;
+- (void)_drawCropAdjustmentBox;
 - (void)_drawResizeHandle;
 
 @end
@@ -128,7 +125,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLContextObj const contextObj = [context CGLContextObj];
 	[context makeCurrentContext];
 	CGLLockContext(contextObj);
-	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
 	NSUInteger i;
 
@@ -145,28 +142,28 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_attachedFrames makeObjectsPerformSelector:@selector(invalidate)];
 	[_attachedFrameLock unlock];
 
-	if(_textureNames) ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
+	if(_textureNames) ECVGLError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
 	[_textureNames release];
 	_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * ECVRequiredBufferCount];
-	ECVglError(glGenTextures(ECVRequiredBufferCount, [_textureNames mutableBytes]));
+	ECVGLError(glGenTextures(ECVRequiredBufferCount, [_textureNames mutableBytes]));
 
-	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
+	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
 	[_bufferData release];
 	_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * ECVRequiredBufferCount];
-	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
+	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
 
 	GLenum const format = ECVPixelFormatTypeToGLFormat(_pixelFormatType);
 	GLenum const type = ECVPixelFormatTypeToGLType(_pixelFormatType);
 	for(i = 0; i < ECVRequiredBufferCount; i++) {
-		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
-		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
-		ECVglError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
-		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
-		ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
+		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
+		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
+		ECVGLError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
+		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
+		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
 		[self clearBufferAtIndex:i];
 	}
 
-	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
 - (NSUInteger)bufferIndexByBlurringPastFrames
@@ -267,8 +264,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 #pragma mark -
 
 @synthesize delegate;
-@synthesize target;
-@synthesize action;
 @synthesize aspectRatio = _aspectRatio;
 - (void)setAspectRatio:(NSSize)ratio
 {
@@ -279,6 +274,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_aspectRatio = ratio;
 	CGLUnlockContext(contextObj);
 	[self reshape];
+}
+@synthesize cropRect = _cropRect;
+- (void)setCropRect:(NSRect)aRect
+{
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+	_cropRect = aRect;
+	CGLUnlockContext(contextObj);
+	[self setNeedsDisplay:YES];
 }
 @synthesize vsync = _vsync;
 - (void)setVsync:(BOOL)flag
@@ -302,12 +308,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_magFilter = filter;
 	NSUInteger i = 0;
 	if(_textureNames) for(; i < ECVRequiredBufferCount; i++) {
-		ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
-		ECVglError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
+		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
+		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
 	}
 	CGLUnlockContext(contextObj);
+	[self setNeedsDisplay:YES];
 }
 @synthesize showDroppedFrames = _showDroppedFrames;
+@synthesize cell = _cell;
 
 #pragma mark -
 
@@ -320,48 +328,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 
 #pragma mark -ECVVideoView(Private)
-
-- (void)_generatePlayButton
-{
-	if(_playButtonTextureName) ECVglError(glDeleteTextures(1, &_playButtonTextureName));
-	[_playButton release];
-	_playButton = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVPlayButtonSize pixelsHigh:ECVPlayButtonSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVPlayButtonSize * 4 bitsPerPixel:32];
-	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:_playButton]];
-
-	[[NSColor clearColor] set];
-	NSRect const b = NSMakeRect(0.0f, 0.0f, ECVPlayButtonSize, ECVPlayButtonSize);
-	NSRectFill(b);
-	[[NSColor colorWithDeviceWhite:0.5f alpha:0.67f] set];
-	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
-
-	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
-	[shadow setShadowBlurRadius:4.0f];
-	[shadow setShadowOffset:NSMakeSize(0.0f, -2.0f)];
-	[shadow set];
-	[[NSColor whiteColor] set];
-
-	NSBezierPath *const iconPath = [NSBezierPath bezierPath];
-	[iconPath moveToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.75f), round(NSMidY(b)))];
-	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.7f))];
-	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.3f))];
-	[iconPath closePath];
-	[iconPath fill];
-
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
-	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-
-	ECVglError(glGenTextures(1, &_playButtonTextureName));
-	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _playButtonTextureName));
-	ECVglError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, [_playButton pixelsWide], [_playButton pixelsHigh], 0, GL_RGBA, GL_UNSIGNED_BYTE, [_playButton bitmapData]));
-
-	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
-	CGLUnlockContext(contextObj);
-}
-
-#pragma mark -
 
 - (GLuint)_textureNameAtIndex:(NSUInteger)index
 {
@@ -383,6 +349,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_bufferPoolLock lock];
 	NSNumber *const number = [_readyBufferIndexQueue lastObject];
 	CGFloat const frameDropStrength = _frameDropStrength;
+	NSCell<ECVVideoViewCell> *cell = self.cell;
 	[_bufferPoolLock unlock];
 	if(!number) return;
 
@@ -396,6 +363,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	glClear(GL_COLOR_BUFFER_BIT);
 	[self _drawBuffer:index];
 	[self _drawFrameDropIndicatorWithStrength:frameDropStrength];
+	[cell drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
 	glFlush();
 	CGLUnlockContext(contextObj);
@@ -407,74 +375,19 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)_drawBuffer:(NSUInteger)index
 {
-	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:index]));
-	ECVglError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self bufferBytesAtIndex:index]));
+	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:index]));
+	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self bufferBytesAtIndex:index]));
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, _pixelSize.height);
-	glVertex2f(NSMinX(_outputRect), NSMinY(_outputRect));
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(NSMinX(_outputRect), NSMaxY(_outputRect));
-	glTexCoord2f(_pixelSize.width, 0.0f);
-	glVertex2f(NSMaxX(_outputRect), NSMaxY(_outputRect));
-	glTexCoord2f(_pixelSize.width, _pixelSize.height);
-	glVertex2f(NSMaxX(_outputRect), NSMinY(_outputRect));
-	glEnd();
-	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLDrawTexture(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToSize(_pixelSize)));
+	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength
 {
 	if(strength < 0.01f || !self.showDroppedFrames) return;
-	CGFloat const t = 5.0f;
 	NSRect const b = [self bounds];
-
 	glColor4f(1.0f, 0.0f, 0.0f, strength);
-	glBegin(GL_QUADS);
-	glVertex2f(NSMinX(b)    , NSMinY(b)    );
-	glVertex2f(NSMinX(b)    , NSMaxY(b)    );
-	glVertex2f(NSMinX(b) + t, NSMaxY(b)    );
-	glVertex2f(NSMinX(b) + t, NSMinY(b)    );
-
-	glVertex2f(NSMinX(b) + t, NSMaxY(b) - t);
-	glVertex2f(NSMinX(b) + t, NSMaxY(b)    );
-	glVertex2f(NSMaxX(b) - t, NSMaxY(b)    );
-	glVertex2f(NSMaxX(b) - t, NSMaxY(b) - t);
-
-	glVertex2f(NSMaxX(b) - t, NSMinY(b)    );
-	glVertex2f(NSMaxX(b) - t, NSMaxY(b)    );
-	glVertex2f(NSMaxX(b)    , NSMaxY(b)    );
-	glVertex2f(NSMaxX(b)    , NSMinY(b)    );
-
-	glVertex2f(NSMinX(b) + t, NSMinY(b)    );
-	glVertex2f(NSMinX(b) + t, NSMinY(b) + t);
-	glVertex2f(NSMaxX(b) - t, NSMinY(b) + t);
-	glVertex2f(NSMaxX(b) - t, NSMinY(b)    );
-	glEnd();
-}
-- (void)_drawPlayButton
-{
-	if(_displayLink && CVDisplayLinkIsRunning(_displayLink)) return;
-	ECVglError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-	ECVglError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _playButtonTextureName));
-
-	NSRect const b = [self bounds];
-	NSRect const playButtonRect = NSMakeRect(round(NSMidX(b) - ECVPlayButtonSize / 2.0f), round(NSMinY(b) + (NSHeight(b) - ECVPlayButtonSize) / 3.0f), ECVPlayButtonSize, ECVPlayButtonSize);
-
-	GLfloat const c = _highlighted ? 0.67f : 1.0f;
-	glColor4f(c, c, c, 1.0f);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, ECVPlayButtonSize);
-	glVertex2f(NSMinX(playButtonRect), NSMinY(playButtonRect));
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(NSMinX(playButtonRect), NSMaxY(playButtonRect));
-	glTexCoord2f(ECVPlayButtonSize, 0.0f);
-	glVertex2f(NSMaxX(playButtonRect), NSMaxY(playButtonRect));
-	glTexCoord2f(ECVPlayButtonSize, ECVPlayButtonSize);
-	glVertex2f(NSMaxX(playButtonRect), NSMinY(playButtonRect));
-	glEnd();
-
-	ECVglError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLDrawBorder(NSInsetRect(b, 5.0f, 5.0f), b);
 }
 - (void)_drawResizeHandle
 {
@@ -484,28 +397,28 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	glBegin(GL_LINES);
 	glColor4f(0.85f, 0.85f, 0.85f, 0.5f);
-	glVertex2f(NSMaxX(b) - 2.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 2.0f);
-	glVertex2f(NSMaxX(b) - 6.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 6.0f);
-	glVertex2f(NSMaxX(b) - 10.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 10.0f);
+	glVertex2f(NSMaxX(b) -  2.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) -  2.0f);
+	glVertex2f(NSMaxX(b) -  6.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) -  6.0f);
+	glVertex2f(NSMaxX(b) - 10.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) - 10.0f);
 
 	glColor4f(0.15f, 0.15f, 0.15f, 0.5f);
-	glVertex2f(NSMaxX(b) - 3.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 3.0f);
-	glVertex2f(NSMaxX(b) - 7.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 7.0f);
-	glVertex2f(NSMaxX(b) - 11.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 11.0f);
+	glVertex2f(NSMaxX(b) -  3.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) -  3.0f);
+	glVertex2f(NSMaxX(b) -  7.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) -  7.0f);
+	glVertex2f(NSMaxX(b) - 11.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) - 11.0f);
 
 	glColor4f(0.0f, 0.0f, 0.0f, 0.15f);
-	glVertex2f(NSMaxX(b) - 4.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 4.0f);
-	glVertex2f(NSMaxX(b) - 8.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 8.0f);
-	glVertex2f(NSMaxX(b) - 12.0f, NSMinY(b) + 1.0f);
-	glVertex2f(NSMaxX(b) - 1.0f, NSMinY(b) + 12.0f);
+	glVertex2f(NSMaxX(b) -  4.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) -  4.0f);
+	glVertex2f(NSMaxX(b) -  8.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) -  8.0f);
+	glVertex2f(NSMaxX(b) - 12.0f, NSMaxY(b) -  1.0f);
+	glVertex2f(NSMaxX(b) -  1.0f, NSMaxY(b) - 12.0f);
 	glEnd();
 }
 
@@ -549,10 +462,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	glViewport(NSMinX(b), NSMinY(b), NSWidth(b), NSHeight(b));
 	glLoadIdentity();
-	gluOrtho2D(NSMinX(b), NSWidth(b), NSMinY(b), NSHeight(b));
+	gluOrtho2D(NSMinX(b), NSMaxX(b), NSMaxY(b), NSMinY(b));
 
-	ECVglError(glEnable(GL_BLEND));
-	ECVglError(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+	ECVGLError(glEnable(GL_BLEND));
+	ECVGLError(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -561,13 +474,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -NSView
 
+- (BOOL)isFlipped
+{
+	return YES;
+}
 - (BOOL)isOpaque
 {
 	return YES;
 }
 - (void)drawRect:(NSRect)aRect
 {
-	// We do our normal drawing from -_drawOneFrame.
 	NSOpenGLContext *const context = [self openGLContext];
 	CGLContextObj const contextObj = [context CGLContextObj];
 	[context makeCurrentContext];
@@ -577,7 +493,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_bufferPoolLock lock];
 	if(NSNotFound != _currentDrawBufferIndex) [self _drawBuffer:_currentDrawBufferIndex];
 	[_bufferPoolLock unlock];
-	[self _drawPlayButton];
+	[self.cell drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
 	[self _drawResizeHandle];
 	glFlush();
 
@@ -611,17 +527,25 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)mouseDown:(NSEvent *)anEvent
 {
-	_highlighted = YES;
-	[self setNeedsDisplay:YES];
-	NSEvent *latestEvent = nil;
-	while((latestEvent = [[self window] nextEventMatchingMask:NSLeftMouseDraggedMask | NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp) {
-		_highlighted = [[[self window] contentView] hitTest:[latestEvent locationInWindow]] == self;
-		[self setNeedsDisplay:YES];
+	if([[self.cell class] prefersTrackingUntilMouseUp]) {
+		[self.cell trackMouse:anEvent inRect:_outputRect ofView:self untilMouseUp:YES];
+		return;
 	}
+	BOOL const playing = CVDisplayLinkIsRunning(_displayLink);
+	NSEvent *latestEvent = anEvent;
+	do {
+		if([self mouse:[self convertPoint:[latestEvent locationInWindow] fromView:nil] inRect:_outputRect]) {
+			[self.cell setHighlighted:YES];
+			if(!playing) [self setNeedsDisplay:YES];
+			if([self.cell trackMouse:latestEvent inRect:_outputRect ofView:self untilMouseUp:NO]) break;
+			[self.cell setHighlighted:NO];
+			if(!playing) [self setNeedsDisplay:YES];
+		}
+		latestEvent = [[self window] nextEventMatchingMask:NSLeftMouseUpMask | NSLeftMouseDraggedMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES];
+	} while([latestEvent type] != NSLeftMouseUp);
 	[[self window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
-	if(_highlighted) [NSApp sendAction:self.action to:self.target from:self];
-	_highlighted = NO;
-	[self setNeedsDisplay:YES];
+	[self.cell setHighlighted:NO];
+	if(!playing) [self setNeedsDisplay:YES];
 }
 
 #pragma mark -NSObject
@@ -632,9 +556,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(invalidate)];
 
-	ECVglError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
-	ECVglError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
-	ECVglError(glDeleteTextures(1, &_playButtonTextureName));
+	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
+	ECVGLError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
 
 	[_bufferPoolLock release];
 	[_bufferData release];
@@ -644,7 +567,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_attachedFrames release];
 	[_attachedFrameIndexes release];
 	CVDisplayLinkRelease(_displayLink);
-	[_playButton release];
+	[_cell release];
 	[super dealloc];
 }
 
@@ -661,11 +584,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	_bufferPoolLock = [[NSLock alloc] init];
 	_attachedFrameLock = [[NSRecursiveLock alloc] init];
+	_cropRect = ECVUncroppedRect;
 	_magFilter = GL_LINEAR;
 	_readyBufferIndexQueue = [[NSMutableArray alloc] init];
 	_attachedFrames = [[NSMutableArray alloc] init];
 	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
-	[self _generatePlayButton];
 	[self resetFrames];
 }
 

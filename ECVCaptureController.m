@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Views
 #import "MPLWindow.h"
 #import "ECVVideoView.h"
+#import "ECVPlayButtonCell.h"
+#import "ECVCropCell.h"
 
 // Controllers
 #import "ECVController.h"
@@ -55,6 +57,7 @@ static NSString *const ECVShowDroppedFramesKey = @"ECVShowDroppedFrames";
 static NSString *const ECVVideoCodecKey = @"ECVVideoCodec";
 static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 static NSString *const ECVVolumeKey = @"ECVVolume";
+static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 enum {
 	ECVNotPlaying,
@@ -117,6 +120,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 #endif
 		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
 		[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
+		NSStringFromRect(ECVUncroppedRect), ECVCropRectKey,
 		nil]];
 }
 
@@ -749,11 +753,17 @@ ECVNoDeviceError:
 	self.aspectRatio = [self sizeWithAspectRatio:[[[NSUserDefaults standardUserDefaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]];
 
 	self.deinterlacingMode = [[NSUserDefaults standardUserDefaults] integerForKey:ECVDeinterlacingModeKey];
+
+	videoView.cropRect = NSRectFromString([[NSUserDefaults standardUserDefaults] stringForKey:ECVCropRectKey]);
 	videoView.vsync = [[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey];
 	videoView.showDroppedFrames = [[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey];
 	videoView.magFilter = [[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey];
-	videoView.target = self;
-	videoView.action = @selector(togglePlaying:);
+
+	ECVPlayButtonCell *const cell = [[[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]] autorelease];
+	[cell setImage:[ECVPlayButtonCell playButtonImage]];
+	cell.target = self;
+	cell.action = @selector(togglePlaying:);
+	videoView.cell = cell;
 
 	[w center];
 	[self noteVideoSettingDidChange];

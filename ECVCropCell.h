@@ -21,16 +21,18 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
+// Views
+#import "ECVVideoView.h"
 
-@interface NSBezierPath(ECVAppKitAdditions)
+@interface ECVCropCell : NSCell <ECVVideoViewCell>
+{
+	@private
+	NSRect _cropRect;
+	NSBitmapImageRep *_handleRep;
+	GLuint _handleTextureName;
+}
 
-+ (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius;
-
-@end
-
-@interface NSBitmapImageRep(ECVAppKitAdditions)
-
-- (GLuint)ECV_textureName;
+- (id)initWithOpenGLContext:(NSOpenGLContext *)context;
+@property(assign) NSRect cropRect;
 
 @end

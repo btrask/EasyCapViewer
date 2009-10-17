@@ -23,6 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAppKitAdditions.h"
 
+// Other Sources
+#import "ECVDebug.h"
+
 @implementation NSBezierPath(ECVAppKitAdditions)
 
 + (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius
@@ -34,6 +37,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(aRect) - radius, NSMinY(aRect) + radius) radius:radius startAngle:270.0f endAngle:0.0f];
 	[path closePath];
 	return path;
+}
+
+@end
+
+@implementation NSBitmapImageRep(ECVAppKitAdditions)
+
+- (GLuint)ECV_textureName
+{
+	GLuint textureName = 0;
+	ECVGLError(glGenTextures(1, &textureName));
+	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, textureName));
+	ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, [self pixelsWide], [self pixelsHigh], 0, GL_RGBA, GL_UNSIGNED_BYTE, [self bitmapData]));
+	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	return textureName;
 }
 
 @end
