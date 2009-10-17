@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoView.h"
 
 // Controllers
-@class ECVCaptureController;
+#import "ECVConfigController.h"
 
 // Other Sources
 #import "ECVAudioDevice.h"
@@ -68,7 +68,7 @@ extern NSString *const ECVContrastKey;
 extern NSString *const ECVHueKey;
 extern NSString *const ECVSaturationKey;
 
-@interface ECVCaptureController : NSWindowController <ECVAudioDeviceDelegate, ECVVideoViewDelegate, NSWindowDelegate>
+@interface ECVCaptureController : NSWindowController <ECVAudioDeviceDelegate, ECVCaptureControllerConfiguring, ECVVideoViewDelegate, NSWindowDelegate>
 {
 	@private
 	IBOutlet ECVVideoView *videoView;
@@ -93,6 +93,7 @@ extern NSString *const ECVSaturationKey;
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPipe;
+	CGFloat _volume;
 
 	QTMovie *_movie;
 	ECVSoundTrack *_soundTrack;

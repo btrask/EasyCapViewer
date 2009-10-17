@@ -21,25 +21,6 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
-#import <AudioToolbox/AudioToolbox.h>
-#import <CoreAudio/CoreAudio.h>
-
-@interface ECVAudioPipe : NSObject
-{
-	@private
-	AudioStreamBasicDescription _inputStreamDescription;
-	AudioConverterRef _converter;
-	AudioBuffer _audioBuffer;
-	NSMutableData *_bufferData;
-	CGFloat _volume;
-}
-
-- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc;
-@property(assign) CGFloat volume;
-- (void)clearBuffer;
-
-- (BOOL)receiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time;
-- (BOOL)requestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time;
+@interface ECVDividerView : NSView
 
 @end

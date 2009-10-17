@@ -23,6 +23,8 @@
 		0E78CB980FC92D8300E9C148 /* ECVDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CB970FC92D8300E9C148 /* ECVDebug.m */; };
 		0E78CD850FC9F9E300E9C148 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CD840FC9F9E300E9C148 /* QuartzCore.framework */; };
 		0E78CDB50FC9F9EB00E9C148 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */; };
+		0E7FFC0010899578000C8217 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E7FFBFF10899578000C8217 /* vecLib.framework */; };
+		0E7FFC4510899D4B000C8217 /* ECVDividerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E7FFC4410899D4B000C8217 /* ECVDividerView.m */; };
 		0E8CE0CC107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */; };
 		0E8CE152107BE511004F05A7 /* ECVQTKitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE151107BE511004F05A7 /* ECVQTKitAdditions.m */; };
 		0E8CE155107BE51C004F05A7 /* ECVAppKitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE154107BE51C004F05A7 /* ECVAppKitAdditions.m */; };
@@ -83,6 +85,9 @@
 		0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "stk11xx-dev-0408.m"; sourceTree = "<group>"; };
 		0E78CD840FC9F9E300E9C148 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		0E7FFBFF10899578000C8217 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
+		0E7FFC4310899D4B000C8217 /* ECVDividerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDividerView.h; sourceTree = "<group>"; };
+		0E7FFC4410899D4B000C8217 /* ECVDividerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDividerView.m; sourceTree = "<group>"; };
 		0E8CE0CA107BCE12004F05A7 /* ECVHUDPopUpButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDPopUpButtonCell.h; sourceTree = "<group>"; };
 		0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDPopUpButtonCell.m; sourceTree = "<group>"; };
 		0E8CE150107BE511004F05A7 /* ECVQTKitAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVQTKitAdditions.h; sourceTree = "<group>"; };
@@ -133,6 +138,7 @@
 				0EE547941070F34C00F003AF /* CoreVideo.framework in Frameworks */,
 				0EE5483A1071019600F003AF /* QuickTime.framework in Frameworks */,
 				0E9F5E631085D06F00375752 /* Carbon.framework in Frameworks */,
+				0E7FFC0010899578000C8217 /* vecLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,6 +183,8 @@
 				0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */,
 				0E8CE216107BF845004F05A7 /* ECVTickMarkView.h */,
 				0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */,
+				0E7FFC4310899D4B000C8217 /* ECVDividerView.h */,
+				0E7FFC4410899D4B000C8217 /* ECVDividerView.m */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -194,6 +202,7 @@
 				0E78CDB40FC9F9EB00E9C148 /* OpenGL.framework */,
 				0E0AC92310203FB300C12D88 /* QTKit.framework */,
 				0EE548391071019600F003AF /* QuickTime.framework */,
+				0E7FFBFF10899578000C8217 /* vecLib.framework */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -356,6 +365,7 @@
 				0E8CE155107BE51C004F05A7 /* ECVAppKitAdditions.m in Sources */,
 				0E8CE1D1107BE953004F05A7 /* ECVHUDSliderCell.m in Sources */,
 				0E8CE218107BF845004F05A7 /* ECVTickMarkView.m in Sources */,
+				0E7FFC4510899D4B000C8217 /* ECVDividerView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

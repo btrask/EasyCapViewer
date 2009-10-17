@@ -54,6 +54,7 @@ static NSString *const ECVMagFilterKey = @"ECVMagFilter";
 static NSString *const ECVShowDroppedFramesKey = @"ECVShowDroppedFrames";
 static NSString *const ECVVideoCodecKey = @"ECVVideoCodec";
 static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
+static NSString *const ECVVolumeKey = @"ECVVolume";
 
 enum {
 	ECVNotPlaying,
@@ -115,6 +116,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
 #endif
 		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
+		[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
 		nil]];
 }
 
@@ -124,6 +126,8 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 {
 	if(outError) *outError = nil;
 	if(!(self = [self initWithWindowNibName:@"ECVCapture"])) return nil;
+
+	self.volume = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey];
 
 	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], device, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 
@@ -483,11 +487,11 @@ ECVNoDeviceError:
 		if(!inputStream || !outputStream) return NO;
 
 		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
+		_audioPipe.volume = _volume;
 		_audioInput = [input retain];
 		_audioOutput = [output retain];
 		_audioInput.delegate = self;
 		_audioOutput.delegate = self;
-
 	}
 	[_audioPipe clearBuffer];
 	if([_audioInput start] && [_audioOutput start]) return YES;
@@ -786,20 +790,6 @@ ECVNoDeviceError:
 	[super dealloc];
 }
 
-#pragma mark -<ECVAudioDeviceDelegate>
-
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
-{
-	NSParameterAssert(sender = _audioInput);
-	[_audioPipe receiveInput:bufferList atTime:time];
-	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordAudioBufferList:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
-}
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
-{
-	NSParameterAssert(sender == _audioOutput);
-	[_audioPipe requestOutput:bufferList forTime:time];
-}
-
 #pragma mark -NSObject(NSMenuValidation)
 
 - (BOOL)validateMenuItem:(NSMenuItem *)anItem
@@ -833,6 +823,33 @@ ECVNoDeviceError:
 		if(@selector(startRecording:) == action) return NO;
 	}
 	return [self respondsToSelector:action];
+}
+
+#pragma mark -<ECVAudioDeviceDelegate>
+
+- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
+{
+	NSParameterAssert(sender = _audioInput);
+	[_audioPipe receiveInput:bufferList atTime:time];
+	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordAudioBufferList:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
+}
+- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
+{
+	NSParameterAssert(sender == _audioOutput);
+	[_audioPipe requestOutput:bufferList forTime:time];
+}
+
+#pragma mark -<ECVCaptureControllerConfiguring>
+
+- (CGFloat)volume
+{
+	return _volume;
+}
+- (void)setVolume:(CGFloat)value
+{
+	_volume = value;
+	_audioPipe.volume = value;
+	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
 }
 
 #pragma mark -<ECVVideoViewDelegate>

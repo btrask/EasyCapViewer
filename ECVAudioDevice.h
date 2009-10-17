@@ -33,7 +33,7 @@ extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 	@private
 	IBOutlet NSObject<ECVAudioDeviceDelegate> *delegate;
 	AudioDeviceID _deviceID;
-	BOOL _input;
+	BOOL _isInput;
 	AudioDeviceIOProcID _procID;
 }
 
@@ -46,9 +46,9 @@ extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 
 @property(assign) NSObject<ECVAudioDeviceDelegate> *delegate;
 @property(readonly) AudioDeviceID deviceID;
-@property(readonly, getter = isInput) BOOL input;
+@property(readonly) BOOL isInput;
 
-- (NSArray *)streams;
+@property(readonly) NSArray *streams;
 
 - (BOOL)start;
 - (void)stop;

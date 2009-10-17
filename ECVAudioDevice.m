@@ -109,7 +109,7 @@ ECVNoDeviceError:
 	NSParameterAssert(kAudioDeviceUnknown != deviceID);
 	if((self = [super init])) {
 		_deviceID = deviceID;
-		_input = flag;
+		_isInput = flag;
 
 		Float64 rate = 0.0f;
 		UInt32 rateSize= sizeof(rate);
@@ -129,7 +129,7 @@ ECVNoDeviceError:
 
 @synthesize delegate;
 @synthesize deviceID = _deviceID;
-@synthesize input = _input;
+@synthesize isInput = _isInput;
 
 #pragma mark -
 

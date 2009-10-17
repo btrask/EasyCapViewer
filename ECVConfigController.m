@@ -23,6 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVConfigController.h"
 
+// Controllers
+#import "ECVCaptureController.h"
+
 @interface ECVConfigController(Private)
 
 - (void)_snapSlider:(NSSlider *)slider;
@@ -74,11 +77,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:sender];
 	_captureController.hue = [sender doubleValue];
 }
+- (IBAction)changeVolume:(id)sender
+{
+	_captureController.volume = [sender doubleValue];
+}
 
 #pragma mark -
 
 @synthesize captureController = _captureController;
-- (void)setCaptureController:(ECVCaptureController<ECVCaptureControllerConfiguring> *)c
+- (void)setCaptureController:(ECVCaptureController *)c
 {
 	(void)[self window]; // Load.
 
@@ -121,10 +128,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[contrastSlider setEnabled:[_captureController respondsToSelector:@selector(contrast)]];
 	[saturationSlider setEnabled:[_captureController respondsToSelector:@selector(saturation)]];
 	[hueSlider setEnabled:[_captureController respondsToSelector:@selector(hue)]];
+	[volumeSlider setEnabled:[_captureController respondsToSelector:@selector(volume)]];
 	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? _captureController.brightness : 0.5f];
 	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? _captureController.contrast : 0.5f];
 	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? _captureController.saturation : 0.5f];
 	[hueSlider setDoubleValue:[hueSlider isEnabled] ? _captureController.hue : 0.5f];
+	[volumeSlider setDoubleValue:[volumeSlider isEnabled] ? _captureController.volume : 1.0f];
 	[self _snapSlider:brightnessSlider];
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];

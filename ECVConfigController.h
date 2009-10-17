@@ -24,7 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 
 // Controllers
-#import "ECVCaptureController.h"
+@class ECVCaptureController;
 
 @protocol ECVCaptureControllerConfiguring;
 
@@ -38,7 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSSlider *contrastSlider;
 	IBOutlet NSSlider *hueSlider;
 	IBOutlet NSSlider *saturationSlider;
-	ECVCaptureController<ECVCaptureControllerConfiguring> *_captureController;
+	IBOutlet NSSlider *volumeSlider;
+	ECVCaptureController *_captureController;
 }
 
 + (id)sharedConfigController;
@@ -50,8 +51,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeContrast:(id)sender;
 - (IBAction)changeSaturation:(id)sender;
 - (IBAction)changeHue:(id)sender;
+- (IBAction)changeVolume:(id)sender;
 
-@property(assign) ECVCaptureController<ECVCaptureControllerConfiguring> *captureController;
+@property(assign) ECVCaptureController *captureController;
 
 @end
 
@@ -74,5 +76,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat contrast;
 @property(assign) CGFloat saturation;
 @property(assign) CGFloat hue;
+@property(assign) CGFloat volume;
 
 @end
