@@ -72,6 +72,7 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 
 - (BOOL)trackMouse:(NSEvent *)theEvent inRect:(NSRect)cellFrame ofView:(NSView *)controlView untilMouseUp:(BOOL)flag
 {
+	return YES;
 }
 - (void)resetCursorRect:(NSRect)cellFrame inView:(NSView *)controlView
 {
