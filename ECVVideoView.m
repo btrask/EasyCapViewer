@@ -263,18 +263,23 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	[self setNeedsDisplay:YES];
 }
-@synthesize aspectRatio = _aspectRatio;
-- (void)setAspectRatio:(NSSize)ratio
-{
-	_aspectRatio = ratio;
-	[self reshape];
-}
 
 #pragma mark -
 
 @synthesize delegate;
 @synthesize target;
 @synthesize action;
+@synthesize aspectRatio = _aspectRatio;
+- (void)setAspectRatio:(NSSize)ratio
+{
+	NSOpenGLContext *const context = [self openGLContext];
+	CGLContextObj const contextObj = [context CGLContextObj];
+	[context makeCurrentContext];
+	CGLLockContext(contextObj);
+	_aspectRatio = ratio;
+	CGLUnlockContext(contextObj);
+	[self reshape];
+}
 @synthesize vsync = _vsync;
 - (void)setVsync:(BOOL)flag
 {
@@ -527,9 +532,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)reshape
 {
-	NSRect const b = [self bounds];
-	NSSize const aspectRatio = self.aspectRatio;
-
 	NSOpenGLContext *const context = [self openGLContext];
 	CGLContextObj const contextObj = [context CGLContextObj];
 	[context makeCurrentContext];
@@ -537,6 +539,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	[super reshape];
 
+	NSRect const b = [self bounds];
+	NSSize const aspectRatio = self.aspectRatio;
 	_outputRect = b;
 	CGFloat const r = (aspectRatio.width / aspectRatio.height) / (NSWidth(b) / NSHeight(b));
 	if(r > 1.0f) _outputRect.size.height *= 1.0f / r;

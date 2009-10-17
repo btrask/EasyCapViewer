@@ -81,12 +81,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // These methods must be called from the main thread.
 - (void)startDrawing;
 - (void)stopDrawing;
-@property(assign, nonatomic) NSSize aspectRatio;
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
 @property(assign) id target;
 @property(assign) SEL action;
+@property(assign) NSSize aspectRatio;
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
