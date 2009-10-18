@@ -24,15 +24,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Views
 #import "ECVVideoView.h"
 
+@protocol ECVCropCellDelegate;
+
 @interface ECVCropCell : NSCell <ECVVideoViewCell>
 {
 	@private
+	IBOutlet NSObject<ECVCropCellDelegate> *delegate;
 	NSRect _cropRect;
 	NSBitmapImageRep *_handleRep;
 	GLuint _handleTextureName;
 }
 
 - (id)initWithOpenGLContext:(NSOpenGLContext *)context;
+@property(assign) NSObject<ECVCropCellDelegate> *delegate;
 @property(assign) NSRect cropRect;
 
+@end
+
+@protocol ECVCropCellDelegate <NSObject>
+@optional
+- (void)cropCellDidFinishCropping:(ECVCropCell *)sender;
 @end

@@ -66,13 +66,22 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 	}
 	return self;
 }
+@synthesize delegate;
 @synthesize cropRect = _cropRect;
 
 #pragma mark -NSCell
 
-- (BOOL)trackMouse:(NSEvent *)theEvent inRect:(NSRect)cellFrame ofView:(NSView *)controlView untilMouseUp:(BOOL)flag
+- (BOOL)startTrackingAt:(NSPoint)startPoint inView:(NSView *)controlView
 {
 	return YES;
+}
+- (BOOL)continueTracking:(NSPoint)lastPoint at:(NSPoint)currentPoint inView:(NSView *)controlView
+{
+	return YES;
+}
+- (void)stopTracking:(NSPoint)lastPoint at:(NSPoint)stopPoint inView:(NSView *)controlView mouseIsUp:(BOOL)flag
+{
+	if(flag) [self.delegate cropCellDidFinishCropping:self];
 }
 - (void)resetCursorRect:(NSRect)cellFrame inView:(NSView *)controlView
 {
@@ -91,7 +100,6 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 
 - (void)drawWithFrame:(NSRect)r inVideoView:(ECVVideoView *)v playing:(BOOL)flag
 {
-	if(NSEqualRects(_cropRect, ECVUncroppedRect)) return;
 	NSRect const cropRect = NSIntegralRect(NSOffsetRect(ECVScaledRect(_cropRect, r.size), NSMinX(r), NSMinY(r)));
 
 	glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
@@ -113,5 +121,11 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 	ECVDrawHandleAtPoint(NSMaxX(cropRect) - ECVHandleSize, NSMaxY(cropRect) - ECVHandleSize);
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
+
+@end
+
+@implementation NSObject(ECVCropCellDelegate)
+
+- (void)cropCellDidFinishCropping:(ECVCropCell *)sender {}
 
 @end

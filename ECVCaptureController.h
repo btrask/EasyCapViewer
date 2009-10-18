@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Views
 #import "ECVVideoView.h"
+@class ECVPlayButtonCell;
+#import "ECVCropCell.h"
 
 // Controllers
 #import "ECVConfigController.h"
@@ -46,6 +48,17 @@ enum {
 	ECV16x9AspectRatio = 1,
 };
 typedef NSUInteger ECVAspectRatio;
+
+enum {
+	ECVUncropped = 0,
+	ECVCrop2_5Percent = 1,
+	ECVCrop5Percent = 2,
+	ECVCrop10Percent = 3,
+	ECVCropLetterbox16x9 = 4,
+	ECVCropLetterbox16x10 = 5,
+	ECVCropPillarbox4x3 = 6,
+};
+typedef NSUInteger ECVCropType;
 
 enum {
 	ECVFullFrame = 0,
@@ -68,7 +81,7 @@ extern NSString *const ECVContrastKey;
 extern NSString *const ECVHueKey;
 extern NSString *const ECVSaturationKey;
 
-@interface ECVCaptureController : NSWindowController <ECVAudioDeviceDelegate, ECVCaptureControllerConfiguring, ECVVideoViewDelegate, NSWindowDelegate>
+@interface ECVCaptureController : NSWindowController <ECVAudioDeviceDelegate, ECVCaptureControllerConfiguring, ECVCropCellDelegate, ECVVideoViewDelegate, NSWindowDelegate>
 {
 	@private
 	IBOutlet ECVVideoView *videoView;
@@ -101,6 +114,7 @@ extern NSString *const ECVSaturationKey;
 
 	BOOL _fullScreen;
 	BOOL _noteDeviceRemovedWhenSheetCloses;
+	ECVPlayButtonCell *_playButtonCell;
 }
 
 + (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator;
@@ -119,12 +133,15 @@ extern NSString *const ECVSaturationKey;
 - (IBAction)toggleFullScreen:(id)sender;
 - (IBAction)changeScale:(id)sender;
 - (IBAction)changeAspectRatio:(id)sender;
+- (IBAction)changeCropType:(id)sender;
+- (IBAction)enterCropMode:(id)sender;
 - (IBAction)toggleFloatOnTop:(id)sender;
 - (IBAction)toggleVsync:(id)sender;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
 @property(assign) NSSize aspectRatio;
+@property(assign) NSRect cropRect;
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
 @property(assign, getter = isFullScreen) BOOL fullScreen;
 @property(assign, getter = isPlaying) BOOL playing;
@@ -132,6 +149,7 @@ extern NSString *const ECVSaturationKey;
 @property(readonly) NSSize outputSize;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;
+- (NSRect)rectWithCropType:(ECVCropType)type;
 
 - (BOOL)startAudio;
 - (void)stopAudio;

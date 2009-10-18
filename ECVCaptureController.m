@@ -335,6 +335,20 @@ ECVNoDeviceError:
 	self.aspectRatio = [self sizeWithAspectRatio:[sender tag]];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:[sender tag]] forKey:ECVAspectRatio2Key];
 }
+- (IBAction)changeCropType:(id)sender
+{
+	NSRect const r = [self rectWithCropType:[sender tag]];
+	if([videoView.cell respondsToSelector:@selector(setCropRect:)]) [(ECVCropCell *)videoView.cell setCropRect:r];
+	else self.cropRect = r;
+}
+- (IBAction)enterCropMode:(id)sender
+{
+	ECVCropCell *const cell = [[[ECVCropCell alloc] initWithOpenGLContext:[videoView openGLContext]] autorelease];
+	cell.delegate = self;
+	cell.cropRect = self.cropRect;
+	videoView.cropRect = ECVUncroppedRect;
+	videoView.cell = cell;
+}
 - (IBAction)toggleVsync:(id)sender
 {
 	videoView.vsync = !videoView.vsync;
@@ -369,6 +383,15 @@ ECVNoDeviceError:
 	s.height = s.width * r;
 	self.windowContentSize = s;
 	[[self window] setMinSize:NSMakeSize(200.0f, 200.0f * r)];
+}
+- (NSRect)cropRect
+{
+	return [videoView.cell respondsToSelector:@selector(cropRect)] ? [(ECVCropCell *)videoView.cell cropRect] : videoView.cropRect;
+}
+- (void)setCropRect:(NSRect)aRect
+{
+	videoView.cropRect = aRect;
+	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect(aRect) forKey:ECVCropRectKey];
 }
 @synthesize deinterlacingMode = _deinterlacingMode;
 - (void)setDeinterlacingMode:(ECVDeinterlacingMode)mode
@@ -477,6 +500,18 @@ ECVNoDeviceError:
 		case ECV16x9AspectRatio:  return NSMakeSize(16.0f,  9.0f);
 	}
 	return NSZeroSize;
+}
+- (NSRect)rectWithCropType:(ECVCropType)type
+{
+	switch(type) {
+		case ECVCrop2_5Percent:     return NSMakeRect(0.025f, 0.025f, 0.95f, 0.95f);
+		case ECVCrop5Percent:       return NSMakeRect(0.05f, 0.05f, 0.9f, 0.9f);
+		case ECVCrop10Percent:      return NSMakeRect(0.1f, 0.1f, 0.8f, 0.8f);
+		case ECVCropLetterbox16x9:  return NSMakeRect(0.0f, 7.0f / 32.0f, 1.0f, 9.0f / 16.0f);
+		case ECVCropLetterbox16x10: return NSMakeRect(0.0f, 3.0f / 16.0f, 1.0f, 5.0f / 8.0f);
+		case ECVCropPillarbox4x3:   return NSMakeRect(1.0f / 8.0f, 0.0f, 3.0f / 4.0f, 1.0f);
+	}
+	return ECVUncroppedRect;
 }
 
 #pragma mark -
@@ -759,11 +794,11 @@ ECVNoDeviceError:
 	videoView.showDroppedFrames = [[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey];
 	videoView.magFilter = [[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey];
 
-	ECVPlayButtonCell *const cell = [[[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]] autorelease];
-	[cell setImage:[ECVPlayButtonCell playButtonImage]];
-	cell.target = self;
-	cell.action = @selector(togglePlaying:);
-	videoView.cell = cell;
+	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
+	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];
+	_playButtonCell.target = self;
+	_playButtonCell.action = @selector(togglePlaying:);
+	videoView.cell = _playButtonCell;
 
 	[w center];
 	[self noteVideoSettingDidChange];
@@ -797,6 +832,7 @@ ECVNoDeviceError:
 	[_movie release];
 	[_soundTrack release];
 	[_videoTrack release];
+	[_playButtonCell release];
 	[super dealloc];
 }
 
@@ -812,6 +848,7 @@ ECVNoDeviceError:
 		NSSize const s2 = videoView.aspectRatio;
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
+	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self rectWithCropType:[anItem tag]], self.cropRect)];
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes(self.windowContentSize, [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:videoView.vsync ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
@@ -860,6 +897,14 @@ ECVNoDeviceError:
 	_volume = value;
 	_audioPipe.volume = value;
 	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
+}
+
+#pragma mark -<ECVCropCellDelegate>
+
+- (void)cropCellDidFinishCropping:(ECVCropCell *)sender
+{
+	self.cropRect = sender.cropRect;
+	videoView.cell = _playButtonCell;
 }
 
 #pragma mark -<ECVVideoViewDelegate>
