@@ -39,17 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #define ECVArrowMarginRight 6.0f
 #define ECVArrowWidthRatio 1.25f
 
-static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, CGFloat *out)
-{
-	if([cell isHighlighted]) {
-		out[0] = 0.85f - in[0] * 0.2f;
-		out[1] = 0.8f;
-	} else {
-		out[0] = 0.35f - in[0] * 0.2f;
-		out[1] = 0.3f;
-	}
-}
-
 @implementation ECVHUDPopUpButtonCell
 
 #pragma mark -NSMenuItemCell
@@ -74,21 +63,17 @@ static void ECVGradientCallback(ECVHUDPopUpButtonCell *cell, const CGFloat *in, 
 	CGContextBeginTransparencyLayerWithRect(context, NSRectToCGRect(r), nil);
 
 	NSBezierPath *const p = [NSBezierPath ECV_bezierPathWithRoundRect:NSMakeRect(NSMinX(r) + ECVMarginLeft, NSMinY(r) + ECVMarginTop, NSWidth(r) - ECVMarginHorz, NSHeight(r) - ECVMarginVert) cornerRadius:4.0f];
-	[NSGraphicsContext saveGraphicsState];
 
-	[p addClip];
-	CGFloat const domain[] = {0.0f, 1.0f};
-	CGFloat const range[] = {0.0f, 1.0f, 0.0f, 1.0f};
-	CGFunctionCallbacks const callbacks = {0, (CGFunctionEvaluateCallback)ECVGradientCallback, NULL};
-	CGFunctionRef const function = CGFunctionCreate(self, numberof(domain) / 2, domain, numberof(range) / 2, range, &callbacks);
-	CGColorSpaceRef const colorSpace = CGColorSpaceCreateDeviceGray();
-	CGShadingRef const shading = CGShadingCreateAxial(colorSpace, CGPointMake(NSMinX(r), NSMinY(r) + ECVMarginTop), CGPointMake(NSMinX(r), NSMaxY(r) - ECVMarginBottom), function, false, false);
-	CGColorSpaceRelease(colorSpace);
-	CGFunctionRelease(function);
-	CGContextDrawShading(context, shading);
-	CGShadingRelease(shading);
+	NSColor *startColor = nil, *endColor = nil;
+	if([self isHighlighted]) {
+		startColor = [NSColor colorWithDeviceWhite:0.95f alpha:0.8f];
+		endColor = [NSColor colorWithDeviceWhite:0.55f alpha:0.8f];
+	} else {
+		startColor = [NSColor colorWithDeviceWhite:0.55f alpha:0.3f];
+		endColor = [NSColor colorWithDeviceWhite:0.1f alpha:0.3f];
+	}
+	[p ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(r), NSMinY(r) + ECVMarginTop) toColor:endColor atPoint:NSMakePoint(NSMinX(r), NSMaxY(r) - ECVMarginBottom)];
 
-	[NSGraphicsContext restoreGraphicsState];
 	[[NSColor colorWithDeviceWhite:0.75f alpha:0.9f] set];
 	[p stroke];
 

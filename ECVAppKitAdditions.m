@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation NSBezierPath(ECVAppKitAdditions)
 
+#pragma mark +NSBezierPath(ECVAppKitAdditions)
+
 + (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius
 {
 	NSBezierPath *const path = [self bezierPath];
@@ -37,6 +39,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(aRect) - radius, NSMinY(aRect) + radius) radius:radius startAngle:270.0f endAngle:0.0f];
 	[path closePath];
 	return path;
+}
+
+#pragma mark -NSBezierPath(ECVAppKitAdditions)
+
+#define ECVNumberOfColorSpaceComponents 4
+static void ECVGradientCallback(CGFloat colors[2][ECVNumberOfColorSpaceComponents], CGFloat const x[1], CGFloat y[ECVNumberOfColorSpaceComponents])
+{
+	NSUInteger i = 0;
+	for(; i < ECVNumberOfColorSpaceComponents; i++) y[i] = (1.0f - x[0]) * colors[0][i] + x[0] * colors[1][i];
+}
+- (void)ECV_fillWithGradientFromColor:(NSColor *)startColor atPoint:(NSPoint)startPoint toColor:(NSColor *)endColor atPoint:(NSPoint)endPoint
+{
+	NSColorSpace *const colorSpace = [NSColorSpace deviceRGBColorSpace];
+	CGFloat const domain[] = {0.0f, 1.0f};
+	CGFloat const range[ECVNumberOfColorSpaceComponents * 2] = {
+		0.0f, 1.0f,
+		0.0f, 1.0f,
+		0.0f, 1.0f,
+		0.0f, 1.0f,
+	};
+	CGFloat colors[2][ECVNumberOfColorSpaceComponents] = {};
+	[[startColor colorUsingColorSpace:colorSpace] getComponents:colors[0]];
+	[[endColor colorUsingColorSpace:colorSpace] getComponents:colors[1]];
+
+	[NSGraphicsContext saveGraphicsState];
+	[self addClip];
+	CGFunctionCallbacks const callbacks = {0, (CGFunctionEvaluateCallback)ECVGradientCallback, NULL};
+	CGFunctionRef const function = CGFunctionCreate(colors, 1, domain, ECVNumberOfColorSpaceComponents, range, &callbacks);
+	CGShadingRef const shading = CGShadingCreateAxial([colorSpace CGColorSpace], NSPointToCGPoint(startPoint), NSPointToCGPoint(endPoint), function, true, true);
+	CGFunctionRelease(function);
+	CGContextDrawShading([[NSGraphicsContext currentContext] graphicsPort], shading);
+	CGShadingRelease(shading);
+	[NSGraphicsContext restoreGraphicsState];
 }
 
 @end

@@ -23,6 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVHUDSliderCell.h"
 
+// Other Sources
+#import "ECVAppKitAdditions.h"
+
 @implementation ECVHUDSliderCell
 
 #pragma mark -NSSliderCell
@@ -54,9 +57,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	CGContextRef const context = [[NSGraphicsContext currentContext] graphicsPort];
 	CGContextBeginTransparencyLayerWithRect(context, NSRectToCGRect(knobRect), NULL);
 	BOOL const e = [self isEnabled];
-	[[NSColor colorWithDeviceWhite:[self isHighlighted] ? 0.75f : 0.4f alpha:e ? 1.0f : 0.3f] set];
 	NSBezierPath *const p = [NSBezierPath bezierPathWithOvalInRect:NSInsetRect(knobRect, 2.5f, 2.5f)];
-	[p fill];
+	CGFloat const knobFillAlpha = e ? 1.0f : 0.3f;
+	NSColor *startColor = nil, *endColor = nil;
+	if([self isHighlighted]) {
+		startColor = [NSColor colorWithDeviceWhite:0.95f alpha:knobFillAlpha];
+		endColor = [NSColor colorWithDeviceWhite:0.45f alpha:knobFillAlpha];
+	} else {
+		startColor = [NSColor colorWithDeviceWhite:0.65f alpha:knobFillAlpha];
+		endColor = [NSColor colorWithDeviceWhite:0.25f alpha:knobFillAlpha];
+	}
+	[p ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(knobRect), NSMinY(knobRect)) toColor:endColor atPoint:NSMakePoint(NSMinX(knobRect), NSMaxY(knobRect))];
 	[[NSColor colorWithDeviceWhite:1.0f alpha:e ? 0.9f : 0.27f] set];
 	[p stroke];
 	CGContextEndTransparencyLayer(context);
