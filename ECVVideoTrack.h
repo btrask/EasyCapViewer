@@ -35,13 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	QTTrack *_track;
 	TimeValue64 _frameDuration;
 	ICMCompressionSessionRef _compressionSession;
+	NSDictionary *_cleanApertureValue;
 	ICMEncodedFrameRef _encodedFrame;
 }
 
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
++ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)size cleanAperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
+- (id)initWithTrack:(QTTrack *)track size:(NSSize)size cleanAperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
 @property(readonly) QTTrack *track;
+
 - (void)addFrame:(id<ECVFrameReading>)frame;
 - (void)finish;
 

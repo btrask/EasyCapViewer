@@ -284,8 +284,19 @@ ECVNoDeviceError:
 	_movie = [[QTMovie alloc] initToWritableFile:[savePanel filename] error:NULL];
 	ECVAudioStream *const stream = [[[_audioInput streams] objectEnumerator] nextObject];
 	NSParameterAssert(stream);
+
+	ECVPixelSize const s = [self captureSize];
+	NSRect const c = self.cropRect;
+	ECVPixelSize const croppedSize = (ECVPixelSize){round(NSWidth(c) * s.width), round(NSHeight(c) * s.height)};
+	CleanApertureImageDescriptionExtension const croppedAperture = {
+		croppedSize.width, 1,
+		croppedSize.height, 1,
+		round(NSMinX(c) * s.width - (s.width - croppedSize.width) / 2.0f), 1,
+		round(NSMinY(c) * s.height - (s.height - croppedSize.height) / 2.0f), 1,
+	};
+	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize] cleanAperture:croppedAperture codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 	_soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
-	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize] codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
+
 	[[_soundTrack.track media] ECV_beginEdits];
 	[[_videoTrack.track media] ECV_beginEdits];
 #endif
