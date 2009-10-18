@@ -54,9 +54,9 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 		_handleRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVHandleSize pixelsHigh:ECVHandleSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVHandleSize * 4 bitsPerPixel:0];
 		[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:_handleRep]];
 
-		[[NSColor colorWithDeviceWhite:1.0f alpha:0.75f] set];
+		[[NSColor colorWithCalibratedWhite:1.0f alpha:0.75f] set];
 		NSRectFill(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize));
-		[[NSColor colorWithDeviceWhite:0.0f alpha:1.0f] set];
+		[[NSColor colorWithCalibratedWhite:0.0f alpha:1.0f] set];
 		NSFrameRect(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize));
 
 		[context makeCurrentContext];

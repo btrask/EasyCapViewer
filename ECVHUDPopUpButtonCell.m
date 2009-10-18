@@ -66,15 +66,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSColor *startColor = nil, *endColor = nil;
 	if([self isHighlighted]) {
-		startColor = [NSColor colorWithDeviceWhite:0.95f alpha:0.8f];
-		endColor = [NSColor colorWithDeviceWhite:0.55f alpha:0.8f];
+		startColor = [NSColor colorWithCalibratedWhite:0.95f alpha:0.8f];
+		endColor = [NSColor colorWithCalibratedWhite:0.55f alpha:0.8f];
 	} else {
-		startColor = [NSColor colorWithDeviceWhite:0.55f alpha:0.3f];
-		endColor = [NSColor colorWithDeviceWhite:0.1f alpha:0.3f];
+		startColor = [NSColor colorWithCalibratedWhite:0.55f alpha:0.3f];
+		endColor = [NSColor colorWithCalibratedWhite:0.1f alpha:0.3f];
 	}
 	[p ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(r), NSMinY(r) + ECVMarginTop) toColor:endColor atPoint:NSMakePoint(NSMinX(r), NSMaxY(r) - ECVMarginBottom)];
 
-	[[NSColor colorWithDeviceWhite:0.75f alpha:0.9f] set];
+	[[NSColor colorWithCalibratedWhite:0.75f alpha:0.9f] set];
 	[p stroke];
 
 	CGFloat const arrowHeight = round((NSHeight(r) - ECVMarginVert) / 2.0f - ECVArrowMarginVert);
@@ -92,7 +92,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[arrows lineToPoint:NSMakePoint(o.x + arrowWidth / 2.0f, o.y + ECVArrowCenterlineDistance)];
 	[arrows closePath];
 
-	[[NSColor colorWithDeviceWhite:1.0f alpha:0.9f] set];
+	[[NSColor colorWithCalibratedWhite:1.0f alpha:0.9f] set];
 	[arrows fill];
 
 	CGContextEndTransparencyLayer(context);

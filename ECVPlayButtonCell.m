@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[[NSColor clearColor] set];
 	NSRect const b = NSMakeRect(0.0f, 0.0f, ECVPlayButtonSize, ECVPlayButtonSize);
 	NSRectFill(b);
-	[[NSColor colorWithDeviceWhite:0.5f alpha:0.67f] set];
+	[[NSColor colorWithCalibratedWhite:0.5f alpha:0.67f] set];
 	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
 
 	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];

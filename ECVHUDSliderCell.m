@@ -39,9 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(f) + r, NSMinY(f) + r) radius:r startAngle:90.0f endAngle:270.0f];
 	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(f) - r, NSMinY(f) + r) radius:r startAngle:270.0f endAngle:90.0f];
 	[path closePath];
-	[[NSColor colorWithDeviceWhite:0.75f alpha:e ? 0.67f : 0.1f] set];
+	[[NSColor colorWithCalibratedWhite:0.75f alpha:e ? 0.67f : 0.1f] set];
 	[path fill];
-	[[NSColor colorWithDeviceWhite:0.9f alpha:e ? 0.9f : 0.33f] set];
+	[[NSColor colorWithCalibratedWhite:0.9f alpha:e ? 0.9f : 0.33f] set];
 	[path stroke];
 	[self drawInteriorWithFrame:aRect inView:aView];
 }
@@ -61,14 +61,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	CGFloat const knobFillAlpha = e ? 1.0f : 0.3f;
 	NSColor *startColor = nil, *endColor = nil;
 	if([self isHighlighted]) {
-		startColor = [NSColor colorWithDeviceWhite:0.95f alpha:knobFillAlpha];
-		endColor = [NSColor colorWithDeviceWhite:0.45f alpha:knobFillAlpha];
+		startColor = [NSColor colorWithCalibratedWhite:0.95f alpha:knobFillAlpha];
+		endColor = [NSColor colorWithCalibratedWhite:0.45f alpha:knobFillAlpha];
 	} else {
-		startColor = [NSColor colorWithDeviceWhite:0.65f alpha:knobFillAlpha];
-		endColor = [NSColor colorWithDeviceWhite:0.25f alpha:knobFillAlpha];
+		startColor = [NSColor colorWithCalibratedWhite:0.65f alpha:knobFillAlpha];
+		endColor = [NSColor colorWithCalibratedWhite:0.25f alpha:knobFillAlpha];
 	}
 	[p ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(knobRect), NSMinY(knobRect)) toColor:endColor atPoint:NSMakePoint(NSMinX(knobRect), NSMaxY(knobRect))];
-	[[NSColor colorWithDeviceWhite:1.0f alpha:e ? 0.9f : 0.27f] set];
+	[[NSColor colorWithCalibratedWhite:1.0f alpha:e ? 0.9f : 0.27f] set];
 	[p stroke];
 	CGContextEndTransparencyLayer(context);
 

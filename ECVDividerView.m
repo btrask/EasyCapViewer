@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)drawRect:(NSRect)aRect
 {
-	[[NSColor colorWithDeviceWhite:0.35f alpha:0.9f] set];
+	[[NSColor colorWithCalibratedWhite:0.35f alpha:0.9f] set];
 	NSRectFill(aRect);
 }
 

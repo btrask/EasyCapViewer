@@ -51,7 +51,7 @@ static void ECVGradientCallback(CGFloat colors[2][ECVNumberOfColorSpaceComponent
 }
 - (void)ECV_fillWithGradientFromColor:(NSColor *)startColor atPoint:(NSPoint)startPoint toColor:(NSColor *)endColor atPoint:(NSPoint)endPoint
 {
-	NSColorSpace *const colorSpace = [NSColorSpace deviceRGBColorSpace];
+	NSColorSpace *const colorSpace = [NSColorSpace genericRGBColorSpace];
 	CGFloat const domain[] = {0.0f, 1.0f};
 	CGFloat const range[ECVNumberOfColorSpaceComponents * 2] = {
 		0.0f, 1.0f,

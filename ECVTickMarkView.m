@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	CGFloat const start = NSMinX(b) + step;
 	NSUInteger i = 0;
 	for(; i < ECVNumberOfTickMarks; i++) {
-		[[NSColor colorWithDeviceWhite:0.67f alpha:ECVMiddleTickMark == i ? 0.75f : 0.4f] set];
+		[[NSColor colorWithCalibratedWhite:0.67f alpha:ECVMiddleTickMark == i ? 0.75f : 0.4f] set];
 		NSRectFill(NSMakeRect(round(start + step * i), NSMinY(b), ECVTickMarkThickness, NSHeight(b)));
 	}
 }
