@@ -586,10 +586,7 @@ ECVNoDeviceError:
 	ECVLog(ECVNotice, @"Starting playback.");
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
-	if(![self startAudio]) {
-		usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
-		[self startAudio];
-	}
+	(void)[self startAudio];
 	[_playLock unlockWithCondition:ECVPlaying];
 
 	NSUInteger const simultaneousTransfers = self.simultaneousTransfers;
