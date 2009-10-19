@@ -34,6 +34,7 @@ extern NSString *const ECVGeneralErrorDomain;
 + (id)sharedController;
 
 - (IBAction)configureDevice:(id)sender;
+- (IBAction)showErrorLog:(id)sender;
 
 @property(readonly) IONotificationPortRef notificationPort;
 

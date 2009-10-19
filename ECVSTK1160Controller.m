@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 enum {
 	ECVHighFieldFlag = 1 << 6,
-	ECVNewImageFlag = 1 << 7
+	ECVNewImageFlag = 1 << 7,
 };
 
 static NSString *const ECVSTK1160VideoSourceKey = @"ECVSTK1160VideoSource";
@@ -155,8 +155,12 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (BOOL)threaded_watchdog
 {
 	SInt32 value;
-	if(![self readValue:&value atIndex:0x0001]) return NO;
-	return 0x0003 == value;
+	if(![self readValue:&value atIndex:0x01]) return NO;
+	if(0x03 != value) {
+		ECVLog(ECVError, @"Device watchdog was 0x%02x (should be 0x03).", value);
+		return NO;
+	}
+	return YES;
 }
 - (void)threaded_readFrame:(IOUSBLowLatencyIsocFrame *)frame bytes:(UInt8 const *)bytes
 {

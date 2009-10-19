@@ -534,7 +534,10 @@ ECVNoDeviceError:
 		ECVAudioDevice *const output = [ECVAudioDevice defaultOutputDevice];
 		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
 		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-		if(!inputStream || !outputStream) return NO;
+		if(!inputStream || !outputStream) {
+			ECVLog(ECVWarning, @"Audio streams could not be determined (input: %@; output: %@).", inputStream, outputStream);
+			return NO;
+		}
 
 		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
 		_audioPipe.volume = _volume;
@@ -544,9 +547,16 @@ ECVNoDeviceError:
 		_audioOutput.delegate = self;
 	}
 	[_audioPipe clearBuffer];
-	if([_audioInput start] && [_audioOutput start]) return YES;
-	[self stopAudio];
-	return NO;
+	if(![_audioInput start]) {
+		ECVLog(ECVWarning, @"Audio input could not be started (%@).", _audioInput);
+		return NO;
+	}
+	if(![_audioOutput start]) {
+		[_audioInput stop];
+		ECVLog(ECVWarning, @"Audio output could not be started (%@).", _audioOutput);
+		return NO;
+	}
+	return YES;
 }
 - (void)stopAudio
 {
@@ -569,11 +579,15 @@ ECVNoDeviceError:
 		[pool release];
 		return;
 	}
+	ECVLog(ECVNotice, @"Starting playback.");
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
 	if(![self startAudio]) {
 		usleep(500000); // Make sure the device has time to initialize.
-		if(![self startAudio]) goto bail;
+		if(![self startAudio]) {
+			ECVLog(ECVError, @"Unable to start audio.");
+			goto bail;
+		}
 	}
 	[_playLock unlockWithCondition:ECVPlaying];
 
@@ -609,6 +623,7 @@ ECVNoDeviceError:
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
 		if(![self threaded_watchdog]) {
+			ECVLog(ECVError, @"Invalid device watchdog result.");
 			[innerPool release];
 			break;
 		}
@@ -640,6 +655,7 @@ ECVNoDeviceError:
 	if(fullFrameList) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameList);
 	[_playLock lock];
 bail:
+	ECVLog(ECVNotice, @"Stopping playback.");
 	NSParameterAssert([_playLock condition] != ECVNotPlaying);
 	[_playLock unlockWithCondition:ECVNotPlaying];
 	[pool drain];
@@ -860,6 +876,7 @@ ECVNoDeviceError:
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
 	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self rectWithCropType:[anItem tag]], self.cropRect)];
+	if(@selector(enterCropMode:) == action) return NO; // Not done yet.
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes(self.windowContentSize, [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:videoView.vsync ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];

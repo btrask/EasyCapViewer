@@ -21,39 +21,21 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-enum {
-	ECVNotice,
-	ECVWarning,
-	ECVError,
-	ECVCritical,
-};
-typedef NSUInteger ECVErrorLevel;
+#import "ECVDebug.h"
 
-extern void ECVLog(ECVErrorLevel level, NSString *format, ...) __attribute__((format(__NSString__, 2, 3)));
-extern NSString *ECVIOKitErrorToString(IOReturn error);
+@interface ECVErrorLogController : NSWindowController <NSToolbarDelegate>
+{
+	@private
+	IBOutlet NSTextView *errorLogTextView;
+	NSMutableAttributedString *_errorLog;
+}
 
-#define ECVIOReturn(x) do {\
-	IOReturn const __e = (x);\
-	if(kIOReturnSuccess == __e) break;\
-	ECVLog(ECVWarning, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
-	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
-	goto ECVGenericError;\
-} while(NO)
++ (id)sharedErrorLogController;
 
-#define ECVOSStatus(x) do {\
-	OSStatus const __e = (x);\
-	if(noErr != __e) ECVLog(ECVError, @"%%s:%d %s: '%d'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
-} while(NO)
+- (IBAction)clearLog:(id)sender;
 
-#define ECVCVReturn(x) do {\
-	CVReturn const __e = (x);\
-	if(kCVReturnSuccess != __e) ECVLog(ECVError, @"%s:%d %s: '%d'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
-} while(NO)
+- (void)logLevel:(ECVErrorLevel)level message:(NSString *)message;
+- (void)logLevel:(ECVErrorLevel)level format:(NSString *)format arguments:(va_list)arguments;
+- (void)logLevel:(ECVErrorLevel)level format:(NSString *)format, ...;
 
-#define ECVGLError(x) do {\
-	(x);\
-	GLenum __e;\
-	while((__e = glGetError()) != GL_NO_ERROR) ECVLog(ECVError, @"%s:%d %s: '0x%03x'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
-} while(NO)
-
-#define ECVAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]
+@end

@@ -33,6 +33,9 @@
 		0E8CE155107BE51C004F05A7 /* ECVAppKitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE154107BE51C004F05A7 /* ECVAppKitAdditions.m */; };
 		0E8CE1D1107BE953004F05A7 /* ECVHUDSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */; };
 		0E8CE218107BF845004F05A7 /* ECVTickMarkView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */; };
+		0E984D6B108C65D100CB469C /* ECVErrorLogController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E984D6A108C65D100CB469C /* ECVErrorLogController.m */; };
+		0E984D6E108C660E00CB469C /* ECVErrorLog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E984D6C108C660E00CB469C /* ECVErrorLog.xib */; };
+		0E984E21108C7F3D00CB469C /* Log-Clear.png in Resources */ = {isa = PBXBuildFile; fileRef = 0E984E20108C7F3D00CB469C /* Log-Clear.png */; };
 		0E9F5E631085D06F00375752 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E9F5E621085D06F00375752 /* Carbon.framework */; };
 		0EC4C811103E9B5E00FCFCA0 /* ECVFrameReading.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */; };
 		0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D341101903F200CFBDFF /* CoreAudio.framework */; };
@@ -107,6 +110,10 @@
 		0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDSliderCell.m; sourceTree = "<group>"; };
 		0E8CE216107BF845004F05A7 /* ECVTickMarkView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVTickMarkView.h; sourceTree = "<group>"; };
 		0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVTickMarkView.m; sourceTree = "<group>"; };
+		0E984D69108C65D100CB469C /* ECVErrorLogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVErrorLogController.h; sourceTree = "<group>"; };
+		0E984D6A108C65D100CB469C /* ECVErrorLogController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVErrorLogController.m; sourceTree = "<group>"; };
+		0E984D6D108C660E00CB469C /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ECVErrorLog.xib; sourceTree = "<group>"; };
+		0E984E20108C7F3D00CB469C /* Log-Clear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Log-Clear.png"; sourceTree = "<group>"; };
 		0E9F5E621085D06F00375752 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		0EC4C80F103E9B5E00FCFCA0 /* ECVFrameReading.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameReading.h; sourceTree = "<group>"; };
 		0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameReading.m; sourceTree = "<group>"; };
@@ -164,6 +171,8 @@
 				0E78CD500FC9F8E500E9C148 /* STK1160 */,
 				0E26A997100314E6002FF95A /* ECVConfigController.h */,
 				0E26A998100314E6002FF95A /* ECVConfigController.m */,
+				0E984D69108C65D100CB469C /* ECVErrorLogController.h */,
+				0E984D6A108C65D100CB469C /* ECVErrorLogController.m */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -288,6 +297,8 @@
 				1DDD58140DA1D0A300B32029 /* MainMenu.xib */,
 				0E78CA300FC9055100E9C148 /* ECVCapture.xib */,
 				0E26A9831003127B002FF95A /* ECVConfig.xib */,
+				0E984D6C108C660E00CB469C /* ECVErrorLog.xib */,
+				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -351,6 +362,8 @@
 				0E26A9851003127B002FF95A /* ECVConfig.xib in Resources */,
 				0E26AA4510033FC4002FF95A /* Credits.rtf in Resources */,
 				0E26AA97100346D1002FF95A /* Localizable.strings in Resources */,
+				0E984D6E108C660E00CB469C /* ECVErrorLog.xib in Resources */,
+				0E984E21108C7F3D00CB469C /* Log-Clear.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,6 +397,7 @@
 				0E7FFD1B1089CEE0000C8217 /* ECVPlayButtonCell.m in Sources */,
 				0E7FFD1E1089D60A000C8217 /* ECVCropCell.m in Sources */,
 				0E7FFD211089D651000C8217 /* ECVOpenGLAdditions.m in Sources */,
+				0E984D6B108C65D100CB469C /* ECVErrorLogController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,6 +442,14 @@
 				0E78CA310FC9055100E9C148 /* English */,
 			);
 			name = ECVCapture.xib;
+			sourceTree = "<group>";
+		};
+		0E984D6C108C660E00CB469C /* ECVErrorLog.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0E984D6D108C660E00CB469C /* English */,
+			);
+			name = ECVErrorLog.xib;
 			sourceTree = "<group>";
 		};
 		1DDD58140DA1D0A300B32029 /* MainMenu.xib */ = {

@@ -553,7 +553,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)dealloc
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	ECVCVReturn(CVDisplayLinkStop(_displayLink));
+	if(_displayLink && CVDisplayLinkIsRunning(_displayLink)) ECVCVReturn(CVDisplayLinkStop(_displayLink));
 	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(invalidate)];
 
 	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));

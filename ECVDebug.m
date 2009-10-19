@@ -22,8 +22,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
-#include <mach/mach_port.h>
+#import <mach/mach_port.h>
+#import <IOKit/usb/IOUSBLib.h>
 
+// Controllers
+#import "ECVErrorLogController.h"
+
+void ECVLog(ECVErrorLevel level, NSString *format, ...)
+{
+	va_list arguments;
+	va_start(arguments, format);
+	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
+	va_end(arguments);
+}
 NSString *ECVIOKitErrorToString(IOReturn error)
 {
 #define ErrorCase(val) case (val): return [NSString stringWithUTF8String:#val]

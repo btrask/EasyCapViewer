@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVCaptureController.h"
 #import "ECVConfigController.h"
+#import "ECVErrorLogController.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -55,6 +56,10 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 - (IBAction)configureDevice:(id)sender
 {
 	[[ECVConfigController sharedConfigController] showWindow:sender];
+}
+- (IBAction)showErrorLog:(id)sender
+{
+	[[ECVErrorLogController sharedErrorLogController] showWindow:sender];
 }
 
 #pragma mark -
