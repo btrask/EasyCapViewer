@@ -144,7 +144,7 @@ static ECVErrorLogController *ECVSharedErrorLogController;
 }
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar
 {
-	return [NSArray arrayWithObjects:ECVClearLogItemIdentifier];
+	return [NSArray arrayWithObjects:ECVClearLogItemIdentifier, nil];
 }
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar*)toolbar
 {
