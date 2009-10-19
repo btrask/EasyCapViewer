@@ -30,14 +30,12 @@
  *   $Author: nicklas79 $
  *   $HeadURL: https://syntekdriver.svn.sourceforge.net/svnroot/syntekdriver/trunk/driver/stk11xx.h $
  */
+#import "ECVDebug.h"
 
 #define STK11XX_PERCENT(x, y) (((int)x * (int)y) / 100)
 
-#define STK_INFO(x, y...)  //NSLog((NSString *)CFSTR(x), ##y)
-#define STK_DEBUG(x, y...) //NSLog((NSString *)CFSTR(x), ##y)
-#define STK_ERROR(x, y...) //NSLog((NSString *)CFSTR(x), ##y)
-#define printk(x, y...)    //NSLog((NSString *)CFSTR(x), ##y)
-#define msleep(x) usleep(1000 * (x))
+#define STK_ERROR(x, y...) ECVLog(ECVError, (NSString *)CFSTR(x), ##y)
+#define msleep(x) usleep((x) * ECVMicrosecondsPerMillisecond)
 
 struct stk11xx_coord {
 	int x;

@@ -2,6 +2,13 @@
 #import <Cocoa/Cocoa.h>
 #endif
 
+#define ECVMicrosecondsPerMillisecond 1000
+
+#define ECVMillisecondsPerSecond 1000
+#define ECVMicrosecondsPerSecond (ECVMillisecondsPerSecond * ECVMicrosecondsPerMillisecond)
+
+#define ECVUncroppedRect (NSRect){{0.0f, 0.0f}, {1.0f, 1.0f}}
+
 #define numberof(x) (sizeof(x) / sizeof(*x))
 
 typedef struct {
@@ -17,5 +24,3 @@ NS_INLINE NSRect ECVScaledRect(NSRect r, NSSize s)
 {
 	return NSMakeRect(NSMinX(r) * s.width, NSMinY(r) * s.height, NSWidth(r) * s.width, NSHeight(r) * s.height);
 }
-
-#define ECVUncroppedRect NSMakeRect(0.0f, 0.0f, 1.0f, 1.0f)

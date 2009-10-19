@@ -237,7 +237,7 @@ ECVNoDeviceError:
 			[self stopRecording:self];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
-			usleep(500000); // Don't restart the device too quickly; wait 0.5 seconds.
+			usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
 			[_playLock unlock];
 			break;
 	}
@@ -470,7 +470,7 @@ ECVNoDeviceError:
 			[self stopRecording:self];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
-			usleep(500000); // Don't restart the device too quickly; wait 0.5 seconds.
+			usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
 			[_playLock unlock];
 		}
 	}
@@ -531,11 +531,15 @@ ECVNoDeviceError:
 {
 	if(!_audioPipe) {
 		ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_device input:YES];
-		ECVAudioDevice *const output = [ECVAudioDevice defaultOutputDevice];
 		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
+		if(!inputStream) {
+			ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
+			return NO;
+		}
+		ECVAudioDevice *const output = [ECVAudioDevice defaultOutputDevice];
 		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-		if(!inputStream || !outputStream) {
-			ECVLog(ECVWarning, @"Audio streams could not be determined (input: %@; output: %@).", inputStream, outputStream);
+		if(!outputStream) {
+			ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
 			return NO;
 		}
 
@@ -548,12 +552,12 @@ ECVNoDeviceError:
 	}
 	[_audioPipe clearBuffer];
 	if(![_audioInput start]) {
-		ECVLog(ECVWarning, @"Audio input could not be started (%@).", _audioInput);
+		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", _audioInput);
 		return NO;
 	}
 	if(![_audioOutput start]) {
 		[_audioInput stop];
-		ECVLog(ECVWarning, @"Audio output could not be started (%@).", _audioOutput);
+		ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", _audioOutput);
 		return NO;
 	}
 	return YES;
@@ -583,11 +587,8 @@ ECVNoDeviceError:
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
 	if(![self startAudio]) {
-		usleep(500000); // Make sure the device has time to initialize.
-		if(![self startAudio]) {
-			ECVLog(ECVError, @"Unable to start audio.");
-			goto bail;
-		}
+		usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
+		[self startAudio];
 	}
 	[_playLock unlockWithCondition:ECVPlaying];
 

@@ -73,7 +73,6 @@ static ECVErrorLogController *ECVSharedErrorLogController;
 }
 - (void)logLevel:(ECVErrorLevel)level format:(NSString *)format arguments:(va_list)arguments
 {
-	NSLog(@"format: %@", format);
 	[self logLevel:level message:[[[NSString alloc] initWithFormat:format arguments:arguments] autorelease]];
 }
 - (void)logLevel:(ECVErrorLevel)level format:(NSString *)format, ...

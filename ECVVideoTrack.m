@@ -28,9 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVFrameReading.h"
 
-#define ECVMillisecondTimeScale 1000
-#define ECVMicrosecondTimeScale (ECVMillisecondTimeScale * 1000)
-
 #if !__LP64__
 @interface ECVVideoTrack(Private)
 
@@ -84,7 +81,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 			Fixed const frameRateFixed = X2Fix(frameRateInterval);
 			ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, sizeof(frameRateFixed), &frameRateFixed));
 		}
-		UInt32 const frameRateMicroseconds = QTMakeTimeScaled(frameRate, ECVMicrosecondTimeScale).timeValue;
+		UInt32 const frameRateMicroseconds = QTMakeTimeScaled(frameRate, ECVMicrosecondsPerSecond).timeValue;
 		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, sizeof(frameRateMicroseconds), &frameRateMicroseconds));
 		OSType const scalingMode = kICMScalingMode_StretchCleanAperture;
 		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_ScalingMode, sizeof(scalingMode), &scalingMode));

@@ -174,8 +174,6 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 {
 	int i;
 
-	STK_INFO("Initialize USB2.0 Syntek Capture device\n");
-
 //what is all this writing to register 2 doing?
 	usb_stk11xx_write_registry(dev, 0x0002, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0000, 0x0000);
@@ -260,9 +258,6 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 	(void)dev_stk11xx_check_device(dev, 500);
 
 	usb_stk11xx_set_feature(dev, 1); 
-
-	// Device is initialized and is ready !!!
-	STK_INFO("Syntek USB2.0 Capture device is ready\n");
 
 	return 0;
 }
