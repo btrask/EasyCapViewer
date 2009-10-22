@@ -171,6 +171,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[[audioSourcePopUp menu] addItem:item];
 	}
 	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:_captureController.audioInput]];
+	[audioSourcePopUp setEnabled:!!_captureController];
 }
 
 #pragma mark -ECVConfigController(Private)
