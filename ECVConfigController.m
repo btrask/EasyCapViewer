@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVCaptureController.h"
 
+// Other Sources
+#import "ECVAudioDevice.h"
+
 @interface ECVConfigController(Private)
 
 - (void)_snapSlider:(NSSlider *)slider;
@@ -77,6 +80,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:sender];
 	_captureController.hue = [sender doubleValue];
 }
+
+#pragma mark -
+
+- (IBAction)changeAudioInput:(id)sender
+{
+	_captureController.audioInput = [[sender selectedItem] representedObject];
+}
 - (IBAction)changeVolume:(id)sender
 {
 	_captureController.volume = [sender doubleValue];
@@ -87,9 +97,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @synthesize captureController = _captureController;
 - (void)setCaptureController:(ECVCaptureController *)c
 {
-	(void)[self window]; // Load.
-
 	_captureController = c;
+
+	if(![self isWindowLoaded]) return;
 
 	[sourcePopUp removeAllItems];
 	if([_captureController respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in _captureController.allVideoSourceObjects) {
@@ -138,6 +148,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];
 	[self _snapSlider:hueSlider];
+
+	[self audioHardwareDevicesDidChange:nil];
+}
+
+#pragma mark -
+
+- (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif
+{
+	[audioSourcePopUp removeAllItems];
+	ECVAudioDevice *const preferredInput = _captureController.audioInputOfCaptureHardware;
+	if(preferredInput) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:preferredInput.name action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:preferredInput];
+		[[audioSourcePopUp menu] addItem:item];
+		[[audioSourcePopUp menu] addItem:[NSMenuItem separatorItem]];
+	}
+	for(ECVAudioDevice *const device in [ECVAudioDevice allDevicesInput:YES]) {
+		if(ECVEqualObjects(device, preferredInput)) continue;
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:device.name action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:device];
+		[[audioSourcePopUp menu] addItem:item];
+	}
+	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:_captureController.audioInput]];
 }
 
 #pragma mark -ECVConfigController(Private)
@@ -152,9 +185,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)windowDidLoad
 {
 	[super windowDidLoad];
-	[self setCaptureController:nil];
 	[(NSPanel *)[self window] setBecomesKeyOnlyIfNeeded:YES];
-	[[self window] center];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification object:[ECVAudioDevice class]];
+	[self setCaptureController:_captureController];
 }
 
 #pragma mark -NSObject

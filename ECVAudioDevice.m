@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+NSString *const ECVAudioHardwareDevicesDidChangeNotification = @"ECVAudioHardwareDevicesDidChange";
+
 AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *bufferList)
 {
 	UInt32 i;
@@ -47,6 +49,13 @@ AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *bufferList)
 	return copy;
 }
 
+static OSStatus ECVAudioHardwarePropertyListenerProc(AudioHardwarePropertyID propertyID, id obj)
+{
+	switch(propertyID) {
+		case kAudioHardwarePropertyDevices: [[NSNotificationCenter defaultCenter] postNotificationName:ECVAudioHardwareDevicesDidChangeNotification object:obj]; break;
+	}
+	return noErr;
+}
 static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, ECVAudioDevice *device)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
@@ -58,8 +67,33 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 
 @implementation ECVAudioDevice
 
+#pragma mark +NSObject
+
++ (void)initialize
+{
+	if([ECVAudioDevice class] != self) return;
+	ECVOSStatus(AudioHardwareAddPropertyListener(kAudioHardwarePropertyDevices, (AudioHardwarePropertyListenerProc)ECVAudioHardwarePropertyListenerProc, self));
+}
+
 #pragma mark +ECVAudioDevice
 
++ (NSArray *)allDevicesInput:(BOOL)flag
+{
+	NSMutableArray *const devices = [NSMutableArray array];
+	UInt32 size = 0;
+	ECVOSStatus(AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &size, NULL));
+	if(!size) return devices;
+	AudioDeviceID *const deviceIDs = malloc(size);
+	if(!deviceIDs) return devices;
+	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &size, deviceIDs));
+	NSUInteger i = 0;
+	for(; i < size / sizeof(AudioDeviceID); i++) {
+		ECVAudioDevice *const device = [[[self alloc] initWithDeviceID:deviceIDs[i] input:flag] autorelease];
+		if([[device streams] count]) [devices addObject:device];
+	}
+	free(deviceIDs);
+	return devices;
+}
 + (id)defaultInputDevice
 {
 	AudioDeviceID deviceID = 0;
@@ -82,7 +116,7 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 		&UID,
 		sizeof(UID),
 		&deviceID,
-		sizeof(deviceID)
+		sizeof(deviceID),
 	};
 	UInt32 translationSize = sizeof(deviceUIDTranslation);
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDeviceForUID, &translationSize, &deviceUIDTranslation));
@@ -133,20 +167,32 @@ ECVNoDeviceError:
 
 #pragma mark -
 
+- (NSString *)name
+{
+	if(_name) return [[_name retain] autorelease];
+	NSString *name = nil;
+	UInt32 nameSize = sizeof(name);
+	ECVOSStatus(AudioDeviceGetProperty(self.deviceID, 0, self.isInput, kAudioDevicePropertyDeviceNameCFString, &nameSize, &name));
+	return [name autorelease];
+}
+- (void)setName:(NSString *)name
+{
+	if(ECVEqualObjects(_name, name)) return;
+	[_name release];
+	_name = [name copy];
+}
 - (NSArray *)streams
 {
 	UInt32 streamIDsSize = 0;
 	ECVOSStatus(AudioDeviceGetPropertyInfo(self.deviceID, 0, self.isInput, kAudioDevicePropertyStreams, &streamIDsSize, NULL));
 	AudioStreamID *const streamIDs = malloc(streamIDsSize);
 	ECVOSStatus(AudioDeviceGetProperty(self.deviceID, 0, self.isInput, kAudioDevicePropertyStreams, &streamIDsSize, streamIDs));
-
 	NSUInteger i = 0;
 	NSMutableArray *const streams = [NSMutableArray array];
 	for(; i < streamIDsSize / sizeof(AudioStreamID); i++) {
 		ECVAudioStream *const stream = [[[ECVAudioStream alloc] initWithStreamID:streamIDs[i]] autorelease];
 		[streams addObject:stream];
 	}
-
 	free(streamIDs);
 	return streams;
 }
@@ -170,11 +216,30 @@ ECVNoDeviceError:
 	_procID = NULL;
 }
 
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_name release];
+	[super dealloc];
+}
+
 #pragma mark -<NSObject>
+
+- (NSUInteger)hash
+{
+	return [[self class] hash] ^ _deviceID ^ _isInput;
+}
+- (BOOL)isEqual:(id)obj
+{
+	return [obj isKindOfClass:[ECVAudioDevice class]] && [obj deviceID] == self.deviceID && [obj isInput] == self.isInput;
+}
+
+#pragma mark -
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %d (%@)>", [self class], self, self.deviceID, self.isInput ? @"In" : @"Out"];
+	return [NSString stringWithFormat:@"<%@ %p: %@ (%d, %@)>", [self class], self, self.name, self.deviceID, self.isInput ? @"In" : @"Out"];
 }
 
 @end

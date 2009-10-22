@@ -42,7 +42,7 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 
 #define ECVOSStatus(x) do {\
 	OSStatus const __e = (x);\
-	if(noErr != __e) ECVLog(ECVError, @"%%s:%d %s: '%d'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
+	if(noErr != __e) ECVLog(ECVError, @"%s:%d %s: '%d'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
 } while(NO)
 
 #define ECVCVReturn(x) do {\

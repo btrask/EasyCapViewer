@@ -294,7 +294,7 @@ ECVNoDeviceError:
 	};
 	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize] cleanAperture:croppedAperture codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 
-	ECVAudioStream *const stream = [[[_audioInput streams] objectEnumerator] nextObject];
+	ECVAudioStream *const stream = [[[self.audioInput streams] objectEnumerator] nextObject];
 	if(stream) _soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
 
 	[[_soundTrack.track media] ECV_beginEdits];
@@ -535,45 +535,91 @@ ECVNoDeviceError:
 
 #pragma mark -
 
+- (ECVAudioDevice *)audioInputOfCaptureHardware
+{
+	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_device input:YES];
+	input.name = _productName;
+	return input;
+}
+- (ECVAudioDevice *)audioInput
+{
+	if(!_audioInput) _audioInput = [self.audioInputOfCaptureHardware retain];
+	if(!_audioInput) _audioInput = [[ECVAudioDevice defaultInputDevice] retain];
+	return [[_audioInput retain] autorelease];
+}
+- (void)setAudioInput:(ECVAudioDevice *)device
+{
+	if(device) NSParameterAssert(device.isInput);
+	if(ECVEqualObjects(device, _audioInput)) return;
+	BOOL const playing = self.playing;
+	if(playing) self.playing = NO;
+	[_audioInput release];
+	_audioInput = [device retain];
+	[_audioPipe release];
+	_audioPipe = nil;
+	if(playing) self.playing = YES;
+}
+- (ECVAudioDevice *)audioOutput
+{
+	if(!_audioOutput) return _audioOutput = [[ECVAudioDevice defaultOutputDevice] retain];
+	return [[_audioOutput retain] autorelease];
+}
+- (void)setAudioOutput:(ECVAudioDevice *)device
+{
+	if(device) NSParameterAssert(!device.isInput);
+	if(ECVEqualObjects(device, _audioOutput)) return;
+	BOOL const playing = self.playing;
+	if(playing) self.playing = NO;
+	[_audioOutput release];
+	_audioOutput = [device retain];
+	[_audioPipe release];
+	_audioPipe = nil;
+	if(playing) self.playing = YES;
+}
 - (BOOL)startAudio
 {
-	if(!_audioPipe) {
-		ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_device input:YES];
-		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
-		if(!inputStream) {
-			ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
-			return NO;
-		}
-		ECVAudioDevice *const output = [ECVAudioDevice defaultOutputDevice];
-		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-		if(!outputStream) {
-			ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
-			return NO;
-		}
+	NSAssert(!_audioPipe, @"Audio pipe should be cleared before restarting audio.");
 
-		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
-		_audioPipe.volume = _volume;
-		_audioInput = [input retain];
-		_audioOutput = [output retain];
-		_audioInput.delegate = self;
-		_audioOutput.delegate = self;
-	}
-	[_audioPipe clearBuffer];
-	if(![_audioInput start]) {
-		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", _audioInput);
+	ECVAudioDevice *const input = self.audioInput;
+	ECVAudioDevice *const output = self.audioOutput;
+
+	ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
+	if(!inputStream) {
+		ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
 		return NO;
 	}
-	if(![_audioOutput start]) {
-		[_audioInput stop];
-		ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", _audioOutput);
+	ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
+	if(!outputStream) {
+		ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
+		return NO;
+	}
+
+	_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
+	_audioPipe.volume = _volume;
+	input.delegate = self;
+	output.delegate = self;
+
+	if(![input start]) {
+		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
+		return NO;
+	}
+	if(![output start]) {
+		[output stop];
+		ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
 		return NO;
 	}
 	return YES;
 }
 - (void)stopAudio
 {
-	[_audioOutput stop];
-	[_audioInput stop];
+	ECVAudioDevice *const input = self.audioInput;
+	ECVAudioDevice *const output = self.audioOutput;
+	[input stop];
+	[output stop];
+	input.delegate = nil;
+	output.delegate = nil;
+	[_audioPipe release];
+	_audioPipe = nil;
 }
 
 #pragma mark -
@@ -852,8 +898,6 @@ ECVNoDeviceError:
 	if(_deviceInterface) (*_deviceInterface)->USBDeviceClose(_deviceInterface);
 	if(_deviceInterface) (*_deviceInterface)->Release(_deviceInterface);
 	if(_interfaceInterface) (*_interfaceInterface)->Release(_interfaceInterface);
-	_audioInput.delegate = nil;
-	_audioOutput.delegate = nil;
 
 	IOObjectRelease(_device);
 	[_productName release];
@@ -909,7 +953,7 @@ ECVNoDeviceError:
 
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
-	NSParameterAssert(sender = _audioInput);
+	NSParameterAssert(sender == _audioInput);
 	[_audioPipe receiveInput:bufferList atTime:time];
 	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordAudioBufferList:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
 }

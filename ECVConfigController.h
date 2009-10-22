@@ -38,7 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSSlider *contrastSlider;
 	IBOutlet NSSlider *hueSlider;
 	IBOutlet NSSlider *saturationSlider;
+
+	IBOutlet NSPopUpButton *audioSourcePopUp;
 	IBOutlet NSSlider *volumeSlider;
+
 	ECVCaptureController *_captureController;
 }
 
@@ -51,9 +54,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeContrast:(id)sender;
 - (IBAction)changeSaturation:(id)sender;
 - (IBAction)changeHue:(id)sender;
+- (IBAction)changeAudioInput:(id)sender;
 - (IBAction)changeVolume:(id)sender;
 
 @property(assign) ECVCaptureController *captureController;
+
+- (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
 
 @end
 

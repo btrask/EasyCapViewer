@@ -45,9 +45,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)drawTitleWithFrame:(NSRect)r inView:(NSView *)controlView
 {
+	NSMutableParagraphStyle *const style = [[[NSParagraphStyle defaultParagraphStyle] mutableCopy] autorelease];
+	[style setLineBreakMode:NSLineBreakByTruncatingTail];
 	[[self title] drawInRect:[self titleRectForBounds:r] withAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSColor colorWithCalibratedWhite:1.0f alpha:[self isEnabled] ? 1.0f : 0.67f], NSForegroundColorAttributeName,
 		[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:[self controlSize]]], NSFontAttributeName,
+		style, NSParagraphStyleAttributeName,
 		nil]];
 }
 - (void)drawBorderAndBackgroundWithFrame:(NSRect)r inView:(NSView *)controlView

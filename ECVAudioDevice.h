@@ -24,6 +24,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Cocoa/Cocoa.h>
 #import <CoreAudio/CoreAudio.h>
 
+extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
+
 extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 
 @protocol ECVAudioDeviceDelegate;
@@ -34,9 +36,11 @@ extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 	IBOutlet NSObject<ECVAudioDeviceDelegate> *delegate;
 	AudioDeviceID _deviceID;
 	BOOL _isInput;
+	NSString *_name;
 	AudioDeviceIOProcID _procID;
 }
 
++ (NSArray *)allDevicesInput:(BOOL)flag;
 + (id)defaultInputDevice;
 + (id)defaultOutputDevice;
 + (id)deviceWithUID:(NSString *)UID input:(BOOL)flag;
@@ -48,6 +52,7 @@ extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
 @property(readonly) AudioDeviceID deviceID;
 @property(readonly) BOOL isInput;
 
+@property(copy) NSString *name;
 @property(readonly) NSArray *streams;
 
 - (BOOL)start;

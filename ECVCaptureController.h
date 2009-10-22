@@ -151,6 +151,9 @@ extern NSString *const ECVSaturationKey;
 - (NSRect)cropRectWithType:(ECVCropType)type;
 - (NSRect)cropRectWithAspectRatio:(ECVAspectRatio)ratio;
 
+@property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
+@property(retain) ECVAudioDevice *audioInput;
+@property(retain) ECVAudioDevice *audioOutput;
 - (BOOL)startAudio;
 - (void)stopAudio;
 
