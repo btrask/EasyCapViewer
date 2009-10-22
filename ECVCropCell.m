@@ -29,11 +29,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVOpenGLAdditions.h"
 
 #define ECVHandleSize 16
+#define ECVMinimumCropSize 0.05f
 
-static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
-{
-	ECVGLDrawTexture(NSMakeRect(x, y, ECVHandleSize, ECVHandleSize), NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize));
-}
+static ECVRectEdgeMask const ECVHandlePositions[] = {
+	ECVMinYMask | ECVMinXMask,
+	ECVMinYMask | ECVRectMidX,
+	ECVMinYMask | ECVMaxXMask,
+	ECVRectMidY | ECVMinXMask,
+	ECVRectMidY | ECVMaxXMask,
+	ECVMaxYMask | ECVMinXMask,
+	ECVMaxYMask | ECVRectMidX,
+	ECVMaxYMask | ECVMaxXMask,
+};
 
 @implementation ECVCropCell
 
@@ -67,24 +74,70 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 	return self;
 }
 @synthesize delegate;
-@synthesize cropRect = _cropRect;
+- (NSRect)cropRect
+{
+	return _cropRect;
+}
+- (void)setCropRect:(NSRect)aRect
+{
+	_cropRect = aRect;
+	_tempCropRect = aRect;
+}
+
+#pragma mark -
+
+- (NSRect)maskRectWithCropRect:(NSRect)crop frame:(NSRect)frame
+{
+	NSRect r = NSOffsetRect(ECVScaledRect(crop, frame.size), NSMinX(frame), NSMinY(frame));
+	r.origin.x = round(NSMinX(r));
+	r.origin.y = round(NSMinY(r));
+	r.size.width = round(NSWidth(r));
+	r.size.height = round(NSHeight(r));
+	return r;
+}
+- (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)aRect
+{
+	NSPoint const c = ECVRectPoint(aRect, pos);
+	NSPoint const p = ECVRectPoint(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize), pos);
+	return NSMakeRect(round(c.x - p.x), round(c.y - p.y), ECVHandleSize, ECVHandleSize);
+}
+- (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)aRect view:(NSView *)aView
+{
+	NSUInteger i = 0;
+	for(; i < numberof(ECVHandlePositions); i++) if([aView mouse:point inRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:aRect]]) return ECVHandlePositions[i];
+	return ECVRectCenter;
+}
 
 #pragma mark -NSCell
 
-- (BOOL)startTrackingAt:(NSPoint)startPoint inView:(NSView *)controlView
+- (BOOL)trackMouse:(NSEvent *)firstEvent inRect:(NSRect)aRect ofView:(NSView *)aView untilMouseUp:(BOOL)flag
 {
+	NSPoint const firstLocation = [aView convertPoint:[firstEvent locationInWindow] fromView:nil];
+	ECVRectEdgeMask const handle = [self handlePositionForPoint:firstLocation withMaskRect:[self maskRectWithCropRect:_cropRect frame:aRect] view:aView];
+	if(!handle) {
+		[self.delegate cropCellDidFinishCropping:self];
+		return YES; // Claim the mouse is up.
+	}
+
+	[[aView window] disableCursorRects];
+	NSEvent *latestEvent = nil;
+	while((latestEvent = [[aView window] nextEventMatchingMask:NSLeftMouseUpMask | NSLeftMouseDraggedMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp) {
+		NSPoint const latestLocation = [aView convertPoint:[latestEvent locationInWindow] fromView:nil];
+		NSRect const maskRect = [self maskRectWithCropRect:_cropRect frame:aRect];
+		NSRect const r = ECVRectByScalingEdgeToPoint(maskRect, handle, latestLocation);
+		_tempCropRect = ECVScaledRect(NSOffsetRect(r, -NSMinX(aRect), -NSMinY(aRect)), NSMakeSize(1.0f / NSWidth(aRect), 1.0f / NSHeight(aRect)));
+		[aView setNeedsDisplay:YES];
+	}
+	[[aView window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
+	[[aView window] invalidateCursorRectsForView:aView];
+	[[aView window] enableCursorRects];
+	_cropRect = _tempCropRect;
 	return YES;
-}
-- (BOOL)continueTracking:(NSPoint)lastPoint at:(NSPoint)currentPoint inView:(NSView *)controlView
-{
-	return YES;
-}
-- (void)stopTracking:(NSPoint)lastPoint at:(NSPoint)stopPoint inView:(NSView *)controlView mouseIsUp:(BOOL)flag
-{
-	if(flag) [self.delegate cropCellDidFinishCropping:self];
 }
 - (void)resetCursorRect:(NSRect)cellFrame inView:(NSView *)controlView
 {
+	NSUInteger i = 0;
+	for(; i < numberof(ECVHandlePositions); i++) [controlView addCursorRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:[self maskRectWithCropRect:_tempCropRect frame:cellFrame]] cursor:[NSCursor openHandCursor]];
 }
 
 #pragma mark -NSObject
@@ -98,27 +151,19 @@ static void ECVDrawHandleAtPoint(CGFloat x, CGFloat y)
 
 #pragma mark -<ECVVideoViewCell>
 
-- (void)drawWithFrame:(NSRect)r inVideoView:(ECVVideoView *)v playing:(BOOL)flag
+- (void)drawWithFrame:(NSRect)aRect inVideoView:(ECVVideoView *)view playing:(BOOL)flag
 {
-	NSRect const cropRect = NSIntegralRect(NSOffsetRect(ECVScaledRect(_cropRect, r.size), NSMinX(r), NSMinY(r)));
+	NSRect const maskRect = [self maskRectWithCropRect:_tempCropRect frame:aRect];
 
 	glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-	ECVGLDrawBorder(cropRect, r);
+	ECVGLDrawBorder(maskRect, aRect);
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	ECVGLDrawBorder(cropRect, NSInsetRect(cropRect, -1.0f, -1.0f));
+	ECVGLDrawBorder(maskRect, NSInsetRect(maskRect, -1.0f, -1.0f));
 
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _handleTextureName));
-	ECVDrawHandleAtPoint(NSMinX(cropRect), NSMinY(cropRect));
-	ECVDrawHandleAtPoint(roundf(NSMidX(cropRect) - ECVHandleSize / 2.0f), NSMinY(cropRect));
-	ECVDrawHandleAtPoint(NSMaxX(cropRect) - ECVHandleSize, NSMinY(cropRect));
-
-	ECVDrawHandleAtPoint(NSMinX(cropRect), roundf(NSMidY(cropRect) - ECVHandleSize / 2.0f));
-	ECVDrawHandleAtPoint(NSMaxX(cropRect) - ECVHandleSize, roundf(NSMidY(cropRect) - ECVHandleSize / 2.0f));
-
-	ECVDrawHandleAtPoint(NSMinX(cropRect), NSMaxY(cropRect) - ECVHandleSize);
-	ECVDrawHandleAtPoint(roundf(NSMidX(cropRect) - ECVHandleSize / 2.0f), NSMaxY(cropRect) - ECVHandleSize);
-	ECVDrawHandleAtPoint(NSMaxX(cropRect) - ECVHandleSize, NSMaxY(cropRect) - ECVHandleSize);
+	NSUInteger i = 0;
+	for(; i < numberof(ECVHandlePositions); i++) ECVGLDrawTextureInRect([self frameForHandlePosition:ECVHandlePositions[i] maskRect:maskRect]);
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 

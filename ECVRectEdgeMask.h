@@ -21,6 +21,25 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-extern void ECVGLDrawTextureInRectWithBounds(NSRect frame, NSRect bounds);
-extern void ECVGLDrawTextureInRect(NSRect frame);
-extern void ECVGLDrawBorder(NSRect inner, NSRect outer);
+enum {
+	ECVMinXMask = 1 << NSMinXEdge,
+	ECVMinYMask = 1 << NSMinYEdge,
+	ECVMaxXMask = 1 << NSMaxXEdge,
+	ECVMaxYMask = 1 << NSMaxYEdge,
+	ECVMinXMinYCorner = ECVMinXMask | ECVMinYMask,
+	ECVMinXMaxYCorner = ECVMinXMask | ECVMaxYMask,
+	ECVMaxXMinYCorner = ECVMaxXMask | ECVMinYMask,
+	ECVMaxXMaxYCorner = ECVMaxXMask | ECVMaxYMask,
+	ECVRectHorz = ECVMinXMask | ECVMaxXMask,
+	ECVRectVert = ECVMinYMask | ECVMaxYMask,
+	ECVRectMidX = 0,
+	ECVRectMidY = 0,
+	ECVRectCenter = ECVRectMidX | ECVRectMidY,
+};
+typedef NSUInteger ECVRectEdgeMask;
+
+extern NSPoint ECVRectPoint(NSRect r, ECVRectEdgeMask mask);
+extern ECVRectEdgeMask ECVRectEdgeOpposite(ECVRectEdgeMask mask);
+extern NSRect ECVRectWithSizeFromEdge(NSRect rect, NSSize size, ECVRectEdgeMask mask);
+extern NSRect ECVRectByAddingSizeFromEdge(NSRect rect, NSSize size, ECVRectEdgeMask mask);
+extern NSRect ECVRectByScalingEdgeToPoint(NSRect rect, ECVRectEdgeMask mask, NSPoint p);

@@ -104,7 +104,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _textureName));
 	GLfloat const c = [self isHighlighted] ? 0.67f : 1.0f;
 	glColor4f(c, c, c, 1.0f);
-	ECVGLDrawTexture(NSMakeRect(round(NSMidX(r) - ECVPlayButtonSize / 2.0f), round(NSMinY(r) + (NSHeight(r) - ECVPlayButtonSize) * 0.67f), ECVPlayButtonSize, ECVPlayButtonSize), NSMakeRect(0.0f, 0.0f, ECVPlayButtonSize, ECVPlayButtonSize));
+	ECVGLDrawTextureInRect(NSMakeRect(round(NSMidX(r) - ECVPlayButtonSize / 2.0f), round(NSMinY(r) + (NSHeight(r) - ECVPlayButtonSize) * 0.67f), ECVPlayButtonSize, ECVPlayButtonSize));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 

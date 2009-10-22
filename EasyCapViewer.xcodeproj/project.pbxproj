@@ -42,6 +42,7 @@
 		0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */; };
 		0EC7D4AC1019B60100CFBDFF /* ECVAudioPipe.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */; };
 		0EC7D4AF1019B67600CFBDFF /* ECVAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */; };
+		0EC8BF901090A3F400ED9BB0 /* ECVRectEdgeMask.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */; };
 		0EDF46C20FCE1B4F006630E1 /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
 		0EE547941070F34C00F003AF /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE547931070F34C00F003AF /* CoreVideo.framework */; };
 		0EE5483A1071019600F003AF /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE548391071019600F003AF /* QuickTime.framework */; };
@@ -123,6 +124,8 @@
 		0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVAudioPipe.m; sourceTree = "<group>"; };
 		0EC7D4AD1019B67600CFBDFF /* ECVAudioDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAudioDevice.h; sourceTree = "<group>"; };
 		0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVAudioDevice.m; sourceTree = "<group>"; };
+		0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVRectEdgeMask.h; sourceTree = "<group>"; };
+		0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVRectEdgeMask.m; sourceTree = "<group>"; };
 		0EDF451A0FCD2167006630E1 /* stk11xx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stk11xx.h; sourceTree = "<group>"; };
 		0EE547931070F34C00F003AF /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		0EE548391071019600F003AF /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
@@ -283,6 +286,8 @@
 				0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */,
 				0E0AC91F102030CE00C12D88 /* ECVVideoTrack.h */,
 				0E0AC920102030CE00C12D88 /* ECVVideoTrack.m */,
+				0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */,
+				0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -398,6 +403,7 @@
 				0E7FFD1E1089D60A000C8217 /* ECVCropCell.m in Sources */,
 				0E7FFD211089D651000C8217 /* ECVOpenGLAdditions.m in Sources */,
 				0E984D6B108C65D100CB469C /* ECVErrorLogController.m in Sources */,
+				0EC8BF901090A3F400ED9BB0 /* ECVRectEdgeMask.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

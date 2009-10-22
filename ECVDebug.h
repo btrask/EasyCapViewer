@@ -57,3 +57,4 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 } while(NO)
 
 #define ECVAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]
+#define ECVCAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInFunction:[NSString stringWithUTF8String:__PRETTY_FUNCTION__] file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]

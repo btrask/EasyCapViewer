@@ -23,7 +23,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVOpenGLAdditions.h"
 
-void ECVGLDrawTexture(NSRect frame, NSRect bounds)
+void ECVGLDrawTextureInRectWithBounds(NSRect frame, NSRect bounds)
 {
 	glBegin(GL_QUADS);
 	glTexCoord2f(NSMinX(bounds), NSMinY(bounds)); glVertex2f(NSMinX(frame), NSMinY(frame));
@@ -31,6 +31,10 @@ void ECVGLDrawTexture(NSRect frame, NSRect bounds)
 	glTexCoord2f(NSMaxX(bounds), NSMaxY(bounds)); glVertex2f(NSMaxX(frame), NSMaxY(frame));
 	glTexCoord2f(NSMaxX(bounds), NSMinY(bounds)); glVertex2f(NSMaxX(frame), NSMinY(frame));
 	glEnd();
+}
+void ECVGLDrawTextureInRect(NSRect frame)
+{
+	ECVGLDrawTextureInRectWithBounds(frame, (NSRect){NSZeroPoint, frame.size});
 }
 void ECVGLDrawBorder(NSRect inner, NSRect outer)
 {

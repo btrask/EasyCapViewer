@@ -24,6 +24,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Views
 #import "ECVVideoView.h"
 
+// Other Sources
+#import "ECVRectEdgeMask.h"
+
 @protocol ECVCropCellDelegate;
 
 @interface ECVCropCell : NSCell <ECVVideoViewCell>
@@ -31,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	IBOutlet NSObject<ECVCropCellDelegate> *delegate;
 	NSRect _cropRect;
+	NSRect _tempCropRect;
 	NSBitmapImageRep *_handleRep;
 	GLuint _handleTextureName;
 }
@@ -38,6 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithOpenGLContext:(NSOpenGLContext *)context;
 @property(assign) NSObject<ECVCropCellDelegate> *delegate;
 @property(assign) NSRect cropRect;
+
+- (NSRect)maskRectWithCropRect:(NSRect)crop frame:(NSRect)frame;
+- (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)aRect;
+- (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)aRect view:(NSView *)aView;
 
 @end
 

@@ -315,7 +315,18 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[self setNeedsDisplay:YES];
 }
 @synthesize showDroppedFrames = _showDroppedFrames;
-@synthesize cell = _cell;
+- (NSCell<ECVVideoViewCell> *)cell
+{
+	return [[_cell retain] autorelease];
+}
+- (void)setCell:(NSCell<ECVVideoViewCell> *)cell
+{
+	if(cell == _cell) return;
+	[_cell release];
+	_cell = [cell retain];
+	[self setNeedsDisplay:YES];
+	[[self window] invalidateCursorRectsForView:self];
+}
 
 #pragma mark -
 
@@ -379,7 +390,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:index]));
 	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self bufferBytesAtIndex:index]));
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	ECVGLDrawTexture(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToSize(_pixelSize)));
+	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToSize(_pixelSize)));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength
@@ -498,6 +509,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	glFlush();
 
 	CGLUnlockContext(contextObj);
+}
+- (void)resetCursorRects
+{
+	[self.cell resetCursorRect:[self bounds] inView:self];
 }
 - (void)viewWillMoveToWindow:(NSWindow *)aWindow
 {

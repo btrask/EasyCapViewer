@@ -349,8 +349,10 @@ ECVNoDeviceError:
 - (IBAction)changeCropType:(id)sender
 {
 	NSRect const r = [self rectWithCropType:[sender tag]];
-	if([videoView.cell respondsToSelector:@selector(setCropRect:)]) [(ECVCropCell *)videoView.cell setCropRect:r];
-	else self.cropRect = r;
+	if([videoView.cell respondsToSelector:@selector(setCropRect:)]) {
+		[(ECVCropCell *)videoView.cell setCropRect:r];
+		[videoView setNeedsDisplay:YES];
+	}else self.cropRect = r;
 }
 - (IBAction)enterCropMode:(id)sender
 {
@@ -874,7 +876,6 @@ ECVNoDeviceError:
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
 	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self rectWithCropType:[anItem tag]], self.cropRect)];
-	if(@selector(enterCropMode:) == action) return NO; // Not done yet.
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes(self.windowContentSize, [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:videoView.vsync ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
