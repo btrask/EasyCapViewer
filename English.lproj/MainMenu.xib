@@ -12,7 +12,7 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="24"/>
+			<integer value="548"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -495,15 +495,6 @@
 												<reference key="NSOnImage" ref="35465992"/>
 												<reference key="NSMixedImage" ref="502551668"/>
 												<int key="NSTag">5</int>
-											</object>
-											<object class="NSMenuItem" id="971731713">
-												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">Pillarbox (4:3)</string>
-												<string key="NSKeyEquiv"/>
-												<int key="NSMnemonicLoc">2147483647</int>
-												<reference key="NSOnImage" ref="35465992"/>
-												<reference key="NSMixedImage" ref="502551668"/>
-												<int key="NSTag">6</int>
 											</object>
 											<object class="NSMenuItem" id="102737785">
 												<reference key="NSMenu" ref="1070066135"/>
@@ -995,14 +986,6 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="971731713"/>
-					</object>
-					<int key="connectionID">564</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
 						<string key="label">enterCropMode:</string>
 						<reference key="source" ref="1014"/>
 						<reference key="destination" ref="969894588"/>
@@ -1479,7 +1462,6 @@
 							<reference ref="46357795"/>
 							<reference ref="157762793"/>
 							<reference ref="626088662"/>
-							<reference ref="971731713"/>
 							<reference ref="102737785"/>
 							<reference ref="969894588"/>
 						</object>
@@ -1513,11 +1495,6 @@
 					<object class="IBObjectRecord">
 						<int key="objectID">554</int>
 						<reference key="object" ref="626088662"/>
-						<reference key="parent" ref="1070066135"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">555</int>
-						<reference key="object" ref="971731713"/>
 						<reference key="parent" ref="1070066135"/>
 					</object>
 					<object class="IBObjectRecord">
@@ -1653,7 +1630,6 @@
 					<string>552.IBPluginDependency</string>
 					<string>553.IBPluginDependency</string>
 					<string>554.IBPluginDependency</string>
-					<string>555.IBPluginDependency</string>
 					<string>556.IBPluginDependency</string>
 					<string>557.IBPluginDependency</string>
 					<string>56.IBPluginDependency</string>
@@ -1770,8 +1746,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{513, 506}, {171, 173}}</string>
-					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{513, 526}, {171, 153}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>

@@ -348,7 +348,7 @@ ECVNoDeviceError:
 }
 - (IBAction)changeCropType:(id)sender
 {
-	NSRect const r = [self rectWithCropType:[sender tag]];
+	NSRect const r = [self cropRectWithType:[sender tag]];
 	if([videoView.cell respondsToSelector:@selector(setCropRect:)]) {
 		[(ECVCropCell *)videoView.cell setCropRect:r];
 		[videoView setNeedsDisplay:YES];
@@ -514,17 +514,23 @@ ECVNoDeviceError:
 	}
 	return NSZeroSize;
 }
-- (NSRect)rectWithCropType:(ECVCropType)type
+- (NSRect)cropRectWithType:(ECVCropType)type
 {
 	switch(type) {
 		case ECVCrop2_5Percent:     return NSMakeRect(0.025f, 0.025f, 0.95f, 0.95f);
 		case ECVCrop5Percent:       return NSMakeRect(0.05f, 0.05f, 0.9f, 0.9f);
 		case ECVCrop10Percent:      return NSMakeRect(0.1f, 0.1f, 0.8f, 0.8f);
-		case ECVCropLetterbox16x9:  return NSMakeRect(0.0f, 7.0f / 32.0f, 1.0f, 9.0f / 16.0f);
-		case ECVCropLetterbox16x10: return NSMakeRect(0.0f, 3.0f / 16.0f, 1.0f, 5.0f / 8.0f);
-		case ECVCropPillarbox4x3:   return NSMakeRect(1.0f / 8.0f, 0.0f, 3.0f / 4.0f, 1.0f);
+		case ECVCropLetterbox16x9:  return [self cropRectWithAspectRatio:ECV16x9AspectRatio];
+		case ECVCropLetterbox16x10: return [self cropRectWithAspectRatio:ECV16x10AspectRatio];
+		default: return ECVUncroppedRect;
 	}
-	return ECVUncroppedRect;
+}
+- (NSRect)cropRectWithAspectRatio:(ECVAspectRatio)ratio
+{
+	NSSize const standard = [self sizeWithAspectRatio:ECV4x3AspectRatio];
+	NSSize const user = [self sizeWithAspectRatio:ratio];
+	CGFloat const correction = (user.height / user.width) / (standard.height / standard.width);
+	return NSMakeRect(0.0f, (1.0f - correction) / 2.0f, 1.0f, correction);
 }
 
 #pragma mark -
@@ -875,7 +881,7 @@ ECVNoDeviceError:
 		NSSize const s2 = videoView.aspectRatio;
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
-	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self rectWithCropType:[anItem tag]], self.cropRect)];
+	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self cropRectWithType:[anItem tag]], self.cropRect)];
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes(self.windowContentSize, [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:videoView.vsync ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];

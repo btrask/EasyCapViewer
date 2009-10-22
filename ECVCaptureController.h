@@ -56,7 +56,6 @@ enum {
 	ECVCrop10Percent = 3,
 	ECVCropLetterbox16x9 = 4,
 	ECVCropLetterbox16x10 = 5,
-	ECVCropPillarbox4x3 = 6,
 };
 typedef NSUInteger ECVCropType;
 
@@ -149,7 +148,8 @@ extern NSString *const ECVSaturationKey;
 @property(readonly) NSSize outputSize;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;
-- (NSRect)rectWithCropType:(ECVCropType)type;
+- (NSRect)cropRectWithType:(ECVCropType)type;
+- (NSRect)cropRectWithAspectRatio:(ECVAspectRatio)ratio;
 
 - (BOOL)startAudio;
 - (void)stopAudio;
