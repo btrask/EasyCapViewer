@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	AudioStreamBasicDescription _inputStreamDescription;
 	AudioConverterRef _converter;
-	AudioBuffer _audioBuffer;
-	NSMutableData *_bufferData;
 	CGFloat _volume;
+	NSMutableArray *_unusedBuffers;
+	NSMutableArray *_usedBuffers;
 }
 
 - (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc;

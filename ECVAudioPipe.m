@@ -28,14 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
-@implementation ECVAudioPipe
+@interface ECVAudioPipe(Private)
+
+- (void)_fillOutput:(AudioBufferList *)bufferList;
+
+@end
 
 static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioConverter, UInt32 *ioNumberDataPackets, AudioBufferList *bufferList, AudioStreamPacketDescription **outDataPacketDescription, ECVAudioPipe *pipe)
 {
-	bufferList->mBuffers[0].mDataByteSize = pipe->_audioBuffer.mDataByteSize;
-	bufferList->mBuffers[0].mData = pipe->_audioBuffer.mData;
+	[pipe _fillOutput:bufferList];
 	return noErr;
 }
+
+@implementation ECVAudioPipe
 
 #pragma mark -ECVAudioPipe
 
@@ -43,8 +48,9 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 {
 	if((self = [super init])) {
 		_inputStreamDescription = inputDesc;
-		_bufferData = [[NSMutableData alloc] init];
 		_volume = 1.0f;
+		_unusedBuffers = [[NSMutableArray alloc] init];
+		_usedBuffers = [[NSMutableArray alloc] init];
 
 		ECVOSStatus(AudioConverterNew(&inputDesc, &outputDesc, &_converter));
 		UInt32 quality = kAudioConverterQuality_Max;
@@ -57,33 +63,46 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 @synthesize volume = _volume;
 - (void)clearBuffer
 {
-	_audioBuffer.mNumberChannels = 0;
-	_audioBuffer.mDataByteSize = 0;
+	[_unusedBuffers removeAllObjects];
 }
 
 #pragma mark -
 
 - (BOOL)receiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
-	if(!bufferList->mNumberBuffers || !bufferList->mBuffers[0].mData) return YES;
-
-	UInt32 const l = bufferList->mBuffers[0].mDataByteSize;
-	if(l > [_bufferData length]) [_bufferData setLength:l];
-	void *const bytes = [_bufferData mutableBytes];
-
+	NSUInteger i = 0;
 	float const volume = pow(_volume, 2);
-	vDSP_vsmul(bufferList->mBuffers[0].mData, 1, &volume, bytes, 1, l / sizeof(float));
-
-	_audioBuffer.mNumberChannels = bufferList->mBuffers[0].mNumberChannels;
-	_audioBuffer.mDataByteSize = l;
-	_audioBuffer.mData = bytes;
+	for(; i < bufferList->mNumberBuffers; i++) {
+		size_t const length = bufferList->mBuffers[i].mDataByteSize;
+		if(!length) continue;
+		void *const bytes = malloc(length);
+		if(!bytes) continue;
+		vDSP_vsmul(bufferList->mBuffers[i].mData, 1, &volume, bytes, 1, length / sizeof(float));
+		[_unusedBuffers insertObject:[NSMutableData dataWithBytesNoCopy:bytes length:length freeWhenDone:YES] atIndex:0];
+	}
 	return YES;
 }
 - (BOOL)requestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {
+	[_usedBuffers removeAllObjects];
 	if(!bufferList || !bufferList->mNumberBuffers) return NO;
 	UInt32 packetCount = bufferList->mBuffers[0].mDataByteSize / _inputStreamDescription.mBytesPerPacket;
 	return AudioConverterFillComplexBuffer(_converter, (AudioConverterComplexInputDataProc)ECVAudioConverterComplexInputDataProc, self, &packetCount, bufferList, NULL) == noErr;
+}
+
+#pragma mark -ECVAudioPipe(Private)
+
+- (void)_fillOutput:(AudioBufferList *)bufferList
+{
+	NSUInteger i = 0;
+	for(; i < bufferList->mNumberBuffers; i++) {
+		NSMutableData *const data = [_unusedBuffers lastObject];
+		bufferList->mBuffers[i].mDataByteSize = [data length];
+		bufferList->mBuffers[0].mData = [data mutableBytes];
+		if(!data) continue;
+		[_usedBuffers addObject:data];
+		[_unusedBuffers removeLastObject];
+	}
 }
 
 #pragma mark -NSObject
@@ -91,7 +110,8 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 - (void)dealloc
 {
 	ECVOSStatus(AudioConverterDispose(_converter));
-	[_bufferData release];
+	[_unusedBuffers release];
+	[_usedBuffers release];
 	[super dealloc];
 }
 
