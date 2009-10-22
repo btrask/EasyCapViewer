@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)drawTitleWithFrame:(NSRect)r inView:(NSView *)controlView
 {
 	[[self title] drawInRect:[self titleRectForBounds:r] withAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSColor whiteColor], NSForegroundColorAttributeName,
+		[NSColor colorWithCalibratedWhite:1.0f alpha:[self isEnabled] ? 1.0f : 0.67f], NSForegroundColorAttributeName,
 		[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:[self controlSize]]], NSFontAttributeName,
 		nil]];
 }
@@ -62,19 +62,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	CGContextRef const context = [[NSGraphicsContext currentContext] graphicsPort];
 	CGContextBeginTransparencyLayerWithRect(context, NSRectToCGRect(r), nil);
 
+	BOOL const e = [self isEnabled];
+
 	NSBezierPath *const p = [NSBezierPath ECV_bezierPathWithRoundRect:NSMakeRect(NSMinX(r) + ECVMarginLeft, NSMinY(r) + ECVMarginTop, NSWidth(r) - ECVMarginHorz, NSHeight(r) - ECVMarginVert) cornerRadius:4.0f];
 
 	NSColor *startColor = nil, *endColor = nil;
 	if([self isHighlighted]) {
-		startColor = [NSColor colorWithCalibratedWhite:0.95f alpha:0.8f];
-		endColor = [NSColor colorWithCalibratedWhite:0.55f alpha:0.8f];
+		startColor = [NSColor colorWithCalibratedWhite:0.95f alpha:e ? 0.8f : 0.4f];
+		endColor = [NSColor colorWithCalibratedWhite:0.55f alpha:e ? 0.8f : 0.4f];
 	} else {
-		startColor = [NSColor colorWithCalibratedWhite:0.55f alpha:0.3f];
-		endColor = [NSColor colorWithCalibratedWhite:0.1f alpha:0.3f];
+		startColor = [NSColor colorWithCalibratedWhite:0.55f alpha:e ? 0.3f : 0.1f];
+		endColor = [NSColor colorWithCalibratedWhite:0.1f alpha:e ? 0.3f : 0.1f];
 	}
 	[p ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(r), NSMinY(r) + ECVMarginTop) toColor:endColor atPoint:NSMakePoint(NSMinX(r), NSMaxY(r) - ECVMarginBottom)];
 
-	[[NSColor colorWithCalibratedWhite:0.75f alpha:0.9f] set];
+	[[NSColor colorWithCalibratedWhite:0.75f alpha:e ? 0.9f : 0.5f] set];
 	[p stroke];
 
 	CGFloat const arrowHeight = round((NSHeight(r) - ECVMarginVert) / 2.0f - ECVArrowMarginVert);
@@ -92,7 +94,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[arrows lineToPoint:NSMakePoint(o.x + arrowWidth / 2.0f, o.y + ECVArrowCenterlineDistance)];
 	[arrows closePath];
 
-	[[NSColor colorWithCalibratedWhite:1.0f alpha:0.9f] set];
+	[[NSColor colorWithCalibratedWhite:1.0f alpha:e ? 0.9f : 0.5f] set];
 	[arrows fill];
 
 	CGContextEndTransparencyLayer(context);

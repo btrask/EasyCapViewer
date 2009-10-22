@@ -152,6 +152,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)windowDidLoad
 {
 	[super windowDidLoad];
+	[self setCaptureController:nil];
 	[(NSPanel *)[self window] setBecomesKeyOnlyIfNeeded:YES];
 	[[self window] center];
 }
