@@ -49,6 +49,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 	if((self = [super init])) {
 		_inputStreamDescription = inputDesc;
 		_volume = 1.0f;
+		_lock = [[NSLock alloc] init];
 		_unusedBuffers = [[NSMutableArray alloc] init];
 		_usedBuffers = [[NSMutableArray alloc] init];
 
@@ -61,10 +62,6 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 	return self;
 }
 @synthesize volume = _volume;
-- (void)clearBuffer
-{
-	[_unusedBuffers removeAllObjects];
-}
 
 #pragma mark -
 
@@ -78,7 +75,9 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 		void *const bytes = malloc(length);
 		if(!bytes) continue;
 		vDSP_vsmul(bufferList->mBuffers[i].mData, 1, &volume, bytes, 1, length / sizeof(float));
+		[_lock lock];
 		[_unusedBuffers insertObject:[NSMutableData dataWithBytesNoCopy:bytes length:length freeWhenDone:YES] atIndex:0];
+		[_lock unlock];
 	}
 	return YES;
 }
@@ -96,12 +95,16 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 {
 	NSUInteger i = 0;
 	for(; i < bufferList->mNumberBuffers; i++) {
+		[_lock lock];
 		NSMutableData *const data = [_unusedBuffers lastObject];
+		[_lock unlock];
 		bufferList->mBuffers[i].mDataByteSize = [data length];
 		bufferList->mBuffers[i].mData = [data mutableBytes];
 		if(!data) continue;
 		[_usedBuffers addObject:data];
+		[_lock lock];
 		[_unusedBuffers removeLastObject];
+		[_lock unlock];
 	}
 }
 
@@ -110,6 +113,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 - (void)dealloc
 {
 	ECVOSStatus(AudioConverterDispose(_converter));
+	[_lock release];
 	[_unusedBuffers release];
 	[_usedBuffers release];
 	[super dealloc];

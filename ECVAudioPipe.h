@@ -31,13 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	AudioStreamBasicDescription _inputStreamDescription;
 	AudioConverterRef _converter;
 	CGFloat _volume;
+	NSLock *_lock;
 	NSMutableArray *_unusedBuffers;
 	NSMutableArray *_usedBuffers;
 }
 
 - (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc;
 @property(assign) CGFloat volume;
-- (void)clearBuffer;
 
 - (BOOL)receiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time;
 - (BOOL)requestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time;
