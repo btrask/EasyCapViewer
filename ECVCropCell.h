@@ -44,8 +44,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) NSRect cropRect;
 
 - (NSRect)maskRectWithCropRect:(NSRect)crop frame:(NSRect)frame;
-- (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)aRect;
-- (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)aRect view:(NSView *)aView;
+- (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)mask inFrame:(NSRect)frame;
+- (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)mask inFrame:(NSRect)frame view:(NSView *)aView;
+- (NSCursor *)cursorForHandlePosition:(ECVRectEdgeMask)pos;
 
 @end
 

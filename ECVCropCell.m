@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVOpenGLAdditions.h"
 
-#define ECVHandleSize 16
+#define ECVHandleSize 10
 #define ECVMinimumCropSize 0.05f
 
 static ECVRectEdgeMask const ECVHandlePositions[] = {
@@ -59,12 +59,17 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 		_cropRect = ECVUncroppedRect;
 
 		_handleRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVHandleSize pixelsHigh:ECVHandleSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVHandleSize * 4 bitsPerPixel:0];
-		[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:_handleRep]];
+		NSGraphicsContext *const graphicsContext = [NSGraphicsContext graphicsContextWithBitmapImageRep:_handleRep];
+		[NSGraphicsContext setCurrentContext:graphicsContext];
 
-		[[NSColor colorWithCalibratedWhite:1.0f alpha:0.75f] set];
-		NSRectFill(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize));
-		[[NSColor colorWithCalibratedWhite:0.0f alpha:1.0f] set];
-		NSFrameRect(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize));
+		NSRect const r = NSInsetRect(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize), 1.0f, 1.0f);
+		NSBezierPath *const p = [NSBezierPath bezierPathWithOvalInRect:r];
+		[p setLineWidth:2.0f];
+		[p ECV_fillWithGradientFromColor:[NSColor colorWithCalibratedWhite:0.7f alpha:1.0f] atPoint:ECVRectPoint(r, ECVMinXMaxYCorner) toColor:[NSColor colorWithCalibratedWhite:0.2f alpha:1.0f] atPoint:ECVRectPoint(r, ECVMinXMinYCorner)];
+		[[NSColor whiteColor] set];
+		[p stroke];
+
+		[graphicsContext flushGraphics];
 
 		[context makeCurrentContext];
 		CGLLockContext([context CGLContextObj]);
@@ -95,17 +100,36 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 	r.size.height = round(NSHeight(r));
 	return r;
 }
-- (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)aRect
+- (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)mask inFrame:(NSRect)frame
 {
-	NSPoint const c = ECVRectPoint(aRect, pos);
+	NSPoint const c = ECVRectPoint(NSIntersectionRect(frame, NSInsetRect(mask, ECVHandleSize / -2.0f, ECVHandleSize / -2.0f)), pos);
 	NSPoint const p = ECVRectPoint(NSMakeRect(0.0f, 0.0f, ECVHandleSize, ECVHandleSize), pos);
 	return NSMakeRect(round(c.x - p.x), round(c.y - p.y), ECVHandleSize, ECVHandleSize);
 }
-- (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)aRect view:(NSView *)aView
+- (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)mask inFrame:(NSRect)frame view:(NSView *)aView
 {
 	NSUInteger i = 0;
-	for(; i < numberof(ECVHandlePositions); i++) if([aView mouse:point inRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:aRect]]) return ECVHandlePositions[i];
+	for(; i < numberof(ECVHandlePositions); i++) if([aView mouse:point inRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:mask inFrame:frame]]) return ECVHandlePositions[i];
 	return ECVRectCenter;
+}
+- (NSCursor *)cursorForHandlePosition:(ECVRectEdgeMask)pos
+{
+	switch(pos) {
+		case ECVMinXMask:
+		case ECVMaxXMask:
+			return [NSCursor resizeLeftRightCursor];
+		case ECVMinYMask:
+		case ECVMaxYMask:
+			return [NSCursor resizeUpDownCursor];
+		case ECVMinXMinYCorner:
+		case ECVMaxXMaxYCorner:
+			return [[[NSCursor alloc] initWithImage:[NSImage imageNamed:@"Cursor-Resize-135"] hotSpot:NSMakePoint(8.0f, 8.0f)] autorelease];
+		case ECVMinXMaxYCorner:
+		case ECVMaxXMinYCorner:
+			return [[[NSCursor alloc] initWithImage:[NSImage imageNamed:@"Cursor-Resize-45"] hotSpot:NSMakePoint(8.0f, 8.0f)] autorelease];
+		default:
+			return [NSCursor arrowCursor];
+	}
 }
 
 #pragma mark -NSCell
@@ -114,7 +138,7 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 {
 	NSPoint const firstLocation = [aView convertPoint:[firstEvent locationInWindow] fromView:nil];
 	NSRect const firstMaskRect = [self maskRectWithCropRect:_cropRect frame:aRect];
-	ECVRectEdgeMask const handle = [self handlePositionForPoint:firstLocation withMaskRect:firstMaskRect view:aView];
+	ECVRectEdgeMask const handle = [self handlePositionForPoint:firstLocation withMaskRect:firstMaskRect inFrame:aRect view:aView];
 	if(!handle) {
 		[self.delegate cropCellDidFinishCropping:self];
 		return YES; // Claim the mouse is up.
@@ -140,7 +164,8 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 - (void)resetCursorRect:(NSRect)cellFrame inView:(NSView *)controlView
 {
 	NSUInteger i = 0;
-	for(; i < numberof(ECVHandlePositions); i++) [controlView addCursorRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:[self maskRectWithCropRect:_tempCropRect frame:cellFrame]] cursor:[NSCursor openHandCursor]];
+	NSRect const maskRect = [self maskRectWithCropRect:_tempCropRect frame:cellFrame];
+	for(; i < numberof(ECVHandlePositions); i++) [controlView addCursorRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:maskRect inFrame:cellFrame] cursor:[self cursorForHandlePosition:ECVHandlePositions[i]]];
 }
 
 #pragma mark -NSObject
@@ -166,7 +191,7 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _handleTextureName));
 	NSUInteger i = 0;
-	for(; i < numberof(ECVHandlePositions); i++) ECVGLDrawTextureInRect([self frameForHandlePosition:ECVHandlePositions[i] maskRect:maskRect]);
+	for(; i < numberof(ECVHandlePositions); i++) ECVGLDrawTextureInRect([self frameForHandlePosition:ECVHandlePositions[i] maskRect:maskRect inFrame:aRect]);
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 

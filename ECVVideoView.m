@@ -512,7 +512,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)resetCursorRects
 {
-	[self.cell resetCursorRect:[self bounds] inView:self];
+	[self.cell resetCursorRect:_outputRect inView:self];
 }
 - (void)viewWillMoveToWindow:(NSWindow *)aWindow
 {

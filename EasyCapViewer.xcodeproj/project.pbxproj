@@ -47,6 +47,8 @@
 		0EE547941070F34C00F003AF /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE547931070F34C00F003AF /* CoreVideo.framework */; };
 		0EE5483A1071019600F003AF /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE548391071019600F003AF /* QuickTime.framework */; };
 		0EEFA5C2103BB79A0038C135 /* ECVVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EEFA5C1103BB79A0038C135 /* ECVVideoView.m */; };
+		0EFEE896109205C300312653 /* Cursor-Resize-45.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */; };
+		0EFEE897109205C300312653 /* Cursor-Resize-135.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */; };
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -131,6 +133,8 @@
 		0EE548391071019600F003AF /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		0EEFA5C0103BB79A0038C135 /* ECVVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoView.h; sourceTree = "<group>"; };
 		0EEFA5C1103BB79A0038C135 /* ECVVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoView.m; sourceTree = "<group>"; };
+		0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = "Cursor-Resize-45.tiff"; sourceTree = "<group>"; };
+		0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = "Cursor-Resize-135.tiff"; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -303,6 +307,8 @@
 				0E78CA300FC9055100E9C148 /* ECVCapture.xib */,
 				0E26A9831003127B002FF95A /* ECVConfig.xib */,
 				0E984D6C108C660E00CB469C /* ECVErrorLog.xib */,
+				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
+				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
 			);
 			name = Resources;
@@ -369,6 +375,8 @@
 				0E26AA97100346D1002FF95A /* Localizable.strings in Resources */,
 				0E984D6E108C660E00CB469C /* ECVErrorLog.xib in Resources */,
 				0E984E21108C7F3D00CB469C /* Log-Clear.png in Resources */,
+				0EFEE896109205C300312653 /* Cursor-Resize-45.tiff in Resources */,
+				0EFEE897109205C300312653 /* Cursor-Resize-135.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

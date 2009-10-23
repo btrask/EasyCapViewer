@@ -352,6 +352,7 @@ ECVNoDeviceError:
 	if([videoView.cell respondsToSelector:@selector(setCropRect:)]) {
 		[(ECVCropCell *)videoView.cell setCropRect:r];
 		[videoView setNeedsDisplay:YES];
+		[[self window] invalidateCursorRectsForView:videoView];
 	}else self.cropRect = r;
 }
 - (IBAction)enterCropMode:(id)sender
