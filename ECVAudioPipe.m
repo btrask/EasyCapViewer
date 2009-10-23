@@ -67,6 +67,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 
 - (BOOL)receiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
+	NSMutableArray *const buffers = [NSMutableArray arrayWithCapacity:bufferList->mNumberBuffers];
 	NSUInteger i = 0;
 	float const volume = pow(_volume, 2);
 	for(; i < bufferList->mNumberBuffers; i++) {
@@ -75,10 +76,11 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 		void *const bytes = malloc(length);
 		if(!bytes) continue;
 		vDSP_vsmul(bufferList->mBuffers[i].mData, 1, &volume, bytes, 1, length / sizeof(float));
-		[_lock lock];
-		[_unusedBuffers insertObject:[NSMutableData dataWithBytesNoCopy:bytes length:length freeWhenDone:YES] atIndex:0];
-		[_lock unlock];
+		[buffers insertObject:[NSMutableData dataWithBytesNoCopy:bytes length:length freeWhenDone:YES] atIndex:0];
 	}
+	[_lock lock];
+	[_unusedBuffers setArray:buffers];
+	[_lock unlock];
 	return YES;
 }
 - (BOOL)requestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
@@ -103,7 +105,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 		if(!data) continue;
 		[_usedBuffers addObject:data];
 		[_lock lock];
-		[_unusedBuffers removeLastObject];
+		[_unusedBuffers removeObjectIdenticalTo:data];
 		[_lock unlock];
 	}
 }
