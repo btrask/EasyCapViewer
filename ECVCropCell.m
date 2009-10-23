@@ -113,18 +113,21 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 - (BOOL)trackMouse:(NSEvent *)firstEvent inRect:(NSRect)aRect ofView:(NSView *)aView untilMouseUp:(BOOL)flag
 {
 	NSPoint const firstLocation = [aView convertPoint:[firstEvent locationInWindow] fromView:nil];
-	ECVRectEdgeMask const handle = [self handlePositionForPoint:firstLocation withMaskRect:[self maskRectWithCropRect:_cropRect frame:aRect] view:aView];
+	NSRect const firstMaskRect = [self maskRectWithCropRect:_cropRect frame:aRect];
+	ECVRectEdgeMask const handle = [self handlePositionForPoint:firstLocation withMaskRect:firstMaskRect view:aView];
 	if(!handle) {
 		[self.delegate cropCellDidFinishCropping:self];
 		return YES; // Claim the mouse is up.
 	}
+	NSPoint const handlePoint = ECVRectPoint(firstMaskRect, handle);
+	NSSize const handleOffset = NSMakeSize(handlePoint.x - firstLocation.x, handlePoint.y - firstLocation.y);
 
 	[[aView window] disableCursorRects];
 	NSEvent *latestEvent = nil;
 	while((latestEvent = [[aView window] nextEventMatchingMask:NSLeftMouseUpMask | NSLeftMouseDraggedMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp) {
 		NSPoint const latestLocation = [aView convertPoint:[latestEvent locationInWindow] fromView:nil];
 		NSRect const maskRect = [self maskRectWithCropRect:_cropRect frame:aRect];
-		NSRect const r = ECVRectByScalingEdgeToPoint(maskRect, handle, latestLocation);
+		NSRect const r = ECVRectByScalingEdgeToPoint(maskRect, handle, NSMakePoint(latestLocation.x + handleOffset.width, latestLocation.y + handleOffset.height));
 		_tempCropRect = ECVScaledRect(NSOffsetRect(r, -NSMinX(aRect), -NSMinY(aRect)), NSMakeSize(1.0f / NSWidth(aRect), 1.0f / NSHeight(aRect)));
 		[aView setNeedsDisplay:YES];
 	}
