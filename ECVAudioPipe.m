@@ -98,12 +98,14 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 	NSUInteger i = 0;
 	for(; i < bufferList->mNumberBuffers; i++) {
 		[_lock lock];
-		NSMutableData *const data = [[[_unusedBuffers lastObject] retain] autorelease];
-		if(data) [_unusedBuffers removeLastObject];
+		NSMutableData *const data = [_unusedBuffers lastObject];
+		if(data) {
+			[_usedBuffers addObject:data];
+			[_unusedBuffers removeLastObject];
+		}
 		[_lock unlock];
 		bufferList->mBuffers[i].mDataByteSize = [data length];
 		bufferList->mBuffers[i].mData = [data mutableBytes];
-		if(data) [_usedBuffers addObject:data];
 	}
 }
 
