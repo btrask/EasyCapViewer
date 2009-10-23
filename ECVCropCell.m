@@ -151,7 +151,7 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 	while((latestEvent = [[aView window] nextEventMatchingMask:NSLeftMouseUpMask | NSLeftMouseDraggedMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES]) && [latestEvent type] != NSLeftMouseUp) {
 		NSPoint const latestLocation = [aView convertPoint:[latestEvent locationInWindow] fromView:nil];
 		NSRect const maskRect = [self maskRectWithCropRect:_cropRect frame:aRect];
-		NSRect const r = ECVRectByScalingEdgeToPoint(maskRect, handle, NSMakePoint(latestLocation.x + handleOffset.width, latestLocation.y + handleOffset.height));
+		NSRect const r = ECVRectByScalingEdgeToPoint(maskRect, handle, NSMakePoint(latestLocation.x + handleOffset.width, latestLocation.y + handleOffset.height), NSMakeSize(ECVHandleSize * 2.0f, ECVHandleSize * 2.0f), aRect);
 		_tempCropRect = ECVScaledRect(NSOffsetRect(r, -NSMinX(aRect), -NSMinY(aRect)), NSMakeSize(1.0f / NSWidth(aRect), 1.0f / NSHeight(aRect)));
 		[aView setNeedsDisplay:YES];
 	}

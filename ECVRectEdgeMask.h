@@ -41,5 +41,5 @@ typedef NSUInteger ECVRectEdgeMask;
 extern NSPoint ECVRectPoint(NSRect r, ECVRectEdgeMask mask);
 extern ECVRectEdgeMask ECVRectEdgeOpposite(ECVRectEdgeMask mask);
 extern NSRect ECVRectWithSizeFromEdge(NSRect rect, NSSize size, ECVRectEdgeMask mask);
-extern NSRect ECVRectByAddingSizeFromEdge(NSRect rect, NSSize size, ECVRectEdgeMask mask);
-extern NSRect ECVRectByScalingEdgeToPoint(NSRect rect, ECVRectEdgeMask mask, NSPoint p);
+NSRect ECVRectByAddingSizeFromEdge(NSRect rect, NSSize size, ECVRectEdgeMask mask);
+extern NSRect ECVRectByScalingEdgeToPoint(NSRect rect, ECVRectEdgeMask mask, NSPoint p, NSSize minSize, NSRect maxRect);
