@@ -32,11 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)ECV_beginEdits
 {
-	ECVOSStatus(BeginMediaEdits([self quickTimeMedia]));
+	ECVOSErr(BeginMediaEdits([self quickTimeMedia]));
 }
 - (void)ECV_endEdits
 {
-	ECVOSStatus(EndMediaEdits([self quickTimeMedia]));
+	ECVOSErr(EndMediaEdits([self quickTimeMedia]));
 }
 
 @end
@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	long const movieScale = [[[[self movie] movieAttributes] objectForKey:QTMovieTimeScaleAttribute] longValue];
 	QTTime const t = QTMakeTimeScaled(time, movieScale);
 	Media const m = [[self media] quickTimeMedia];
-	ECVOSStatus(InsertMediaIntoTrack([self quickTimeTrack], t.timeValue, GetMediaDisplayStartTime(m), GetMediaDisplayDuration(m), fixed1));
+	ECVOSErr(InsertMediaIntoTrack([self quickTimeTrack], t.timeValue, GetMediaDisplayStartTime(m), GetMediaDisplayDuration(m), fixed1));
 }
 
 @end

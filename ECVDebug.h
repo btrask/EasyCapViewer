@@ -30,7 +30,19 @@ enum {
 typedef NSUInteger ECVErrorLevel;
 
 extern void ECVLog(ECVErrorLevel level, NSString *format, ...) __attribute__((format(__NSString__, 2, 3)));
+extern NSString *ECVOSStatusToString(OSStatus error);
 extern NSString *ECVIOKitErrorToString(IOReturn error);
+extern NSString *ECVCVReturnToString(CVReturn error);
+extern NSString *ECVOpenGLErrorToString(GLenum error);
+
+#define ECVOSStatus(x) do {\
+	OSStatus const __e = (x);\
+	if(noErr == __e) break;\
+	ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVOSStatusToString(__e));\
+} while(NO)
+
+#define ECVOSErr(x) ECVOSStatus((OSStatus)(x))
+#define ECVComponentResult(x) ECVOSStatus((OSSTatus)(x))
 
 #define ECVIOReturn(x) do {\
 	IOReturn const __e = (x);\
@@ -40,20 +52,16 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 	goto ECVGenericError;\
 } while(NO)
 
-#define ECVOSStatus(x) do {\
-	OSStatus const __e = (x);\
-	if(noErr != __e) ECVLog(ECVError, @"%s:%d %s: '%d'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
-} while(NO)
-
 #define ECVCVReturn(x) do {\
 	CVReturn const __e = (x);\
-	if(kCVReturnSuccess != __e) ECVLog(ECVError, @"%s:%d %s: '%d'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
+	if(kCVReturnSuccess == __e) break;\
+	ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVCVReturnToString(__e));\
 } while(NO)
 
 #define ECVGLError(x) do {\
 	(x);\
 	GLenum __e;\
-	while((__e = glGetError()) != GL_NO_ERROR) ECVLog(ECVError, @"%s:%d %s: '0x%03x'", __PRETTY_FUNCTION__, __LINE__, #x, __e);\
+	while((__e = glGetError()) != GL_NO_ERROR) ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVOpenGLErrorToString(__e));\
 } while(NO)
 
 #define ECVAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]
