@@ -108,8 +108,8 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 }
 - (ECVRectEdgeMask)handlePositionForPoint:(NSPoint)point withMaskRect:(NSRect)mask inFrame:(NSRect)frame view:(NSView *)aView
 {
-	NSUInteger i = 0;
-	for(; i < numberof(ECVHandlePositions); i++) if([aView mouse:point inRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:mask inFrame:frame]]) return ECVHandlePositions[i];
+	NSUInteger i = numberof(ECVHandlePositions);
+	while(i--) if([aView mouse:point inRect:[self frameForHandlePosition:ECVHandlePositions[i] maskRect:mask inFrame:frame]]) return ECVHandlePositions[i];
 	return ECVRectCenter;
 }
 - (NSCursor *)cursorForHandlePosition:(ECVRectEdgeMask)pos
