@@ -38,4 +38,6 @@ extern NSString *const ECVGeneralErrorDomain;
 
 @property(readonly) IONotificationPortRef notificationPort;
 
+- (void)workspaceDidWake:(NSNotification *)aNotif;
+
 @end

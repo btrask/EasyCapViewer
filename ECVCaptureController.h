@@ -120,6 +120,8 @@ extern NSString *const ECVSaturationKey;
 
 - (id)initWithDevice:(io_service_t)device error:(out NSError **)outError;
 - (void)noteDeviceRemoved;
+- (void)noteVideoSettingDidChange; // Be sure to call this when you change the resolution or deinterlacing mode. NOT thread safe, pause first!
+- (void)workspaceWillSleep:(NSNotification *)aNotif;
 
 - (IBAction)play:(id)sender;
 - (IBAction)pause:(id)sender;
@@ -166,8 +168,6 @@ extern NSString *const ECVSaturationKey;
 - (BOOL)writeValue:(UInt16)value atIndex:(UInt16)index;
 - (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)index;
 - (BOOL)setFeatureAtIndex:(UInt16)index;
-
-- (void)noteVideoSettingDidChange; // Be sure to call this when you change the resolution or deinterlacing mode. NOT thread safe, pause first!
 
 @end
 

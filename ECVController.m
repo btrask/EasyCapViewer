@@ -66,22 +66,10 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 
 @synthesize notificationPort = _notificationPort;
 
-#pragma mark -NSObject
+#pragma mark -
 
-- (void)dealloc
+- (void)workspaceDidWake:(NSNotification *)aNotif
 {
-	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
-	IONotificationPortDestroy(_notificationPort);
-	[super dealloc];
-}
-
-#pragma mark -NSObject(NSNibAwaking)
-
-- (void)awakeFromNib
-{
-	if(!ECVSharedController) ECVSharedController = [self retain];
-	_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
-	CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopDefaultMode);
 	NSArray *const types = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVCaptureTypes"];
 	BOOL found = NO;
 	for(NSDictionary *const type in types) {
@@ -103,6 +91,33 @@ ECVNoDeviceError:
 	[alert setInformativeText:NSLocalizedString(@"Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported.", nil)];
 	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
 	[alert runModal];
+}
+
+#pragma mark -NSObject
+
+- (id)init
+{
+	if((self = [super init])) {
+		if(!ECVSharedController) ECVSharedController = [self retain];
+		_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
+		CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopDefaultMode);
+	}
+	return self;
+}
+- (void)dealloc
+{
+	
+	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
+	IONotificationPortDestroy(_notificationPort);
+	[super dealloc];
+}
+
+#pragma mark -NSObject(NSNibAwaking)
+
+- (void)awakeFromNib
+{
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceDidWake:) name:NSWorkspaceDidWakeNotification object:[NSWorkspace sharedWorkspace]];
+	[self workspaceDidWake:nil];
 }
 
 @end

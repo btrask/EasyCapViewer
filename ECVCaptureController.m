@@ -131,6 +131,8 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	if(outError) *outError = nil;
 	if(!(self = [self initWithWindowNibName:@"ECVCapture"])) return nil;
 
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
+
 	self.volume = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey];
 
 	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], device, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
@@ -161,7 +163,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		kIOUSBFindInterfaceDontCare,
 		kIOUSBFindInterfaceDontCare,
 		kIOUSBFindInterfaceDontCare,
-		kIOUSBFindInterfaceDontCare
+		kIOUSBFindInterfaceDontCare,
 	};
 	io_iterator_t interfaceIterator = IO_OBJECT_NULL;
 	ECVIOReturn((*_deviceInterface)->CreateInterfaceIterator(_deviceInterface, &interfaceRequest, &interfaceIterator));
@@ -175,7 +177,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		kIOUSBInterfaceInterfaceID300,
 		kIOUSBInterfaceInterfaceID245,
 		kIOUSBInterfaceInterfaceID220,
-		kIOUSBInterfaceInterfaceID197
+		kIOUSBInterfaceInterfaceID197,
 	};
 	NSUInteger i;
 	for(i = 0; i < numberof(refs); i++) if(SUCCEEDED((*interfacePlugInInterface)->QueryInterface(interfacePlugInInterface, CFUUIDGetUUIDBytes(refs[i]), (LPVOID)&_interfaceInterface))) break;
@@ -211,6 +213,19 @@ ECVNoDeviceError:
 		[[self window] close];
 		[self release];
 	}
+}
+- (void)noteVideoSettingDidChange
+{
+	NSParameterAssert(!self.isPlaying);
+	ECVPixelSize s = self.captureSize;
+	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
+	[videoView setPixelFormat:kCVPixelFormatType_422YpCbCr8 size:s]; // AKA k2vuyPixelFormat.
+	_pendingImageLength = 0;
+}
+- (void)workspaceWillSleep:(NSNotification *)aNotif
+{
+	self.playing = NO;
+	[self noteDeviceRemoved];
 }
 
 #pragma mark -
@@ -641,14 +656,11 @@ ECVNoDeviceError:
 	ECVLog(ECVNotice, @"Starting playback.");
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
-	(void)[self startAudio];
 	[_playLock unlockWithCondition:ECVPlaying];
 
 	NSUInteger const simultaneousTransfers = self.simultaneousTransfers;
 	NSUInteger const microframesPerTransfer = self.microframesPerTransfer;
 	UInt8 const pipe = self.isochReadingPipe;
-	SEL const scanSelector = @selector(threaded_readFrame:bytes:);
-	IMP const scanner = [self methodForSelector:scanSelector];
 	NSUInteger i;
 
 	UInt16 frameRequestSize = 0;
@@ -672,6 +684,7 @@ ECVNoDeviceError:
 	_firstFrame = YES;
 	[videoView resetFrames];
 	[videoView performSelectorOnMainThread:@selector(startDrawing) withObject:nil waitUntilDone:NO];
+	(void)[self startAudio];
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
@@ -690,7 +703,7 @@ ECVNoDeviceError:
 					mach_wait_until(UnsignedWideToUInt64(NanosecondsToAbsolute(nextUpdateTime)));
 				}
 				while(kUSBLowLatencyIsochTransferKey == frameList[i].frStatus) usleep(100); // In case we haven't slept long enough already.
-				scanner(self, scanSelector, frameList + i, frameData + i * frameRequestSize);
+				[self threaded_readFrame:frameList + i bytes:frameData + i * frameRequestSize];
 				frameList[i].frStatus = kUSBLowLatencyIsochTransferKey;
 			}
 			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipe, frameData, currentFrame, microframesPerTransfer, 1, frameList, ECVDoNothing, NULL));
@@ -822,17 +835,6 @@ ECVNoDeviceError:
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:index length:0 data:NULL];
 }
 
-#pragma mark -
-
-- (void)noteVideoSettingDidChange
-{
-	NSParameterAssert(!self.isPlaying);
-	ECVPixelSize s = self.captureSize;
-	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
-	[videoView setPixelFormat:kCVPixelFormatType_422YpCbCr8 size:s]; // AKA k2vuyPixelFormat.
-	_pendingImageLength = 0;
-}
-
 #pragma mark -ECVCaptureController(Private)
 
 - (void)_recordVideoFrame:(id<ECVFrameReading>)frame
@@ -893,6 +895,7 @@ ECVNoDeviceError:
 
 - (void)dealloc
 {
+	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
 	ECVConfigController *const config = [ECVConfigController sharedConfigController];
 	if([config captureController] == self) [config setCaptureController:nil];
 
