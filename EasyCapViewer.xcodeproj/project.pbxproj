@@ -286,12 +286,12 @@
 				0E7FFD201089D651000C8217 /* ECVOpenGLAdditions.m */,
 				0E8CE150107BE511004F05A7 /* ECVQTKitAdditions.h */,
 				0E8CE151107BE511004F05A7 /* ECVQTKitAdditions.m */,
+				0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */,
+				0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */,
 				0E0ACAE51020993E00C12D88 /* ECVSoundTrack.h */,
 				0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */,
 				0E0AC91F102030CE00C12D88 /* ECVVideoTrack.h */,
 				0E0AC920102030CE00C12D88 /* ECVVideoTrack.m */,
-				0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */,
-				0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
