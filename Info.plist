@@ -41,13 +41,14 @@
 	<array>
 		<string>'jpeg'</string>
 		<string>'mp4v'</string>
+		<string>'yuv2'</string>
 	</array>
 	<key>ECVInfoByVideoCodec</key>
 	<dict>
 		<key>'jpeg'</key>
 		<dict>
 			<key>ECVCodecLabel</key>
-			<string>JPEG</string>
+			<string>JPEG (Recommended)</string>
 			<key>ECVConfigurableQuality</key>
 			<true/>
 		</dict>
@@ -57,6 +58,13 @@
 			<string>MPEG-4</string>
 			<key>ECVConfigurableQuality</key>
 			<true/>
+		</dict>
+		<key>'yuv2'</key>
+		<dict>
+			<key>ECVCodecLabel</key>
+			<string>Raw Y'CbCr</string>
+			<key>ECVConfigurableQuality</key>
+			<false/>
 		</dict>
 	</dict>
 </dict>
