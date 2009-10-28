@@ -67,11 +67,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLFormat(OSType t)
 NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 {
 	switch(t) {
-#if LITTLE_ENDIAN
 		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_APPLE;
-#else
-		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_REV_APPLE;
-#endif
 	}
 	return 0;
 }
