@@ -21,31 +21,27 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#if !__LP64__
-// Other Sources
-@protocol ECVFrameReading;
-
 #import "ECVTrack.h"
-@interface ECVVideoTrack : ECVTrack
+
+@implementation ECVTrack
+
+#pragma mark -ECVTrack
+
+- (id)initWithTrack:(QTTrack *)track
 {
-	@private
-	TimeValue64 _frameDuration;
-	ICMCompressionSessionRef _compressionSession;
-	NSDictionary *_cleanApertureValue;
-	ICMEncodedFrameRef _encodedFrame;
+	if((self = [super init])) {
+		_track = [track retain];
+	}
+	return self;
+}
+@synthesize track = _track;
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_track release];
+	[super dealloc];
 }
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
-
-- (void)addFrame:(id<ECVFrameReading>)frame;
-- (void)finish;
-
 @end
-
-@interface QTMovie(ECVVideoTrackCreation)
-
-- (ECVVideoTrack *)ECV_videoTrackWithSize:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
-
-@end
-
-#endif

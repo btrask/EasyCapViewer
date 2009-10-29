@@ -21,25 +21,26 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <Cocoa/Cocoa.h>
-#import <QTKit/QTKit.h>
-
 #if !__LP64__
 
-@interface ECVSoundTrack : NSObject
+#import "ECVTrack.h"
+@interface ECVSoundTrack : ECVTrack
 {
 	@private
-	QTTrack *_track;
 	AudioStreamBasicDescription _basicDescription;
 	SoundDescriptionHandle _soundDescriptionHandle;
 }
 
-+ (id)soundTrackWithMovie:(QTMovie *)movie volume:(float)volume description:(AudioStreamBasicDescription)desc;
+- (id)initWithTrack:(QTTrack *)track description:(AudioStreamBasicDescription)desc;
 
-- (id)initWithTrack:(QTTrack *)track;
-@property(readonly) QTTrack *track;
-
+- (void)addSample:(AudioBuffer const *)buffer;
 - (void)addSamples:(AudioBufferList const *)bufferList;
+
+@end
+
+@interface QTMovie(ECVSoundTrackCreation)
+
+- (ECVSoundTrack *)ECV_soundTrackWithDescription:(AudioStreamBasicDescription)desc volume:(CGFloat)volume;
 
 @end
 

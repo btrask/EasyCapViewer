@@ -21,77 +21,61 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#if !__LP64__
 #import "ECVSoundTrack.h"
 
 // Other Sources
 #import "ECVDebug.h"
 
-#if !__LP64__
-
-@interface ECVSoundTrack(Private)
-
-- (void)_setStreamBasicDescription:(AudioStreamBasicDescription)desc;
-
-@end
-
 @implementation ECVSoundTrack
-
-#pragma mark +ECVSoundTrack
-
-+ (id)soundTrackWithMovie:(QTMovie *)movie volume:(float)volume description:(AudioStreamBasicDescription)desc
-{
-	NSParameterAssert([[[movie movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
-	Track const track = NewMovieTrack([movie quickTimeMovie], 0, 0, (short)roundf(volume * kFullVolume));
-	if(!track) return nil;
-	Media const media = NewTrackMedia(track, SoundMediaType, desc.mSampleRate, NULL, 0);
-	if(!media) {
-		DisposeMovieTrack(track);
-		return nil;
-	}
-	ECVSoundTrack *const obj = [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:nil]] autorelease];
-	[obj _setStreamBasicDescription:desc];
-	return obj;
-}
 
 #pragma mark -ECVSoundTrack
 
-- (id)initWithTrack:(QTTrack *)track
+- (id)initWithTrack:(QTTrack *)track description:(AudioStreamBasicDescription)desc
 {
-	if((self = [super init])) {
-		_track = [track retain];
+	if((self = [super initWithTrack:track])) {
+		_basicDescription = desc;
+		ECVOSStatus(QTSoundDescriptionCreate(&desc, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_soundDescriptionHandle));
 	}
 	return self;
 }
-@synthesize track = _track;
 
 #pragma mark -
 
+- (void)addSample:(AudioBuffer const *)buffer
+{
+	ByteCount const size = buffer->mDataByteSize;
+	AddMediaSample2([[self.track media] quickTimeMedia], buffer->mData, size, 1, 0, (SampleDescriptionHandle)_soundDescriptionHandle, size / _basicDescription.mBytesPerFrame, 0, NULL);
+}
 - (void)addSamples:(AudioBufferList const *)bufferList
 {
 	UInt32 i = 0;
-	for(; i < bufferList->mNumberBuffers; i++) {
-		ByteCount const size = (ByteCount)bufferList->mBuffers[i].mDataByteSize;
-		AddMediaSample2([[self.track media] quickTimeMedia], bufferList->mBuffers[i].mData, size, 1, 0, (SampleDescriptionHandle)_soundDescriptionHandle, size / _basicDescription.mBytesPerFrame, 0, NULL);
-	}
-}
-
-#pragma mark -ECVSoundTrack(Private)
-
-- (void)_setStreamBasicDescription:(AudioStreamBasicDescription)desc
-{
-	if(_soundDescriptionHandle) DisposeHandle((Handle)_soundDescriptionHandle);
-	_soundDescriptionHandle = NULL;
-	_basicDescription = desc;
-	ECVOSStatus(QTSoundDescriptionCreate(&desc, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_soundDescriptionHandle));
+	for(; i < bufferList->mNumberBuffers; i++) [self addSample:&bufferList->mBuffers[i]];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[_track release];
 	if(_soundDescriptionHandle) DisposeHandle((Handle)_soundDescriptionHandle);
 	[super dealloc];
+}
+
+@end
+
+@implementation QTMovie(ECVSoundTrackCreation)
+
+- (ECVSoundTrack *)ECV_soundTrackWithDescription:(AudioStreamBasicDescription)desc volume:(CGFloat)volume
+{
+	NSParameterAssert([[[self movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
+	Track const track = NewMovieTrack([self quickTimeMovie], 0, 0, (short)round(volume * kFullVolume));
+	if(!track) return nil;
+	Media const media = NewTrackMedia(track, SoundMediaType, desc.mSampleRate, NULL, 0);
+	if(!media) {
+		DisposeMovieTrack(track);
+		return nil;
+	}
+	return [[[ECVSoundTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:nil] description:desc] autorelease];
 }
 
 @end

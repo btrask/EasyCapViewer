@@ -37,6 +37,7 @@
 		0E984D6E108C660E00CB469C /* ECVErrorLog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E984D6C108C660E00CB469C /* ECVErrorLog.xib */; };
 		0E984E21108C7F3D00CB469C /* Log-Clear.png in Resources */ = {isa = PBXBuildFile; fileRef = 0E984E20108C7F3D00CB469C /* Log-Clear.png */; };
 		0E9F5E631085D06F00375752 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E9F5E621085D06F00375752 /* Carbon.framework */; };
+		0EBC1B4C109A5B1700DFBA31 /* ECVTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EBC1B4B109A5B1700DFBA31 /* ECVTrack.m */; };
 		0EC4C811103E9B5E00FCFCA0 /* ECVFrameReading.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */; };
 		0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D341101903F200CFBDFF /* CoreAudio.framework */; };
 		0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */; };
@@ -118,6 +119,8 @@
 		0E984D6D108C660E00CB469C /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ECVErrorLog.xib; sourceTree = "<group>"; };
 		0E984E20108C7F3D00CB469C /* Log-Clear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Log-Clear.png"; sourceTree = "<group>"; };
 		0E9F5E621085D06F00375752 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		0EBC1B4A109A5B1700DFBA31 /* ECVTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVTrack.h; sourceTree = "<group>"; };
+		0EBC1B4B109A5B1700DFBA31 /* ECVTrack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVTrack.m; sourceTree = "<group>"; };
 		0EC4C80F103E9B5E00FCFCA0 /* ECVFrameReading.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameReading.h; sourceTree = "<group>"; };
 		0EC4C810103E9B5E00FCFCA0 /* ECVFrameReading.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameReading.m; sourceTree = "<group>"; };
 		0EC7D341101903F200CFBDFF /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -288,6 +291,8 @@
 				0E8CE151107BE511004F05A7 /* ECVQTKitAdditions.m */,
 				0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */,
 				0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */,
+				0EBC1B4A109A5B1700DFBA31 /* ECVTrack.h */,
+				0EBC1B4B109A5B1700DFBA31 /* ECVTrack.m */,
 				0E0ACAE51020993E00C12D88 /* ECVSoundTrack.h */,
 				0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */,
 				0E0AC91F102030CE00C12D88 /* ECVVideoTrack.h */,
@@ -412,6 +417,7 @@
 				0E7FFD211089D651000C8217 /* ECVOpenGLAdditions.m in Sources */,
 				0E984D6B108C65D100CB469C /* ECVErrorLogController.m in Sources */,
 				0EC8BF901090A3F400ED9BB0 /* ECVRectEdgeMask.m in Sources */,
+				0EBC1B4C109A5B1700DFBA31 /* ECVTrack.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

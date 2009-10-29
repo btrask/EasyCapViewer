@@ -21,6 +21,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#if !__LP64__
 #import "ECVVideoTrack.h"
 #import <CoreVideo/CoreVideo.h>
 
@@ -28,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVFrameReading.h"
 
-#if !__LP64__
 @interface ECVVideoTrack(Private)
 
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
@@ -49,27 +49,11 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 @implementation ECVVideoTrack
 
-#pragma mark +ECVVideoTrack
-
-+ (id)videoTrackWithMovie:(QTMovie *)movie size:(NSSize)size cleanAperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
-{
-	NSParameterAssert([[[movie movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
-	Track const track = NewMovieTrack([movie quickTimeMovie], X2Fix(roundf(size.width)), X2Fix(roundf(size.height)), kNoVolume);
-	if(!track) return nil;
-	Media const media = NewTrackMedia(track, VideoMediaType, frameRate.timeScale, NULL, 0);
-	if(!media) {
-		DisposeMovieTrack(track);
-		return nil;
-	}
-	return [[[self alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] size:size cleanAperture:aperture codec:codec quality:quality frameRate:frameRate] autorelease];
-}
-
 #pragma mark -ECVVideoTrack
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size cleanAperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
+- (id)initWithTrack:(QTTrack *)track size:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
 {
-	if((self = [super init])) {
-		_track = [track retain];
+	if((self = [super initWithTrack:track])) {
 		_frameDuration = frameRate.timeValue;
 
 		ICMCompressionSessionOptionsRef options = NULL;
@@ -103,7 +87,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 	}
 	return self;
 }
-@synthesize track = _track;
 
 #pragma mark -
 
@@ -136,18 +119,34 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		ICMEncodedFrameRelease(_encodedFrame);
 		_encodedFrame = ICMEncodedFrameRetain(frame);
 	}
-	if(_encodedFrame) ECVOSStatus(AddMediaSampleFromEncodedFrame([[_track media] quickTimeMedia], _encodedFrame, NULL));
+	if(_encodedFrame) ECVOSStatus(AddMediaSampleFromEncodedFrame([[self.track media] quickTimeMedia], _encodedFrame, NULL));
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[_track release];
 	[_cleanApertureValue release];
 	ICMCompressionSessionRelease(_compressionSession);
 	ICMEncodedFrameRelease(_encodedFrame);
 	[super dealloc];
+}
+
+@end
+
+@implementation QTMovie(ECVVideoTrackCreation)
+
+- (ECVVideoTrack *)ECV_videoTrackWithSize:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
+{
+	NSParameterAssert([[[self movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
+	Track const track = NewMovieTrack([self quickTimeMovie], X2Fix(roundf(size.width)), X2Fix(roundf(size.height)), kNoVolume);
+	if(!track) return nil;
+	Media const media = NewTrackMedia(track, VideoMediaType, frameRate.timeScale, NULL, 0);
+	if(!media) {
+		DisposeMovieTrack(track);
+		return nil;
+	}
+	return [[[ECVVideoTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] size:size aperture:aperture codec:codec quality:quality frameRate:frameRate] autorelease];
 }
 
 @end

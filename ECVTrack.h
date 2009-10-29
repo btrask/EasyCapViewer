@@ -22,29 +22,16 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #if !__LP64__
-// Other Sources
-@protocol ECVFrameReading;
+#import <QTKit/QTKit.h>
 
-#import "ECVTrack.h"
-@interface ECVVideoTrack : ECVTrack
+@interface ECVTrack : NSObject
 {
 	@private
-	TimeValue64 _frameDuration;
-	ICMCompressionSessionRef _compressionSession;
-	NSDictionary *_cleanApertureValue;
-	ICMEncodedFrameRef _encodedFrame;
+	QTTrack *_track;
 }
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
-
-- (void)addFrame:(id<ECVFrameReading>)frame;
-- (void)finish;
-
-@end
-
-@interface QTMovie(ECVVideoTrackCreation)
-
-- (ECVVideoTrack *)ECV_videoTrackWithSize:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
+- (id)initWithTrack:(QTTrack *)track;
+@property(readonly) QTTrack *track;
 
 @end
 

@@ -307,10 +307,10 @@ ECVNoDeviceError:
 		round(NSMinX(c) * s.width - (s.width - croppedSize.width) / 2.0f), 1,
 		round(NSMinY(c) * s.height - (s.height - croppedSize.height) / 2.0f), 1,
 	};
-	_videoTrack = [[ECVVideoTrack videoTrackWithMovie:_movie size:[self outputSize] cleanAperture:croppedAperture codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
+	_videoTrack = [[_movie ECV_videoTrackWithSize:[self outputSize] aperture:croppedAperture codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 
 	ECVAudioStream *const stream = [[[self.audioInput streams] objectEnumerator] nextObject];
-	if(stream) _soundTrack = [[ECVSoundTrack soundTrackWithMovie:_movie volume:1.0f description:[stream basicDescription]] retain];
+	if(stream) _soundTrack = [[_movie ECV_soundTrackWithDescription:[stream basicDescription] volume:1.0f] retain];
 
 	[[_soundTrack.track media] ECV_beginEdits];
 	[[_videoTrack.track media] ECV_beginEdits];
