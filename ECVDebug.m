@@ -22,8 +22,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
-#import <mach/mach_port.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import <IOKit/usb/IOUSBLib.h>
+#import <mach/mach_port.h>
 
 // Controllers
 #import "ECVErrorLogController.h"
@@ -117,6 +118,18 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(invalidSpriteIndexErr)
 		ERROR_CASE(invalidImageIndexErr)
 		ERROR_CASE(invalidSpriteIDErr)
+
+		// AudioConverter:
+		ERROR_CASE(kAudioConverterErr_FormatNotSupported)
+		ERROR_CASE(kAudioConverterErr_OperationNotSupported)
+		ERROR_CASE(kAudioConverterErr_PropertyNotSupported)
+		ERROR_CASE(kAudioConverterErr_InvalidInputSize)
+		ERROR_CASE(kAudioConverterErr_InvalidOutputSize)
+		ERROR_CASE(kAudioConverterErr_UnspecifiedError)
+		ERROR_CASE(kAudioConverterErr_BadPropertySizeError)
+		ERROR_CASE(kAudioConverterErr_RequiresPacketDescriptionsError)
+		ERROR_CASE(kAudioConverterErr_InputSampleRateOutOfRange)
+		ERROR_CASE(kAudioConverterErr_OutputSampleRateOutOfRange)
 	}
 	return [NSString stringWithFormat:@"Unknown error %d", error];
 }
