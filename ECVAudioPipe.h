@@ -29,17 +29,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	AudioStreamBasicDescription _inputStreamDescription;
+	AudioStreamBasicDescription _outputStreamDescription;
 	AudioConverterRef _converter;
 	CGFloat _volume;
+	BOOL _dropsBuffers;
 	NSLock *_lock;
 	NSMutableArray *_unusedBuffers;
 	NSMutableArray *_usedBuffers;
 }
 
 - (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc;
+@property(readonly) AudioStreamBasicDescription inputStreamDescription;
+@property(readonly) AudioStreamBasicDescription outputStreamDescription;
 @property(assign) CGFloat volume;
+@property(assign) BOOL dropsBuffers;
 
-- (BOOL)receiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time;
-- (BOOL)requestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time;
+- (void)receiveInputBufferList:(AudioBufferList const *)inputBufferList;
+- (void)requestOutputBufferList:(inout AudioBufferList *)outputBufferList;
 
 @end

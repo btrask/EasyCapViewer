@@ -104,12 +104,12 @@ extern NSString *const ECVSaturationKey;
 
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
-	ECVAudioPipe *_audioPipe;
+	ECVAudioPipe *_audioPreviewingPipe;
 	CGFloat _volume;
 
 	QTMovie *_movie;
-	ECVSoundTrack *_soundTrack;
 	ECVVideoTrack *_videoTrack;
+	ECVSoundTrack *_soundTrack;
 
 	BOOL _fullScreen;
 	BOOL _noteDeviceRemovedWhenSheetCloses;

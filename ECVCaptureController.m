@@ -309,8 +309,8 @@ ECVNoDeviceError:
 	};
 	_videoTrack = [[_movie ECV_videoTrackWithSize:[self outputSize] aperture:croppedAperture codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 
-	ECVAudioStream *const stream = [[[self.audioInput streams] objectEnumerator] nextObject];
-	if(stream) _soundTrack = [[_movie ECV_soundTrackWithDescription:[stream basicDescription] volume:1.0f] retain];
+	ECVAudioStream *const inputStream = [[[self.audioInput streams] objectEnumerator] nextObject];
+	if(inputStream) _soundTrack = [[_movie ECV_soundTrackWithDescription:[inputStream basicDescription] volume:1.0f] retain];
 
 	[[_soundTrack.track media] ECV_beginEdits];
 	[[_videoTrack.track media] ECV_beginEdits];
@@ -571,8 +571,8 @@ ECVNoDeviceError:
 	if(playing) self.playing = NO;
 	[_audioInput release];
 	_audioInput = [device retain];
-	[_audioPipe release];
-	_audioPipe = nil;
+	[_audioPreviewingPipe release];
+	_audioPreviewingPipe = nil;
 	if(playing) self.playing = YES;
 }
 - (ECVAudioDevice *)audioOutput
@@ -588,13 +588,13 @@ ECVNoDeviceError:
 	if(playing) self.playing = NO;
 	[_audioOutput release];
 	_audioOutput = [device retain];
-	[_audioPipe release];
-	_audioPipe = nil;
+	[_audioPreviewingPipe release];
+	_audioPreviewingPipe = nil;
 	if(playing) self.playing = YES;
 }
 - (BOOL)startAudio
 {
-	NSAssert(!_audioPipe, @"Audio pipe should be cleared before restarting audio.");
+	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
 
 	ECVAudioDevice *const input = self.audioInput;
 	ECVAudioDevice *const output = self.audioOutput;
@@ -610,8 +610,8 @@ ECVNoDeviceError:
 		return NO;
 	}
 
-	_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
-	_audioPipe.volume = _volume;
+	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
+	_audioPreviewingPipe.volume = _volume;
 	input.delegate = self;
 	output.delegate = self;
 
@@ -634,8 +634,8 @@ ECVNoDeviceError:
 	[output stop];
 	input.delegate = nil;
 	output.delegate = nil;
-	[_audioPipe release];
-	_audioPipe = nil;
+	[_audioPreviewingPipe release];
+	_audioPreviewingPipe = nil;
 }
 
 #pragma mark -
@@ -909,10 +909,10 @@ ECVNoDeviceError:
 	[_playLock release];
 	[_audioInput release];
 	[_audioOutput release];
-	[_audioPipe release];
+	[_audioPreviewingPipe release];
 	[_movie release];
-	[_soundTrack release];
 	[_videoTrack release];
+	[_soundTrack release];
 	[_playButtonCell release];
 	[super dealloc];
 }
@@ -958,13 +958,13 @@ ECVNoDeviceError:
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
 	NSParameterAssert(sender == _audioInput);
-	[_audioPipe receiveInput:bufferList atTime:time];
+	[_audioPreviewingPipe receiveInputBufferList:bufferList];
 	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordAudioBufferList:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
 }
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {
 	NSParameterAssert(sender == _audioOutput);
-	[_audioPipe requestOutput:bufferList forTime:time];
+	[_audioPreviewingPipe requestOutputBufferList:bufferList];
 }
 
 #pragma mark -<ECVCaptureControllerConfiguring>
@@ -976,7 +976,7 @@ ECVNoDeviceError:
 - (void)setVolume:(CGFloat)value
 {
 	_volume = value;
-	_audioPipe.volume = value;
+	_audioPreviewingPipe.volume = value;
 	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
 }
 
