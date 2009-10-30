@@ -25,8 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
-extern AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *);
-
 @protocol ECVAudioDeviceDelegate;
 
 @interface ECVAudioDevice : NSObject

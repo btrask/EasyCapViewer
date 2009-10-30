@@ -29,26 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 NSString *const ECVAudioHardwareDevicesDidChangeNotification = @"ECVAudioHardwareDevicesDidChange";
 
-AudioBufferList *ECVAudioBufferListCopy(AudioBufferList const *bufferList)
-{
-	UInt32 i;
-	size_t totalDataSize = 0;
-	for(i = 0; i < bufferList->mNumberBuffers; i++) totalDataSize += bufferList->mBuffers[i].mDataByteSize;
-	size_t const listSize = sizeof(AudioBufferList) + sizeof(AudioBuffer) * (bufferList->mNumberBuffers - 1);
-	AudioBufferList *const copy = malloc(listSize + totalDataSize);
-	size_t dataOffset = listSize;
-	copy->mNumberBuffers = bufferList->mNumberBuffers;
-	for(i = 0; i < bufferList->mNumberBuffers; i++) {
-		copy->mBuffers[i].mNumberChannels = bufferList->mBuffers[i].mNumberChannels;
-		size_t const dataSize = bufferList->mBuffers[i].mDataByteSize;
-		copy->mBuffers[i].mDataByteSize = dataSize;
-		copy->mBuffers[i].mData = copy + dataOffset;
-		memcpy(copy + dataOffset, bufferList->mBuffers[i].mData, dataSize);
-		dataOffset += dataSize;
-	}
-	return copy;
-}
-
 static OSStatus ECVAudioHardwarePropertyListenerProc(AudioHardwarePropertyID propertyID, id obj)
 {
 	switch(propertyID) {

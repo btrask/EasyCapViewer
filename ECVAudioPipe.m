@@ -47,6 +47,11 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 - (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc
 {
 	if((self = [super init])) {
+		if(kAudioFormatLinearPCM != inputDesc.mFormatID) {
+			[self release];
+			return nil;
+		}
+
 		ECVOSStatus(AudioConverterNew(&inputDesc, &outputDesc, &_converter));
 		if(!_converter) {
 			[self release];
@@ -111,7 +116,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 	UInt32 const dstCount = conversionBufferList->mNumberBuffers;
 	UInt32 const minCount = MIN(srcCount, dstCount);
 
-	NSRange const bufferRange = NSMakeRange(srcCount - minCount, minCount);
+	NSRange const bufferRange = NSMakeRange(0, minCount);
 	NSArray *const buffers = [_unusedBuffers subarrayWithRange:bufferRange];
 	[_usedBuffers addObjectsFromArray:buffers];
 	[_unusedBuffers removeObjectsInRange:bufferRange];

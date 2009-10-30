@@ -59,6 +59,23 @@ static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 static NSString *const ECVVolumeKey = @"ECVVolume";
 static NSString *const ECVCropRectKey = @"ECVCropRect";
 
+#if !__LP64__
+#define ECVFramesPerPacket 1u
+#define ECVChannelsPerFrame 2u
+#define ECVBitsPerByte 8u
+static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
+	48000.0f,
+	kAudioFormatLinearPCM,
+	kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsPacked,
+	sizeof(Float32) * ECVChannelsPerFrame * ECVFramesPerPacket,
+	ECVFramesPerPacket,
+	sizeof(Float32) * ECVChannelsPerFrame,
+	ECVChannelsPerFrame,
+	sizeof(Float32) * ECVBitsPerByte,
+	0u,
+};
+#endif
+
 enum {
 	ECVNotPlaying,
 	ECVStartPlaying,
@@ -75,7 +92,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 @interface ECVCaptureController(Private)
 
 - (void)_recordVideoFrame:(id<ECVFrameReading>)frame;
-- (void)_recordAudioBufferList:(NSValue *)bufferListValue;
+- (void)_recordBufferedAudio;
 - (void)_hideMenuBar;
 
 @end
@@ -310,7 +327,11 @@ ECVNoDeviceError:
 	_videoTrack = [[_movie ECV_videoTrackWithSize:[self outputSize] aperture:croppedAperture codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue] frameRate:self.frameRate] retain];
 
 	ECVAudioStream *const inputStream = [[[self.audioInput streams] objectEnumerator] nextObject];
-	if(inputStream) _soundTrack = [[_movie ECV_soundTrackWithDescription:[inputStream basicDescription] volume:1.0f] retain];
+	if(inputStream) {
+		_audioRecordingPipe = [[ECVAudioPipe alloc] initWithInputDescription:inputStream.basicDescription outputDescription:ECVAudioRecordingOutputDescription];
+		_audioRecordingPipe.dropsBuffers = NO;
+		_soundTrack = [[_movie ECV_soundTrackWithDescription:_audioRecordingPipe.outputStreamDescription volume:1.0f] retain];
+	}
 
 	[[_soundTrack.track media] ECV_beginEdits];
 	[[_videoTrack.track media] ECV_beginEdits];
@@ -329,6 +350,8 @@ ECVNoDeviceError:
 	[_videoTrack release];
 	_soundTrack = nil;
 	_videoTrack = nil;
+	[_audioRecordingPipe release];
+	_audioRecordingPipe = nil;
 	[_movie updateMovieFile];
 	[_movie release];
 	_movie = nil;
@@ -843,12 +866,15 @@ ECVNoDeviceError:
 	[_videoTrack addFrame:frame];
 #endif
 }
-- (void)_recordAudioBufferList:(NSValue *)bufferListValue
+- (void)_recordBufferedAudio
 {
 #if !__LP64__
-	AudioBufferList *const bufferList = [bufferListValue pointerValue];
-	[_soundTrack addSamples:bufferList];
-	free(bufferList);
+	UInt32 const bufferSize = ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000; // Should be more than enough to keep up with the incoming data.
+	static u_int8_t *bytes;
+	if(!bytes) bytes = malloc(bufferSize);
+	AudioBufferList outputBufferList = {1, {2, bufferSize, bytes}};
+	[_audioRecordingPipe requestOutputBufferList:&outputBufferList];
+	[_soundTrack addSamples:&outputBufferList];
 #endif
 }
 - (void)_hideMenuBar
@@ -913,6 +939,7 @@ ECVNoDeviceError:
 	[_movie release];
 	[_videoTrack release];
 	[_soundTrack release];
+	[_audioRecordingPipe release];
 	[_playButtonCell release];
 	[super dealloc];
 }
@@ -959,7 +986,8 @@ ECVNoDeviceError:
 {
 	NSParameterAssert(sender == _audioInput);
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
-	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordAudioBufferList:) withObject:[NSValue valueWithPointer:ECVAudioBufferListCopy(bufferList)] waitUntilDone:NO];
+	[_audioRecordingPipe receiveInputBufferList:bufferList];
+	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordBufferedAudio) withObject:nil waitUntilDone:NO];
 }
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {

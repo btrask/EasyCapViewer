@@ -109,6 +109,7 @@ extern NSString *const ECVSaturationKey;
 	QTMovie *_movie;
 	ECVVideoTrack *_videoTrack;
 	ECVSoundTrack *_soundTrack;
+	ECVAudioPipe *_audioRecordingPipe;
 
 	BOOL _fullScreen;
 	BOOL _noteDeviceRemovedWhenSheetCloses;
