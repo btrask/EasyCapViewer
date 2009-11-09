@@ -21,12 +21,17 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+// Controllers
+@class ECVCaptureController;
+
 extern NSString *const ECVGeneralErrorDomain;
 
 @interface ECVController : NSObject
 {
 	@private
 	IONotificationPortRef _notificationPort;
+	NSUInteger _playCount;
+	NSTimer *_userActivityTimer;
 }
 
 + (id)sharedController;
@@ -35,6 +40,10 @@ extern NSString *const ECVGeneralErrorDomain;
 - (IBAction)showErrorLog:(id)sender;
 
 @property(readonly) IONotificationPortRef notificationPort;
+@property(assign) BOOL playing;
+
+- (void)noteCaptureControllerStartedPlaying:(ECVCaptureController *)controller;
+- (void)noteCaptureControllerStoppedPlaying:(ECVCaptureController *)controller;
 
 - (void)workspaceDidWake:(NSNotification *)aNotif;
 

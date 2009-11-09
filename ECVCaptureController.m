@@ -708,6 +708,7 @@ ECVNoDeviceError:
 	[videoView resetFrames];
 	[videoView performSelectorOnMainThread:@selector(startDrawing) withObject:nil waitUntilDone:NO];
 	(void)[self startAudio];
+	[[ECVController sharedController] performSelectorOnMainThread:@selector(noteCaptureControllerStartedPlaying:) withObject:self waitUntilDone:NO];
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
@@ -738,6 +739,7 @@ ECVNoDeviceError:
 	[self threaded_pause];
 ECVGenericError:
 ECVNoDeviceError:
+	[[ECVController sharedController] performSelectorOnMainThread:@selector(noteCaptureControllerStoppedPlaying:) withObject:self waitUntilDone:NO];
 	[self stopAudio];
 	[videoView performSelectorOnMainThread:@selector(stopDrawing) withObject:nil waitUntilDone:NO];
 	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);

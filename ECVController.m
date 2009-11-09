@@ -42,6 +42,12 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 	// Don't release the iterator because we want to continue receiving notifications.
 }
 
+@interface ECVController(Private)
+
+- (void)_userActivity;
+
+@end
+
 @implementation ECVController
 
 #pragma mark +ECVController
@@ -65,6 +71,35 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 #pragma mark -
 
 @synthesize notificationPort = _notificationPort;
+- (BOOL)playing
+{
+	return !!_playCount;
+}
+- (void)setPlaying:(BOOL)flag
+{
+	if(flag) {
+		if(_playCount < NSUIntegerMax) _playCount++;
+		if(1 == _playCount) _userActivityTimer = [NSTimer scheduledTimerWithTimeInterval:30.0f target:self selector:@selector(_userActivity) userInfo:nil repeats:YES];
+	} else {
+		NSParameterAssert(_playCount);
+		_playCount--;
+		if(!_playCount) {
+			[_userActivityTimer invalidate];
+			_userActivityTimer = nil;
+		}
+	}
+}
+
+#pragma mark -
+
+- (void)noteCaptureControllerStartedPlaying:(ECVCaptureController *)controller
+{
+	[self setPlaying:YES];
+}
+- (void)noteCaptureControllerStoppedPlaying:(ECVCaptureController *)controller
+{
+	[self setPlaying:NO];
+}
 
 #pragma mark -
 
@@ -93,6 +128,13 @@ ECVNoDeviceError:
 	[alert runModal];
 }
 
+#pragma mark -ECVController(Private)
+
+- (void)_userActivity
+{
+	UpdateSystemActivity(UsrActivity);
+}
+
 #pragma mark -NSObject
 
 - (id)init
@@ -106,9 +148,9 @@ ECVNoDeviceError:
 }
 - (void)dealloc
 {
-	
 	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
 	IONotificationPortDestroy(_notificationPort);
+	[_userActivityTimer invalidate];
 	[super dealloc];
 }
 
