@@ -119,6 +119,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	dev_stk0408_initialize_device(self);
 	if(![_SAA711XChip initializeRegisters]) return NO;
+	dev_stk0408_write0(self, 0x93, 1 << 7 | [self videoSource] << 3); // Guess.
 	dev_stk0408_init_camera(self);
 	dev_stk0408_set_resolution(self);
 	dev_stk11xx_camera_on(self);
@@ -310,11 +311,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	switch([self videoSource]) {
 		case ECVSTK1160SVideoInput: return SAA711XMODESVideoAI12_YGain;
-		case ECVSTK1160Composite1Input: return SAA711XMODECompositeAI11;
-		case ECVSTK1160Composite2Input: return SAA711XMODECompositeAI21; // The rest are guesses.
-		case ECVSTK1160Composite3Input: return SAA711XMODECompositeAI23;
-		case ECVSTK1160Composite4Input: return SAA711XMODECompositeAI24;
-		default: return 0;
+		default: return SAA711XMODECompositeAI11;
 	}
 }
 - (BOOL)SVideo
