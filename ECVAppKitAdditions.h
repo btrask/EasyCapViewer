@@ -33,3 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (GLuint)ECV_textureName;
 
 @end
+
+@interface NSWindowController(ECVAppKitAdditions)
+
+- (IBAction)ECV_toggleWindow:(id)sender;
+
+@end

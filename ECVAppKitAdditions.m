@@ -90,3 +90,13 @@ static void ECVGradientCallback(CGFloat colors[2][ECVNumberOfColorSpaceComponent
 }
 
 @end
+
+@implementation NSWindowController(ECVAppKitAdditions)
+
+- (IBAction)ECV_toggleWindow:(id)sender
+{
+	if([[self window] isVisible]) [[self window] performClose:sender];
+	else [self showWindow:sender];
+}
+
+@end

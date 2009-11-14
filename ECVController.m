@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVErrorLogController.h"
 
 // Other Sources
+#import "ECVAppKitAdditions.h"
 #import "ECVDebug.h"
 
 NSString *const ECVGeneralErrorDomain = @"ECVGeneralErrorDomain";
@@ -61,11 +62,11 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 
 - (IBAction)configureDevice:(id)sender
 {
-	[[ECVConfigController sharedConfigController] showWindow:sender];
+	[[ECVConfigController sharedConfigController] ECV_toggleWindow:sender];
 }
 - (IBAction)showErrorLog:(id)sender
 {
-	[[ECVErrorLogController sharedErrorLogController] showWindow:sender];
+	[[ECVErrorLogController sharedErrorLogController] ECV_toggleWindow:sender];
 }
 
 #pragma mark -
