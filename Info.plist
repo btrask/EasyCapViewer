@@ -48,7 +48,7 @@
 		<key>'jpeg'</key>
 		<dict>
 			<key>ECVCodecLabel</key>
-			<string>JPEG (Recommended)</string>
+			<string>Motion JPEG</string>
 			<key>ECVConfigurableQuality</key>
 			<true/>
 		</dict>
