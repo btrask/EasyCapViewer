@@ -183,7 +183,7 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 
 	dev_stk0408_write0(dev, 0x07f, 0x001);
 
-	(void)dev_stk11xx_check_device(dev, 500);
+	dev_stk0408_check_device(dev);
 
 	usb_stk11xx_set_feature(dev, 1);
 

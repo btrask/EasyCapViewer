@@ -85,37 +85,3 @@ static void dev_stk11xx_camera_off(ECVSTK1160Controller *dev)
 {
 	(void)[dev setAlternateInterface:0];
 }
-static int dev_stk11xx_check_device(ECVSTK1160Controller *dev, int nbr)
-{
-	int i;
-	int value;
-
-	for (i=0; i<nbr; i++) {
-		usb_stk11xx_read_registry(dev, 0x201, &value);
-		
-		if (value == 0x00) {
-		}
-		else if ((value == 0x11) || (value == 0x14)) {
-		}
-		else if ((value == 0x30) || (value == 0x31)) {
-		}
-		else if ((value == 0x51)) {
-		}
-		else if ((value == 0x70) || (value == 0x71)) {
-		}
-		else if ((value == 0x91)) {
-		}
-		else if (value == 0x01) {
-			return 1;
-		} else if ((value == 0x04) || (value == 0x05)) {
-			return 1;
-		} else if (value == 0x15) {
-			return 1;
-		} else {
-			STK_ERROR("Check device return error (0x0201 = %02X) !\n", value);
-			return -1;
-		}
-	}
-
-	return 0;
-}
