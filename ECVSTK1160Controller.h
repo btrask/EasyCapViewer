@@ -29,6 +29,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVSTK1160Controller;
 #import "stk11xx.h"
 
+// Other Sources
+#import "SAA711XChip.h"
+
+enum {
+	ECVSTK1160SVideoInput = 0,
+	ECVSTK1160Composite1Input = 1,
+	ECVSTK1160Composite2Input = 2,
+	ECVSTK1160Composite3Input = 3,
+	ECVSTK1160Composite4Input = 4
+};
+typedef NSUInteger ECVSTK1160VideoSource;
 enum {
 	ECVSTK1160Auto60HzFormat = 0,
 	ECVSTK1160NTSCMFormat = 8,
@@ -46,20 +57,15 @@ enum {
 };
 typedef NSUInteger ECVSTK1160VideoFormat;
 
-@interface ECVSTK1160Controller : ECVCaptureController <ECVCaptureControllerConfiguring>
+@interface ECVSTK1160Controller : ECVCaptureController <ECVCaptureControllerConfiguring, SAA711XDevice>
 {
 	@private
 	ECVSTK1160VideoSource _videoSource;
 	ECVSTK1160VideoFormat _videoFormat;
-	CGFloat _brightness;
-	CGFloat _contrast;
-	CGFloat _saturation;
-	CGFloat _hue;
+	SAA711XChip *_SAA711XChip;
 }
 
 @property(assign) ECVSTK1160VideoSource videoSource;
-@property(readonly) BOOL SVideo;
 @property(assign) ECVSTK1160VideoFormat videoFormat;
-@property(readonly) BOOL is60HzFormat;
 
 @end

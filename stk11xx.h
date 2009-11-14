@@ -37,33 +37,11 @@
 #define STK_ERROR(x, y...) ECVLog(ECVError, (NSString *)CFSTR(x), ##y)
 #define msleep(x) usleep((x) * ECVMicrosecondsPerMillisecond)
 
-struct stk11xx_coord {
-	int x;
-	int y;
-};
-
-enum {
-	ECVSTK1160SVideoInput = 0,
-	ECVSTK1160Composite1Input = 1,
-	ECVSTK1160Composite2Input = 2,
-	ECVSTK1160Composite3Input = 3,
-	ECVSTK1160Composite4Input = 4
-};
-typedef NSUInteger ECVSTK1160VideoSource;
-
-int dev_stk0408_write_saa(ECVSTK1160Controller *dev, u_int8_t reg, int16_t val);
 int dev_stk0408_initialize_device(ECVSTK1160Controller *dev);
 int dev_stk0408_init_camera(ECVSTK1160Controller *dev);
 int dev_stk0408_check_device(ECVSTK1160Controller *dev);
 int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val);
 int dev_stk0408_set_streaming(ECVSTK1160Controller *dev, int streaming);
-
-int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev);
-int dev_stk0408_set_source(ECVSTK1160Controller *dev, ECVSTK1160VideoSource source);
-int dev_stk0408_set_brightness(ECVSTK1160Controller *dev, CGFloat brightness);
-int dev_stk0408_set_contrast(ECVSTK1160Controller *dev, CGFloat contrast);
-int dev_stk0408_set_saturation(ECVSTK1160Controller *dev, CGFloat saturation);
-int dev_stk0408_set_hue(ECVSTK1160Controller *dev, CGFloat hue);
 
 static void usb_stk11xx_write_registry(ECVSTK1160Controller *dev, u_int16_t index, u_int16_t value)
 {

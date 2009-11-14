@@ -11,6 +11,7 @@
 		0E0AC921102030CE00C12D88 /* ECVVideoTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0AC920102030CE00C12D88 /* ECVVideoTrack.m */; };
 		0E0AC92410203FB300C12D88 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0AC92310203FB300C12D88 /* QTKit.framework */; };
 		0E0ACAE71020993E00C12D88 /* ECVSoundTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */; };
+		0E16F6AE10AE92C600730A18 /* SAA711XChip.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E16F6AD10AE92C600730A18 /* SAA711XChip.m */; };
 		0E26A9851003127B002FF95A /* ECVConfig.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E26A9831003127B002FF95A /* ECVConfig.xib */; };
 		0E26A999100314E6002FF95A /* ECVConfigController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E26A998100314E6002FF95A /* ECVConfigController.m */; };
 		0E26AA4510033FC4002FF95A /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0E26AA4310033FC4002FF95A /* Credits.rtf */; };
@@ -77,6 +78,8 @@
 		0E0AC92310203FB300C12D88 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		0E0ACAE51020993E00C12D88 /* ECVSoundTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVSoundTrack.h; sourceTree = "<group>"; };
 		0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVSoundTrack.m; sourceTree = "<group>"; };
+		0E16F6AC10AE92C600730A18 /* SAA711XChip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SAA711XChip.h; sourceTree = "<group>"; };
+		0E16F6AD10AE92C600730A18 /* SAA711XChip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SAA711XChip.m; sourceTree = "<group>"; };
 		0E26A9841003127B002FF95A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ECVConfig.xib; sourceTree = "<group>"; };
 		0E26A997100314E6002FF95A /* ECVConfigController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVConfigController.h; sourceTree = "<group>"; };
 		0E26A998100314E6002FF95A /* ECVConfigController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVConfigController.m; sourceTree = "<group>"; };
@@ -297,6 +300,8 @@
 				0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */,
 				0E0AC91F102030CE00C12D88 /* ECVVideoTrack.h */,
 				0E0AC920102030CE00C12D88 /* ECVVideoTrack.m */,
+				0E16F6AC10AE92C600730A18 /* SAA711XChip.h */,
+				0E16F6AD10AE92C600730A18 /* SAA711XChip.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -418,6 +423,7 @@
 				0E984D6B108C65D100CB469C /* ECVErrorLogController.m in Sources */,
 				0EC8BF901090A3F400ED9BB0 /* ECVRectEdgeMask.m in Sources */,
 				0EBC1B4C109A5B1700DFBA31 /* ECVTrack.m in Sources */,
+				0E16F6AE10AE92C600730A18 /* SAA711XChip.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

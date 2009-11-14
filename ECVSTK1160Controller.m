@@ -52,12 +52,14 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	if((self = [super initWithDevice:device error:outError])) {
 		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
-		self.videoSource = [d integerForKey:ECVSTK1160VideoSourceKey];
-		self.videoFormat = [d integerForKey:ECVSTK1160VideoFormatKey];
-		self.brightness = [[d objectForKey:ECVBrightnessKey] doubleValue];
-		self.contrast = [[d objectForKey:ECVContrastKey] doubleValue];
-		self.hue = [[d objectForKey:ECVHueKey] doubleValue];
-		self.saturation = [[d objectForKey:ECVSaturationKey] doubleValue];
+		[self setVideoSource:[d integerForKey:ECVSTK1160VideoSourceKey]];
+		[self setVideoFormat:[d integerForKey:ECVSTK1160VideoFormatKey]];
+		_SAA711XChip = [[SAA711XChip alloc] init];
+		[_SAA711XChip setDevice:self];
+		[_SAA711XChip setBrightness:[[d objectForKey:ECVBrightnessKey] doubleValue]];
+		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
+		[_SAA711XChip setSaturation:[[d objectForKey:ECVSaturationKey] doubleValue]];
+		[_SAA711XChip setHue:[[d objectForKey:ECVHueKey] doubleValue]];
 	}
 	return self;
 }
@@ -65,13 +67,11 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
 	if(source == _videoSource) return;
+	BOOL const playing = self.playing;
+	if(playing) self.playing = NO;
 	_videoSource = source;
-	if(self.playing) dev_stk0408_set_source(self, source);
 	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
-}
-- (BOOL)SVideo
-{
-	return ECVSTK1160SVideoInput == self.videoSource;
+	if(playing) self.playing = YES;
 }
 @synthesize videoFormat = _videoFormat;
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format
@@ -84,28 +84,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	self.windowContentSize = self.outputSize;
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
 	if(playing) self.playing = YES;
-}
-- (BOOL)is60HzFormat
-{
-	switch(self.videoFormat) {
-		case ECVSTK1160Auto60HzFormat:
-		case ECVSTK1160NTSCMFormat:
-		case ECVSTK1160PAL60Format:
-		case ECVSTK1160PALMFormat:
-		case ECVSTK1160NTSC44360HzFormat:
-		case ECVSTK1160NTSCJFormat:
-			return YES;
-		case ECVSTK1160Auto50HzFormat:
-		case ECVSTK1160PALBGDHIFormat:
-		case ECVSTK1160PALNFormat:
-		case ECVSTK1160NTSCNFormat:
-		case ECVSTK1160NTSC44350HzFormat:
-		case ECVSTK1160SECAMFormat:
-			return NO;
-		default:
-			ECVAssertNotReached(@"Invalid video format.");
-			return NO;
-	}
 }
 
 #pragma mark -ECVCaptureController(ECVAbstract)
@@ -140,8 +118,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (BOOL)threaded_play
 {
 	dev_stk0408_initialize_device(self);
+	if(![_SAA711XChip initializeRegisters]) return NO;
 	dev_stk0408_init_camera(self);
-	dev_stk11xx_camera_on(self);
 	dev_stk0408_set_streaming(self, YES);
 	return YES;
 }
@@ -171,6 +149,15 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		skip = 8;
 	}
 	if(length > skip) [self threaded_readImageBytes:bytes + skip length:length - skip];
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_SAA711XChip setDevice:nil];
+	[_SAA711XChip release];
+	[super dealloc];
 }
 
 #pragma mark -<ECVCaptureControllerConfiguring>
@@ -273,43 +260,109 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 - (CGFloat)brightness
 {
-	return _brightness;
+	return [_SAA711XChip brightness];
 }
 - (void)setBrightness:(CGFloat)val
 {
-	_brightness = val;
-	if(self.playing) dev_stk0408_set_brightness(self, val);
+	[_SAA711XChip setBrightness:val];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
-	return _contrast;
+	return [_SAA711XChip contrast];
 }
 - (void)setContrast:(CGFloat)val
 {
-	_contrast = val;
-	if(self.playing) dev_stk0408_set_contrast(self, val);
+	[_SAA711XChip setContrast:val];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
 {
-	return _saturation;
+	return [_SAA711XChip saturation];
 }
 - (void)setSaturation:(CGFloat)val
 {
-	_saturation = val;
-	if(self.playing) dev_stk0408_set_saturation(self, val);
+	[_SAA711XChip setSaturation:val];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
 {
-	return _hue;
+	return [_SAA711XChip hue];
 }
 - (void)setHue:(CGFloat)val
 {
-	_hue = val;
-	if(self.playing) dev_stk0408_set_hue(self, val);
+	[_SAA711XChip setHue:val];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
+}
+
+#pragma mark -<SAA711XDevice>
+
+- (BOOL)writeSAA711XRegister:(u_int8_t)reg value:(int16_t)val
+{
+	usb_stk11xx_write_registry(self, 0x0204, reg);
+	usb_stk11xx_write_registry(self, 0x0205, val);
+	usb_stk11xx_write_registry(self, 0x0200, 0x0001);
+	return dev_stk0408_check_device(self) == 0;
+}
+- (SAA711XMODESource)SAA711XMODESource
+{
+	switch([self videoSource]) {
+		case ECVSTK1160SVideoInput: return SAA711XMODESVideoAI12_YGain;
+		case ECVSTK1160Composite1Input: return SAA711XMODECompositeAI11;
+		case ECVSTK1160Composite2Input: return SAA711XMODECompositeAI21; // The rest are guesses.
+		case ECVSTK1160Composite3Input: return SAA711XMODECompositeAI23;
+		case ECVSTK1160Composite4Input: return SAA711XMODECompositeAI24;
+		default: return 0;
+	}
+}
+- (BOOL)SVideo
+{
+	return ECVSTK1160SVideoInput == self.videoSource;
+}
+- (SAA711XCSTDFormat)SAA711XCSTDFormat
+{
+	switch([self videoFormat]) {
+		case ECVSTK1160Auto60HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160NTSCMFormat:       return SAA711XCSTDNTSCM;
+		case ECVSTK1160PAL60Format:       return SAA711XCSTDPAL60Hz;
+		case ECVSTK1160PALMFormat:        return SAA711XCSTDPALM;
+		case ECVSTK1160NTSC44360HzFormat: return SAA711XCSTDNTSC44360Hz;
+		case ECVSTK1160NTSCJFormat:       return SAA711XCSTDNTSCJ;
+
+		case ECVSTK1160Auto50HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160PALBGDHIFormat:    return SAA711XCSTDPAL_BGDHI;
+		case ECVSTK1160PALNFormat:        return SAA711XCSTDPALN;
+		case ECVSTK1160NTSC44350HzFormat: return SAA711XCSTDNTSC44350Hz;
+		case ECVSTK1160NTSCNFormat:       return SAA711XCSTDNTSCN;
+		case ECVSTK1160SECAMFormat:       return SAA711XCSTDSECAM;
+		default: return 0;
+	}
+}
+- (BOOL)is60HzFormat
+{
+	switch([self videoFormat]) {
+		case ECVSTK1160Auto60HzFormat:
+		case ECVSTK1160NTSCMFormat:
+		case ECVSTK1160PAL60Format:
+		case ECVSTK1160PALMFormat:
+		case ECVSTK1160NTSC44360HzFormat:
+		case ECVSTK1160NTSCJFormat:
+			return YES;
+		case ECVSTK1160Auto50HzFormat:
+		case ECVSTK1160PALBGDHIFormat:
+		case ECVSTK1160PALNFormat:
+		case ECVSTK1160NTSCNFormat:
+		case ECVSTK1160NTSC44350HzFormat:
+		case ECVSTK1160SECAMFormat:
+			return NO;
+		default:
+			ECVAssertNotReached(@"Invalid video format.");
+			return NO;
+	}
+}
+- (BOOL)SAA711XRTP0OutputPolarityInverted
+{
+	return YES;
 }
 
 @end
