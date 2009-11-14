@@ -173,10 +173,7 @@ static u_int8_t SAA7115CSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoF
 int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 {
 	dev_stk0408_write0(dev, 0x0007, 0x0001);
-	
-	dev_stk0408_configure_device(dev,1);
-	dev_stk0408_configure_device(dev,2);
-	
+
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094); 
 	msleep(10);
 	
@@ -290,44 +287,51 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 	return 0;
 }
 
-
 /** 
  * @param dev Device structure
- * @param step The step of configuration [0-6]
  * 
  * @returns 0 if all is OK
  *
- * @brief This function configures the device.
+ * @brief Wake-up the camera.
  *
- * This is called multiple times through intitialisation and configuration
- * there appear to be six distinct steps
- *
+ * This function permits to wake-up the device.
  */
-int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
+int dev_stk0408_camera_asleep(ECVSTK1160Controller *dev)
 {
-	if (step != 1)
-	{
-		usb_stk11xx_read_registry(dev, 0x0003, NULL);
-		usb_stk11xx_read_registry(dev, 0x0001, NULL);
-		usb_stk11xx_read_registry(dev, 0x0002, NULL);
-		usb_stk11xx_read_registry(dev, 0x0000, NULL);
-		usb_stk11xx_read_registry(dev, 0x0003, NULL);
-		usb_stk11xx_read_registry(dev, 0x0001, NULL);
-		dev_stk0408_write0(dev, 0x0078, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0001, 0x0003);
 
-		usb_stk11xx_read_registry(dev, 0x0002, NULL);
-		usb_stk11xx_read_registry(dev, 0x0000, NULL);
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-		usb_stk11xx_read_registry(dev, 0x0000, NULL);
-		usb_stk11xx_read_registry(dev, 0x0002, NULL);
-		usb_stk11xx_read_registry(dev, 0x0000, NULL);
-		dev_stk0408_write0(dev, 0x0078, 0x0030);
-		usb_stk11xx_read_registry(dev, 0x0002, NULL);
-		usb_stk11xx_read_registry(dev, 0x0002, NULL);
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-	}
+	usb_stk11xx_read_registry(dev, 0x0104, NULL);
+	usb_stk11xx_read_registry(dev, 0x0105, NULL);
+	usb_stk11xx_read_registry(dev, 0x0106, NULL);
+
+	int value;
+	usb_stk11xx_read_registry(dev, 0x0100, &value);
+	usb_stk11xx_write_registry(dev, 0x0100, value & 0x7f);
+
+	usb_stk11xx_write_registry(dev, 0x0116, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0117, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0018, 0x0000);
+
+	return 0;
+}
+
+
+/** 
+ * @param dev Device structure
+ * 
+ * @returns 0 if all is OK
+ *
+ * @brief This function initializes the device for the stream.
+ *
+ * It's the start. This function has to be called at first, before
+ * enabling the video stream.
+ */
+int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
+{
+	dev_stk0408_camera_asleep(dev);
+
+	usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
+	usb_stk11xx_write_registry(dev, 0x0001, 0x0003);
+	dev_stk0408_write0(dev, 0x0078, 0x0030);
 
 	const int ids[] = {
 		0x203,0x00d,0x00f,0x103,0x018,0x01b,0x01c,0x01a,0x019,
@@ -356,210 +360,107 @@ int dev_stk0408_configure_device(ECVSTK1160Controller *dev, int step)
 	int i = 0;
 	for(; i < numberof(values); i++) usb_stk11xx_write_registry(dev, ids[i], values[i]);
 
-	if (step == 1)
-	{
-		usb_stk11xx_read_registry(dev, 0x0100, NULL);
-		usb_stk11xx_write_registry(dev, 0x0100, 0x0000);
-	}
-	else
-	{
-		usb_stk11xx_read_registry(dev, 0x0100, NULL);
-		usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
-	}
+	usb_stk11xx_read_registry(dev, 0x0100, NULL);
+	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
 
-	if (step <=2 )
-	{
-		return 0;
-	}
-	
-	if (step==3)
-	{
-		dev_stk0408_sensor_settings(dev);
-	}
+	dev_stk0408_sensor_settings(dev);
 
 	usb_stk11xx_read_registry(dev, 0x0100, NULL);
 	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
 	usb_stk11xx_write_registry(dev, 0x0103, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
 
-	
-	switch (step)
-	{		
-		case 3: /* all fine */
-			usb_stk11xx_write_registry(dev, 0x0104, 0x0000);
-			usb_stk11xx_write_registry(dev, 0x0105, 0x0000);
-			usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0104, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0105, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
 
-			dev_stk11xx_camera_off(dev);
+	dev_stk11xx_camera_off(dev);
 
-			usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
-			usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-			usb_stk11xx_write_registry(dev, 0x0506, 0x0001);
-			usb_stk11xx_write_registry(dev, 0x0507, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
+	usb_stk11xx_write_registry(dev, 0x0506, 0x0001);
+	usb_stk11xx_write_registry(dev, 0x0507, 0x0000);
 
-			break;
-			
-		case 5:
-			usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
-			break;
-	}
+	//test and set?
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
+		
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
+		
+	usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
+		
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-	if (step == 3)
-	{
-		//test and set?
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-			
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-			
-		usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-			
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001a);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0004);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0004);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001a);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0004);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0004);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-	
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
-	}
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
 
-	if ((step == 4 )|| (step == 6))
-	{
-		dev_stk0408_set_resolution(dev);
+	dev_stk11xx_camera_on(dev);
+	usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
 
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
-	}
+	dev_stk0408_set_resolution(dev);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-	if (step == 6)
-	{
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
 
-		dev_stk0408_set_resolution(dev);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-		usb_stk11xx_write_registry(dev, 0x0002, 0x0078);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
+	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
+	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-	
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
-
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-	
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-		usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-		usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-		usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-	}
-
-	if (step==4)
-	{	
-		dev_stk11xx_camera_on(dev);
-	}
-	
-	return 0;
-}
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief Wake-up the camera.
- *
- * This function permits to wake-up the device.
- */
-int dev_stk0408_camera_asleep(ECVSTK1160Controller *dev)
-{
-
-	usb_stk11xx_read_registry(dev, 0x0104, NULL);
-	usb_stk11xx_read_registry(dev, 0x0105, NULL);
-	usb_stk11xx_read_registry(dev, 0x0106, NULL);
-
-	int value;
-	usb_stk11xx_read_registry(dev, 0x0100, &value);
-	usb_stk11xx_write_registry(dev, 0x0100, value & 0x7f);
-
-	usb_stk11xx_write_registry(dev, 0x0116, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0117, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0018, 0x0000);
-
-	usb_stk11xx_read_registry(dev, 0x0002, NULL);
-	usb_stk11xx_read_registry(dev, 0x0000, NULL);
-	usb_stk11xx_write_registry(dev, 0x0002, value);
-	usb_stk11xx_read_registry(dev, 0x0000, NULL);
-
-	return 0;
-}
-
-
-/** 
- * @param dev Device structure
- * 
- * @returns 0 if all is OK
- *
- * @brief This function initializes the device for the stream.
- *
- * It's the start. This function has to be called at first, before
- * enabling the video stream.
- */
-int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
-{
-	dev_stk0408_camera_asleep(dev);
-
-	dev_stk0408_configure_device(dev, 3);
-	dev_stk0408_configure_device(dev, 4);
-	dev_stk0408_configure_device(dev, 5);
-
-	dev_stk0408_configure_device(dev, 6);
-	
 	return 0;
 }
 
