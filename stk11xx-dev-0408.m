@@ -317,15 +317,6 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 
 	dev_stk0408_sensor_settings(dev);
 
-	usb_stk11xx_read_registry(dev, 0x0100, NULL);
-	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
-	usb_stk11xx_write_registry(dev, 0x0103, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
-
-	usb_stk11xx_write_registry(dev, 0x0104, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0105, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
-
 	dev_stk11xx_camera_off(dev);
 
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
@@ -382,9 +373,8 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
 	dev_stk11xx_camera_on(dev);
-	usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
-
 	dev_stk0408_set_resolution(dev);
+
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
