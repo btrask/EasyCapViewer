@@ -57,7 +57,7 @@ enum {
 	SAA711XCSTDNTSC44360Hz = SAA711XCSTDPALN,
 	SAA711XCSTDPALM        = SAA711XCSTDNTSCN,
 };
-typedef int16_t SAA711XCSTDFormat;
+typedef u_int8_t SAA711XCSTDFormat;
 enum {
 	SAA711XMODECompositeAI11 = 0,
 	SAA711XMODECompositeAI12 = 1,
@@ -70,7 +70,7 @@ enum {
 	SAA711XMODESVideoAI11_YGain = 8,
 	SAA711XMODESVideoAI12_YGain = 9,
 };
-typedef int16_t SAA711XMODESource;
+typedef u_int8_t SAA711XMODESource;
 
 @protocol SAA711XDevice
 
