@@ -32,127 +32,127 @@
 #import <unistd.h>
 
 enum {
-	SAA7115MODECompositeAI11 = 0,
-	SAA7115MODECompositeAI12 = 1,
-	SAA7115MODECompositeAI21 = 2,
-	SAA7115MODECompositeAI22 = 3,
-	SAA7115MODECompositeAI23 = 4,
-	SAA7115MODECompositeAI24 = 5,
-	SAA7115MODESVideoAI11_GAI2 = 6,
-	SAA7115MODESVideoAI12_GAI2 = 7,
-	SAA7115MODESVideoAI11_YGain = 8,
-	SAA7115MODESVideoAI12_YGain = 9,
-	SAA7115FUSE0Antialias = 1 << 6,
-	SAA7115FUSE1Amplifier = 1 << 7,
+	SAA711XMODECompositeAI11 = 0,
+	SAA711XMODECompositeAI12 = 1,
+	SAA711XMODECompositeAI21 = 2,
+	SAA711XMODECompositeAI22 = 3,
+	SAA711XMODECompositeAI23 = 4,
+	SAA711XMODECompositeAI24 = 5,
+	SAA711XMODESVideoAI11_GAI2 = 6,
+	SAA711XMODESVideoAI12_GAI2 = 7,
+	SAA711XMODESVideoAI11_YGain = 8,
+	SAA711XMODESVideoAI12_YGain = 9,
+	SAA711XFUSE0Antialias = 1 << 6,
+	SAA711XFUSE1Amplifier = 1 << 7,
 };
 enum {
-	SAA7115GAI18StaticGainControl1 = 1 << 0,
-	SAA7115GAI28StaticGainControl2 = 1 << 1,
-	SAA7115GAFIXGainControlUserProgrammable = 1 << 2,
-	SAA7115HOLDGAutomaticGainControlEnabled = 0 << 3,
-	SAA7115HOLDGAutomaticGainControlDisabled = 1 << 3,
-	SAA7115CPOFFColorPeakControlDisabled = 1 << 4,
-	SAA7115VBSLLongVerticalBlanking = 1 << 5,
-	SAA7115HLNRSReferenceSelect = 1 << 6,
+	SAA711XGAI18StaticGainControl1 = 1 << 0,
+	SAA711XGAI28StaticGainControl2 = 1 << 1,
+	SAA711XGAFIXGainControlUserProgrammable = 1 << 2,
+	SAA711XHOLDGAutomaticGainControlEnabled = 0 << 3,
+	SAA711XHOLDGAutomaticGainControlDisabled = 1 << 3,
+	SAA711XCPOFFColorPeakControlDisabled = 1 << 4,
+	SAA711XVBSLLongVerticalBlanking = 1 << 5,
+	SAA711XHLNRSReferenceSelect = 1 << 6,
 };
 enum {
-	SAA7115YCOMBAdaptiveLuminanceComb = 1 << 6,
-	SAA7115BYPSChrominanceTrapCombBypass = 1 << 7,
+	SAA711XYCOMBAdaptiveLuminanceComb = 1 << 6,
+	SAA711XBYPSChrominanceTrapCombBypass = 1 << 7,
 };
 enum {
-	SAA7115VNOIVerticalNoiseReductionNormal = 0 << 0,
-	SAA7115VNOIVerticalNoiseReductionFast = 1 << 0,
-	SAA7115VNOIVerticalNoiseReductionFree = 2 << 0,
-	SAA7115VNOIVerticalNoiseReductionBypass = 3 << 0,
-	SAA7115HTCHorizontalTimeConstantTVMode = 0 << 3,
-	SAA7115HTCHorizontalTimeConstantVTRMode = 1 << 3,
-	SAA7115HTCHorizontalTimeConstantAutomatic = 2 << 3,
-	SAA7115HTCHorizontalTimeConstantFastLocking = 3 << 3,
-	SAA7115FOETForcedOddEventToggle = 1 << 5,
-	SAA7115FSELManualFieldSelection50Hz = 0 << 6,
-	SAA7115FSELManualFieldSelection60Hz = 1 << 6,
-	SAA7115AUFDAutomaticFieldDetection = 1 << 7,
+	SAA711XVNOIVerticalNoiseReductionNormal = 0 << 0,
+	SAA711XVNOIVerticalNoiseReductionFast = 1 << 0,
+	SAA711XVNOIVerticalNoiseReductionFree = 2 << 0,
+	SAA711XVNOIVerticalNoiseReductionBypass = 3 << 0,
+	SAA711XHTCHorizontalTimeConstantTVMode = 0 << 3,
+	SAA711XHTCHorizontalTimeConstantVTRMode = 1 << 3,
+	SAA711XHTCHorizontalTimeConstantAutomatic = 2 << 3,
+	SAA711XHTCHorizontalTimeConstantFastLocking = 3 << 3,
+	SAA711XFOETForcedOddEventToggle = 1 << 5,
+	SAA711XFSELManualFieldSelection50Hz = 0 << 6,
+	SAA711XFSELManualFieldSelection60Hz = 1 << 6,
+	SAA711XAUFDAutomaticFieldDetection = 1 << 7,
 };
 enum {
-	SAA7115CGAINChromaGainValueMinimum = 0x00,
-	SAA7115CGAINChromaGainValueNominal = 0x2a,
-	SAA7115CGAINChromaGainValueMaximum = 0x7f,
-	SAA7115ACGCAutomaticChromaGainControlEnabled = 0 << 7,
-	SAA7115ACGCAutomaticChromaGainControlDisabled = 1 << 7,
+	SAA711XCGAINChromaGainValueMinimum = 0x00,
+	SAA711XCGAINChromaGainValueNominal = 0x2a,
+	SAA711XCGAINChromaGainValueMaximum = 0x7f,
+	SAA711XACGCAutomaticChromaGainControlEnabled = 0 << 7,
+	SAA711XACGCAutomaticChromaGainControlDisabled = 1 << 7,
 };
 enum {
-	SAA7115RTP0OutputPolarityInverted = 1 << 3,
+	SAA711XRTP0OutputPolarityInverted = 1 << 3,
 };
 enum {
-	SAA7115SLM1ScalerDisabled = 1 << 1,
-	SAA7115SLM3AudioClockGenerationDisabled = 1 << 3,
-	SAA7115CH1ENAD1X = 1 << 6,
-	SAA7115CH2ENAD2X = 1 << 7,
+	SAA711XSLM1ScalerDisabled = 1 << 1,
+	SAA711XSLM3AudioClockGenerationDisabled = 1 << 3,
+	SAA711XCH1ENAD1X = 1 << 6,
+	SAA711XCH2ENAD2X = 1 << 7,
 };
 enum {
-	SAA7115CCOMBAdaptiveChrominanceComb = 1 << 0,
-	SAA7115FCTCFastColorTimeConstant = 1 << 2,
+	SAA711XCCOMBAdaptiveChrominanceComb = 1 << 0,
+	SAA711XFCTCFastColorTimeConstant = 1 << 2,
 
-	SAA7115AUTO0AutomaticChrominanceStandardDetection = 1 << 1,
-	SAA7115CSTDPAL_BGDHI   = 0 << 4,
-	SAA7115CSTDNTSC44350Hz = 1 << 4,
-	SAA7115CSTDPALN        = 2 << 4,
-	SAA7115CSTDNTSCN       = 3 << 4,
-	SAA7115CSTDNTSCJ       = 4 << 4,
-	SAA7115CSTDSECAM       = 5 << 4,
+	SAA711XAUTO0AutomaticChrominanceStandardDetection = 1 << 1,
+	SAA711XCSTDPAL_BGDHI   = 0 << 4,
+	SAA711XCSTDNTSC44350Hz = 1 << 4,
+	SAA711XCSTDPALN        = 2 << 4,
+	SAA711XCSTDNTSCN       = 3 << 4,
+	SAA711XCSTDNTSCJ       = 4 << 4,
+	SAA711XCSTDSECAM       = 5 << 4,
 
-	SAA7115CSTDNTSCM       = SAA7115CSTDPAL_BGDHI,
-	SAA7115CSTDPAL60Hz     = SAA7115CSTDNTSC44350Hz,
-	SAA7115CSTDNTSC44360Hz = SAA7115CSTDPALN,
-	SAA7115CSTDPALM        = SAA7115CSTDNTSCN,
+	SAA711XCSTDNTSCM       = SAA711XCSTDPAL_BGDHI,
+	SAA711XCSTDPAL60Hz     = SAA711XCSTDNTSC44350Hz,
+	SAA711XCSTDNTSC44360Hz = SAA711XCSTDPALN,
+	SAA711XCSTDPALM        = SAA711XCSTDNTSCN,
 };
-static u_int8_t SAA7115MODEModeSelectForVideoSource(ECVSTK1160VideoSource s)
+static u_int8_t SAA711XMODEModeSelectForVideoSource(ECVSTK1160VideoSource s)
 {
 	switch(s) {
-		case ECVSTK1160SVideoInput: return SAA7115MODESVideoAI12_YGain;
-		case ECVSTK1160Composite1Input: return SAA7115MODECompositeAI11;
-		case ECVSTK1160Composite2Input: return SAA7115MODECompositeAI21; // The rest are guesses.
-		case ECVSTK1160Composite3Input: return SAA7115MODECompositeAI23;
-		case ECVSTK1160Composite4Input: return SAA7115MODECompositeAI24;
+		case ECVSTK1160SVideoInput: return SAA711XMODESVideoAI12_YGain;
+		case ECVSTK1160Composite1Input: return SAA711XMODECompositeAI11;
+		case ECVSTK1160Composite2Input: return SAA711XMODECompositeAI21; // The rest are guesses.
+		case ECVSTK1160Composite3Input: return SAA711XMODECompositeAI23;
+		case ECVSTK1160Composite4Input: return SAA711XMODECompositeAI24;
 		default: return 0;
 	}
 }
-static u_int8_t SAA7115CHXENOutputControlForMODE(u_int8_t m)
+static u_int8_t SAA711XCHXENOutputControlForMODE(u_int8_t m)
 {
 	switch(m) {
-		case SAA7115MODECompositeAI11:
-		case SAA7115MODECompositeAI12:
-			return SAA7115CH1ENAD1X;
-		case SAA7115MODECompositeAI21:
-		case SAA7115MODECompositeAI22:
-		case SAA7115MODECompositeAI23:
-		case SAA7115MODECompositeAI24:
-			return SAA7115CH2ENAD2X;
-		case SAA7115MODESVideoAI11_GAI2:
-		case SAA7115MODESVideoAI12_GAI2:
-		case SAA7115MODESVideoAI11_YGain:
-		case SAA7115MODESVideoAI12_YGain:
-			return SAA7115CH1ENAD1X | SAA7115CH2ENAD2X;
+		case SAA711XMODECompositeAI11:
+		case SAA711XMODECompositeAI12:
+			return SAA711XCH1ENAD1X;
+		case SAA711XMODECompositeAI21:
+		case SAA711XMODECompositeAI22:
+		case SAA711XMODECompositeAI23:
+		case SAA711XMODECompositeAI24:
+			return SAA711XCH2ENAD2X;
+		case SAA711XMODESVideoAI11_GAI2:
+		case SAA711XMODESVideoAI12_GAI2:
+		case SAA711XMODESVideoAI11_YGain:
+		case SAA711XMODESVideoAI12_YGain:
+			return SAA711XCH1ENAD1X | SAA711XCH2ENAD2X;
 		default:
 			return 0;
 	}
 }
-static u_int8_t SAA7115CSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoFormat f)
+static u_int8_t SAA711XCSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoFormat f)
 {
 	switch(f) {
-		case ECVSTK1160Auto60HzFormat:    return SAA7115AUTO0AutomaticChrominanceStandardDetection;
-		case ECVSTK1160NTSCMFormat:       return SAA7115CSTDNTSCM;
-		case ECVSTK1160PAL60Format:       return SAA7115CSTDPAL60Hz;
-		case ECVSTK1160PALMFormat:        return SAA7115CSTDPALM;
-		case ECVSTK1160NTSC44360HzFormat: return SAA7115CSTDNTSC44360Hz;
-		case ECVSTK1160NTSCJFormat:       return SAA7115CSTDNTSCJ;
+		case ECVSTK1160Auto60HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160NTSCMFormat:       return SAA711XCSTDNTSCM;
+		case ECVSTK1160PAL60Format:       return SAA711XCSTDPAL60Hz;
+		case ECVSTK1160PALMFormat:        return SAA711XCSTDPALM;
+		case ECVSTK1160NTSC44360HzFormat: return SAA711XCSTDNTSC44360Hz;
+		case ECVSTK1160NTSCJFormat:       return SAA711XCSTDNTSCJ;
 
-		case ECVSTK1160Auto50HzFormat:    return SAA7115AUTO0AutomaticChrominanceStandardDetection;
-		case ECVSTK1160PALBGDHIFormat:    return SAA7115CSTDPAL_BGDHI;
-		case ECVSTK1160PALNFormat:        return SAA7115CSTDPALN;
-		case ECVSTK1160NTSC44350HzFormat: return SAA7115CSTDNTSC44350Hz;
-		case ECVSTK1160NTSCNFormat:       return SAA7115CSTDNTSCN;
-		case ECVSTK1160SECAMFormat:       return SAA7115CSTDSECAM;
+		case ECVSTK1160Auto50HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
+		case ECVSTK1160PALBGDHIFormat:    return SAA711XCSTDPAL_BGDHI;
+		case ECVSTK1160PALNFormat:        return SAA711XCSTDPALN;
+		case ECVSTK1160NTSC44350HzFormat: return SAA711XCSTDNTSC44350Hz;
+		case ECVSTK1160NTSCNFormat:       return SAA711XCSTDNTSCN;
+		case ECVSTK1160SECAMFormat:       return SAA711XCSTDSECAM;
 		default: return 0;
 	}
 }
@@ -452,17 +452,17 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 		int16_t val;
 	} settings[] = {
 		{0x01, 0x08},
-		{0x03, SAA7115HOLDGAutomaticGainControlEnabled | SAA7115VBSLLongVerticalBlanking},
+		{0x03, SAA711XHOLDGAutomaticGainControlEnabled | SAA711XVBSLLongVerticalBlanking},
 		{0x04, 0x90},
 		{0x05, 0x90},
 		{0x06, 0xeb},
 		{0x07, 0xe0},
-		{0x08, SAA7115VNOIVerticalNoiseReductionFast | SAA7115HTCHorizontalTimeConstantFastLocking | SAA7115FOETForcedOddEventToggle | (dev.is60HzFormat ? SAA7115FSELManualFieldSelection60Hz : SAA7115FSELManualFieldSelection50Hz)},
-		{0x09, dev.SVideo ? SAA7115BYPSChrominanceTrapCombBypass : SAA7115YCOMBAdaptiveLuminanceComb},
-		{0x0e, SAA7115CCOMBAdaptiveChrominanceComb | SAA7115FCTCFastColorTimeConstant | SAA7115CSTDColorStandardSelectionForVideoFormat(dev.videoFormat)},
-		{0x0f, SAA7115CGAINChromaGainValueNominal | SAA7115ACGCAutomaticChromaGainControlEnabled},
+		{0x08, SAA711XVNOIVerticalNoiseReductionFast | SAA711XHTCHorizontalTimeConstantFastLocking | SAA711XFOETForcedOddEventToggle | (dev.is60HzFormat ? SAA711XFSELManualFieldSelection60Hz : SAA711XFSELManualFieldSelection50Hz)},
+		{0x09, dev.SVideo ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb},
+		{0x0e, SAA711XCCOMBAdaptiveChrominanceComb | SAA711XFCTCFastColorTimeConstant | SAA711XCSTDColorStandardSelectionForVideoFormat(dev.videoFormat)},
+		{0x0f, SAA711XCGAINChromaGainValueNominal | SAA711XACGCAutomaticChromaGainControlEnabled},
 		{0x10, 0x06},
-		{0x11, SAA7115RTP0OutputPolarityInverted},
+		{0x11, SAA711XRTP0OutputPolarityInverted},
 		{0x12, 0x00},
 		{0x13, 0x00},
 		{0x14, 0x01},
@@ -489,9 +489,9 @@ int dev_stk0408_sensor_settings(ECVSTK1160Controller *dev)
 }
 int dev_stk0408_set_source(ECVSTK1160Controller *dev, ECVSTK1160VideoSource source)
 {
-	u_int8_t const MODE = SAA7115MODEModeSelectForVideoSource(dev.videoSource);
-	dev_stk0408_write_saa(dev, 0x02, SAA7115FUSE0Antialias | SAA7115FUSE1Amplifier | MODE);
-	dev_stk0408_write_saa(dev, 0x88, SAA7115SLM1ScalerDisabled | SAA7115SLM3AudioClockGenerationDisabled | SAA7115CHXENOutputControlForMODE(MODE));
+	u_int8_t const MODE = SAA711XMODEModeSelectForVideoSource(dev.videoSource);
+	dev_stk0408_write_saa(dev, 0x02, SAA711XFUSE0Antialias | SAA711XFUSE1Amplifier | MODE);
+	dev_stk0408_write_saa(dev, 0x88, SAA711XSLM1ScalerDisabled | SAA711XSLM3AudioClockGenerationDisabled | SAA711XCHXENOutputControlForMODE(MODE));
 	return 1;
 }
 int dev_stk0408_set_brightness(ECVSTK1160Controller *dev, CGFloat brightness)
