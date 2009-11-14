@@ -216,9 +216,6 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
-	dev_stk11xx_camera_on(dev);
-	dev_stk0408_set_resolution(dev);
-
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);

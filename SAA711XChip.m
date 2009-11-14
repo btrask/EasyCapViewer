@@ -94,7 +94,7 @@ enum {
 - (void)setBrightness:(CGFloat)val
 {
 	_brightness = val;
-	(void)[device writeSAA711XRegister: 0x0a value:round(val * 0xff)];
+	(void)[device writeSAA711XRegister:0x0a value:round(val * 0xff)];
 }
 - (CGFloat)contrast
 {
