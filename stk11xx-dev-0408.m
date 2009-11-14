@@ -1,4 +1,4 @@
-/** 
+/**
  * @file stk11xx-dev-0408.c
  * @author Ivor Hewitt
  * @date 2009-01-01
@@ -157,9 +157,9 @@ static u_int8_t SAA7115CSTDColorStandardSelectionForVideoFormat(ECVSTK1160VideoF
 	}
 }
 
-/** 
+/**
  * @param dev Device structure
- * 
+ *
  * @returns 0 if all is OK
  *
  * @brief This function initializes the device.
@@ -174,9 +174,9 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 {
 	dev_stk0408_write0(dev, 0x0007, 0x0001);
 
-	usb_stk11xx_write_registry(dev, 0x0500, 0x0094); 
+	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
 	msleep(10);
-	
+
 	dev_stk0408_camera_asleep(dev);
 
 	dev_stk0408_write0(dev, 0x0078, 0x0000);
@@ -187,7 +187,7 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 
 	(void)dev_stk11xx_check_device(dev, 500);
 
-	usb_stk11xx_set_feature(dev, 1); 
+	usb_stk11xx_set_feature(dev, 1);
 
 	return 0;
 }
@@ -219,20 +219,20 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 {
 /*
  * These registers control the resolution of the capture buffer.
- * 
+ *
  * xres = (X - xsub) / 2
  * yres = (Y - ysub)
  *
  */
 	int x,y,xsub,ysub;
-	
+
 	switch (dev.captureSize.width)
 	{
 		case 720:
 			x = 0x5a0;
 			xsub = 0;
 			break;
-			
+
 		case 704:
 		case 352:
 		case 176:
@@ -264,9 +264,9 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 			y = dev.is60HzFormat ? 0xf3 : 0x110;
 			ysub= dev.is60HzFormat ? 0x03 : 0x20;
 			break;
-		
+
 		case 120:
-		case 240:	
+		case 240:
 			y = 0x103;
 			ysub = 0x13;
 			break;
@@ -283,13 +283,13 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0115, 5    );
 	usb_stk11xx_write_registry(dev, 0x0116, y    ); // Y
 	usb_stk11xx_write_registry(dev, 0x0117, dev.is60HzFormat ? 0 : 1);
-	
+
 	return 0;
 }
 
-/** 
+/**
  * @param dev Device structure
- * 
+ *
  * @returns 0 if all is OK
  *
  * @brief Wake-up the camera.
@@ -315,9 +315,9 @@ int dev_stk0408_camera_asleep(ECVSTK1160Controller *dev)
 }
 
 
-/** 
+/**
  * @param dev Device structure
- * 
+ *
  * @returns 0 if all is OK
  *
  * @brief This function initializes the device for the stream.
@@ -372,21 +372,21 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-		
+
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
 	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-		
+
 	usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
 	usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
 	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-		
+
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
@@ -411,7 +411,7 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
 	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
 	dev_stk11xx_camera_on(dev);
 	usb_stk11xx_write_registry(dev, 0x0106, 0x0000);
@@ -429,7 +429,7 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
 	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);		
+	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
 
 	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
@@ -453,14 +453,14 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
 	int i;
 	int value;
 	const int retry=2;
-	
+
 	for (i=0; i < retry; i++) {
 		usb_stk11xx_read_registry(dev, 0x201, &value);
 
 //writes to 204/204 return 4 on success
 //writes to 208 return 1 on success
 
-		if (value == 0x04 || value == 0x01) 
+		if (value == 0x04 || value == 0x01)
 			return 1;
 
 		if (value != 0x00)
@@ -470,14 +470,14 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
 		}
 //		msleep(10);
 	}
-	
+
 	return 0;
-}			
+}
 
 
-/** 
+/**
  * @param dev Device structure
- * 
+ *
  * @returns 0 if all is OK
  *
  * @brief This function sets the default sensor settings
