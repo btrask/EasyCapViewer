@@ -177,8 +177,6 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
 	msleep(10);
 
-	dev_stk0408_camera_asleep(dev);
-
 	dev_stk0408_write0(dev, 0x0078, 0x0000);
 
 	usb_stk11xx_write_registry(dev, 0x0203, 0x00a0);
@@ -292,34 +290,6 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
  *
  * @returns 0 if all is OK
  *
- * @brief Wake-up the camera.
- *
- * This function permits to wake-up the device.
- */
-int dev_stk0408_camera_asleep(ECVSTK1160Controller *dev)
-{
-
-	usb_stk11xx_read_registry(dev, 0x0104, NULL);
-	usb_stk11xx_read_registry(dev, 0x0105, NULL);
-	usb_stk11xx_read_registry(dev, 0x0106, NULL);
-
-	int value;
-	usb_stk11xx_read_registry(dev, 0x0100, &value);
-	usb_stk11xx_write_registry(dev, 0x0100, value & 0x7f);
-
-	usb_stk11xx_write_registry(dev, 0x0116, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0117, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0018, 0x0000);
-
-	return 0;
-}
-
-
-/**
- * @param dev Device structure
- *
- * @returns 0 if all is OK
- *
  * @brief This function initializes the device for the stream.
  *
  * It's the start. This function has to be called at first, before
@@ -327,8 +297,6 @@ int dev_stk0408_camera_asleep(ECVSTK1160Controller *dev)
  */
 int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 {
-	dev_stk0408_camera_asleep(dev);
-
 	usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
 	usb_stk11xx_write_registry(dev, 0x0001, 0x0003);
 	dev_stk0408_write0(dev, 0x0078, 0x0030);
