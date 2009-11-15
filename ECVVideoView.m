@@ -414,24 +414,25 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)mouseDown:(NSEvent *)anEvent
 {
-	if([[[self cell] class] prefersTrackingUntilMouseUp]) {
-		[[self cell] trackMouse:anEvent inRect:_outputRect ofView:self untilMouseUp:YES];
+	NSCell *const cell = [self cell];
+	if([[cell class] prefersTrackingUntilMouseUp]) {
+		[cell trackMouse:anEvent inRect:_outputRect ofView:self untilMouseUp:YES];
 		return;
 	}
 	BOOL const playing = CVDisplayLinkIsRunning(_displayLink);
 	NSEvent *latestEvent = anEvent;
 	do {
 		if([self mouse:[self convertPoint:[latestEvent locationInWindow] fromView:nil] inRect:_outputRect]) {
-			[[self cell] setHighlighted:YES];
+			[cell setHighlighted:YES];
 			if(!playing) [self setNeedsDisplay:YES];
-			if([[self cell] trackMouse:latestEvent inRect:_outputRect ofView:self untilMouseUp:NO]) break;
-			[[self cell] setHighlighted:NO];
+			if([cell trackMouse:latestEvent inRect:_outputRect ofView:self untilMouseUp:NO]) break;
+			[cell setHighlighted:NO];
 			if(!playing) [self setNeedsDisplay:YES];
 		}
 		latestEvent = [[self window] nextEventMatchingMask:NSLeftMouseUpMask | NSLeftMouseDraggedMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES];
 	} while([latestEvent type] != NSLeftMouseUp);
 	[[self window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
-	[[self cell] setHighlighted:NO];
+	[cell setHighlighted:NO];
 	if(!playing) [self setNeedsDisplay:YES];
 }
 
