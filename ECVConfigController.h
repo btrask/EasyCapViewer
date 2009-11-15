@@ -21,8 +21,8 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Controllers
-@class ECVCaptureController;
+// Models
+@class ECVCaptureDevice;
 
 @protocol ECVCaptureControllerConfiguring;
 
@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSPopUpButton *audioSourcePopUp;
 	IBOutlet NSSlider *volumeSlider;
 
-	ECVCaptureController *_captureController;
+	ECVCaptureDevice *_captureDevice;
 }
 
 + (id)sharedConfigController;
@@ -55,13 +55,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeAudioInput:(id)sender;
 - (IBAction)changeVolume:(id)sender;
 
-@property(assign) ECVCaptureController *captureController;
+@property(assign) ECVCaptureDevice *captureDevice;
 
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
 
 @end
 
-@protocol ECVCaptureControllerConfiguring <NSObject>
+@protocol ECVCaptureDeviceConfiguring<NSObject>
 
 @optional
 @property(readonly) NSArray *allVideoSourceObjects;

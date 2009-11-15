@@ -37,30 +37,30 @@
 #define STK_ERROR(x, y...) ECVLog(ECVError, (NSString *)CFSTR(x), ##y)
 #define msleep(x) usleep((x) * ECVMicrosecondsPerMillisecond)
 
-int dev_stk0408_initialize_device(ECVSTK1160Controller *dev);
-int dev_stk0408_init_camera(ECVSTK1160Controller *dev);
-int dev_stk0408_check_device(ECVSTK1160Controller *dev);
-int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val);
-int dev_stk0408_set_resolution(ECVSTK1160Controller *dev);
-int dev_stk0408_set_streaming(ECVSTK1160Controller *dev, int streaming);
+int dev_stk0408_initialize_device(ECVSTK1160Device *dev);
+int dev_stk0408_init_camera(ECVSTK1160Device *dev);
+int dev_stk0408_check_device(ECVSTK1160Device *dev);
+int dev_stk0408_write0(ECVSTK1160Device *dev, int mask, int val);
+int dev_stk0408_set_resolution(ECVSTK1160Device *dev);
+int dev_stk0408_set_streaming(ECVSTK1160Device *dev, int streaming);
 
-static void usb_stk11xx_write_registry(ECVSTK1160Controller *dev, u_int16_t index, u_int16_t value)
+static void usb_stk11xx_write_registry(ECVSTK1160Device *dev, u_int16_t index, u_int16_t value)
 {
 	(void)[dev writeValue:value atIndex:index];
 }
-static void usb_stk11xx_read_registry(ECVSTK1160Controller *dev, u_int16_t index, int32_t *value)
+static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t index, int32_t *value)
 {
 	(void)[dev readValue:(SInt32 *)value atIndex:index];
 }
-static void usb_stk11xx_set_feature(ECVSTK1160Controller *dev, int index)
+static void usb_stk11xx_set_feature(ECVSTK1160Device *dev, int index)
 {
 	(void)[dev setFeatureAtIndex:index];
 }
-static void dev_stk11xx_camera_on(ECVSTK1160Controller *dev)
+static void dev_stk11xx_camera_on(ECVSTK1160Device *dev)
 {
 	(void)[dev setAlternateInterface:5];
 }
-static void dev_stk11xx_camera_off(ECVSTK1160Controller *dev)
+static void dev_stk11xx_camera_off(ECVSTK1160Device *dev)
 {
 	(void)[dev setAlternateInterface:0];
 }

@@ -33,26 +33,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVVideoView : NSOpenGLView <NSWindowDelegate>
 {
 	@private
-	ECVVideoStorage *_videoStorage;
-	NSMutableData *_textureNames;
-	NSMutableArray *_frames;
-	ECVVideoFrame *_lastDrawnFrame;
-	CGFloat _frameDropStrength;
-
 	CVDisplayLinkRef _displayLink;
 	NSRect _outputRect;
 
 	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
+	ECVVideoStorage *_videoStorage;
 	NSSize _aspectRatio;
 	NSRect _cropRect;
 	BOOL _vsync;
 	GLint _magFilter;
 	BOOL _showDroppedFrames;
 	NSCell<ECVVideoViewCell> *_cell;
-}
 
-@property(retain) ECVVideoStorage *videoStorage;
-- (void)pushFrame:(ECVVideoFrame *)frame;
+	NSMutableData *_textureNames;
+	NSMutableArray *_frames;
+	ECVVideoFrame *_lastDrawnFrame;
+	CGFloat _frameDropStrength;
+}
 
 // These methods must be called from the main thread.
 - (void)startDrawing;
@@ -60,12 +57,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
+@property(retain) ECVVideoStorage *videoStorage;
 @property(assign) NSSize aspectRatio;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
 @property(retain) NSCell<ECVVideoViewCell> *cell;
+- (void)pushFrame:(ECVVideoFrame *)frame;
 
 @end
 

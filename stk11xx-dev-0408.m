@@ -26,7 +26,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
-#import "ECVSTK1160Controller.h"
+#import "ECVSTK1160Device.h"
 #import "stk11xx.h"
 #import <unistd.h>
 
@@ -43,7 +43,7 @@
  *
  * This function is written from the USB log.
  */
-int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
+int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 {
 	dev_stk0408_write0(dev, 0x0007, 0x0001);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
@@ -72,14 +72,14 @@ int dev_stk0408_initialize_device(ECVSTK1160Controller *dev)
 	return 0;
 }
 
-int dev_stk0408_write0(ECVSTK1160Controller *dev, int mask, int val)
+int dev_stk0408_write0(ECVSTK1160Device *dev, int mask, int val)
 {
 	usb_stk11xx_write_registry(dev, 0x0002, mask);
 	usb_stk11xx_write_registry(dev, 0x0000, val);
 	return 0;
 }
 
-int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
+int dev_stk0408_set_resolution(ECVSTK1160Device *dev)
 {
 /*
  * These registers control the resolution of the capture buffer.
@@ -161,7 +161,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Controller *dev)
  * It's the start. This function has to be called at first, before
  * enabling the video stream.
  */
-int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
+int dev_stk0408_init_camera(ECVSTK1160Device *dev)
 {
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
@@ -247,7 +247,7 @@ int dev_stk0408_init_camera(ECVSTK1160Controller *dev)
 	return 0;
 }
 
-int dev_stk0408_check_device(ECVSTK1160Controller *dev)
+int dev_stk0408_check_device(ECVSTK1160Device *dev)
 {
 	int const retry = 2;
 	int i = 0;
@@ -268,7 +268,7 @@ int dev_stk0408_check_device(ECVSTK1160Controller *dev)
 enum {
 	STK0408Streaming = 1 << 7,
 };
-int dev_stk0408_set_streaming(ECVSTK1160Controller *dev, int streaming)
+int dev_stk0408_set_streaming(ECVSTK1160Device *dev, int streaming)
 {
 	int value;
 	usb_stk11xx_read_registry(dev, 0x0100, &value);

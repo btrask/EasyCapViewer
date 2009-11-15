@@ -21,7 +21,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVSTK1160Controller.h"
+#import "ECVSTK1160Device.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -34,7 +34,7 @@ enum {
 static NSString *const ECVSTK1160VideoSourceKey = @"ECVSTK1160VideoSource";
 static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
-@implementation ECVSTK1160Controller
+@implementation ECVSTK1160Device
 
 #pragma mark +NSObject
 
@@ -46,23 +46,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		nil]];
 }
 
-#pragma mark -ECVCaptureController
+#pragma mark -ECVSTK1160Device
 
-- (id)initWithDevice:(io_service_t)device error:(out NSError **)outError
-{
-	if((self = [super initWithDevice:device error:outError])) {
-		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
-		[self setVideoSource:[d integerForKey:ECVSTK1160VideoSourceKey]];
-		[self setVideoFormat:[d integerForKey:ECVSTK1160VideoFormatKey]];
-		_SAA711XChip = [[SAA711XChip alloc] init];
-		[_SAA711XChip setDevice:self];
-		[_SAA711XChip setBrightness:[[d objectForKey:ECVBrightnessKey] doubleValue]];
-		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
-		[_SAA711XChip setSaturation:[[d objectForKey:ECVSaturationKey] doubleValue]];
-		[_SAA711XChip setHue:[[d objectForKey:ECVHueKey] doubleValue]];
-	}
-	return self;
-}
 @synthesize videoSource = _videoSource;
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
@@ -80,9 +65,39 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	BOOL const playing = self.playing;
 	if(playing) self.playing = NO;
 	_videoFormat = format;
-	self.windowContentSize = self.outputSize;
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
 	if(playing) self.playing = YES;
+}
+
+#pragma mark -ECVCaptureDevice
+
+- (id)initWithService:(io_service_t)service error:(out NSError **)outError
+{
+	if((self = [super initWithService:service error:outError])) {
+		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
+		[self setVideoSource:[d integerForKey:ECVSTK1160VideoSourceKey]];
+		[self setVideoFormat:[d integerForKey:ECVSTK1160VideoFormatKey]];
+		_SAA711XChip = [[SAA711XChip alloc] init];
+		[_SAA711XChip setDevice:self];
+		[_SAA711XChip setBrightness:[[d objectForKey:ECVBrightnessKey] doubleValue]];
+		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
+		[_SAA711XChip setSaturation:[[d objectForKey:ECVSaturationKey] doubleValue]];
+		[_SAA711XChip setHue:[[d objectForKey:ECVHueKey] doubleValue]];
+	}
+	return self;
+}
+
+#pragma mark -
+
+- (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
+{
+	if(!length) return;
+	size_t skip = 4;
+	if(ECVNewImageFlag & bytes[0]) {
+		[self threaded_startNewImageWithFieldType:ECVHighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
+		skip = 8;
+	}
+	if(length > skip) [super threaded_readImageBytes:bytes + skip length:length - skip];
 }
 
 #pragma mark -ECVCaptureController(ECVAbstract)
@@ -140,17 +155,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		return NO;
 	}
 	return YES;
-}
-- (void)threaded_readFrame:(IOUSBLowLatencyIsocFrame *)frame bytes:(UInt8 const *)bytes
-{
-	size_t const length = (size_t)frame->frActCount;
-	if(!length) return;
-	size_t skip = 4;
-	if(ECVNewImageFlag & bytes[0]) {
-		[self threaded_startNewImageWithFieldType:ECVHighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
-		skip = 8;
-	}
-	if(length > skip) [self threaded_readImageBytes:bytes + skip length:length - skip];
 }
 
 #pragma mark -NSObject

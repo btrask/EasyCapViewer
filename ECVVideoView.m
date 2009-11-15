@@ -77,6 +77,24 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -ECVVideoView
 
+- (void)startDrawing
+{
+	if(!_displayLink) {
+		ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
+		ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
+		[self windowDidChangeScreenProfile:nil];
+	}
+	ECVCVReturn(CVDisplayLinkStart(_displayLink));
+}
+- (void)stopDrawing
+{
+	ECVCVReturn(CVDisplayLinkStop(_displayLink));
+	[self setNeedsDisplay:YES];
+}
+
+#pragma mark -
+
+@synthesize delegate;
 - (ECVVideoStorage *)videoStorage
 {
 	return [[_videoStorage retain] autorelease];
@@ -119,35 +137,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
-- (void)pushFrame:(ECVVideoFrame *)frame
-{
-	if(!frame) return;
-	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
-	CGLLockContext(contextObj);
-	[_frames insertObject:frame atIndex:0];
-	CGLUnlockContext(contextObj);
-}
-
-#pragma mark -
-
-- (void)startDrawing
-{
-	if(!_displayLink) {
-		ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
-		ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
-		[self windowDidChangeScreenProfile:nil];
-	}
-	ECVCVReturn(CVDisplayLinkStart(_displayLink));
-}
-- (void)stopDrawing
-{
-	ECVCVReturn(CVDisplayLinkStop(_displayLink));
-	[self setNeedsDisplay:YES];
-}
-
-#pragma mark -
-
-@synthesize delegate;
 @synthesize aspectRatio = _aspectRatio;
 - (void)setAspectRatio:(NSSize)ratio
 {
@@ -210,6 +199,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_cell = [cell retain];
 	[self setNeedsDisplay:YES];
 	[[self window] invalidateCursorRectsForView:self];
+}
+- (void)pushFrame:(ECVVideoFrame *)frame
+{
+	if(!frame) return;
+	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
+	CGLLockContext(contextObj);
+	[_frames insertObject:frame atIndex:0];
+	CGLUnlockContext(contextObj);
 }
 
 #pragma mark -ECVVideoView(Private)

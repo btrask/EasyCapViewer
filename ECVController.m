@@ -24,8 +24,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVController.h"
 #import <IOKit/usb/IOUSBLib.h>
 
+// Models
+#import "ECVCaptureDevice.h"
+
 // Controllers
-#import "ECVCaptureController.h"
 #import "ECVConfigController.h"
 #import "ECVErrorLogController.h"
 
@@ -37,9 +39,9 @@ NSString *const ECVGeneralErrorDomain = @"ECVGeneralErrorDomain";
 
 static ECVController *ECVSharedController;
 
-static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
+static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 {
-	(void)[controllerClass deviceAddedWithIterator:iterator];
+	(void)[deviceClass deviceAddedWithIterator:iterator];
 	// Don't release the iterator because we want to continue receiving notifications.
 }
 
@@ -93,11 +95,11 @@ static void ECVDeviceAdded(Class controllerClass, io_iterator_t iterator)
 
 #pragma mark -
 
-- (void)noteCaptureControllerStartedPlaying:(ECVCaptureController *)controller
+- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device
 {
 	[self setPlaying:YES];
 }
-- (void)noteCaptureControllerStoppedPlaying:(ECVCaptureController *)controller
+- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device
 {
 	[self setPlaying:NO];
 }

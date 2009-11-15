@@ -30,7 +30,7 @@
 	<array>
 		<dict>
 			<key>ECVCaptureClass</key>
-			<string>ECVSTK1160Controller</string>
+			<string>ECVSTK1160Device</string>
 			<key>ECVVendorID</key>
 			<integer>1505</integer>
 			<key>ECVProductID</key>

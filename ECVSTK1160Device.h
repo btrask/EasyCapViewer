@@ -21,12 +21,11 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Controllers
-#import "ECVCaptureController.h"
-#import "ECVConfigController.h"
+// Models
+#import "ECVCaptureDevice.h"
 
 // STK1160
-@class ECVSTK1160Controller;
+@class ECVSTK1160Device;
 #import "stk11xx.h"
 
 // Other Sources
@@ -57,7 +56,7 @@ enum {
 };
 typedef NSUInteger ECVSTK1160VideoFormat;
 
-@interface ECVSTK1160Controller : ECVCaptureController <ECVCaptureControllerConfiguring, SAA711XDevice>
+@interface ECVSTK1160Device : ECVCaptureDevice <ECVCaptureDeviceConfiguring, SAA711XDevice>
 {
 	@private
 	ECVSTK1160VideoSource _videoSource;
