@@ -28,38 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVVideoFrame.h"
+#import "ECVVideoStorage.h"
 
 // Other Sources
 #import "ECVDebug.h"
 #import "ECVOpenGLAdditions.h"
 
-#define ECVMaxPendingDisplayFrames 1
-#define ECVMaxPendingAttachedFrames 1
-#define ECVFieldBuffersPerFrame 2
-
-#define ECVCurrentFillBuffers 1
-#define ECVPreviousFillBuffers 1
-#define ECVCurrentDrawBuffers 1
-#define ECVUnassignedBuffers 1
-#define ECVMaxPendingDisplayBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingDisplayFrames)
-#define ECVMaxPendingAttachedBuffers (ECVFieldBuffersPerFrame * ECVMaxPendingAttachedFrames)
-
-#define ECVRequiredBufferCount (ECVCurrentFillBuffers + ECVPreviousFillBuffers + ECVCurrentDrawBuffers + ECVUnassignedBuffers + ECVMaxPendingDisplayBuffers + ECVMaxPendingAttachedBuffers)
-
-NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
-{
-	switch(t) {
-		case kCVPixelFormatType_422YpCbCr8: return 2;
-	}
-	return 0;
-}
-NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
-{
-	switch(t) {
-		case kCVPixelFormatType_422YpCbCr8: return CFSwapInt64HostToBig(0x8010801080108010ULL);
-	}
-	return 0;
-}
 NS_INLINE GLenum ECVPixelFormatTypeToGLFormat(OSType t)
 {
 	switch(t) {
@@ -84,7 +58,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
 
 - (void)_drawOneFrame;
-- (void)_drawBuffer:(NSUInteger)index;
+- (BOOL)_drawFrame:(ECVVideoFrame *)frame;
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength;
 - (void)_drawCropAdjustmentBox;
 - (void)_drawResizeHandle;
@@ -103,172 +77,55 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -ECVVideoView
 
-- (void)setPixelFormat:(OSType)formatType size:(ECVPixelSize)size
+- (ECVVideoStorage *)videoStorage
 {
-	[self resetFrames];
-
+	return [[_videoStorage retain] autorelease];
+}
+- (void)setVideoStorage:(ECVVideoStorage *)storage
+{
+	if(storage == _videoStorage) return;
 	NSOpenGLContext *const context = [self openGLContext];
 	CGLContextObj const contextObj = [context CGLContextObj];
 	[context makeCurrentContext];
 	CGLLockContext(contextObj);
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
-	NSUInteger i;
-
-	_blurredBufferIndex = NSNotFound;
-
-	[_bufferPoolLock lock];
-	_pixelFormatType = formatType;
-	_pixelSize = size;
-	_bufferSize = _pixelSize.width * _pixelSize.height * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
-	_currentDrawBufferIndex = NSNotFound;
-	[_bufferPoolLock unlock];
-
-	[_attachedFrameLock lock];
-	[_attachedFrames makeObjectsPerformSelector:@selector(invalidate)];
-	[_attachedFrameLock unlock];
-
-	if(_textureNames) ECVGLError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
+	if(_textureNames) ECVGLError(glDeleteTextures([_videoStorage numberOfBuffers], [_textureNames bytes]));
 	[_textureNames release];
-	_textureNames = [[NSMutableData alloc] initWithLength:sizeof(GLuint) * ECVRequiredBufferCount];
-	ECVGLError(glGenTextures(ECVRequiredBufferCount, [_textureNames mutableBytes]));
+	[_frames release];
+	[_lastDrawnFrame release];
+	_lastDrawnFrame = nil;
 
-	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
-	[_bufferData release];
-	_bufferData = [[NSMutableData alloc] initWithLength:_bufferSize * ECVRequiredBufferCount];
-	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_bufferData length], [_bufferData bytes]));
+	[_videoStorage release];
+	_videoStorage = [storage retain];
 
-	GLenum const format = ECVPixelFormatTypeToGLFormat(_pixelFormatType);
-	GLenum const type = ECVPixelFormatTypeToGLType(_pixelFormatType);
-	for(i = 0; i < ECVRequiredBufferCount; i++) {
+	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_videoStorage bufferSize] * [_videoStorage numberOfBuffers], [_videoStorage allBufferBytes]));
+	_textureNames = [[NSMutableData alloc] initWithLength:[_videoStorage numberOfBuffers] * sizeof(GLuint)];
+	ECVGLError(glGenTextures([_videoStorage numberOfBuffers], [_textureNames mutableBytes]));
+	_frames = [[NSMutableArray alloc] init];
+
+	ECVPixelSize const s = [_videoStorage pixelSize];
+	GLenum const format = ECVPixelFormatTypeToGLFormat([_videoStorage pixelFormatType]);
+	GLenum const type = ECVPixelFormatTypeToGLType([_videoStorage pixelFormatType]);
+	NSUInteger i = 0;
+	for(; i < [_videoStorage numberOfBuffers]; i++) {
 		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVGLError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
-		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, _pixelSize.width, _pixelSize.height, 0, format, type, [self bufferBytesAtIndex:i]));
-		[self clearBufferAtIndex:i];
+		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, s.width, s.height, 0, format, type, [_videoStorage bufferBytesAtIndex:i]));
 	}
 
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
-- (size_t)bufferSize
+- (void)pushFrame:(ECVVideoFrame *)frame
 {
-	[_bufferPoolLock lock];
-	NSUInteger const b = _bufferSize;
-	[_bufferPoolLock unlock];
-	return b;
-}
-- (ECVPixelSize)pixelSize
-{
-	[_bufferPoolLock lock];
-	ECVPixelSize const p = _pixelSize;
-	[_bufferPoolLock unlock];
-	return p;
-}
-- (OSType)pixelFormatType
-{
-	[_bufferPoolLock lock];
-	OSType const t = _pixelFormatType;
-	[_bufferPoolLock unlock];
-	return t;
-}
-- (size_t)bytesPerRow
-{
-	[_bufferPoolLock lock];
-	size_t const bpr = _pixelSize.width * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
-	[_bufferPoolLock unlock];
-	return bpr;
-}
-
-#pragma mark -
-
-@synthesize currentFillBufferIndex = _currentFillBufferIndex;
-- (NSUInteger)bufferIndexByBlurringPastFrames
-{
-	NSUInteger const blurredBufferIndex = _blurredBufferIndex;
-	_blurredBufferIndex = _currentFillBufferIndex;
-	if(NSNotFound == _currentFillBufferIndex || NSNotFound == blurredBufferIndex) return _currentFillBufferIndex;
-	UInt8 *const src = [self bufferBytesAtIndex:_currentFillBufferIndex];
-	UInt8 *const dst = [self bufferBytesAtIndex:blurredBufferIndex];
-	NSUInteger i;
-	for(i = 0; i < _bufferSize; i++) dst[i] = dst[i] / 2 + src[i] / 2;
-	return blurredBufferIndex;
-}
-- (NSUInteger)nextFillBufferIndex:(NSUInteger)bufferToDraw
-{
-	[_attachedFrameLock lock];
-	NSUInteger const attachedFrameCount = [_attachedFrames count];
-	NSUInteger const keep = attachedFrameCount % ECVMaxPendingAttachedBuffers;
-	if(attachedFrameCount > ECVMaxPendingAttachedBuffers) [[_attachedFrames subarrayWithRange:NSMakeRange(keep, attachedFrameCount - keep)] makeObjectsPerformSelector:@selector(tryToInvalidate)];
-	NSIndexSet *const attachedFrameIndexes = [[_attachedFrameIndexes copy] autorelease];
-	[_attachedFrameLock unlock];
-
-	[_bufferPoolLock lock];
-	NSUInteger const readyBufferCount = [_readyBufferIndexQueue count];
-	if(readyBufferCount > ECVMaxPendingDisplayBuffers) {
-		NSUInteger const keep = readyBufferCount % ECVMaxPendingDisplayBuffers;
-		[_readyBufferIndexQueue removeObjectsInRange:NSMakeRange(keep, readyBufferCount - keep)];
-		_frameDropStrength = 1.0f;
-	} else _frameDropStrength *= 0.75f;
-	NSArray *const readyBufferIndexQueue = [[_readyBufferIndexQueue copy] autorelease];
-	NSUInteger const lastDrawnBufferIndex = _currentDrawBufferIndex;
-	[_bufferPoolLock unlock];
-
-	NSUInteger i;
-	for(i = 0; i < ECVRequiredBufferCount; i++) {
-		if(_currentFillBufferIndex == i || bufferToDraw == i || lastDrawnBufferIndex == i) continue;
-		if([attachedFrameIndexes containsIndex:i]) continue;
-		if([readyBufferIndexQueue containsObject:[NSNumber numberWithUnsignedInteger:i]]) continue;
-		return i;
-	}
-	return NSNotFound;
-}
-- (void)resetFrames
-{
-	[_bufferPoolLock lock];
-	[_readyBufferIndexQueue removeAllObjects];
-	_frameDropStrength = 0.0f;
-	[_bufferPoolLock unlock];
-	_currentFillBufferIndex = NSNotFound;
-}
-
-#pragma mark -
-
-- (void *)bufferBytesAtIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return NULL;
-	return (char *)[_bufferData mutableBytes] + _bufferSize * index;
-}
-- (void)clearBufferAtIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return;
-	uint64_t const val = ECVPixelFormatBlackPattern(_pixelFormatType);
-	memset_pattern8([self bufferBytesAtIndex:index], &val, self.bufferSize);
-}
-- (void)drawBufferIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return;
-	[_bufferPoolLock lock];
-	[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:index] atIndex:0];
-	[_bufferPoolLock unlock];
-}
-- (ECVVideoFrame *)frameWithBufferAtIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return nil;
-	ECVVideoFrame *const frame = [[[ECVVideoFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
-	[_attachedFrameLock lock];
-	[_attachedFrames insertObject:frame atIndex:0];
-	[_attachedFrameIndexes addIndex:index];
-	[_attachedFrameLock unlock];
-	return frame;
-}
-- (void)invalidateFrame:(ECVVideoFrame *)frame
-{
-	[_attachedFrameLock lock];
-	[_attachedFrames removeObjectIdenticalTo:frame];
-	[_attachedFrameIndexes removeIndex:[frame bufferIndex]];
-	[_attachedFrameLock unlock];
+	if(!frame) return;
+	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
+	CGLLockContext(contextObj);
+	[_frames insertObject:frame atIndex:0];
+	CGLUnlockContext(contextObj);
 }
 
 #pragma mark -
@@ -334,7 +191,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 	_magFilter = filter;
 	NSUInteger i = 0;
-	if(_textureNames) for(; i < ECVRequiredBufferCount; i++) {
+	if(_textureNames) for(; i < [_videoStorage numberOfBuffers]; i++) {
 		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
 	}
@@ -357,13 +214,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -
 
-- (NSUInteger)currentDrawBufferIndex
-{
-	[_bufferPoolLock lock];
-	NSUInteger const i = _currentDrawBufferIndex;
-	[_bufferPoolLock unlock];
-	return i;
-}
+//- (NSUInteger)currentDrawBufferIndex
+//{
+//	[_bufferPoolLock lock];
+//	NSUInteger const i = _currentDrawBufferIndex;
+//	[_bufferPoolLock unlock];
+//	return i;
+//}
 
 #pragma mark -ECVVideoView(Private)
 
@@ -377,41 +234,51 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)_drawOneFrame
 {
-	[_bufferPoolLock lock];
-	NSNumber *const number = [_readyBufferIndexQueue lastObject];
-	CGFloat const frameDropStrength = _frameDropStrength;
-	NSCell<ECVVideoViewCell> *cell = self.cell;
-	[_bufferPoolLock unlock];
-	if(!number) return;
-
-	NSUInteger const index = [number unsignedIntegerValue];
-	NSParameterAssert(NSNotFound != index);
-
 	NSOpenGLContext *const context = [self openGLContext];
 	CGLContextObj const contextObj = [context CGLContextObj];
 	[context makeCurrentContext];
 	CGLLockContext(contextObj);
 	glClear(GL_COLOR_BUFFER_BIT);
-	[self _drawBuffer:index];
-	[self _drawFrameDropIndicatorWithStrength:frameDropStrength];
-	[cell drawWithFrame:_outputRect inVideoView:self playing:YES];
+
+	_frameDropStrength *= 0.75f;
+	BOOL drawn = NO;
+	while([_frames count]) {
+		ECVVideoFrame *const frame = [[[_frames lastObject] retain] autorelease];
+		[_frames removeLastObject];
+		if(![self _drawFrame:frame]) {
+			_frameDropStrength = 1.0f;
+			continue;
+		}
+		drawn = YES;
+		[_lastDrawnFrame release];
+		_lastDrawnFrame = [frame retain];
+		break;
+	}
+	if(!drawn) [self _drawFrame:_lastDrawnFrame];
+
+	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
+	[self.cell drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
 	glFlush();
 	CGLUnlockContext(contextObj);
-
-	[_bufferPoolLock lock];
-	[_readyBufferIndexQueue removeLastObject];
-	_currentDrawBufferIndex = index;
-	[_bufferPoolLock unlock];
 }
-- (void)_drawBuffer:(NSUInteger)index
+- (BOOL)_drawFrame:(ECVVideoFrame *)frame
 {
-	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:index]));
-	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _pixelSize.width, _pixelSize.height, ECVPixelFormatTypeToGLFormat(_pixelFormatType), ECVPixelFormatTypeToGLType(_pixelFormatType), [self bufferBytesAtIndex:index]));
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToSize(_pixelSize)));
-	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	if(!frame) return NO;
+	[frame lock];
+	BOOL const draw = ![frame isDropped];
+	if(draw) {
+		ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+		ECVPixelSize const s = [_videoStorage pixelSize];
+		OSType const f = [_videoStorage pixelFormatType];
+		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
+		ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatTypeToGLFormat(f), ECVPixelFormatTypeToGLType(f), [frame bufferBytes]));
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToSize(s)));
+		ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	}
+	[frame unlock];
+	return draw;
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength
 {
@@ -521,9 +388,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	[_bufferPoolLock lock];
-	if(NSNotFound != _currentDrawBufferIndex) [self _drawBuffer:_currentDrawBufferIndex];
-	[_bufferPoolLock unlock];
+	[self _drawFrame:_lastDrawnFrame];
 	[self.cell drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
 	[self _drawResizeHandle];
 	glFlush();
@@ -589,18 +454,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	if(_displayLink && CVDisplayLinkIsRunning(_displayLink)) ECVCVReturn(CVDisplayLinkStop(_displayLink));
-	[[[_attachedFrames copy] autorelease] makeObjectsPerformSelector:@selector(invalidate)];
 
 	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
-	ECVGLError(glDeleteTextures(ECVRequiredBufferCount, [_textureNames bytes]));
+	ECVGLError(glDeleteTextures([[self videoStorage] numberOfBuffers], [_textureNames bytes]));
 
-	[_bufferPoolLock release];
-	[_bufferData release];
+	[_videoStorage release];
 	[_textureNames release];
-	[_readyBufferIndexQueue release];
-	[_attachedFrameLock release];
-	[_attachedFrames release];
-	[_attachedFrameIndexes release];
+	[_frames release];
+	[_lastDrawnFrame release];
 	CVDisplayLinkRelease(_displayLink);
 	[_cell release];
 	[super dealloc];
@@ -617,25 +478,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)awakeFromNib
 {
-	_bufferPoolLock = [[NSLock alloc] init];
-	_attachedFrameLock = [[NSRecursiveLock alloc] init];
 	_cropRect = ECVUncroppedRect;
 	_magFilter = GL_LINEAR;
-	_readyBufferIndexQueue = [[NSMutableArray alloc] init];
-	_attachedFrames = [[NSMutableArray alloc] init];
-	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
-	[self resetFrames];
-}
-
-#pragma mark -<NSLocking>
-
-- (void)lock
-{
-	[_bufferPoolLock lock];
-}
-- (void)unlock
-{
-	[_bufferPoolLock unlock];
 }
 
 #pragma mark -<NSWindowDelegate>

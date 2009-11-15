@@ -80,7 +80,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	BOOL const playing = self.playing;
 	if(playing) self.playing = NO;
 	_videoFormat = format;
-	[self noteVideoSettingDidChange];
 	self.windowContentSize = self.outputSize;
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
 	if(playing) self.playing = YES;

@@ -23,19 +23,32 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
 
-// Views
-#import "ECVVideoView.h"
+// Models
+#import "ECVVideoStorage.h"
+
+NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
+{
+	switch(t) {
+		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
+	}
+	return 0;
+}
 
 @implementation ECVVideoFrame
 
 #pragma mark -ECVAttachedFrame
 
-- (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index
+- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index
 {
 	if((self = [super init])) {
-		_videoView = view;
+		_lock = [[NSLock alloc] init];
+
+		_videoStorage = storage;
 		_bufferIndex = index;
-		_videoViewLock = [[NSLock alloc] init];
+
+		_pixelSize = [_videoStorage pixelSize];
+		_pixelFormatType = [_videoStorage pixelFormatType];
+		_bytesPerRow = [_videoStorage bytesPerRow];
 	}
 	return self;
 }
@@ -48,58 +61,126 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (BOOL)isValid
 {
-	return !!_videoView;
+	return _videoStorage || _bufferData;
 }
-- (void *)bufferBytes
+- (BOOL)isDroppable
 {
-	return [_videoView bufferBytesAtIndex:_bufferIndex];
+	return _droppable;
 }
-- (size_t)bufferSize
+- (BOOL)isDropped
 {
-	return [_videoView bufferSize];
+	return !_videoStorage;
 }
-- (ECVPixelSize)pixelSize
+- (BOOL)isDetached
 {
-	return [_videoView pixelSize];
-}
-- (OSType)pixelFormatType
-{
-	return [_videoView pixelFormatType];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoView bytesPerRow];
+	return !!_bufferData;
 }
 
 #pragma mark -
 
-- (void)markAsInvalid
+- (void *)bufferBytes
 {
-	[_videoView invalidateFrame:self];
-	_videoView = nil;
+	return _bufferData ? [_bufferData mutableBytes] : [_videoStorage bufferBytesAtIndex:_bufferIndex];
 }
-- (void)invalidateWait:(BOOL)wait
+- (size_t)bufferSize
 {
-	if(wait) [_videoViewLock lock];
-	else if(![_videoViewLock tryLock]) return;
-	[self markAsInvalid];
-	[_videoViewLock unlock];
+	return _bufferData ? [_bufferData length] : [_videoStorage bufferSize];
 }
-- (void)invalidate
+- (ECVPixelSize)pixelSize
 {
-	[self invalidateWait:YES];
+	return _pixelSize;
 }
-- (void)tryToInvalidate
+- (OSType)pixelFormatType
 {
-	[self invalidateWait:NO];
+	return _pixelFormatType;
+}
+- (size_t)bytesPerRow
+{
+	return _bytesPerRow;
+}
+
+#pragma mark -
+
+- (void)becomeDroppable
+{
+	[_lock lock];
+	_droppable = YES;
+	[_lock unlock];
+}
+- (void)detachInsteadOfDroppingWhenRemoved
+{
+	[_lock lock];
+	_detachInsteadOfDroppingWhenRemoved = YES;
+	[_lock unlock];
+}
+- (BOOL)removeFromStorage
+{
+	if(!_videoStorage || !_droppable) return NO;
+	if(_detachInsteadOfDroppingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[self bufferSize]];
+	[_videoStorage removeFrame:self];
+	_videoStorage = nil;
+	_bufferIndex = NSNotFound;
+	return YES;
+}
+- (BOOL)lockAndRemoveFromStorage
+{
+	[_lock lock];
+	BOOL const success = [self removeFromStorage];
+	[_lock unlock];
+	return success;
+}
+- (BOOL)tryLockAndRemoveFromStorage
+{
+	if(![_lock tryLock]) return NO;
+	BOOL success = [self removeFromStorage];
+	[_lock unlock];
+	return success;
+}
+
+#pragma mark -
+
+- (void)clear
+{
+	uint64_t const val = ECVPixelFormatBlackPattern([self pixelFormatType]);
+	memset_pattern8([self bufferBytes], &val, [self bufferSize]);
+}
+- (void)fillWithFrame:(ECVVideoFrame *)frame
+{
+	BOOL filled = NO;
+	if(frame) {
+		[frame lock];
+		if([frame isValid]) {
+			size_t const l = MIN([self bufferSize], [frame bufferSize]);
+			UInt8 *const src = [frame bufferBytes];
+			UInt8 *const dst = [self bufferBytes];
+			memcpy(dst, src, l);
+			filled = YES;
+		}
+		[frame unlock];
+	}
+	if(!filled) [self clear];
+}
+- (void)blurWithFrame:(ECVVideoFrame *)frame
+{
+	if(!frame) return;
+	[frame lock];
+	if([frame isValid]) {
+		size_t const l = MIN([self bufferSize], [frame bufferSize]);
+		UInt8 *const src = [frame bufferBytes];
+		UInt8 *const dst = [self bufferBytes];
+		NSUInteger i;
+		for(i = 0; i < l; i++) dst[i] = dst[i] / 2 + src[i] / 2;
+	}
+	[frame unlock];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	NSParameterAssert(!_videoView);
-	[_videoViewLock release];
+	[_videoStorage removeFrame:self];
+	[_lock release];
+	[_bufferData release];
 	[super dealloc];
 }
 
@@ -107,11 +188,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)lock
 {
-	[_videoViewLock lock];
+	[_lock lock];
 }
 - (void)unlock
 {
-	[_videoViewLock unlock];
+	[_lock unlock];
 }
 
 @end

@@ -21,60 +21,35 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <OpenGL/gl.h>
-#import <QuartzCore/QuartzCore.h>
-
 // Models
 @class ECVVideoFrame;
-@class ECVVideoStorage;
 
-@protocol ECVVideoViewCell, ECVVideoViewDelegate;
-
-@interface ECVVideoView : NSOpenGLView <NSWindowDelegate>
+@interface ECVVideoStorage : NSObject
 {
 	@private
-	ECVVideoStorage *_videoStorage;
-	NSMutableData *_textureNames;
-	NSMutableArray *_frames;
-	ECVVideoFrame *_lastDrawnFrame;
-	CGFloat _frameDropStrength;
+	NSUInteger _numberOfBuffers;
+	OSType _pixelFormatType;
+	ECVPixelSize _pixelSize;
+	size_t _bytesPerRow;
+	size_t _bufferSize;
+	NSMutableData *_allBufferData;
 
-	CVDisplayLinkRef _displayLink;
-	NSRect _outputRect;
-
-	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
-	NSSize _aspectRatio;
-	NSRect _cropRect;
-	BOOL _vsync;
-	GLint _magFilter;
-	BOOL _showDroppedFrames;
-	NSCell<ECVVideoViewCell> *_cell;
+	NSRecursiveLock *_lock;
+	CFMutableArrayRef _frames;
+	NSMutableIndexSet *_unusedBufferIndexes;
 }
 
-@property(retain) ECVVideoStorage *videoStorage;
-- (void)pushFrame:(ECVVideoFrame *)frame;
+- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size;
+@property(readonly) NSUInteger numberOfBuffers;
+@property(readonly) OSType pixelFormatType;
+@property(readonly) ECVPixelSize pixelSize;
+@property(readonly) size_t bytesPerRow;
+@property(readonly) size_t bufferSize;
+@property(readonly) void *allBufferBytes;
 
-// These methods must be called from the main thread.
-- (void)startDrawing;
-- (void)stopDrawing;
+- (void *)bufferBytesAtIndex:(NSUInteger)index;
 
-// These methods are thread safe.
-@property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(assign) NSSize aspectRatio;
-@property(assign) NSRect cropRect;
-@property(assign) BOOL vsync;
-@property(assign) GLint magFilter;
-@property(assign) BOOL showDroppedFrames;
-@property(retain) NSCell<ECVVideoViewCell> *cell;
+- (ECVVideoFrame *)nextFrame;
+- (void)removeFrame:(ECVVideoFrame *)frame;
 
-@end
-
-@protocol ECVVideoViewCell <NSObject>
-@required
-- (void)drawWithFrame:(NSRect)r inVideoView:(ECVVideoView *)v playing:(BOOL)flag;
-@end
-
-@protocol ECVVideoViewDelegate <NSObject>
-@optional
-- (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
 @end

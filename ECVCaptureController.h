@@ -25,6 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QuartzCore/QuartzCore.h>
 #import <QTKit/QTKit.h>
 
+// Models
+@class ECVVideoFrame;
+
 // Views
 #import "ECVVideoView.h"
 @class ECVPlayButtonCell;
@@ -100,6 +103,8 @@ extern NSString *const ECVSaturationKey;
 	ECVDeinterlacingMode _deinterlacingMode;
 	NSConditionLock *_playLock;
 	BOOL _firstFrame;
+	ECVVideoFrame *_pendingFrame;
+	ECVVideoFrame *_lastCompletedFrame;
 
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
@@ -120,7 +125,6 @@ extern NSString *const ECVSaturationKey;
 
 - (id)initWithDevice:(io_service_t)device error:(out NSError **)outError;
 - (void)noteDeviceRemoved;
-- (void)noteVideoSettingDidChange; // Be sure to call this when you change the resolution or deinterlacing mode. NOT thread safe, pause first!
 - (void)workspaceWillSleep:(NSNotification *)aNotif;
 
 - (IBAction)play:(id)sender;

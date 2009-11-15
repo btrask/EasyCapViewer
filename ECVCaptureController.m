@@ -26,6 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <IOKit/IOMessage.h>
 #import <mach/mach_time.h>
 
+// Models
+#import "ECVVideoFrame.h"
+#import "ECVVideoStorage.h"
+
 // Views
 #import "MPLWindow.h"
 #import "ECVVideoView.h"
@@ -230,14 +234,6 @@ ECVNoDeviceError:
 		[[self window] close];
 		[self release];
 	}
-}
-- (void)noteVideoSettingDidChange
-{
-	NSParameterAssert(!self.isPlaying);
-	ECVPixelSize s = self.captureSize;
-	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
-	[videoView setPixelFormat:kCVPixelFormatType_422YpCbCr8 size:s]; // AKA k2vuyPixelFormat.
-	_pendingImageLength = 0;
 }
 - (void)workspaceWillSleep:(NSNotification *)aNotif
 {
@@ -452,7 +448,6 @@ ECVNoDeviceError:
 	BOOL const playing = self.playing;
 	if(playing) self.playing = NO;
 	_deinterlacingMode = mode;
-	[self noteVideoSettingDidChange];
 	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
 	if(playing) self.playing = YES;
 }
@@ -703,9 +698,12 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored));
 	currentFrame += 10;
 
+	ECVPixelSize s = [self captureSize];
+	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
+	[videoView setVideoStorage:[[[ECVVideoStorage alloc] initWithNumberOfBuffers:5 pixelFormatType:k2vuyPixelFormat size:s] autorelease]]; // AKA kCVPixelFormatType_422YpCbCr8.
 	_pendingImageLength = 0;
 	_firstFrame = YES;
-	[videoView resetFrames];
+
 	[videoView performSelectorOnMainThread:@selector(startDrawing) withObject:nil waitUntilDone:NO];
 	(void)[self startAudio];
 	[[ECVController sharedController] performSelectorOnMainThread:@selector(noteCaptureControllerStartedPlaying:) withObject:self waitUntilDone:NO];
@@ -744,6 +742,10 @@ ECVNoDeviceError:
 	[videoView performSelectorOnMainThread:@selector(stopDrawing) withObject:nil waitUntilDone:NO];
 	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);
 	if(fullFrameList) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameList);
+	[_pendingFrame release];
+	_pendingFrame = nil;
+	[_lastCompletedFrame release];
+	_lastCompletedFrame = nil;
 	[_playLock lock];
 bail:
 	ECVLog(ECVNotice, @"Stopping playback.");
@@ -754,11 +756,12 @@ bail:
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
 {
 	if(!bytes || !length) return;
-	UInt8 *const dest = [videoView bufferBytesAtIndex:videoView.currentFillBufferIndex];
+	ECVVideoStorage *const storage = [videoView videoStorage];
+	UInt8 *const dest = [_pendingFrame bufferBytes];
 	if(!dest) return;
-	size_t const maxLength = videoView.bufferSize;
+	size_t const maxLength = [storage bufferSize];
 	size_t const theoreticalRowLength = self.captureSize.width * 2; // YUYV is effectively 2Bpp.
-	size_t const actualRowLength = videoView.bytesPerRow;
+	size_t const actualRowLength = [storage bytesPerRow];
 	size_t const rowPadding = actualRowLength - theoreticalRowLength;
 	BOOL const skipLines = ECVFullFrame != _fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
 
@@ -787,31 +790,28 @@ bail:
 		return;
 	}
 
-	NSUInteger const bufferToDraw = ECVBlur == _deinterlacingMode ? [videoView bufferIndexByBlurringPastFrames] : videoView.currentFillBufferIndex;
-
-	NSUInteger const nextFillBufferIndex = [videoView nextFillBufferIndex:bufferToDraw];
-	switch(_deinterlacingMode) {
-		case ECVWeave:
-		{
-			NSUInteger sourceIndex = videoView.currentFillBufferIndex;
-			if(NSNotFound == sourceIndex) sourceIndex = videoView.currentDrawBufferIndex;
-			void *const dst = [videoView bufferBytesAtIndex:nextFillBufferIndex];
-			void *const src = [videoView bufferBytesAtIndex:sourceIndex];
-			if(dst && src) memcpy(dst, src, videoView.bufferSize);
-			else [videoView clearBufferAtIndex:nextFillBufferIndex];
-			break;
-		}
-		case ECVAlternate:
-			[videoView clearBufferAtIndex:nextFillBufferIndex];
-			break;
+	ECVVideoFrame *frameToDraw = _pendingFrame;
+	if(ECVBlur == _deinterlacingMode && _lastCompletedFrame) {
+		[_lastCompletedFrame blurWithFrame:_pendingFrame]; // TODO: _lastCompletedFrame might still be in use, so this method needs to create a new frame.
+		frameToDraw = _lastCompletedFrame;
 	}
-	videoView.currentFillBufferIndex = nextFillBufferIndex;
+	if(frameToDraw) {
+		[videoView pushFrame:frameToDraw];
+		if(_videoTrack) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frameToDraw waitUntilDone:NO];
+	}
 
-	[videoView drawBufferIndex:bufferToDraw];
+	ECVVideoStorage *const storage = [videoView videoStorage];
+	ECVVideoFrame *const frame = [storage nextFrame];
+	switch(_deinterlacingMode) {
+		case ECVWeave: [frame fillWithFrame:_pendingFrame]; break;
+		case ECVAlternate: [frame clear]; break;
+	}
+	[_lastCompletedFrame becomeDroppable];
+	[_lastCompletedFrame release];
+	_lastCompletedFrame = _pendingFrame;
+	_pendingFrame = [frame retain];
 
-	if(_videoTrack) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:[videoView frameWithBufferAtIndex:bufferToDraw] waitUntilDone:NO];
-
-	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? videoView.bytesPerRow : 0;
+	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? [storage bytesPerRow] : 0;
 	_fieldType = fieldType;
 }
 
@@ -911,7 +911,6 @@ ECVNoDeviceError:
 	videoView.cell = _playButtonCell;
 
 	[w center];
-	[self noteVideoSettingDidChange];
 	[super windowDidLoad];
 }
 - (void)synchronizeWindowTitleWithDocumentName

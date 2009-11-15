@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static void ECVPixelBufferReleaseBytesCallback(ECVVideoFrame *frame, const void *baseAddress)
 {
-	[frame markAsInvalid];
 	[frame unlock];
 	[frame release];
 }

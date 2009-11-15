@@ -17,6 +17,7 @@
 		0E26AA4510033FC4002FF95A /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0E26AA4310033FC4002FF95A /* Credits.rtf */; };
 		0E26AA97100346D1002FF95A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0E26AA95100346D1002FF95A /* Localizable.strings */; };
 		0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
+		0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
 		0E78C93E0FC8F98100E9C148 /* ECVCaptureController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */; };
 		0E78C9F30FC8FA1000E9C148 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78C9F20FC8FA1000E9C148 /* IOKit.framework */; };
 		0E78CA320FC9055100E9C148 /* ECVCapture.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E78CA300FC9055100E9C148 /* ECVCapture.xib */; };
@@ -87,6 +88,8 @@
 		0E26AA96100346D1002FF95A /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoFrame.h; sourceTree = "<group>"; };
 		0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoFrame.m; sourceTree = "<group>"; };
+		0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoStorage.h; sourceTree = "<group>"; };
+		0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoStorage.m; sourceTree = "<group>"; };
 		0E78C93C0FC8F98100E9C148 /* ECVCaptureController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVCaptureController.h; sourceTree = "<group>"; };
 		0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCaptureController.m; sourceTree = "<group>"; };
 		0E78C9F20FC8FA1000E9C148 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
@@ -195,6 +198,8 @@
 			children = (
 				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
 				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
+				0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */,
+				0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -432,6 +437,7 @@
 				0EBC1B4C109A5B1700DFBA31 /* ECVTrack.m in Sources */,
 				0E16F6AE10AE92C600730A18 /* SAA711XChip.m in Sources */,
 				0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */,
+				0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,30 +21,47 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Views
-@class ECVVideoView;
+// Models
+@class ECVVideoStorage;
 
 @interface ECVVideoFrame : NSObject <NSLocking>
 {
-	@private
-	ECVVideoView *_videoView;
+	@protected
+	NSLock *_lock;
+	BOOL _droppable;
+	BOOL _detachInsteadOfDroppingWhenRemoved;
+
+	__weak ECVVideoStorage *_videoStorage;
 	NSUInteger _bufferIndex;
-	NSLock *_videoViewLock;
+
+	OSType _pixelFormatType;
+	ECVPixelSize _pixelSize;
+	size_t _bytesPerRow;
+	NSMutableData *_bufferData;
 }
 
-- (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index;
+- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index;
 @property(readonly) NSUInteger bufferIndex;
 
 @property(readonly) BOOL isValid;
+@property(readonly) BOOL isDroppable;
+@property(readonly) BOOL isDropped;
+@property(readonly) BOOL isDetached;
+
 @property(readonly) void *bufferBytes;
 @property(readonly) size_t bufferSize;
 @property(readonly) ECVPixelSize pixelSize;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) size_t bytesPerRow;
 
-- (void)markAsInvalid;
-- (void)invalidateWait:(BOOL)wait;
-- (void)invalidate;
-- (void)tryToInvalidate;
+- (void)becomeDroppable;
+- (void)detachInsteadOfDroppingWhenRemoved;
+- (BOOL)removeFromStorage;
+- (BOOL)lockAndRemoveFromStorage;
+- (BOOL)tryLockAndRemoveFromStorage;
+
+- (void)clear;
+- (void)fillWithFrame:(ECVVideoFrame *)frame;
+- (void)blurWithFrame:(ECVVideoFrame *)frame;
 
 @end
