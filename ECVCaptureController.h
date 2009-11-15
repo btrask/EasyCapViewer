@@ -57,7 +57,7 @@ typedef NSUInteger ECVCropType;
 	ECVPlayButtonCell *_playButtonCell;
 }
 
-- (IBAction)newViewer:(id)sender;
+- (IBAction)cloneViewer:(id)sender;
 
 - (IBAction)play:(id)sender;
 - (IBAction)pause:(id)sender;

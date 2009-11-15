@@ -209,10 +209,19 @@
 									<reference key="NSOnImage" ref="35465992"/>
 									<reference key="NSMixedImage" ref="502551668"/>
 								</object>
-								<object class="NSMenuItem" id="591304279">
+								<object class="NSMenuItem" id="274590582">
 									<reference key="NSMenu" ref="368211976"/>
-									<string key="NSTitle">New Viewer</string>
-									<string key="NSKeyEquiv">n</string>
+									<string key="NSTitle">Start Recording…</string>
+									<string key="NSKeyEquiv">s</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="35465992"/>
+									<reference key="NSMixedImage" ref="502551668"/>
+								</object>
+								<object class="NSMenuItem" id="656965080">
+									<reference key="NSMenu" ref="368211976"/>
+									<string key="NSTitle">Stop Recording</string>
+									<string key="NSKeyEquiv">.</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="35465992"/>
@@ -228,20 +237,10 @@
 									<reference key="NSOnImage" ref="35465992"/>
 									<reference key="NSMixedImage" ref="502551668"/>
 								</object>
-								<object class="NSMenuItem" id="274590582">
+								<object class="NSMenuItem" id="591304279">
 									<reference key="NSMenu" ref="368211976"/>
-									<string key="NSTitle">Start Recording…</string>
-									<string key="NSKeyEquiv">s</string>
-									<int key="NSKeyEquivModMask">1048576</int>
-									<int key="NSMnemonicLoc">2147483647</int>
-									<reference key="NSOnImage" ref="35465992"/>
-									<reference key="NSMixedImage" ref="502551668"/>
-								</object>
-								<object class="NSMenuItem" id="656965080">
-									<reference key="NSMenu" ref="368211976"/>
-									<string key="NSTitle">Stop Recording</string>
-									<string key="NSKeyEquiv">.</string>
-									<int key="NSKeyEquivModMask">1048576</int>
+									<string key="NSTitle">Clone Viewer</string>
+									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="35465992"/>
 									<reference key="NSMixedImage" ref="502551668"/>
@@ -1011,11 +1010,11 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">newViewer:</string>
+						<string key="label">cloneViewer:</string>
 						<reference key="source" ref="1014"/>
 						<reference key="destination" ref="591304279"/>
 					</object>
-					<int key="connectionID">574</int>
+					<int key="connectionID">575</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -1333,10 +1332,10 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<reference ref="274590582"/>
 							<reference ref="656965080"/>
-							<reference ref="848289431"/>
 							<reference ref="50374464"/>
 							<reference ref="380596237"/>
 							<reference ref="591304279"/>
+							<reference ref="848289431"/>
 						</object>
 						<reference key="parent" ref="862960086"/>
 					</object>
@@ -1811,7 +1810,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">574</int>
+			<int key="maxID">575</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1826,8 +1825,8 @@
 							<string>changeAspectRatio:</string>
 							<string>changeCropType:</string>
 							<string>changeScale:</string>
+							<string>cloneViewer:</string>
 							<string>enterCropMode:</string>
-							<string>newViewer:</string>
 							<string>pause:</string>
 							<string>play:</string>
 							<string>startRecording:</string>

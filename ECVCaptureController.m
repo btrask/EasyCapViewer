@@ -66,7 +66,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 #pragma mark -ECVCaptureController
 
-- (IBAction)newViewer:(id)sender
+- (IBAction)cloneViewer:(id)sender
 {
 	ECVCaptureController *const controller = [[[[self class] alloc] init] autorelease];
 	[[self document] addWindowController:controller];
@@ -205,7 +205,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 		NSArray *const screens = [NSScreen screens];
 		if([screens count]) frame = [[screens objectAtIndex:0] frame];
 	} else {
-		styleMask = NSTitledWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+		styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
 		frame = (NSRect){{100, 100}, [self outputSize]};
 	}
 	NSWindow *const oldWindow = [self window];
