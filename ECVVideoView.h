@@ -73,6 +73,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)clearBufferAtIndex:(NSUInteger)index;
 - (void)drawBufferIndex:(NSUInteger)index;
 - (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index;
+- (void)invalidateFrame:(id<ECVFrameReading>)frame;
 
 // These methods must be called from the main thread.
 - (void)startDrawing;

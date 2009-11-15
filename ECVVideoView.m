@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glext.h>
 #import <OpenGL/glu.h>
 
+// Models
+#import "ECVVideoFrame.h"
+
 // Other Sources
 #import "ECVDebug.h"
 #import "ECVOpenGLAdditions.h"
@@ -76,26 +79,9 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 	return 0;
 }
 
-@interface ECVAttachedFrame : NSObject <ECVFrameReading>
-{
-	@private
-	ECVVideoView *_videoView;
-	NSUInteger _bufferIndex;
-	NSLock *_videoViewLock;
-}
-
-- (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index;
-@property(readonly) NSUInteger bufferIndex;
-- (void)invalidateWait:(BOOL)wait;
-- (void)invalidate;
-- (void)tryToInvalidate;
-
-@end
-
 @interface ECVVideoView(Private)
 
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
-- (void)_invalidateFrame:(ECVAttachedFrame *)frame;
 
 - (void)_drawOneFrame;
 - (void)_drawBuffer:(NSUInteger)index;
@@ -216,12 +202,19 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index
 {
 	if(NSNotFound == index) return nil;
-	ECVAttachedFrame *const frame = [[[ECVAttachedFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
+	ECVVideoFrame *const frame = [[[ECVVideoFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
 	[_attachedFrameLock lock];
 	[_attachedFrames insertObject:frame atIndex:0];
 	[_attachedFrameIndexes addIndex:index];
 	[_attachedFrameLock unlock];
 	return frame;
+}
+- (void)invalidateFrame:(id<ECVFrameReading>)frame
+{
+	[_attachedFrameLock lock];
+	[_attachedFrames removeObjectIdenticalTo:frame];
+	[_attachedFrameIndexes removeIndex:[(ECVVideoFrame *)frame bufferIndex]];
+	[_attachedFrameLock unlock];
 }
 - (void *)bufferBytesAtIndex:(NSUInteger)index
 {
@@ -344,13 +337,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	if(NSNotFound == index) return 0;
 	return ((GLuint *)[_textureNames mutableBytes])[index];
-}
-- (void)_invalidateFrame:(ECVAttachedFrame *)frame
-{
-	[_attachedFrameLock lock];
-	[_attachedFrames removeObjectIdenticalTo:frame];
-	[_attachedFrameIndexes removeIndex:frame.bufferIndex];
-	[_attachedFrameLock unlock];
 }
 
 #pragma mark -
@@ -680,93 +666,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
 {
 	return NO;
-}
-
-@end
-
-@implementation ECVAttachedFrame
-
-#pragma mark -ECVAttachedFrame
-
-- (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index
-{
-	if((self = [super init])) {
-		_videoView = view;
-		_bufferIndex = index;
-		_videoViewLock = [[NSLock alloc] init];
-	}
-	return self;
-}
-- (NSUInteger)bufferIndex
-{
-	return _bufferIndex;
-}
-- (void)invalidateWait:(BOOL)wait
-{
-	if(wait) [_videoViewLock lock];
-	else if(![_videoViewLock tryLock]) return;
-	[self markAsInvalid];
-	[_videoViewLock unlock];
-}
-- (void)invalidate
-{
-	[self invalidateWait:YES];
-}
-- (void)tryToInvalidate
-{
-	[self invalidateWait:NO];
-}
-
-#pragma mark -NSObject
-
-- (void)dealloc
-{
-	NSParameterAssert(!_videoView);
-	[_videoViewLock release];
-	[super dealloc];
-}
-
-#pragma mark -<ECVFrameReading>
-
-- (BOOL)isValid
-{
-	return !!_videoView;
-}
-- (void *)bufferBytes
-{
-	return [_videoView bufferBytesAtIndex:_bufferIndex];
-}
-- (NSUInteger)bufferSize
-{
-	return _videoView.bufferSize;
-}
-- (ECVPixelSize)pixelSize
-{
-	return _videoView.pixelSize;
-}
-- (OSType)pixelFormatType
-{
-	return _videoView.pixelFormatType;
-}
-- (size_t)bytesPerRow
-{
-	return _videoView.bytesPerRow;
-}
-- (void)markAsInvalid
-{
-	[_videoView _invalidateFrame:self];
-	_videoView = nil;
-}
-
-#pragma mark -<NSLocking>
-
-- (void)lock
-{
-	[_videoViewLock lock];
-}
-- (void)unlock
-{
-	[_videoViewLock unlock];
 }
 
 @end
