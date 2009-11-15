@@ -135,8 +135,8 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 - (IBAction)changeCropType:(id)sender
 {
 	NSRect const r = [self cropRectWithType:[sender tag]];
-	if([videoView.cell respondsToSelector:@selector(setCropRect:)]) {
-		[(ECVCropCell *)videoView.cell setCropRect:r];
+	if([[videoView cell] respondsToSelector:@selector(setCropRect:)]) {
+		[(ECVCropCell *)[videoView cell] setCropRect:r];
 		[videoView setNeedsDisplay:YES];
 		[[self window] invalidateCursorRectsForView:videoView];
 	}else [self setCropRect:r];
@@ -146,37 +146,37 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	ECVCropCell *const cell = [[[ECVCropCell alloc] initWithOpenGLContext:[videoView openGLContext]] autorelease];
 	cell.delegate = self;
 	cell.cropRect = [self cropRect];
-	videoView.cropRect = ECVUncroppedRect;
-	videoView.cell = cell;
+	[videoView setCropRect:ECVUncroppedRect];
+	[videoView setCell:cell];
 }
 - (IBAction)toggleVsync:(id)sender
 {
-	videoView.vsync = !videoView.vsync;
-	[[NSUserDefaults standardUserDefaults] setBool:videoView.vsync forKey:ECVVsyncKey];
+	[videoView setVsync:![videoView vsync]];
+	[[NSUserDefaults standardUserDefaults] setBool:[videoView vsync] forKey:ECVVsyncKey];
 }
 - (IBAction)toggleSmoothing:(id)sender
 {
-	switch(videoView.magFilter) {
-		case GL_NEAREST: videoView.magFilter = GL_LINEAR; break;
-		case GL_LINEAR: videoView.magFilter = GL_NEAREST; break;
+	switch([videoView magFilter]) {
+		case GL_NEAREST: [videoView setMagFilter:GL_LINEAR]; break;
+		case GL_LINEAR: [videoView setMagFilter:GL_NEAREST]; break;
 	}
-	[[NSUserDefaults standardUserDefaults] setInteger:videoView.magFilter forKey:ECVMagFilterKey];
+	[[NSUserDefaults standardUserDefaults] setInteger:[videoView magFilter] forKey:ECVMagFilterKey];
 }
 - (IBAction)toggleShowDroppedFrames:(id)sender
 {
-	videoView.showDroppedFrames = !videoView.showDroppedFrames;
-	[[NSUserDefaults standardUserDefaults] setBool:videoView.showDroppedFrames forKey:ECVShowDroppedFramesKey];
+	[videoView setShowDroppedFrames:![videoView showDroppedFrames]];
+	[[NSUserDefaults standardUserDefaults] setBool:[videoView showDroppedFrames] forKey:ECVShowDroppedFramesKey];
 }
 
 #pragma mark -
 
 - (NSSize)aspectRatio
 {
-	return videoView.aspectRatio;
+	return [videoView aspectRatio];
 }
 - (void)setAspectRatio:(NSSize)ratio
 {
-	videoView.aspectRatio = ratio;
+	[videoView setAspectRatio:ratio];
 	[[self window] setContentAspectRatio:ratio];
 	CGFloat const r = ratio.height / ratio.width;
 	NSSize s = [self windowContentSize];
@@ -186,11 +186,11 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 }
 - (NSRect)cropRect
 {
-	return [videoView.cell respondsToSelector:@selector(cropRect)] ? [(ECVCropCell *)videoView.cell cropRect] : videoView.cropRect;
+	return [[videoView cell] respondsToSelector:@selector(cropRect)] ? [(ECVCropCell *)[videoView cell] cropRect] : [videoView cropRect];
 }
 - (void)setCropRect:(NSRect)aRect
 {
-	videoView.cropRect = aRect;
+	[videoView setCropRect:aRect];
 	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect(aRect) forKey:ECVCropRectKey];
 }
 @synthesize fullScreen = _fullScreen;
@@ -316,16 +316,16 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 	[self setAspectRatio:[self sizeWithAspectRatio:[[[NSUserDefaults standardUserDefaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
 
-	videoView.cropRect = NSRectFromString([[NSUserDefaults standardUserDefaults] stringForKey:ECVCropRectKey]);
-	videoView.vsync = [[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey];
-	videoView.showDroppedFrames = [[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey];
-	videoView.magFilter = [[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey];
+	[videoView setCropRect:NSRectFromString([[NSUserDefaults standardUserDefaults] stringForKey:ECVCropRectKey])];
+	[videoView setVsync:[[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey]];
+	[videoView setShowDroppedFrames:[[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey]];
+	[videoView setMagFilter:[[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey]];
 
 	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
 	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];
 	_playButtonCell.target = self;
 	_playButtonCell.action = @selector(togglePlaying:);
-	videoView.cell = _playButtonCell;
+	[videoView setCell:_playButtonCell];
 
 	[w center];
 	[super windowDidLoad];
@@ -352,15 +352,15 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	if(@selector(togglePlaying:) == action) [anItem setTitle:[[self document] isPlaying] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
 	if(@selector(changeAspectRatio:) == action) {
 		NSSize const s1 = [self sizeWithAspectRatio:[anItem tag]];
-		NSSize const s2 = videoView.aspectRatio;
+		NSSize const s2 = [videoView aspectRatio];
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
 	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self cropRectWithType:[anItem tag]], [self cropRect])];
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([self windowContentSize], [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
-	if(@selector(toggleVsync:) == action) [anItem setTitle:videoView.vsync ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
-	if(@selector(toggleSmoothing:) == action) [anItem setTitle:GL_LINEAR == videoView.magFilter ? NSLocalizedString(@"Turn Smoothing Off", nil) : NSLocalizedString(@"Turn Smoothing On", nil)];
-	if(@selector(toggleShowDroppedFrames:) == action) [anItem setTitle:videoView.showDroppedFrames ? NSLocalizedString(@"Hide Dropped Frames", nil) : NSLocalizedString(@"Show Dropped Frames", nil)];
+	if(@selector(toggleVsync:) == action) [anItem setTitle:[videoView vsync] ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
+	if(@selector(toggleSmoothing:) == action) [anItem setTitle:GL_LINEAR == [videoView magFilter] ? NSLocalizedString(@"Turn Smoothing Off", nil) : NSLocalizedString(@"Turn Smoothing On", nil)];
+	if(@selector(toggleShowDroppedFrames:) == action) [anItem setTitle:[videoView showDroppedFrames] ? NSLocalizedString(@"Hide Dropped Frames", nil) : NSLocalizedString(@"Show Dropped Frames", nil)];
 
 	if(![self conformsToProtocol:@protocol(ECVCaptureControllerConfiguring)]) {
 		if(@selector(configureDevice:) == action) return NO;

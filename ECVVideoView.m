@@ -130,7 +130,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVGLError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
-		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, self.magFilter));
+		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, [self magFilter]));
 		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, s.width, s.height, 0, format, type, [_videoStorage bufferBytesAtIndex:i]));
 	}
 
@@ -244,7 +244,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(!drawn) [self _drawFrame:_lastDrawnFrame];
 
 	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
-	[self.cell drawWithFrame:_outputRect inVideoView:self playing:YES];
+	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
 	glFlush();
 	CGLUnlockContext(contextObj);
@@ -269,7 +269,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength
 {
-	if(strength < 0.01f || !self.showDroppedFrames) return;
+	if(strength < 0.01f || ![self showDroppedFrames]) return;
 	NSRect const b = [self bounds];
 	glColor4f(1.0f, 0.0f, 0.0f, strength);
 	ECVGLDrawBorder(NSInsetRect(b, 5.0f, 5.0f), b);
@@ -338,7 +338,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[super reshape];
 
 	NSRect const b = [self bounds];
-	NSSize const aspectRatio = self.aspectRatio;
+	NSSize const aspectRatio = [self aspectRatio];
 	_outputRect = b;
 	CGFloat const r = (aspectRatio.width / aspectRatio.height) / (NSWidth(b) / NSHeight(b));
 	if(r > 1.0f) _outputRect.size.height *= 1.0f / r;
@@ -376,7 +376,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	[self _drawFrame:_lastDrawnFrame];
-	[self.cell drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
+	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
 	[self _drawResizeHandle];
 	glFlush();
 
@@ -384,7 +384,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)resetCursorRects
 {
-	[self.cell resetCursorRect:_outputRect inView:self];
+	[[self cell] resetCursorRect:_outputRect inView:self];
 }
 - (void)viewWillMoveToWindow:(NSWindow *)aWindow
 {
@@ -410,28 +410,28 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)keyDown:(NSEvent *)anEvent
 {
-	if(![self.delegate videoView:self handleKeyDown:anEvent]) [super keyDown:anEvent];
+	if(![[self delegate] videoView:self handleKeyDown:anEvent]) [super keyDown:anEvent];
 }
 - (void)mouseDown:(NSEvent *)anEvent
 {
-	if([[self.cell class] prefersTrackingUntilMouseUp]) {
-		[self.cell trackMouse:anEvent inRect:_outputRect ofView:self untilMouseUp:YES];
+	if([[[self cell] class] prefersTrackingUntilMouseUp]) {
+		[[self cell] trackMouse:anEvent inRect:_outputRect ofView:self untilMouseUp:YES];
 		return;
 	}
 	BOOL const playing = CVDisplayLinkIsRunning(_displayLink);
 	NSEvent *latestEvent = anEvent;
 	do {
 		if([self mouse:[self convertPoint:[latestEvent locationInWindow] fromView:nil] inRect:_outputRect]) {
-			[self.cell setHighlighted:YES];
+			[[self cell] setHighlighted:YES];
 			if(!playing) [self setNeedsDisplay:YES];
-			if([self.cell trackMouse:latestEvent inRect:_outputRect ofView:self untilMouseUp:NO]) break;
-			[self.cell setHighlighted:NO];
+			if([[self cell] trackMouse:latestEvent inRect:_outputRect ofView:self untilMouseUp:NO]) break;
+			[[self cell] setHighlighted:NO];
 			if(!playing) [self setNeedsDisplay:YES];
 		}
 		latestEvent = [[self window] nextEventMatchingMask:NSLeftMouseUpMask | NSLeftMouseDraggedMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES];
 	} while([latestEvent type] != NSLeftMouseUp);
 	[[self window] discardEventsMatchingMask:NSAnyEventMask beforeEvent:latestEvent];
-	[self.cell setHighlighted:NO];
+	[[self cell] setHighlighted:NO];
 	if(!playing) [self setNeedsDisplay:YES];
 }
 

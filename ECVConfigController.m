@@ -50,46 +50,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (IBAction)changeFormat:(id)sender
 {
-	_captureDevice.videoFormatObject = [[sender selectedItem] representedObject];
+	[_captureDevice setVideoFormatObject:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeSource:(id)sender
 {
-	_captureDevice.videoSourceObject = [[sender selectedItem] representedObject];
+	[_captureDevice setVideoSourceObject:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
-	_captureDevice.deinterlacingMode = [sender selectedTag];
+	[_captureDevice setDeinterlacingMode:[sender selectedTag]];
 }
 - (IBAction)changeBrightness:(id)sender
 {
 	[self _snapSlider:sender];
-	_captureDevice.brightness = [sender doubleValue];
+	[_captureDevice setBrightness:[sender doubleValue]];
 }
 - (IBAction)changeContrast:(id)sender
 {
 	[self _snapSlider:sender];
-	_captureDevice.contrast = [sender doubleValue];
+	[_captureDevice setContrast:[sender doubleValue]];
 }
 - (IBAction)changeSaturation:(id)sender
 {
 	[self _snapSlider:sender];
-	_captureDevice.saturation = [sender doubleValue];
+	[_captureDevice setSaturation:[sender doubleValue]];
 }
 - (IBAction)changeHue:(id)sender
 {
 	[self _snapSlider:sender];
-	_captureDevice.hue = [sender doubleValue];
+	[_captureDevice setHue:[sender doubleValue]];
 }
 
 #pragma mark -
 
 - (IBAction)changeAudioInput:(id)sender
 {
-	_captureDevice.audioInput = [[sender selectedItem] representedObject];
+	[_captureDevice setAudioInput:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeVolume:(id)sender
 {
-	_captureDevice.volume = [sender doubleValue];
+	[_captureDevice setVolume:[sender doubleValue]];
 }
 
 #pragma mark -
@@ -102,7 +102,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(![self isWindowLoaded]) return;
 
 	[sourcePopUp removeAllItems];
-	if([_captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in _captureDevice.allVideoSourceObjects) {
+	if([_captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [_captureDevice allVideoSourceObjects]) {
 		if([NSNull null] == videoSourceObject) {
 			[[sourcePopUp menu] addItem:[NSMenuItem separatorItem]];
 			continue;
@@ -114,10 +114,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[[sourcePopUp menu] addItem:item];
 	}
 	[sourcePopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoSourceObject)]];
-	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:_captureDevice.videoSourceObject]];
+	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[_captureDevice videoSourceObject]]];
 
 	[formatPopUp removeAllItems];
-	if([_captureDevice respondsToSelector:@selector(allVideoFormatObjects)]) for(id const videoFormatObject in _captureDevice.allVideoFormatObjects) {
+	if([_captureDevice respondsToSelector:@selector(allVideoFormatObjects)]) for(id const videoFormatObject in [_captureDevice allVideoFormatObjects]) {
 		if([NSNull null] == videoFormatObject) {
 			[[formatPopUp menu] addItem:[NSMenuItem separatorItem]];
 			continue;
@@ -129,9 +129,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[[formatPopUp menu] addItem:item];
 	}
 	[formatPopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoFormatObject)]];
-	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:_captureDevice.videoFormatObject]];
+	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:[_captureDevice videoFormatObject]]];
 
-	[deinterlacePopUp selectItemWithTag:_captureDevice.deinterlacingMode];
+	[deinterlacePopUp selectItemWithTag:[_captureDevice deinterlacingMode]];
 	[deinterlacePopUp setEnabled:!!_captureDevice];
 
 	[brightnessSlider setEnabled:[_captureDevice respondsToSelector:@selector(brightness)]];
@@ -139,11 +139,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[saturationSlider setEnabled:[_captureDevice respondsToSelector:@selector(saturation)]];
 	[hueSlider setEnabled:[_captureDevice respondsToSelector:@selector(hue)]];
 	[volumeSlider setEnabled:[_captureDevice respondsToSelector:@selector(volume)]];
-	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? _captureDevice.brightness : 0.5f];
-	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? _captureDevice.contrast : 0.5f];
-	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? _captureDevice.saturation : 0.5f];
-	[hueSlider setDoubleValue:[hueSlider isEnabled] ? _captureDevice.hue : 0.5f];
-	[volumeSlider setDoubleValue:[volumeSlider isEnabled] ? _captureDevice.volume : 1.0f];
+	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? [_captureDevice brightness] : 0.5f];
+	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? [_captureDevice contrast] : 0.5f];
+	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? [_captureDevice saturation] : 0.5f];
+	[hueSlider setDoubleValue:[hueSlider isEnabled] ? [_captureDevice hue] : 0.5f];
+	[volumeSlider setDoubleValue:[volumeSlider isEnabled] ? [_captureDevice volume] : 1.0f];
 	[self _snapSlider:brightnessSlider];
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];
@@ -157,7 +157,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif
 {
 	[audioSourcePopUp removeAllItems];
-	ECVAudioDevice *const preferredInput = _captureDevice.audioInputOfCaptureHardware;
+	ECVAudioDevice *const preferredInput = [_captureDevice audioInputOfCaptureHardware];
 	if(preferredInput) {
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:preferredInput.name action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:preferredInput];
@@ -170,7 +170,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[item setRepresentedObject:device];
 		[[audioSourcePopUp menu] addItem:item];
 	}
-	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:_captureDevice.audioInput]];
+	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:[_captureDevice audioInput]]];
 	[audioSourcePopUp setEnabled:!!_captureDevice];
 }
 
