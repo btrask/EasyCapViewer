@@ -283,6 +283,7 @@ ECVNoDeviceError:
 	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
 	if(playing) [self setPlaying:YES];
 }
+@synthesize videoStorage = _videoStorage;
 
 #pragma mark -
 
@@ -635,11 +636,11 @@ ECVNoDeviceError:
 	_videoStorage = [storage retain];
 	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
 	(void)[self startAudio];
-	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlayingWithStorage:) withObject:storage];
+	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
 }
 - (void)_stopPlaying
 {
-	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying) withObject:nil];
+	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
 	[self stopAudio];
 	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
 }

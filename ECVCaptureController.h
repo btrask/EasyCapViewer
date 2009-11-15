@@ -84,7 +84,7 @@ typedef NSUInteger ECVCropType;
 - (NSRect)cropRectWithType:(ECVCropType)type;
 - (NSRect)cropRectWithAspectRatio:(ECVAspectRatio)ratio;
 
-- (void)startPlayingWithStorage:(ECVVideoStorage *)storage;
+- (void)startPlaying;
 - (void)stopPlaying;
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame;
 

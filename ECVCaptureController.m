@@ -272,9 +272,9 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 #pragma mark -
 
-- (void)startPlayingWithStorage:(ECVVideoStorage *)storage
+- (void)startPlaying
 {
-	[videoView setVideoStorage:storage];
+	[videoView setVideoStorage:[[self document] videoStorage]];
 	[videoView startDrawing];
 }
 - (void)stopPlaying
@@ -299,6 +299,11 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 #pragma mark -NSWindowController
 
+- (void)setDocument:(NSDocument *)doc
+{
+	[super setDocument:doc];
+	[videoView setVideoStorage:[[self document] videoStorage]];
+}
 - (void)windowDidLoad
 {
 	NSWindow *const w = [self window];

@@ -100,6 +100,7 @@ extern NSString *const ECVSaturationKey;
 @property(assign, getter = isPlaying) BOOL playing;
 - (void)togglePlaying;
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
+@property(readonly) ECVVideoStorage *videoStorage;
 
 @property(readonly, getter = isRecording) BOOL recording;
 - (void)startRecordingWithURL:(NSURL *)URL;
