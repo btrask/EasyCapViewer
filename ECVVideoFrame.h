@@ -24,10 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Views
 @class ECVVideoView;
 
-// Other Sources
-#import "ECVFrameReading.h"
-
-@interface ECVVideoFrame : NSObject <ECVFrameReading>
+@interface ECVVideoFrame : NSObject <NSLocking>
 {
 	@private
 	ECVVideoView *_videoView;
@@ -37,6 +34,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (id)initWithVideoView:(ECVVideoView *)view bufferIndex:(NSUInteger)index;
 @property(readonly) NSUInteger bufferIndex;
+
+@property(readonly) BOOL isValid;
+@property(readonly) void *bufferBytes;
+@property(readonly) size_t bufferSize;
+@property(readonly) ECVPixelSize pixelSize;
+@property(readonly) OSType pixelFormatType;
+@property(readonly) size_t bytesPerRow;
+
+- (void)markAsInvalid;
 - (void)invalidateWait:(BOOL)wait;
 - (void)invalidate;
 - (void)tryToInvalidate;

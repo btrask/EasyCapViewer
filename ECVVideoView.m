@@ -152,6 +152,38 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	CGLUnlockContext(contextObj);
 }
+- (size_t)bufferSize
+{
+	[_bufferPoolLock lock];
+	NSUInteger const b = _bufferSize;
+	[_bufferPoolLock unlock];
+	return b;
+}
+- (ECVPixelSize)pixelSize
+{
+	[_bufferPoolLock lock];
+	ECVPixelSize const p = _pixelSize;
+	[_bufferPoolLock unlock];
+	return p;
+}
+- (OSType)pixelFormatType
+{
+	[_bufferPoolLock lock];
+	OSType const t = _pixelFormatType;
+	[_bufferPoolLock unlock];
+	return t;
+}
+- (size_t)bytesPerRow
+{
+	[_bufferPoolLock lock];
+	size_t const bpr = _pixelSize.width * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
+	[_bufferPoolLock unlock];
+	return bpr;
+}
+
+#pragma mark -
+
+@synthesize currentFillBufferIndex = _currentFillBufferIndex;
 - (NSUInteger)bufferIndexByBlurringPastFrames
 {
 	NSUInteger const blurredBufferIndex = _blurredBufferIndex;
@@ -192,30 +224,17 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 	return NSNotFound;
 }
-- (void)drawBufferIndex:(NSUInteger)index
+- (void)resetFrames
 {
-	if(NSNotFound == index) return;
 	[_bufferPoolLock lock];
-	[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:index] atIndex:0];
+	[_readyBufferIndexQueue removeAllObjects];
+	_frameDropStrength = 0.0f;
 	[_bufferPoolLock unlock];
+	_currentFillBufferIndex = NSNotFound;
 }
-- (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index
-{
-	if(NSNotFound == index) return nil;
-	ECVVideoFrame *const frame = [[[ECVVideoFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
-	[_attachedFrameLock lock];
-	[_attachedFrames insertObject:frame atIndex:0];
-	[_attachedFrameIndexes addIndex:index];
-	[_attachedFrameLock unlock];
-	return frame;
-}
-- (void)invalidateFrame:(id<ECVFrameReading>)frame
-{
-	[_attachedFrameLock lock];
-	[_attachedFrames removeObjectIdenticalTo:frame];
-	[_attachedFrameIndexes removeIndex:[(ECVVideoFrame *)frame bufferIndex]];
-	[_attachedFrameLock unlock];
-}
+
+#pragma mark -
+
 - (void *)bufferBytesAtIndex:(NSUInteger)index
 {
 	if(NSNotFound == index) return NULL;
@@ -227,15 +246,30 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	uint64_t const val = ECVPixelFormatBlackPattern(_pixelFormatType);
 	memset_pattern8([self bufferBytesAtIndex:index], &val, self.bufferSize);
 }
-- (void)resetFrames
+- (void)drawBufferIndex:(NSUInteger)index
 {
+	if(NSNotFound == index) return;
 	[_bufferPoolLock lock];
-	[_readyBufferIndexQueue removeAllObjects];
-	_frameDropStrength = 0.0f;
+	[_readyBufferIndexQueue insertObject:[NSNumber numberWithUnsignedInteger:index] atIndex:0];
 	[_bufferPoolLock unlock];
-	_currentFillBufferIndex = NSNotFound;
 }
-@synthesize currentFillBufferIndex = _currentFillBufferIndex;
+- (ECVVideoFrame *)frameWithBufferAtIndex:(NSUInteger)index
+{
+	if(NSNotFound == index) return nil;
+	ECVVideoFrame *const frame = [[[ECVVideoFrame alloc] initWithVideoView:self bufferIndex:index] autorelease];
+	[_attachedFrameLock lock];
+	[_attachedFrames insertObject:frame atIndex:0];
+	[_attachedFrameIndexes addIndex:index];
+	[_attachedFrameLock unlock];
+	return frame;
+}
+- (void)invalidateFrame:(ECVVideoFrame *)frame
+{
+	[_attachedFrameLock lock];
+	[_attachedFrames removeObjectIdenticalTo:frame];
+	[_attachedFrameIndexes removeIndex:[frame bufferIndex]];
+	[_attachedFrameLock unlock];
+}
 
 #pragma mark -
 
@@ -592,46 +626,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_attachedFrameIndexes = [[NSMutableIndexSet alloc] init];
 	[self resetFrames];
 }
-
-#pragma mark -<ECVFrameReading>
-
-- (BOOL)isValid
-{
-	return NO;
-}
-- (void *)bufferBytes
-{
-	return NULL;
-}
-- (NSUInteger)bufferSize
-{
-	[_bufferPoolLock lock];
-	NSUInteger const b = _bufferSize;
-	[_bufferPoolLock unlock];
-	return b;
-}
-- (ECVPixelSize)pixelSize
-{
-	[_bufferPoolLock lock];
-	ECVPixelSize const p = _pixelSize;
-	[_bufferPoolLock unlock];
-	return p;
-}
-- (OSType)pixelFormatType
-{
-	[_bufferPoolLock lock];
-	OSType const t = _pixelFormatType;
-	[_bufferPoolLock unlock];
-	return t;
-}
-- (size_t)bytesPerRow
-{
-	[_bufferPoolLock lock];
-	size_t const bpr = _pixelSize.width * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
-	[_bufferPoolLock unlock];
-	return bpr;
-}
-- (void)markAsInvalid {}
 
 #pragma mark -<NSLocking>
 

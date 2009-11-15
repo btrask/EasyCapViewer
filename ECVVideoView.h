@@ -24,12 +24,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
 
-// Other Sources
-#import "ECVFrameReading.h"
+// Models
+@class ECVVideoFrame;
 
 @protocol ECVVideoViewCell, ECVVideoViewDelegate;
 
-@interface ECVVideoView : NSOpenGLView <ECVFrameReading, NSWindowDelegate>
+@interface ECVVideoView : NSOpenGLView <NSWindowDelegate>
 {
 	@private
 	NSMutableData *_bufferData;
@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	CGFloat _frameDropStrength;
 	OSType _pixelFormatType;
 	ECVPixelSize _pixelSize;
-	NSUInteger _bufferSize;
+	size_t _bufferSize;
 
 	NSRecursiveLock *_attachedFrameLock;
 	NSMutableArray *_attachedFrames;
@@ -63,6 +63,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods must be called from the same thread.
 - (void)setPixelFormat:(OSType)formatType size:(ECVPixelSize)size;
+@property(readonly) size_t bufferSize;
+@property(readonly) ECVPixelSize pixelSize;
+@property(readonly) OSType pixelFormatType;
+@property(readonly) size_t bytesPerRow;
 
 @property(assign, nonatomic) NSUInteger currentFillBufferIndex;
 - (NSUInteger)bufferIndexByBlurringPastFrames;
@@ -72,8 +76,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void *)bufferBytesAtIndex:(NSUInteger)index;
 - (void)clearBufferAtIndex:(NSUInteger)index;
 - (void)drawBufferIndex:(NSUInteger)index;
-- (id<ECVFrameReading>)frameWithBufferAtIndex:(NSUInteger)index;
-- (void)invalidateFrame:(id<ECVFrameReading>)frame;
+- (ECVVideoFrame *)frameWithBufferAtIndex:(NSUInteger)index;
+- (void)invalidateFrame:(ECVVideoFrame *)frame;
 
 // These methods must be called from the main thread.
 - (void)startDrawing;

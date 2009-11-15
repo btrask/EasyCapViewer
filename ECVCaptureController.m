@@ -91,7 +91,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 @interface ECVCaptureController(Private)
 
-- (void)_recordVideoFrame:(id<ECVFrameReading>)frame;
+- (void)_recordVideoFrame:(ECVVideoFrame *)frame;
 - (void)_recordBufferedAudio;
 - (void)_hideMenuBar;
 
@@ -862,7 +862,7 @@ ECVNoDeviceError:
 
 #pragma mark -ECVCaptureController(Private)
 
-- (void)_recordVideoFrame:(id<ECVFrameReading>)frame
+- (void)_recordVideoFrame:(ECVVideoFrame *)frame
 {
 #if !__LP64__
 	[_videoTrack addFrame:frame];

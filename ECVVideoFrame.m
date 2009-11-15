@@ -43,6 +43,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return _bufferIndex;
 }
+
+#pragma mark -
+
+- (BOOL)isValid
+{
+	return !!_videoView;
+}
+- (void *)bufferBytes
+{
+	return [_videoView bufferBytesAtIndex:_bufferIndex];
+}
+- (size_t)bufferSize
+{
+	return [_videoView bufferSize];
+}
+- (ECVPixelSize)pixelSize
+{
+	return [_videoView pixelSize];
+}
+- (OSType)pixelFormatType
+{
+	return [_videoView pixelFormatType];
+}
+- (size_t)bytesPerRow
+{
+	return [_videoView bytesPerRow];
+}
+
+#pragma mark -
+
+- (void)markAsInvalid
+{
+	[_videoView invalidateFrame:self];
+	_videoView = nil;
+}
 - (void)invalidateWait:(BOOL)wait
 {
 	if(wait) [_videoViewLock lock];
@@ -66,38 +101,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSParameterAssert(!_videoView);
 	[_videoViewLock release];
 	[super dealloc];
-}
-
-#pragma mark -<ECVFrameReading>
-
-- (BOOL)isValid
-{
-	return !!_videoView;
-}
-- (void *)bufferBytes
-{
-	return [_videoView bufferBytesAtIndex:_bufferIndex];
-}
-- (NSUInteger)bufferSize
-{
-	return _videoView.bufferSize;
-}
-- (ECVPixelSize)pixelSize
-{
-	return _videoView.pixelSize;
-}
-- (OSType)pixelFormatType
-{
-	return _videoView.pixelFormatType;
-}
-- (size_t)bytesPerRow
-{
-	return _videoView.bytesPerRow;
-}
-- (void)markAsInvalid
-{
-	[_videoView invalidateFrame:self];
-	_videoView = nil;
 }
 
 #pragma mark -<NSLocking>

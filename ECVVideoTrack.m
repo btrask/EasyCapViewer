@@ -25,9 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoTrack.h"
 #import <CoreVideo/CoreVideo.h>
 
+// Models
+#import "ECVVideoFrame.h"
+
 // Other Sources
 #import "ECVDebug.h"
-#import "ECVFrameReading.h"
 
 @interface ECVVideoTrack(Private)
 
@@ -35,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @end
 
-static void ECVPixelBufferReleaseBytesCallback(id<ECVFrameReading> frame, const void *baseAddress)
+static void ECVPixelBufferReleaseBytesCallback(ECVVideoFrame *frame, const void *baseAddress)
 {
 	[frame markAsInvalid];
 	[frame unlock];
@@ -90,7 +92,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 #pragma mark -
 
-- (void)addFrame:(id<ECVFrameReading>)frame
+- (void)addFrame:(ECVVideoFrame *)frame
 {
 	[frame lock];
 	if(frame.isValid) {
