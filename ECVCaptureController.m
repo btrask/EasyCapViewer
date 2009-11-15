@@ -66,6 +66,16 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 #pragma mark -ECVCaptureController
 
+- (IBAction)newViewer:(id)sender
+{
+	ECVCaptureController *const controller = [[[[self class] alloc] init] autorelease];
+	[[self document] addWindowController:controller];
+	[controller showWindow:sender];
+	if([[self document] isPlaying]) [controller startPlaying];
+}
+
+#pragma mark -
+
 - (IBAction)play:(id)sender
 {
 	[[self document] setPlaying:YES];
@@ -299,11 +309,6 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 #pragma mark -NSWindowController
 
-- (void)setDocument:(NSDocument *)doc
-{
-	[super setDocument:doc];
-	[videoView setVideoStorage:[[self document] videoStorage]];
-}
 - (void)windowDidLoad
 {
 	NSWindow *const w = [self window];
