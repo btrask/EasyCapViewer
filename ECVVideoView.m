@@ -212,16 +212,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[[self window] invalidateCursorRectsForView:self];
 }
 
-#pragma mark -
-
-//- (NSUInteger)currentDrawBufferIndex
-//{
-//	[_bufferPoolLock lock];
-//	NSUInteger const i = _currentDrawBufferIndex;
-//	[_bufferPoolLock unlock];
-//	return i;
-//}
-
 #pragma mark -ECVVideoView(Private)
 
 - (GLuint)_textureNameAtIndex:(NSUInteger)index
