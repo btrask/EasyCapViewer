@@ -44,12 +44,13 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size
+- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
 		_numberOfBuffers = count;
 		_pixelFormatType = formatType;
 		_pixelSize = size;
+		_frameRate = frameRate;
 		_bytesPerRow = _pixelSize.width * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
 		_bufferSize = _bytesPerRow * _pixelSize.height;
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * _bufferSize];
@@ -60,26 +61,12 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 	}
 	return self;
 }
-- (NSUInteger)numberOfBuffers
-{
-	return _numberOfBuffers;
-}
-- (OSType)pixelFormatType
-{
-	return _pixelFormatType;
-}
-- (ECVPixelSize)pixelSize
-{
-	return _pixelSize;
-}
-- (size_t)bytesPerRow
-{
-	return _bytesPerRow;
-}
-- (size_t)bufferSize
-{
-	return _bufferSize;
-}
+@synthesize numberOfBuffers = _numberOfBuffers;
+@synthesize pixelFormatType = _pixelFormatType;
+@synthesize pixelSize = _pixelSize;
+@synthesize frameRate = _frameRate;
+@synthesize bytesPerRow = _bytesPerRow;
+@synthesize bufferSize = _bufferSize;
 - (void *)allBufferBytes
 {
 	return [_allBufferData mutableBytes];
@@ -136,10 +123,6 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 
 - (void)dealloc
 {
-	[_lock lock];
-	[[[(NSArray *)_frames copy] autorelease] makeObjectsPerformSelector:@selector(lockAndRemoveFromStorage)];
-	[_lock unlock];
-
 	[_allBufferData release];
 	[_lock release];
 	CFRelease(_frames);

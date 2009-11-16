@@ -42,26 +42,19 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	if((self = [super init])) {
 		_lock = [[NSLock alloc] init];
-
-		_videoStorage = storage;
+		_videoStorage = [storage retain];
 		_bufferIndex = index;
-
-		_pixelSize = [_videoStorage pixelSize];
-		_pixelFormatType = [_videoStorage pixelFormatType];
-		_bytesPerRow = [_videoStorage bytesPerRow];
 	}
 	return self;
 }
-- (NSUInteger)bufferIndex
-{
-	return _bufferIndex;
-}
+@synthesize videoStorage = _videoStorage;
+@synthesize bufferIndex = _bufferIndex;
 
 #pragma mark -
 
 - (BOOL)isValid
 {
-	return _videoStorage || _bufferData;
+	return _bufferData || NSNotFound != _bufferIndex;
 }
 - (BOOL)isDroppable
 {
@@ -69,7 +62,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 }
 - (BOOL)isDropped
 {
-	return !_videoStorage;
+	return NSNotFound == _bufferIndex;
 }
 - (BOOL)isDetached
 {
@@ -82,22 +75,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	return _bufferData ? [_bufferData mutableBytes] : [_videoStorage bufferBytesAtIndex:_bufferIndex];
 }
-- (size_t)bufferSize
-{
-	return _bufferData ? [_bufferData length] : [_videoStorage bufferSize];
-}
-- (ECVPixelSize)pixelSize
-{
-	return _pixelSize;
-}
-- (OSType)pixelFormatType
-{
-	return _pixelFormatType;
-}
-- (size_t)bytesPerRow
-{
-	return _bytesPerRow;
-}
 
 #pragma mark -
 
@@ -107,18 +84,17 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	_droppable = YES;
 	[_lock unlock];
 }
-- (void)detachInsteadOfDroppingWhenRemoved
+- (void)detachInsteadOfInvalidatingWhenRemoved
 {
 	[_lock lock];
-	_detachInsteadOfDroppingWhenRemoved = YES;
+	_detachInsteadOfInvalidatingWhenRemoved = YES;
 	[_lock unlock];
 }
 - (BOOL)removeFromStorage
 {
 	if(!_videoStorage || !_droppable) return NO;
-	if(_detachInsteadOfDroppingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[self bufferSize]];
+	if(_detachInsteadOfInvalidatingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[_videoStorage bufferSize]];
 	[_videoStorage removeFrame:self];
-	_videoStorage = nil;
 	_bufferIndex = NSNotFound;
 	return YES;
 }
@@ -141,8 +117,8 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (void)clear
 {
-	uint64_t const val = ECVPixelFormatBlackPattern([self pixelFormatType]);
-	memset_pattern8([self bufferBytes], &val, [self bufferSize]);
+	uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
+	memset_pattern8([self bufferBytes], &val, [_videoStorage bufferSize]);
 }
 - (void)fillWithFrame:(ECVVideoFrame *)frame
 {
@@ -150,7 +126,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if(frame) {
 		[frame lock];
 		if([frame isValid]) {
-			size_t const l = MIN([self bufferSize], [frame bufferSize]);
+			size_t const l = MIN([_videoStorage bufferSize], [[frame videoStorage] bufferSize]);
 			UInt8 *const src = [frame bufferBytes];
 			UInt8 *const dst = [self bufferBytes];
 			memcpy(dst, src, l);
@@ -165,7 +141,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if(!frame) return;
 	[frame lock];
 	if([frame isValid]) {
-		size_t const l = MIN([self bufferSize], [frame bufferSize]);
+		size_t const l = MIN([_videoStorage bufferSize], [[frame videoStorage] bufferSize]);
 		UInt8 *const src = [frame bufferBytes];
 		UInt8 *const dst = [self bufferBytes];
 		NSUInteger i;
@@ -180,6 +156,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	[_videoStorage removeFrame:self];
 	[_lock release];
+	[_videoStorage release];
 	[_bufferData release];
 	[super dealloc];
 }

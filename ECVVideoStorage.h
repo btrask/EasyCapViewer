@@ -21,6 +21,8 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#import <QTKit/QTKit.h>
+
 // Models
 @class ECVVideoFrame;
 
@@ -30,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSUInteger _numberOfBuffers;
 	OSType _pixelFormatType;
 	ECVPixelSize _pixelSize;
+	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
 	NSMutableData *_allBufferData;
@@ -39,10 +42,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSMutableIndexSet *_unusedBufferIndexes;
 }
 
-- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size;
+- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size frameRate:(QTTime)frameRate;
 @property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) ECVPixelSize pixelSize;
+@property(readonly) QTTime frameRate;
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
 @property(readonly) void *allBufferBytes;

@@ -23,19 +23,20 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #if !__LP64__
 // Models
+@class ECVVideoStorage;
 @class ECVVideoFrame;
 
 #import "ECVTrack.h"
 @interface ECVVideoTrack : ECVTrack
 {
 	@private
+	ECVVideoStorage *_videoStorage;
 	TimeValue64 _frameDuration;
 	ICMCompressionSessionRef _compressionSession;
-	NSDictionary *_cleanApertureValue;
 	ICMEncodedFrameRef _encodedFrame;
 }
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
+- (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage;
 
 - (void)addFrame:(ECVVideoFrame *)frame;
 - (void)finish;
@@ -44,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface QTMovie(ECVVideoTrackCreation)
 
-- (ECVVideoTrack *)ECV_videoTrackWithSize:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate;
+- (ECVVideoTrack *)ECV_videoTrackVideoStorage:(ECVVideoStorage *)storage;
 
 @end
 

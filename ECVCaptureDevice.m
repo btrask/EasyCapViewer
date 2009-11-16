@@ -304,7 +304,7 @@ ECVNoDeviceError:
 		0, 1,
 		0, 1,
 	};
-	_videoTrack = [[_movie ECV_videoTrackWithSize:ECVPixelSizeToSize(s) aperture:aperture codec:kJPEGCodecType quality:0.5f frameRate:[self frameRate]] retain];
+	_videoTrack = [[_movie ECV_videoTrackVideoStorage:_videoStorage] retain];
 
 	ECVAudioStream *const inputStream = [[[self.audioInput streams] objectEnumerator] nextObject];
 	if(inputStream) {
@@ -474,7 +474,7 @@ ECVNoDeviceError:
 	_pendingImageLength = 0;
 	_firstFrame = YES;
 
-	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:5 pixelFormatType:k2vuyPixelFormat size:s] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
+	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:5 pixelFormatType:k2vuyPixelFormat size:s frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
 	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {

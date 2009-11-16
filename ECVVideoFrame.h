@@ -29,18 +29,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@protected
 	NSLock *_lock;
 	BOOL _droppable;
-	BOOL _detachInsteadOfDroppingWhenRemoved;
-
-	__weak ECVVideoStorage *_videoStorage;
+	BOOL _detachInsteadOfInvalidatingWhenRemoved;
+	ECVVideoStorage *_videoStorage;
 	NSUInteger _bufferIndex;
-
-	OSType _pixelFormatType;
-	ECVPixelSize _pixelSize;
-	size_t _bytesPerRow;
 	NSMutableData *_bufferData;
 }
 
 - (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index;
+@property(readonly) ECVVideoStorage *videoStorage;
 @property(readonly) NSUInteger bufferIndex;
 
 @property(readonly) BOOL isValid;
@@ -49,13 +45,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) BOOL isDetached;
 
 @property(readonly) void *bufferBytes;
-@property(readonly) size_t bufferSize;
-@property(readonly) ECVPixelSize pixelSize;
-@property(readonly) OSType pixelFormatType;
-@property(readonly) size_t bytesPerRow;
 
 - (void)becomeDroppable;
-- (void)detachInsteadOfDroppingWhenRemoved;
+- (void)detachInsteadOfInvalidatingWhenRemoved;
 - (BOOL)removeFromStorage;
 - (BOOL)lockAndRemoveFromStorage;
 - (BOOL)tryLockAndRemoveFromStorage;

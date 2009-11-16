@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <CoreVideo/CoreVideo.h>
 
 // Models
+#import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 
 // Other Sources
@@ -52,21 +53,19 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 #pragma mark -ECVVideoTrack
 
-- (id)initWithTrack:(QTTrack *)track size:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
+- (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage
 {
 	if((self = [super initWithTrack:track])) {
-		_frameDuration = frameRate.timeValue;
-
 		ICMCompressionSessionOptionsRef options = NULL;
 		ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
 		Boolean const durationsNeeded = true;
 		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_DurationsNeeded, sizeof(durationsNeeded), &durationsNeeded));
 		NSTimeInterval frameRateInterval = 0.0f;
-		if(QTGetTimeInterval(frameRate, &frameRateInterval)) {
+		if(QTGetTimeInterval([_videoStorage frameRate], &frameRateInterval)) {
 			Fixed const frameRateFixed = X2Fix(frameRateInterval);
 			ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, sizeof(frameRateFixed), &frameRateFixed));
 		}
-		UInt32 const frameRateMicroseconds = QTMakeTimeScaled(frameRate, ECVMicrosecondsPerSecond).timeValue;
+		UInt32 const frameRateMicroseconds = QTMakeTimeScaled([_videoStorage frameRate], ECVMicrosecondsPerSecond).timeValue;
 		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, sizeof(frameRateMicroseconds), &frameRateMicroseconds));
 		OSType const scalingMode = kICMScalingMode_StretchCleanAperture;
 		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_ScalingMode, sizeof(scalingMode), &scalingMode));
@@ -75,16 +74,9 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		callback.frameDataAllocator = kCFAllocatorDefault;
 		callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
 		callback.encodedFrameOutputRefCon = self;
-		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, roundf(size.width), roundf(size.height), codec, frameRate.timeScale, options, NULL, &callback, &_compressionSession));
+		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, [_videoStorage pixelSize].width, [_videoStorage pixelSize].height, kDVCNTSCCodecType, [_videoStorage frameRate].timeScale, options, NULL, &callback, &_compressionSession));
 
 		ICMCompressionSessionOptionsRelease(options);
-
-		_cleanApertureValue = [[NSDictionary alloc] initWithObjectsAndKeys:
-			[NSNumber numberWithDouble:(double)aperture.horizOffN / aperture.horizOffD], kCVImageBufferCleanApertureHorizontalOffsetKey,
-			[NSNumber numberWithDouble:(double)aperture.vertOffN / aperture.vertOffD], kCVImageBufferCleanApertureVerticalOffsetKey,
-			[NSNumber numberWithDouble:(double)aperture.cleanApertureWidthN / aperture.cleanApertureWidthD], kCVImageBufferCleanApertureWidthKey,
-			[NSNumber numberWithDouble:(double)aperture.cleanApertureHeightN / aperture.cleanApertureHeightD], kCVImageBufferCleanApertureHeightKey,
-			nil];
 	}
 	return self;
 }
@@ -96,11 +88,10 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 	[frame lock];
 	if(frame.isValid) {
 		[frame retain];
-		ECVPixelSize const size = frame.pixelSize;
+		ECVPixelSize const size = [_videoStorage pixelSize];
 		CVPixelBufferRef pixelBuffer = NULL;
-		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, frame.pixelFormatType, frame.bufferBytes, frame.bytesPerRow, (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
-		CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanApertureValue, kCVAttachmentMode_ShouldNotPropagate);
-		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, _frameDuration, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, [_videoStorage pixelFormatType], frame.bufferBytes, [_videoStorage bytesPerRow], (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeScale, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 		CVPixelBufferRelease(pixelBuffer);
 	} else {
 		[frame unlock];
@@ -127,7 +118,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 - (void)dealloc
 {
-	[_cleanApertureValue release];
 	ICMCompressionSessionRelease(_compressionSession);
 	ICMEncodedFrameRelease(_encodedFrame);
 	[super dealloc];
@@ -137,17 +127,17 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 @implementation QTMovie(ECVVideoTrackCreation)
 
-- (ECVVideoTrack *)ECV_videoTrackWithSize:(NSSize)size aperture:(CleanApertureImageDescriptionExtension)aperture codec:(CodecType)codec quality:(CGFloat)quality frameRate:(QTTime)frameRate
+- (ECVVideoTrack *)ECV_videoTrackVideoStorage:(ECVVideoStorage *)storage
 {
 	NSParameterAssert([[[self movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
-	Track const track = NewMovieTrack([self quickTimeMovie], X2Fix(roundf(size.width)), X2Fix(roundf(size.height)), kNoVolume);
+	Track const track = NewMovieTrack([self quickTimeMovie], Long2Fix([storage pixelSize].width), Long2Fix([storage pixelSize].height), kNoVolume);
 	if(!track) return nil;
-	Media const media = NewTrackMedia(track, VideoMediaType, frameRate.timeScale, NULL, 0);
+	Media const media = NewTrackMedia(track, VideoMediaType, [storage frameRate].timeScale, NULL, 0);
 	if(!media) {
 		DisposeMovieTrack(track);
 		return nil;
 	}
-	return [[[ECVVideoTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] size:size aperture:aperture codec:codec quality:quality frameRate:frameRate] autorelease];
+	return [[[ECVVideoTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] videoStorage:storage] autorelease];
 }
 
 @end
