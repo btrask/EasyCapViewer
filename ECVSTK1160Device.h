@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVSTK1160Device;
 #import "stk11xx.h"
 
-// Other Sources
+// Chipsets
 #import "SAA711XChip.h"
 
 enum {

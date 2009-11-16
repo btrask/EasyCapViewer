@@ -201,6 +201,7 @@
 				0EB070DB10B0992400B9575B /* ECVCaptureDevice.h */,
 				0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */,
 				0E78CD500FC9F8E500E9C148 /* STK1160 */,
+				0EB0723410B0D89D00B9575B /* Chipsets */,
 				0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */,
 				0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */,
 				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
@@ -241,6 +242,15 @@
 				0E7FFD1D1089D60A000C8217 /* ECVCropCell.m */,
 			);
 			name = Views;
+			sourceTree = "<group>";
+		};
+		0EB0723410B0D89D00B9575B /* Chipsets */ = {
+			isa = PBXGroup;
+			children = (
+				0E16F6AC10AE92C600730A18 /* SAA711XChip.h */,
+				0E16F6AD10AE92C600730A18 /* SAA711XChip.m */,
+			);
+			name = Chipsets;
 			sourceTree = "<group>";
 		};
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
@@ -318,8 +328,6 @@
 				0E0ACAE61020993E00C12D88 /* ECVSoundTrack.m */,
 				0E0AC91F102030CE00C12D88 /* ECVVideoTrack.h */,
 				0E0AC920102030CE00C12D88 /* ECVVideoTrack.m */,
-				0E16F6AC10AE92C600730A18 /* SAA711XChip.h */,
-				0E16F6AD10AE92C600730A18 /* SAA711XChip.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
