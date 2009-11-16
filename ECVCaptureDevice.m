@@ -296,14 +296,6 @@ ECVNoDeviceError:
 #if !__LP64__
 	if(_movie) return;
 	_movie = [[QTMovie alloc] initToWritableFile:[URL path] error:NULL];
-
-	ECVPixelSize const s = [self captureSize];
-	CleanApertureImageDescriptionExtension const aperture = {
-		s.width, 1,
-		s.height, 1,
-		0, 1,
-		0, 1,
-	};
 	_videoTrack = [[_movie ECV_videoTrackVideoStorage:_videoStorage] retain];
 
 	ECVAudioStream *const inputStream = [[[self.audioInput streams] objectEnumerator] nextObject];
