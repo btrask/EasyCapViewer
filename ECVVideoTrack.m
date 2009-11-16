@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+#define ECVCSOSetProperty(obj, prop, val) ECVOSStatus({ __typeof__(val) __val = (val); ICMCompressionSessionOptionsSetProperty(obj, kQTPropertyClass_ICMCompressionSessionOptions, (prop), sizeof(__val), &__val); }) // Be sure to cast val to the right type, since no implicit conversion occurs.
+
 @interface ECVVideoTrack(Private)
 
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
@@ -53,28 +55,23 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 #pragma mark -ECVVideoTrack
 
-- (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage
+- (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage size:(ECVPixelSize)size codec:(OSType)codec quality:(CGFloat)quality
 {
 	if((self = [super initWithTrack:track])) {
 		ICMCompressionSessionOptionsRef options = NULL;
 		ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
-		Boolean const durationsNeeded = true;
-		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_DurationsNeeded, sizeof(durationsNeeded), &durationsNeeded));
+		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_DurationsNeeded, (Boolean)true);
 		NSTimeInterval frameRateInterval = 0.0f;
-		if(QTGetTimeInterval([_videoStorage frameRate], &frameRateInterval)) {
-			Fixed const frameRateFixed = X2Fix(frameRateInterval);
-			ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, sizeof(frameRateFixed), &frameRateFixed));
-		}
-		UInt32 const frameRateMicroseconds = QTMakeTimeScaled([_videoStorage frameRate], ECVMicrosecondsPerSecond).timeValue;
-		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, sizeof(frameRateMicroseconds), &frameRateMicroseconds));
-		OSType const scalingMode = kICMScalingMode_StretchCleanAperture;
-		ECVOSStatus(ICMCompressionSessionOptionsSetProperty(options, kQTPropertyClass_ICMCompressionSessionOptions, kICMCompressionSessionOptionsPropertyID_ScalingMode, sizeof(scalingMode), &scalingMode));
+		if(QTGetTimeInterval([_videoStorage frameRate], &frameRateInterval)) ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, X2Fix(frameRateInterval));
+		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, (UInt32)QTMakeTimeScaled([_videoStorage frameRate], ECVMicrosecondsPerSecond).timeValue);
+		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
+		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_Quality, (CodecQ)round(quality * codecMaxQuality));
 
 		ICMEncodedFrameOutputRecord callback = {};
 		callback.frameDataAllocator = kCFAllocatorDefault;
 		callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
 		callback.encodedFrameOutputRefCon = self;
-		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, [_videoStorage pixelSize].width, [_videoStorage pixelSize].height, kDVCNTSCCodecType, [_videoStorage frameRate].timeScale, options, NULL, &callback, &_compressionSession));
+		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, size.width, size.height, codec, [_videoStorage frameRate].timeScale, options, NULL, &callback, &_compressionSession));
 
 		ICMCompressionSessionOptionsRelease(options);
 	}
@@ -83,14 +80,36 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 #pragma mark -
 
+- (NSRect)cropRect
+{
+	return _cropRect;
+}
+- (void)setCropRect:(NSRect)aRect
+{
+	_cropRect = aRect;
+	NSRect const c = aRect;
+	ECVPixelSize const s1 = [_videoStorage pixelSize];
+	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
+	[_cleanAperture release];
+	_cleanAperture = [[NSDictionary alloc] initWithObjectsAndKeys:
+		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
+		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,
+		[NSNumber numberWithDouble:round(NSMinX(c) * s1.width - (s1.width - s2.width) / 2.0f)], kCVImageBufferCleanApertureHorizontalOffsetKey,
+		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0f)], kCVImageBufferCleanApertureVerticalOffsetKey,
+		nil];
+}
+
+#pragma mark -
+
 - (void)addFrame:(ECVVideoFrame *)frame
 {
 	[frame lock];
-	if(frame.isValid) {
+	if([frame isValid]) {
 		[frame retain];
 		ECVPixelSize const size = [_videoStorage pixelSize];
 		CVPixelBufferRef pixelBuffer = NULL;
-		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, [_videoStorage pixelFormatType], frame.bufferBytes, [_videoStorage bytesPerRow], (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, [_videoStorage pixelFormatType], [frame bufferBytes], [_videoStorage bytesPerRow], (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+		if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
 		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeScale, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 		CVPixelBufferRelease(pixelBuffer);
 	} else {
@@ -118,6 +137,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 - (void)dealloc
 {
+	[_cleanAperture release];
 	ICMCompressionSessionRelease(_compressionSession);
 	ICMEncodedFrameRelease(_encodedFrame);
 	[super dealloc];
@@ -127,17 +147,17 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 @implementation QTMovie(ECVVideoTrackCreation)
 
-- (ECVVideoTrack *)ECV_videoTrackVideoStorage:(ECVVideoStorage *)storage
+- (ECVVideoTrack *)ECV_videoTrackVideoStorage:(ECVVideoStorage *)storage size:(ECVPixelSize)size codec:(OSType)codec quality:(CGFloat)quality
 {
 	NSParameterAssert([[[self movieAttributes] objectForKey:QTMovieEditableAttribute] boolValue]);
-	Track const track = NewMovieTrack([self quickTimeMovie], Long2Fix([storage pixelSize].width), Long2Fix([storage pixelSize].height), kNoVolume);
+	Track const track = NewMovieTrack([self quickTimeMovie], Long2Fix(size.width), Long2Fix(size.height), kNoVolume);
 	if(!track) return nil;
 	Media const media = NewTrackMedia(track, VideoMediaType, [storage frameRate].timeScale, NULL, 0);
 	if(!media) {
 		DisposeMovieTrack(track);
 		return nil;
 	}
-	return [[[ECVVideoTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] videoStorage:storage] autorelease];
+	return [[[ECVVideoTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] videoStorage:storage size:size codec:codec quality:quality] autorelease];
 }
 
 @end

@@ -22,6 +22,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QuartzCore/QuartzCore.h>
+#import <QTKit/QTKit.h>
 
 // Models
 @class ECVVideoFrame;
@@ -30,6 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoView.h"
 @class ECVPlayButtonCell;
 #import "ECVCropCell.h"
+
+// Other Sources
+@class ECVAudioPipe;
+@class ECVSoundTrack;
+@class ECVVideoTrack;
 
 enum {
 	ECV1x1AspectRatio = 3,
@@ -53,8 +59,17 @@ typedef NSUInteger ECVCropType;
 {
 	@private
 	IBOutlet ECVVideoView *videoView;
+	IBOutlet NSView *exportAccessoryView;
+	IBOutlet NSPopUpButton *videoCodecPopUp;
+	IBOutlet NSSlider *videoQualitySlider;
+
 	BOOL _fullScreen;
 	ECVPlayButtonCell *_playButtonCell;
+
+	QTMovie *_movie;
+	ECVVideoTrack *_videoTrack;
+	ECVSoundTrack *_soundTrack;
+	ECVAudioPipe *_audioRecordingPipe;
 }
 
 - (IBAction)cloneViewer:(id)sender;
@@ -65,6 +80,7 @@ typedef NSUInteger ECVCropType;
 
 - (IBAction)startRecording:(id)sender;
 - (IBAction)stopRecording:(id)sender;
+- (IBAction)changeCodec:(id)sender;
 
 - (IBAction)toggleFullScreen:(id)sender;
 - (IBAction)changeScale:(id)sender;
@@ -89,5 +105,6 @@ typedef NSUInteger ECVCropType;
 - (void)startPlaying;
 - (void)stopPlaying;
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame;
+- (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue;
 
 @end

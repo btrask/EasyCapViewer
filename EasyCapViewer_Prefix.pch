@@ -38,9 +38,13 @@ typedef struct {
 	NSUInteger height;
 } ECVPixelSize;
 
-NS_INLINE NSSize ECVPixelSizeToSize(ECVPixelSize s)
+NS_INLINE NSSize ECVPixelSizeToNSSize(ECVPixelSize s)
 {
 	return NSMakeSize(s.width, s.height);
+}
+NS_INLINE ECVPixelSize ECVPixelSizeFromNSSize(NSSize s)
+{
+	return (ECVPixelSize){round(s.width), round(s.height)};
 }
 NS_INLINE NSRect ECVScaledRect(NSRect r, NSSize s)
 {

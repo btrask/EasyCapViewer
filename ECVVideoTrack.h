@@ -31,12 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	ECVVideoStorage *_videoStorage;
-	TimeValue64 _frameDuration;
+	NSRect _cropRect;
+	NSDictionary *_cleanAperture;
 	ICMCompressionSessionRef _compressionSession;
 	ICMEncodedFrameRef _encodedFrame;
 }
 
-- (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage;
+- (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage size:(ECVPixelSize)size codec:(OSType)codec quality:(CGFloat)quality;
+
+@property(assign) NSRect cropRect;
 
 - (void)addFrame:(ECVVideoFrame *)frame;
 - (void)finish;
@@ -45,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface QTMovie(ECVVideoTrackCreation)
 
-- (ECVVideoTrack *)ECV_videoTrackVideoStorage:(ECVVideoStorage *)storage;
+- (ECVVideoTrack *)ECV_videoTrackVideoStorage:(ECVVideoStorage *)storage size:(ECVPixelSize)size codec:(OSType)codec quality:(CGFloat)quality;
 
 @end
 

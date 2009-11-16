@@ -116,7 +116,7 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 {
 	CFIndex const count = CFArrayGetCount(_frames);
 	NSUInteger const keep = count % 2;
-	[[(NSArray *)_frames subarrayWithRange:NSMakeRange(0, count - keep)] makeObjectsPerformSelector:@selector(tryLockAndRemoveFromStorage)];
+	[[(NSArray *)_frames subarrayWithRange:NSMakeRange(0, count - keep)] makeObjectsPerformSelector:@selector(removeFromStorage)];
 }
 
 #pragma mark -NSObject

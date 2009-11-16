@@ -38,9 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAudioDevice.h"
 #import "ECVAudioPipe.h"
 #import "ECVDebug.h"
-#import "ECVSoundTrack.h"
-#import "ECVQTKitAdditions.h"
-#import "ECVVideoTrack.h"
 
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";
 NSString *const ECVBrightnessKey = @"ECVBrightness";
@@ -49,23 +46,6 @@ NSString *const ECVHueKey = @"ECVHue";
 NSString *const ECVSaturationKey = @"ECVSaturation";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";
-
-#if !__LP64__
-#define ECVFramesPerPacket 1u
-#define ECVChannelsPerFrame 2u
-#define ECVBitsPerByte 8u
-static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
-	48000.0f,
-	kAudioFormatLinearPCM,
-	kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsPacked,
-	sizeof(Float32) * ECVChannelsPerFrame * ECVFramesPerPacket,
-	ECVFramesPerPacket,
-	sizeof(Float32) * ECVChannelsPerFrame,
-	ECVChannelsPerFrame,
-	sizeof(Float32) * ECVBitsPerByte,
-	0u,
-};
-#endif
 
 enum {
 	ECVNotPlaying,
@@ -78,9 +58,6 @@ enum {
 
 - (void)_startPlayingWithStorage:(ECVVideoStorage *)storage;
 - (void)_stopPlaying;
-
-- (void)_recordVideoFrame:(ECVVideoFrame *)frame;
-- (void)_recordBufferedAudio;
 
 @end
 
@@ -246,7 +223,6 @@ ECVNoDeviceError:
 		} else [_playLock unlock];
 	} else {
 		if([self isPlaying]) {
-			[self stopRecording];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
 			usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
@@ -265,7 +241,6 @@ ECVNoDeviceError:
 			break;
 		case ECVStartPlaying:
 		case ECVPlaying:
-			[self stopRecording];
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
 			usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
@@ -284,51 +259,6 @@ ECVNoDeviceError:
 	if(playing) [self setPlaying:YES];
 }
 @synthesize videoStorage = _videoStorage;
-
-#pragma mark -
-
-- (BOOL)isRecording
-{
-	return !!_movie;
-}
-- (void)startRecordingWithURL:(NSURL *)URL
-{
-#if !__LP64__
-	if(_movie) return;
-	_movie = [[QTMovie alloc] initToWritableFile:[URL path] error:NULL];
-	_videoTrack = [[_movie ECV_videoTrackVideoStorage:_videoStorage] retain];
-
-	ECVAudioStream *const inputStream = [[[self.audioInput streams] objectEnumerator] nextObject];
-	if(inputStream) {
-		_audioRecordingPipe = [[ECVAudioPipe alloc] initWithInputDescription:inputStream.basicDescription outputDescription:ECVAudioRecordingOutputDescription];
-		_audioRecordingPipe.dropsBuffers = NO;
-		_soundTrack = [[_movie ECV_soundTrackWithDescription:_audioRecordingPipe.outputStreamDescription volume:1.0f] retain];
-	}
-
-	[[_soundTrack.track media] ECV_beginEdits];
-	[[_videoTrack.track media] ECV_beginEdits];
-#endif
-}
-- (void)stopRecording
-{
-#if !__LP64__
-	if(!_movie) return;
-	[_videoTrack finish];
-	[_soundTrack.track ECV_insertMediaAtTime:QTZeroTime];
-	[_videoTrack.track ECV_insertMediaAtTime:QTZeroTime];
-	[[_soundTrack.track media] ECV_endEdits];
-	[[_videoTrack.track media] ECV_endEdits];
-	[_soundTrack release];
-	[_videoTrack release];
-	_soundTrack = nil;
-	_videoTrack = nil;
-	[_audioRecordingPipe release];
-	_audioRecordingPipe = nil;
-	[_movie updateMovieFile];
-	[_movie release];
-	_movie = nil;
-#endif
-}
 
 #pragma mark -
 
@@ -466,7 +396,7 @@ ECVNoDeviceError:
 	_pendingImageLength = 0;
 	_firstFrame = YES;
 
-	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:5 pixelFormatType:k2vuyPixelFormat size:s frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
+	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:6 pixelFormatType:k2vuyPixelFormat size:s frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
 	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {
@@ -555,7 +485,6 @@ bail:
 		frameToDraw = _lastCompletedFrame;
 	}
 	if(frameToDraw) {
-		if(_videoTrack) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frameToDraw waitUntilDone:NO];
 		[_windowControllersLock lock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 		[_windowControllersLock unlock];
@@ -637,26 +566,6 @@ ECVNoDeviceError:
 	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
 }
 
-#pragma mark -
-
-- (void)_recordVideoFrame:(ECVVideoFrame *)frame
-{
-#if !__LP64__
-	[_videoTrack addFrame:frame];
-#endif
-}
-- (void)_recordBufferedAudio
-{
-#if !__LP64__
-	UInt32 const bufferSize = ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000; // Should be more than enough to keep up with the incoming data.
-	static u_int8_t *bytes;
-	if(!bytes) bytes = malloc(bufferSize);
-	AudioBufferList outputBufferList = {1, {2, bufferSize, bytes}};
-	[_audioRecordingPipe requestOutputBufferList:&outputBufferList];
-	[_soundTrack addSamples:&outputBufferList];
-#endif
-}
-
 #pragma mark -NSDocument
 
 - (void)addWindowController:(NSWindowController *)windowController
@@ -706,10 +615,6 @@ ECVNoDeviceError:
 	[_audioInput release];
 	[_audioOutput release];
 	[_audioPreviewingPipe release];
-	[_movie release];
-	[_videoTrack release];
-	[_soundTrack release];
-	[_audioRecordingPipe release];
 	[super dealloc];
 }
 
@@ -719,8 +624,10 @@ ECVNoDeviceError:
 {
 	NSParameterAssert(sender == _audioInput);
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
-	[_audioRecordingPipe receiveInputBufferList:bufferList];
-	if(_soundTrack) [self performSelectorOnMainThread:@selector(_recordBufferedAudio) withObject:nil waitUntilDone:NO];
+	NSValue *const bufferListValue = [NSValue valueWithPointer:bufferList];
+	[_windowControllersLock lock];
+	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:bufferListValue];
+	[_windowControllersLock unlock];
 }
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {

@@ -37,15 +37,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVConfigController.h"
 
+// Other Sources
+#import "ECVAudioPipe.h"
+#import "ECVSoundTrack.h"
+#import "ECVQTKitAdditions.h"
+#import "ECVVideoTrack.h"
+
 static NSString *const ECVAspectRatio2Key = @"ECVAspectRatio2";
 static NSString *const ECVVsyncKey = @"ECVVsync";
 static NSString *const ECVMagFilterKey = @"ECVMagFilter";
 static NSString *const ECVShowDroppedFramesKey = @"ECVShowDroppedFrames";
+static NSString *const ECVVideoCodecKey = @"ECVVideoCodec";
+static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 static NSString *const ECVCropRectKey = @"ECVCropRect";
+
+#if !__LP64__
+#define ECVFramesPerPacket 1u
+#define ECVChannelsPerFrame 2u
+#define ECVBitsPerByte 8u
+static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
+	48000.0f,
+	kAudioFormatLinearPCM,
+	kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsPacked,
+	sizeof(Float32) * ECVChannelsPerFrame * ECVFramesPerPacket,
+	ECVFramesPerPacket,
+	sizeof(Float32) * ECVChannelsPerFrame,
+	ECVChannelsPerFrame,
+	sizeof(Float32) * ECVBitsPerByte,
+	0u,
+};
+#endif
 
 @interface ECVCaptureController(Private)
 
 - (void)_hideMenuBar;
+
+- (void)_recordVideoFrame:(ECVVideoFrame *)frame;
+- (void)_recordBufferedAudio;
 
 @end
 
@@ -100,17 +128,75 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
 	[alert runModal];
 #else
+	if(_movie) return;
+
 	NSSavePanel *const savePanel = [NSSavePanel savePanel];
 	[savePanel setAllowedFileTypes:[NSArray arrayWithObject:@"mov"]];
 	[savePanel setCanCreateDirectories:YES];
 	[savePanel setCanSelectHiddenExtension:YES];
 	[savePanel setPrompt:NSLocalizedString(@"Record", nil)];
-	if(NSFileHandlingPanelOKButton == [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)]) [[self document] startRecordingWithURL:[savePanel URL]];
+	[savePanel setAccessoryView:exportAccessoryView];
+
+	[videoCodecPopUp removeAllItems];
+	NSArray *const videoCodecs = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVVideoCodecs"];
+	NSDictionary *const infoByVideoCodec = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"];
+	for(NSString *const codec in videoCodecs) {
+		NSDictionary *const codecInfo = [infoByVideoCodec objectForKey:codec];
+		if(!codecInfo) continue;
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[codecInfo objectForKey:@"ECVCodecLabel"] action:NULL keyEquivalent:@""] autorelease];
+		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType(codec)];
+		[[videoCodecPopUp menu] addItem:item];
+	}
+	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[NSUserDefaults standardUserDefaults] objectForKey:ECVVideoCodecKey])];
+	[self changeCodec:videoCodecPopUp];
+	[videoQualitySlider setDoubleValue:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVideoQualityKey]];
+
+	NSInteger const returnCode = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
+	if(NSFileHandlingPanelOKButton != returnCode) return;
+
+	_movie = [[QTMovie alloc] initToWritableFile:[savePanel filename] error:NULL];
+	ECVVideoStorage *const storage = [[self document] videoStorage];
+	_videoTrack = [[_movie ECV_videoTrackVideoStorage:storage size:ECVPixelSizeFromNSSize([self outputSize]) codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue]] retain];
+	[_videoTrack setCropRect:[self cropRect]];
+
+	ECVAudioStream *const inputStream = [[[[[self document] audioInput] streams] objectEnumerator] nextObject];
+	if(inputStream) {
+		_audioRecordingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription];
+		[_audioRecordingPipe setDropsBuffers:NO];
+		_soundTrack = [[_movie ECV_soundTrackWithDescription:[_audioRecordingPipe outputStreamDescription] volume:1.0f] retain];
+	}
+
+	[[[_soundTrack track] media] ECV_beginEdits];
+	[[[_videoTrack track] media] ECV_beginEdits];
 #endif
 }
 - (IBAction)stopRecording:(id)sender
 {
-	[[self document] stopRecording];
+#if !__LP64__
+	if(!_movie) return;
+	[_videoTrack finish];
+	[[_soundTrack track] ECV_insertMediaAtTime:QTZeroTime];
+	[[_videoTrack track] ECV_insertMediaAtTime:QTZeroTime];
+	[[[_soundTrack track] media] ECV_endEdits];
+	[[[_videoTrack track] media] ECV_endEdits];
+	[_soundTrack release];
+	[_videoTrack release];
+	_soundTrack = nil;
+	_videoTrack = nil;
+	[_audioRecordingPipe release];
+	_audioRecordingPipe = nil;
+	[_movie updateMovieFile];
+	[_movie release];
+	_movie = nil;
+#endif
+}
+- (IBAction)changeCodec:(id)sender
+{
+	NSString *const codec = NSFileTypeForHFSTypeCode((OSType)[sender selectedTag]);
+	[[NSUserDefaults standardUserDefaults] setObject:codec forKey:ECVVideoCodecKey];
+	NSNumber *const configurableQuality = [[[[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"] objectForKey:codec] objectForKey:@"ECVConfigurableQuality"];
+	[videoQualitySlider setEnabled:configurableQuality && [configurableQuality boolValue]];
 }
 
 #pragma mark -
@@ -290,10 +376,20 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 - (void)stopPlaying
 {
 	[videoView stopDrawing];
+	[self stopRecording:self];
 }
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame
 {
 	[videoView pushFrame:frame];
+	if(!_videoTrack) return;
+	[frame detachInsteadOfInvalidatingWhenRemoved];
+	[self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
+}
+- (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue
+{
+	if(!_soundTrack) return;
+	[_audioRecordingPipe receiveInputBufferList:[bufferListValue pointerValue]];
+	[self performSelectorOnMainThread:@selector(_recordBufferedAudio) withObject:nil waitUntilDone:NO];
 }
 
 #pragma mark -ECVCaptureController(Private)
@@ -304,6 +400,26 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[NSApp setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationAutoHideDock];
 #else
 	SetSystemUIMode(kUIModeAllSuppressed, kNilOptions);
+#endif
+}
+
+#pragma mark -
+
+- (void)_recordVideoFrame:(ECVVideoFrame *)frame
+{
+#if !__LP64__
+	[_videoTrack addFrame:frame];
+#endif
+}
+- (void)_recordBufferedAudio
+{
+#if !__LP64__
+	UInt32 const bufferSize = ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000; // Should be more than enough to keep up with the incoming data.
+	static u_int8_t *bytes;
+	if(!bytes) bytes = malloc(bufferSize);
+	AudioBufferList outputBufferList = {1, {2, bufferSize, bytes}};
+	[_audioRecordingPipe requestOutputBufferList:&outputBufferList];
+	[_soundTrack addSamples:&outputBufferList];
 #endif
 }
 
@@ -340,6 +456,10 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 - (void)dealloc
 {
 	[_playButtonCell release];
+	[_movie release];
+	[_videoTrack release];
+	[_soundTrack release];
+	[_audioRecordingPipe release];
 	[super dealloc];
 }
 
@@ -368,7 +488,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	if([self isFullScreen]) {
 		if(@selector(changeScale:) == action) return NO;
 	}
-	if([[self document] isRecording]) {
+	if(_movie) {
 		if(@selector(startRecording:) == action) return NO;
 	} else {
 		if(@selector(stopRecording:) == action) return NO;

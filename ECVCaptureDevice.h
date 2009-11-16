@@ -34,8 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVAudioDevice.h"
 @class ECVAudioPipe;
-@class ECVSoundTrack;
-@class ECVVideoTrack;
 
 enum {
 	ECVFullFrame = 0,
@@ -84,11 +82,6 @@ extern NSString *const ECVSaturationKey;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
 	CGFloat _volume;
-
-	QTMovie *_movie;
-	ECVVideoTrack *_videoTrack;
-	ECVSoundTrack *_soundTrack;
-	ECVAudioPipe *_audioRecordingPipe;
 }
 
 + (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator;
@@ -101,10 +94,6 @@ extern NSString *const ECVSaturationKey;
 - (void)togglePlaying;
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
 @property(readonly) ECVVideoStorage *videoStorage;
-
-@property(readonly, getter = isRecording) BOOL recording;
-- (void)startRecordingWithURL:(NSURL *)URL;
-- (void)stopRecording;
 
 @property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
 @property(retain) ECVAudioDevice *audioInput;

@@ -253,19 +253,20 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	if(!frame) return NO;
 	[frame lock];
-	BOOL const draw = ![frame isDropped];
-	if(draw) {
-		ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-		ECVPixelSize const s = [_videoStorage pixelSize];
-		OSType const f = [_videoStorage pixelFormatType];
-		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
-		ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatTypeToGLFormat(f), ECVPixelFormatTypeToGLType(f), [frame bufferBytes]));
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToSize(s)));
-		ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
+	if(![frame isValid]) {
+		[frame unlock];
+		return NO;
 	}
+	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVPixelSize const s = [_videoStorage pixelSize];
+	OSType const f = [_videoStorage pixelFormatType];
+	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
+	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatTypeToGLFormat(f), ECVPixelFormatTypeToGLType(f), [frame bufferBytes]));
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToNSSize(s)));
+	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	[frame unlock];
-	return draw;
+	return YES;
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength
 {
