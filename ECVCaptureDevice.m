@@ -563,10 +563,10 @@ bail:
 		frameToDraw = _lastCompletedFrame;
 	}
 	if(frameToDraw) {
+		if(_videoTrack) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frameToDraw waitUntilDone:NO];
 		[_windowControllersLock lock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 		[_windowControllersLock unlock];
-		if(_videoTrack) [self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frameToDraw waitUntilDone:NO];
 	}
 
 	ECVVideoFrame *const frame = [_videoStorage nextFrame];
@@ -574,7 +574,7 @@ bail:
 		case ECVWeave: [frame fillWithFrame:_pendingFrame]; break;
 		case ECVAlternate: [frame clear]; break;
 	}
-	[_lastCompletedFrame becomeDroppable];
+	[frameToDraw becomeDroppable];
 	[_lastCompletedFrame release];
 	_lastCompletedFrame = _pendingFrame;
 	_pendingFrame = [frame retain];

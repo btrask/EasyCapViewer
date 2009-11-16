@@ -200,6 +200,7 @@ ECVNoDeviceError:
 
 - (void)dealloc
 {
+	[self stop];
 	[_name release];
 	[super dealloc];
 }
