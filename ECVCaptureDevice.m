@@ -486,8 +486,9 @@ bail:
 	}
 	if(frameToDraw) {
 		[_windowControllersLock lock];
-		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
+		NSArray *const controllers = [[_windowControllers2 copy] autorelease];
 		[_windowControllersLock unlock];
+		[controllers makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 	}
 
 	if(_pendingFrame) {
@@ -624,10 +625,10 @@ ECVNoDeviceError:
 {
 	NSParameterAssert(sender == _audioInput);
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
-	NSValue *const bufferListValue = [NSValue valueWithPointer:bufferList];
 	[_windowControllersLock lock];
-	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:bufferListValue];
+	NSArray *const controllers = [[_windowControllers2 copy] autorelease];
 	[_windowControllersLock unlock];
+	[controllers makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
 }
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {
