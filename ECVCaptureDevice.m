@@ -490,15 +490,16 @@ bail:
 		[_windowControllersLock unlock];
 	}
 
-	ECVVideoFrame *const frame = [_videoStorage nextFrame];
-	switch(_deinterlacingMode) {
-		case ECVWeave: [frame fillWithFrame:_pendingFrame]; break;
-		case ECVAlternate: [frame clear]; break;
+	if(_pendingFrame) {
+		[_lastCompletedFrame release];
+		_lastCompletedFrame = _pendingFrame;
 	}
-	[_lastCompletedFrame release];
-	_lastCompletedFrame = _pendingFrame;
-	_pendingFrame = [frame retain];
+	_pendingFrame = [[_videoStorage nextFrame] retain];
 
+	switch(_deinterlacingMode) {
+		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
+		case ECVAlternate: [_pendingFrame clear]; break;
+	}
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? [_videoStorage bytesPerRow] : 0;
 	_fieldType = fieldType;
 }
