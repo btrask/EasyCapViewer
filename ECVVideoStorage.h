@@ -44,7 +44,7 @@ enum {
 	NSMutableData *_allBufferData;
 
 	NSRecursiveLock *_lock;
-	CFMutableArrayRef _frames;
+	NSMutableArray *_frames;
 	NSMutableIndexSet *_unusedBufferIndexes;
 }
 

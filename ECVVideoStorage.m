@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * _bufferSize];
 
 		_lock = [[NSRecursiveLock alloc] init];
-		_frames = CFArrayCreateMutable(kCFAllocatorDefault, count, NULL);
+		_frames = [[NSMutableArray alloc] init];
 		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
 	}
 	return self;
@@ -91,7 +91,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVVideoFrame *frame = nil;
 	if(NSNotFound != index) {
 		frame = [[[ECVVideoFrame alloc] initWithStorage:self bufferIndex:index] autorelease];
-		CFArrayInsertValueAtIndex(_frames, 0, frame);
+		[_frames insertObject:frame atIndex:0];
 		[_unusedBufferIndexes removeIndex:index];
 	}
 	[_lock unlock];
@@ -100,7 +100,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVVideoFrame *)frameAtIndex:(NSUInteger)i
 {
 	[_lock lock];
-	ECVVideoFrame *const frame = i < CFArrayGetCount(_frames) ? [[(ECVVideoFrame *)CFArrayGetValueAtIndex(_frames, i) retain] autorelease] : nil;
+	ECVVideoFrame *const frame = i < [_frames count] ? [[[_frames objectAtIndex:i] retain] autorelease] : nil;
 	[_lock unlock];
 	return frame;
 }
@@ -108,9 +108,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if(!frame) return;
 	[_lock lock];
-	CFIndex const i = CFArrayGetLastIndexOfValue(_frames, CFRangeMake(0, CFArrayGetCount(_frames)), frame);
-	if(kCFNotFound != i) {
-		CFArrayRemoveValueAtIndex(_frames, i);
+	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
+	if(NSNotFound != i && i >= ECVUndroppableFrameCount) {
+		[[frame retain] autorelease];
+		[_frames removeObjectAtIndex:i];
 		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
 	}
 	[_lock unlock];
@@ -120,18 +121,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)_dropFrames
 {
-	CFIndex const count = MAX(CFArrayGetCount(_frames) - ECVUndroppableFrameCount, 0);
-	CFIndex i = count % 2 + ECVUndroppableFrameCount;
-	for(; i < count; i++) [(ECVVideoFrame *)CFArrayGetValueAtIndex(_frames, i) removeFromStorage];
+	NSUInteger const count = MAX([_frames count] - ECVUndroppableFrameCount, 0);
+	NSUInteger i = count % 2 + ECVUndroppableFrameCount;
+	for(; i < count; i++) [[_frames objectAtIndex:i] tryLockAndRemoveFromStorage];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
+	while([_frames count]) [[_frames objectAtIndex:0] invalidate];
+
 	[_allBufferData release];
 	[_lock release];
-	CFRelease(_frames);
+	[_frames release];
 	[_unusedBufferIndexes release];
 	[super dealloc];
 }

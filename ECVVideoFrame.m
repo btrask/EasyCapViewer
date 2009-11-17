@@ -42,7 +42,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	if((self = [super init])) {
 		_lock = [[NSLock alloc] init];
-		_videoStorage = [storage retain];
+		_videoStorage = storage;
 		_bufferIndex = index;
 	}
 	return self;
@@ -88,19 +88,20 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	_bufferIndex = NSNotFound;
 	return YES;
 }
-- (BOOL)lockAndRemoveFromStorage
-{
-	[_lock lock];
-	BOOL const success = [self removeFromStorage];
-	[_lock unlock];
-	return success;
-}
 - (BOOL)tryLockAndRemoveFromStorage
 {
 	if(![_lock tryLock]) return NO;
 	BOOL success = [self removeFromStorage];
 	[_lock unlock];
 	return success;
+}
+- (void)invalidate
+{
+	[_lock lock];
+	[_videoStorage removeFrame:self];
+	_videoStorage = nil;
+	_bufferIndex = NSNotFound;
+	[_lock unlock];
 }
 
 #pragma mark -
@@ -141,9 +142,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (void)dealloc
 {
-	[_videoStorage removeFrame:self];
 	[_lock release];
-	[_videoStorage release];
 	[_bufferData release];
 	[super dealloc];
 }

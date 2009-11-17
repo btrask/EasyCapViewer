@@ -111,8 +111,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(_textureNames) ECVGLError(glDeleteTextures([_videoStorage numberOfBuffers], [_textureNames bytes]));
 	[_textureNames release];
 	[_frames release];
-	[_lastDrawnFrame release];
-	_lastDrawnFrame = nil;
 
 	[_videoStorage release];
 	_videoStorage = [storage retain];
@@ -232,16 +230,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	while([_frames count]) {
 		ECVVideoFrame *const frame = [[[_frames lastObject] retain] autorelease];
 		[_frames removeLastObject];
-		if(![self _drawFrame:frame]) {
-			_frameDropStrength = 1.0f;
-			continue;
+		if([self _drawFrame:frame]) {
+			drawn = YES;
+			break;
 		}
-		drawn = YES;
-		[_lastDrawnFrame release];
-		_lastDrawnFrame = [frame retain];
-		break;
+		_frameDropStrength = 1.0f;
 	}
-	if(!drawn) [self _drawFrame:_lastDrawnFrame];
+	if(!drawn) [self _drawFrame:[_videoStorage frameAtIndex:ECVLastCompletedFrameIndex]];
 
 	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
@@ -376,7 +371,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	[self _drawFrame:_lastDrawnFrame];
+	[self _drawFrame:[_videoStorage frameAtIndex:ECVLastCompletedFrameIndex]];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
 	[self _drawResizeHandle];
 	glFlush();
@@ -450,7 +445,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_videoStorage release];
 	[_textureNames release];
 	[_frames release];
-	[_lastDrawnFrame release];
 	CVDisplayLinkRelease(_displayLink);
 	[_cell release];
 	[super dealloc];

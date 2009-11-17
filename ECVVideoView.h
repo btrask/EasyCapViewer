@@ -47,7 +47,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSMutableData *_textureNames;
 	NSMutableArray *_frames;
-	ECVVideoFrame *_lastDrawnFrame;
 	CGFloat _frameDropStrength;
 }
 

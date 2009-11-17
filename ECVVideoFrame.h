@@ -46,8 +46,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)detachInsteadOfInvalidatingWhenRemoved;
 - (BOOL)removeFromStorage;
-- (BOOL)lockAndRemoveFromStorage;
 - (BOOL)tryLockAndRemoveFromStorage;
+- (void)invalidate;
 
 - (void)clear;
 - (void)fillWithFrame:(ECVVideoFrame *)frame;
