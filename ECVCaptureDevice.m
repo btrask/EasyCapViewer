@@ -459,7 +459,7 @@ bail:
 	while(used < length) {
 		size_t const remainingRowLength = theoreticalRowLength - rowOffset;
 		size_t const unused = length - used;
-		BOOL isFinishingRow = unused >= remainingRowLength;
+		BOOL const isFinishingRow = unused >= remainingRowLength;
 		size_t const rowFillLength = MIN(maxLength - _pendingImageLength, MIN(remainingRowLength, unused));
 		memcpy(dest + _pendingImageLength, bytes + used, rowFillLength);
 		_pendingImageLength += rowFillLength;
