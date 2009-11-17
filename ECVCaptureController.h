@@ -50,8 +50,9 @@ enum {
 	ECVCrop2_5Percent = 1,
 	ECVCrop5Percent = 2,
 	ECVCrop10Percent = 3,
-	ECVCropLetterbox16x9 = 4,
-	ECVCropLetterbox16x10 = 5,
+	ECVCrop4x3to16x9 = 4,
+	ECVCrop4x3to16x10 = 5,
+	ECVCrop16x9to16x10 = 6,
 };
 typedef NSUInteger ECVCropType;
 
@@ -100,7 +101,7 @@ typedef NSUInteger ECVCropType;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;
 - (NSRect)cropRectWithType:(ECVCropType)type;
-- (NSRect)cropRectWithAspectRatio:(ECVAspectRatio)ratio;
+- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)r1 croppedToAspectRatio:(ECVAspectRatio)r2;
 
 - (void)startPlaying;
 - (void)stopPlaying;

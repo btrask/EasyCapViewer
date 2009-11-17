@@ -350,20 +350,21 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 - (NSRect)cropRectWithType:(ECVCropType)type
 {
 	switch(type) {
-		case ECVCrop2_5Percent:     return NSMakeRect(0.025f, 0.025f, 0.95f, 0.95f);
-		case ECVCrop5Percent:       return NSMakeRect(0.05f, 0.05f, 0.9f, 0.9f);
-		case ECVCrop10Percent:      return NSMakeRect(0.1f, 0.1f, 0.8f, 0.8f);
-		case ECVCropLetterbox16x9:  return [self cropRectWithAspectRatio:ECV16x9AspectRatio];
-		case ECVCropLetterbox16x10: return [self cropRectWithAspectRatio:ECV16x10AspectRatio];
+		case ECVCrop2_5Percent: return NSMakeRect(0.025f, 0.025f, 0.95f, 0.95f);
+		case ECVCrop5Percent: return NSMakeRect(0.05f, 0.05f, 0.9f, 0.9f);
+		case ECVCrop10Percent: return NSMakeRect(0.1f, 0.1f, 0.8f, 0.8f);
+		case ECVCrop4x3to16x9: return [self cropRectWithSourceAspectRatio:ECV4x3AspectRatio croppedToAspectRatio:ECV16x9AspectRatio];
+		case ECVCrop4x3to16x10: return [self cropRectWithSourceAspectRatio:ECV4x3AspectRatio croppedToAspectRatio:ECV16x10AspectRatio];
+		case ECVCrop16x9to16x10: return [self cropRectWithSourceAspectRatio:ECV16x9AspectRatio croppedToAspectRatio:ECV16x10AspectRatio];
 		default: return ECVUncroppedRect;
 	}
 }
-- (NSRect)cropRectWithAspectRatio:(ECVAspectRatio)ratio
+- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)r1 croppedToAspectRatio:(ECVAspectRatio)r2
 {
-	NSSize const standard = [self sizeWithAspectRatio:ECV4x3AspectRatio];
-	NSSize const user = [self sizeWithAspectRatio:ratio];
+	NSSize const standard = [self sizeWithAspectRatio:r1];
+	NSSize const user = [self sizeWithAspectRatio:r2];
 	CGFloat const correction = (user.height / user.width) / (standard.height / standard.width);
-	return NSMakeRect(0.0f, (1.0f - correction) / 2.0f, 1.0f, correction);
+	return correction < 1.0f ? NSMakeRect(0.0f, (1.0f - correction) / 2.0f, 1.0f, correction) : NSMakeRect((1.0f - (1.0f / correction)) / 2.0f, 0.0f, 1.0f / correction, 1.0f);
 }
 
 #pragma mark -
