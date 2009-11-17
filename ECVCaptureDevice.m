@@ -481,7 +481,7 @@ bail:
 
 	ECVVideoFrame *frameToDraw = _pendingFrame;
 	if(ECVBlur == _deinterlacingMode && _lastCompletedFrame) {
-		[_lastCompletedFrame blurWithFrame:_pendingFrame]; // TODO: _lastCompletedFrame might still be in use, so this method needs to create a new frame.
+		[_lastCompletedFrame blurWithFrame:_pendingFrame];
 		frameToDraw = _lastCompletedFrame;
 	}
 	if(frameToDraw) {
