@@ -26,8 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
-#define ECVUndroppableFrames 3
-
 @interface ECVVideoStorage(Private)
 
 - (void)_dropFrames;
@@ -50,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * _bufferSize];
 
 		_lock = [[NSRecursiveLock alloc] init];
-		_frames = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+		_frames = CFArrayCreateMutable(kCFAllocatorDefault, count, NULL);
 		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
 	}
 	return self;
@@ -93,9 +91,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVVideoFrame *frame = nil;
 	if(NSNotFound != index) {
 		frame = [[[ECVVideoFrame alloc] initWithStorage:self bufferIndex:index] autorelease];
-		CFArrayAppendValue(_frames, frame);
+		CFArrayInsertValueAtIndex(_frames, 0, frame);
 		[_unusedBufferIndexes removeIndex:index];
 	}
+	[_lock unlock];
+	return frame;
+}
+- (ECVVideoFrame *)frameAtIndex:(NSUInteger)i
+{
+	[_lock lock];
+	ECVVideoFrame *const frame = i < CFArrayGetCount(_frames) ? [[(ECVVideoFrame *)CFArrayGetValueAtIndex(_frames, i) retain] autorelease] : nil;
 	[_lock unlock];
 	return frame;
 }
@@ -103,7 +108,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if(!frame) return;
 	[_lock lock];
-	CFIndex const i = CFArrayGetFirstIndexOfValue(_frames, CFRangeMake(0, CFArrayGetCount(_frames)), frame);
+	CFIndex const i = CFArrayGetLastIndexOfValue(_frames, CFRangeMake(0, CFArrayGetCount(_frames)), frame);
 	if(kCFNotFound != i) {
 		CFArrayRemoveValueAtIndex(_frames, i);
 		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
@@ -115,9 +120,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)_dropFrames
 {
-	CFIndex const count = MAX(CFArrayGetCount(_frames) - ECVUndroppableFrames, 0);
-	NSUInteger const keep = count % 2;
-	[[(NSArray *)_frames subarrayWithRange:NSMakeRange(0, count - keep)] makeObjectsPerformSelector:@selector(removeFromStorage)];
+	CFIndex const count = MAX(CFArrayGetCount(_frames) - ECVUndroppableFrameCount, 0);
+	CFIndex i = count % 2 + ECVUndroppableFrameCount;
+	for(; i < count; i++) [(ECVVideoFrame *)CFArrayGetValueAtIndex(_frames, i) removeFromStorage];
 }
 
 #pragma mark -NSObject

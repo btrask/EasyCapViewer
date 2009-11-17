@@ -26,6 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 @class ECVVideoFrame;
 
+enum {
+	ECVPendingFrameIndex,
+	ECVLastCompletedFrameIndex,
+	ECVUndroppableFrameCount,
+};
+
 @interface ECVVideoStorage : NSObject
 {
 	@private
@@ -55,6 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void *)bufferBytesAtIndex:(NSUInteger)index;
 
 - (ECVVideoFrame *)nextFrame;
+- (ECVVideoFrame *)frameAtIndex:(NSUInteger)i;
 - (void)removeFrame:(ECVVideoFrame *)frame;
 
 @end
