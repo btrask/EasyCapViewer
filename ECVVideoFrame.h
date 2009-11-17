@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@protected
 	NSLock *_lock;
-	BOOL _droppable;
 	BOOL _detachInsteadOfInvalidatingWhenRemoved;
 	ECVVideoStorage *_videoStorage;
 	NSUInteger _bufferIndex;
@@ -40,13 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) NSUInteger bufferIndex;
 
 @property(readonly) BOOL isValid;
-@property(readonly) BOOL isDroppable;
 @property(readonly) BOOL isDropped;
 @property(readonly) BOOL isDetached;
 
 @property(readonly) void *bufferBytes;
 
-- (void)becomeDroppable;
 - (void)detachInsteadOfInvalidatingWhenRemoved;
 - (BOOL)removeFromStorage;
 - (BOOL)lockAndRemoveFromStorage;

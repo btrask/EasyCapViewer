@@ -56,10 +56,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	return _bufferData || NSNotFound != _bufferIndex;
 }
-- (BOOL)isDroppable
-{
-	return _droppable;
-}
 - (BOOL)isDropped
 {
 	return NSNotFound == _bufferIndex;
@@ -78,12 +74,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 #pragma mark -
 
-- (void)becomeDroppable
-{
-	[_lock lock];
-	_droppable = YES;
-	[_lock unlock];
-}
 - (void)detachInsteadOfInvalidatingWhenRemoved
 {
 	[_lock lock];
@@ -92,7 +82,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 }
 - (BOOL)removeFromStorage
 {
-	if(!_videoStorage || !_droppable) return NO;
+	if(!_videoStorage) return NO;
 	if(_detachInsteadOfInvalidatingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[_videoStorage bufferSize]];
 	[_videoStorage removeFrame:self];
 	_bufferIndex = NSNotFound;

@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
+#define ECVUndroppableFrames 3
+
 NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 {
 	switch(t) {
@@ -114,7 +116,7 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 
 - (void)_dropFrames
 {
-	CFIndex const count = CFArrayGetCount(_frames);
+	CFIndex const count = MAX(CFArrayGetCount(_frames) - ECVUndroppableFrames, 0);
 	NSUInteger const keep = count % 2;
 	[[(NSArray *)_frames subarrayWithRange:NSMakeRange(0, count - keep)] makeObjectsPerformSelector:@selector(removeFromStorage)];
 }

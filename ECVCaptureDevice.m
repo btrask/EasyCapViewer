@@ -396,7 +396,7 @@ ECVNoDeviceError:
 	_pendingImageLength = 0;
 	_firstFrame = YES;
 
-	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:6 pixelFormatType:k2vuyPixelFormat size:s frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
+	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:7 pixelFormatType:k2vuyPixelFormat size:s frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
 	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {
@@ -495,7 +495,6 @@ bail:
 		case ECVWeave: [frame fillWithFrame:_pendingFrame]; break;
 		case ECVAlternate: [frame clear]; break;
 	}
-	[frameToDraw becomeDroppable];
 	[_lastCompletedFrame release];
 	_lastCompletedFrame = _pendingFrame;
 	_pendingFrame = [frame retain];
