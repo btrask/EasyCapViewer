@@ -116,10 +116,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if(frame) {
 		[frame lock];
 		if([frame isValid]) {
-			size_t const l = MIN([_videoStorage bufferSize], [[frame videoStorage] bufferSize]);
-			UInt8 *const src = [frame bufferBytes];
-			UInt8 *const dst = [self bufferBytes];
-			memcpy(dst, src, l);
+			memcpy([self bufferBytes], [frame bufferBytes], [_videoStorage bufferSize]);
 			filled = YES;
 		}
 		[frame unlock];
@@ -131,7 +128,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if(!frame) return;
 	[frame lock];
 	if([frame isValid]) {
-		size_t const l = MIN([_videoStorage bufferSize], [[frame videoStorage] bufferSize]);
+		size_t const l = [_videoStorage bufferSize];
 		UInt8 *const src = [frame bufferBytes];
 		UInt8 *const dst = [self bufferBytes];
 		NSUInteger i;
