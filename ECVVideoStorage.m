@@ -130,7 +130,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)dealloc
 {
-	while([_frames count]) [[_frames objectAtIndex:0] invalidate];
+	for(ECVVideoFrame *const frame in _frames) [frame invalidate];
 
 	[_allBufferData release];
 	[_lock release];

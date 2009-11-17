@@ -98,7 +98,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 - (void)invalidate
 {
 	[_lock lock];
-	[_videoStorage removeFrame:self];
 	_videoStorage = nil;
 	_bufferIndex = NSNotFound;
 	[_lock unlock];
