@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) OSType pixelFormatType;
 @property(readonly) ECVPixelSize pixelSize;
 @property(readonly) QTTime frameRate;
+@property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
 @property(readonly) void *allBufferBytes;

@@ -28,14 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVUndroppableFrames 3
 
-NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
-{
-	switch(t) {
-		case k2vuyPixelFormat: return 2;
-	}
-	return 0;
-}
-
 @interface ECVVideoStorage(Private)
 
 - (void)_dropFrames;
@@ -53,8 +45,8 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 		_pixelFormatType = formatType;
 		_pixelSize = size;
 		_frameRate = frameRate;
-		_bytesPerRow = _pixelSize.width * ECVPixelFormatTypeBytesPerPixel(_pixelFormatType);
-		_bufferSize = _bytesPerRow * _pixelSize.height;
+		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
+		_bufferSize = [self pixelSize].height * [self bytesPerRow];
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * _bufferSize];
 
 		_lock = [[NSRecursiveLock alloc] init];
@@ -67,6 +59,13 @@ NS_INLINE size_t ECVPixelFormatTypeBytesPerPixel(OSType t)
 @synthesize pixelFormatType = _pixelFormatType;
 @synthesize pixelSize = _pixelSize;
 @synthesize frameRate = _frameRate;
+- (size_t)bytesPerPixel
+{
+	switch(_pixelFormatType) {
+		case k2vuyPixelFormat: return 2;
+	}
+	return 0;
+}
 @synthesize bytesPerRow = _bytesPerRow;
 @synthesize bufferSize = _bufferSize;
 - (void *)allBufferBytes

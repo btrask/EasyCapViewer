@@ -449,7 +449,7 @@ bail:
 	UInt8 *const dest = [_pendingFrame bufferBytes];
 	if(!dest) return;
 	size_t const maxLength = [_videoStorage bufferSize];
-	size_t const theoreticalRowLength = [self captureSize].width * 2; // YUYV is effectively 2Bpp.
+	size_t const theoreticalRowLength = [_videoStorage pixelSize].width * [_videoStorage bytesPerPixel];
 	size_t const actualRowLength = [_videoStorage bytesPerRow];
 	size_t const rowPadding = actualRowLength - theoreticalRowLength;
 	BOOL const skipLines = ECVFullFrame != _fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
