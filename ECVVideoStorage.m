@@ -121,9 +121,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)_dropFrames
 {
-	NSUInteger const count = MAX([_frames count] - ECVUndroppableFrameCount, 0);
+	NSArray *const frames = [[_frames copy] autorelease];
+	NSUInteger const count = MAX([frames count] - ECVUndroppableFrameCount, 0);
 	NSUInteger i = count % 2 + ECVUndroppableFrameCount;
-	for(; i < count; i++) [[_frames objectAtIndex:i] tryLockAndRemoveFromStorage];
+	for(; i < count; i++) [[frames objectAtIndex:i] tryLockAndRemoveFromStorage];
 }
 
 #pragma mark -NSObject
