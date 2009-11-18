@@ -92,27 +92,25 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	[_lock unlock];
 	return NO;
 }
-
-#pragma mark -
-
 - (void)detachInsteadOfInvalidatingWhenRemoved
 {
 	[_lock lock];
 	_detachInsteadOfInvalidatingWhenRemoved = YES;
 	[_lock unlock];
 }
+
+#pragma mark -
+
 - (BOOL)removeFromStorage
 {
-	if(!_videoStorage) return NO;
-	if(_detachInsteadOfInvalidatingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[_videoStorage bufferSize]];
-	[_videoStorage removeFrame:self];
-	_bufferIndex = NSNotFound;
-	return YES;
-}
-- (BOOL)tryLockAndRemoveFromStorage
-{
 	if(![_lock tryLock]) return NO;
-	BOOL success = [self removeFromStorage];
+	BOOL success = NO;
+	if(_videoStorage) {
+		if(_detachInsteadOfInvalidatingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[_videoStorage bufferSize]];
+		[_videoStorage removeFrame:self];
+		_bufferIndex = NSNotFound;
+		success = YES;
+	}
 	[_lock unlock];
 	return success;
 }

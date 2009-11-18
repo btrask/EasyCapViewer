@@ -48,10 +48,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) void *bufferBytes;
 - (BOOL)lockIfHasBuffer;
 - (BOOL)lockIfHasOriginalBuffer;
-
 - (void)detachInsteadOfInvalidatingWhenRemoved;
+
 - (BOOL)removeFromStorage;
-- (BOOL)tryLockAndRemoveFromStorage;
 - (void)invalidate;
 
 - (void)clear;
