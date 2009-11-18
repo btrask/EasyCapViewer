@@ -44,12 +44,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) void *bufferBytes;
 - (BOOL)lockIfHasBuffer;
 
-- (BOOL)removeFromStorage;
-- (void)invalidate;
-
 - (void)clear;
 - (void)fillWithFrame:(ECVVideoFrame *)frame;
 - (void)blurWithFrame:(ECVVideoFrame *)frame;
 - (void)appendBytes:(void const *)bytes length:(size_t)length;
+
+- (void)removeFromStorage;
 
 @end

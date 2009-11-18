@@ -141,8 +141,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)dealloc
 {
-	for(ECVVideoFrame *const frame in _frames) [frame invalidate];
-
 	[_allBufferData release];
 	[_lock release];
 	[_frames release];

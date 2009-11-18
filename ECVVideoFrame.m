@@ -84,32 +84,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 #pragma mark -
 
-- (BOOL)removeFromStorage
-{
-	int const error = pthread_rwlock_trywrlock(&_lock);
-	if(error) {
-		if(EBUSY != error) ECVErrno(error);
-		return NO;
-	}
-	BOOL success = NO;
-	if(_videoStorage) {
-		[_videoStorage removeFrame:self];
-		_bufferIndex = NSNotFound;
-		success = YES;
-	}
-	ECVErrno(pthread_rwlock_unlock(&_lock));
-	return success;
-}
-- (void)invalidate
-{
-	ECVErrno(pthread_rwlock_wrlock(&_lock));
-	_videoStorage = nil;
-	_bufferIndex = NSNotFound;
-	ECVErrno(pthread_rwlock_unlock(&_lock));
-}
-
-#pragma mark -
-
 - (void)clear
 {
 	uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
@@ -165,6 +139,19 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		used += rowFillLength;
 		rowOffset = 0;
 	}
+}
+
+#pragma mark -
+
+- (void)removeFromStorage
+{
+	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
+	int const error = pthread_rwlock_trywrlock(&_lock);
+	if(!error) {
+		[_videoStorage removeFrame:self];
+		_bufferIndex = NSNotFound;
+		ECVErrno(pthread_rwlock_unlock(&_lock));
+	} else if(EBUSY != error) ECVErrno(error);
 }
 
 #pragma mark -ECVVideoFrame(Private)
