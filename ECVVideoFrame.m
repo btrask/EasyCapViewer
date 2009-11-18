@@ -110,16 +110,11 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 }
 - (void)fillWithFrame:(ECVVideoFrame *)frame
 {
-	BOOL filled = NO;
-	if(frame) {
-		if([frame lockIfHasBuffer]) {
-			memcpy([self bufferBytes], [frame bufferBytes], [_videoStorage bufferSize]);
-			[frame unlock];
-			[self _resetLength];
-			filled = YES;
-		}
-	}
-	if(!filled) [self clear];
+	if([frame lockIfHasBuffer]) {
+		memcpy([self bufferBytes], [frame bufferBytes], [_videoStorage bufferSize]);
+		[frame unlock];
+		[self _resetLength];
+	} else [self clear];
 }
 - (void)blurWithFrame:(ECVVideoFrame *)frame
 {
