@@ -32,9 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	off_t _length;
 
 	NSLock *_lock;
-	BOOL _detachInsteadOfInvalidatingWhenRemoved;
 	NSUInteger _bufferIndex;
-	NSMutableData *_bufferData;
 }
 
 - (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type;
@@ -43,12 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) ECVFieldType fieldType;
 
 @property(readonly) BOOL hasBuffer;
-@property(readonly) BOOL hasOriginalBuffer;
-@property(readonly) BOOL hasDetachedBuffer;
 @property(readonly) void *bufferBytes;
 - (BOOL)lockIfHasBuffer;
-- (BOOL)lockIfHasOriginalBuffer;
-- (void)detachInsteadOfInvalidatingWhenRemoved;
 
 - (BOOL)removeFromStorage;
 - (void)invalidate;

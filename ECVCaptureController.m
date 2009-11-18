@@ -383,7 +383,6 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 {
 	[videoView pushFrame:frame];
 	if(!_videoTrack) return;
-	[frame detachInsteadOfInvalidatingWhenRemoved];
 	[self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
 }
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue

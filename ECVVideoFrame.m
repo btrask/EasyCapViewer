@@ -64,19 +64,11 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (BOOL)hasBuffer
 {
-	return _bufferData || NSNotFound != _bufferIndex;
-}
-- (BOOL)hasOriginalBuffer
-{
 	return NSNotFound != _bufferIndex;
-}
-- (BOOL)hasDetachedBuffer
-{
-	return !!_bufferData;
 }
 - (void *)bufferBytes
 {
-	return _bufferData ? [_bufferData mutableBytes] : [_videoStorage bufferBytesAtIndex:_bufferIndex];
+	return [_videoStorage bufferBytesAtIndex:_bufferIndex];
 }
 - (BOOL)lockIfHasBuffer
 {
@@ -84,19 +76,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if([self hasBuffer]) return YES;
 	[_lock unlock];
 	return NO;
-}
-- (BOOL)lockIfHasOriginalBuffer
-{
-	[_lock lock];
-	if([self hasOriginalBuffer]) return YES;
-	[_lock unlock];
-	return NO;
-}
-- (void)detachInsteadOfInvalidatingWhenRemoved
-{
-	[_lock lock];
-	_detachInsteadOfInvalidatingWhenRemoved = YES;
-	[_lock unlock];
 }
 
 #pragma mark -
@@ -106,7 +85,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if(![_lock tryLock]) return NO;
 	BOOL success = NO;
 	if(_videoStorage) {
-		if(_detachInsteadOfInvalidatingWhenRemoved) _bufferData = [[NSMutableData alloc] initWithBytes:[self bufferBytes] length:[_videoStorage bufferSize]];
 		[_videoStorage removeFrame:self];
 		_bufferIndex = NSNotFound;
 		success = YES;
@@ -199,7 +177,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 - (void)dealloc
 {
 	[_lock release];
-	[_bufferData release];
 	[super dealloc];
 }
 

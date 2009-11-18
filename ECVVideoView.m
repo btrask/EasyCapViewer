@@ -247,7 +247,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (BOOL)_drawFrame:(ECVVideoFrame *)frame
 {
 	if(!frame) return NO;
-	if(![frame lockIfHasOriginalBuffer]) return NO;
+	if(![frame lockIfHasBuffer]) return NO;
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVPixelSize const s = [_videoStorage pixelSize];
 	OSType const f = [_videoStorage pixelFormatType];
