@@ -34,6 +34,7 @@ extern NSString *ECVOSStatusToString(OSStatus error);
 extern NSString *ECVIOKitErrorToString(IOReturn error);
 extern NSString *ECVCVReturnToString(CVReturn error);
 extern NSString *ECVOpenGLErrorToString(GLenum error);
+extern NSString *ECVErrnoToString(int error);
 
 #define ECVOSStatus(x) do {\
 	OSStatus const __e = (x);\
@@ -62,6 +63,11 @@ extern NSString *ECVOpenGLErrorToString(GLenum error);
 	(x);\
 	GLenum __e;\
 	while((__e = glGetError()) != GL_NO_ERROR) ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVOpenGLErrorToString(__e));\
+} while(NO)
+
+#define ECVErrno(x) do {\
+	int const __e = (x);\
+	if(__e) ECVLog(ECVError, @"%s:%d: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVErrnoToString(__e));\
 } while(NO)
 
 #define ECVAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]

@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVFieldType _fieldType;
 	off_t _length;
 
-	NSLock *_lock;
+	pthread_rwlock_t _lock;
 	NSUInteger _bufferIndex;
 }
 

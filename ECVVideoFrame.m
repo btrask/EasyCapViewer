@@ -22,9 +22,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
+#import <pthread.h>
 
 // Models
 #import "ECVVideoStorage.h"
+
+// Other Sources
+#import "ECVDebug.h"
 
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
@@ -48,7 +52,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	NSAssert((ECVFullFrame == type) == (ECVProgressiveScan == [storage deinterlacingMode]), @"Field type and deinterlacing mode must match.");
 	if((self = [super init])) {
-		_lock = [[NSLock alloc] init];
+		ECVErrno(pthread_rwlock_init(&_lock, NULL));
 		_videoStorage = storage;
 		_bufferIndex = index;
 		_fieldType = type;
@@ -72,9 +76,9 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 }
 - (BOOL)lockIfHasBuffer
 {
-	[_lock lock];
+	[self lock];
 	if([self hasBuffer]) return YES;
-	[_lock unlock];
+	[self unlock];
 	return NO;
 }
 
@@ -82,22 +86,26 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (BOOL)removeFromStorage
 {
-	if(![_lock tryLock]) return NO;
+	int const error = pthread_rwlock_trywrlock(&_lock);
+	if(error) {
+		if(EBUSY != error) ECVErrno(error);
+		return NO;
+	}
 	BOOL success = NO;
 	if(_videoStorage) {
 		[_videoStorage removeFrame:self];
 		_bufferIndex = NSNotFound;
 		success = YES;
 	}
-	[_lock unlock];
+	ECVErrno(pthread_rwlock_unlock(&_lock));
 	return success;
 }
 - (void)invalidate
 {
-	[_lock lock];
+	ECVErrno(pthread_rwlock_wrlock(&_lock));
 	_videoStorage = nil;
 	_bufferIndex = NSNotFound;
-	[_lock unlock];
+	ECVErrno(pthread_rwlock_unlock(&_lock));
 }
 
 #pragma mark -
@@ -171,7 +179,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (void)dealloc
 {
-	[_lock release];
+	ECVErrno(pthread_rwlock_destroy(&_lock));
 	[super dealloc];
 }
 
@@ -179,11 +187,11 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (void)lock
 {
-	[_lock lock];
+	ECVErrno(pthread_rwlock_rdlock(&_lock));
 }
 - (void)unlock
 {
-	[_lock unlock];
+	ECVErrno(pthread_rwlock_unlock(&_lock));
 }
 
 @end
