@@ -248,7 +248,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	if(!frame) return NO;
 	[frame lock];
-	if(![frame isValid]) {
+	if([frame isDropped]) {
 		[frame unlock];
 		return NO;
 	}
