@@ -42,11 +42,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) NSUInteger bufferIndex;
 @property(readonly) ECVFieldType fieldType;
 
-@property(readonly) BOOL isValid;
-@property(readonly) BOOL isDropped;
-@property(readonly) BOOL isDetached;
-
+@property(readonly) BOOL hasBuffer;
+@property(readonly) BOOL hasOriginalBuffer;
+@property(readonly) BOOL hasDetachedBuffer;
 @property(readonly) void *bufferBytes;
+- (BOOL)lockIfHasBuffer;
+- (BOOL)lockIfHasOriginalBuffer;
 
 - (void)detachInsteadOfInvalidatingWhenRemoved;
 - (BOOL)removeFromStorage;

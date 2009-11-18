@@ -62,24 +62,35 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 #pragma mark -
 
-- (BOOL)isValid
+- (BOOL)hasBuffer
 {
 	return _bufferData || NSNotFound != _bufferIndex;
 }
-- (BOOL)isDropped
+- (BOOL)hasOriginalBuffer
 {
-	return NSNotFound == _bufferIndex;
+	return NSNotFound != _bufferIndex;
 }
-- (BOOL)isDetached
+- (BOOL)hasDetachedBuffer
 {
 	return !!_bufferData;
 }
-
-#pragma mark -
-
 - (void *)bufferBytes
 {
 	return _bufferData ? [_bufferData mutableBytes] : [_videoStorage bufferBytesAtIndex:_bufferIndex];
+}
+- (BOOL)lockIfHasBuffer
+{
+	[_lock lock];
+	if([self hasBuffer]) return YES;
+	[_lock unlock];
+	return NO;
+}
+- (BOOL)lockIfHasOriginalBuffer
+{
+	[_lock lock];
+	if([self hasOriginalBuffer]) return YES;
+	[_lock unlock];
+	return NO;
 }
 
 #pragma mark -
@@ -125,28 +136,26 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	BOOL filled = NO;
 	if(frame) {
-		[frame lock];
-		if([frame isValid]) {
+		if([frame lockIfHasBuffer]) {
 			memcpy([self bufferBytes], [frame bufferBytes], [_videoStorage bufferSize]);
+			[frame unlock];
 			[self _resetLength];
 			filled = YES;
 		}
-		[frame unlock];
 	}
 	if(!filled) [self clear];
 }
 - (void)blurWithFrame:(ECVVideoFrame *)frame
 {
 	if(!frame) return;
-	[frame lock];
-	if([frame isValid]) {
-		size_t const l = [_videoStorage bufferSize];
-		UInt8 *const src = [frame bufferBytes];
-		UInt8 *const dst = [self bufferBytes];
+	size_t const l = [_videoStorage bufferSize];
+	UInt8 *const dst = [self bufferBytes];
+	if([frame lockIfHasBuffer]) {
 		NSUInteger i;
+		UInt8 *const src = [frame bufferBytes];
 		for(i = 0; i < l; i++) dst[i] = dst[i] / 2 + src[i] / 2;
+		[frame unlock];
 	}
-	[frame unlock];
 	[self _resetLength];
 }
 - (void)appendBytes:(void const *)bytes length:(size_t)length

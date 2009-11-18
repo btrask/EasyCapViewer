@@ -103,8 +103,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 - (void)addFrame:(ECVVideoFrame *)frame
 {
-	[frame lock];
-	if([frame isValid]) {
+	if([frame lockIfHasBuffer]) {
 		[frame retain];
 		ECVPixelSize const size = [_videoStorage pixelSize];
 		CVPixelBufferRef pixelBuffer = NULL;
@@ -112,10 +111,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
 		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeScale, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 		CVPixelBufferRelease(pixelBuffer);
-	} else {
-		[frame unlock];
-		[self _addEncodedFrame:NULL];
-	}
+	} else [self _addEncodedFrame:NULL];
 }
 - (void)finish
 {
