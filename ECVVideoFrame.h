@@ -27,11 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVVideoFrame : NSObject <NSLocking>
 {
 	@protected
+	ECVVideoStorage *_videoStorage;
+	ECVFieldType _fieldType;
+	off_t _length;
+
 	NSLock *_lock;
 	BOOL _detachInsteadOfInvalidatingWhenRemoved;
-	ECVVideoStorage *_videoStorage;
 	NSUInteger _bufferIndex;
-	ECVFieldType _fieldType;
 	NSMutableData *_bufferData;
 }
 
@@ -54,5 +56,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)clear;
 - (void)fillWithFrame:(ECVVideoFrame *)frame;
 - (void)blurWithFrame:(ECVVideoFrame *)frame;
+- (void)appendBytes:(void const *)bytes length:(size_t)length;
 
 @end

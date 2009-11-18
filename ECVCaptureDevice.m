@@ -391,12 +391,9 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored));
 	currentFrame += 10;
 
-	ECVPixelSize s = [self captureSize];
-	if(ECVLineDouble == _deinterlacingMode || ECVBlur == _deinterlacingMode) s.height /= 2;
-	_pendingImageLength = 0;
 	_firstFrame = YES;
 
-	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:6 pixelFormatType:k2vuyPixelFormat size:s frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
+	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithNumberOfBuffers:6 pixelFormatType:k2vuyPixelFormat deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
 	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {
@@ -445,32 +442,7 @@ bail:
 }
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
 {
-	if(!bytes || !length) return;
-	UInt8 *const dest = [_pendingFrame bufferBytes];
-	if(!dest) return;
-	size_t const maxLength = [_videoStorage bufferSize];
-	size_t const theoreticalRowLength = [_videoStorage pixelSize].width * [_videoStorage bytesPerPixel];
-	size_t const actualRowLength = [_videoStorage bytesPerRow];
-	size_t const rowPadding = actualRowLength - theoreticalRowLength;
-	BOOL const skipLines = ECVFullFrame != [_pendingFrame fieldType] && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
-
-	size_t used = 0;
-	size_t rowOffset = _pendingImageLength % actualRowLength;
-	while(used < length) {
-		size_t const remainingRowLength = theoreticalRowLength - rowOffset;
-		size_t const unused = length - used;
-		BOOL const isFinishingRow = unused >= remainingRowLength;
-		size_t const rowFillLength = MIN(maxLength - _pendingImageLength, MIN(remainingRowLength, unused));
-		memcpy(dest + _pendingImageLength, bytes + used, rowFillLength);
-		_pendingImageLength += rowFillLength;
-		if(_pendingImageLength >= maxLength) break;
-		if(isFinishingRow) {
-			_pendingImageLength += rowPadding;
-			if(skipLines) _pendingImageLength += actualRowLength;
-		}
-		used += rowFillLength;
-		rowOffset = 0;
-	}
+	[_pendingFrame appendBytes:bytes length:length];
 }
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType
 {
@@ -496,12 +468,10 @@ bail:
 		_lastCompletedFrame = _pendingFrame;
 	}
 	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
-
 	switch(_deinterlacingMode) {
 		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
 		case ECVAlternate: [_pendingFrame clear]; break;
 	}
-	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? [_videoStorage bytesPerRow] : 0;
 }
 
 #pragma mark -

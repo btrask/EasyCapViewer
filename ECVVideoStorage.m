@@ -36,12 +36,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size frameRate:(QTTime)frameRate
+- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
 		_numberOfBuffers = count;
 		_pixelFormatType = formatType;
-		_pixelSize = size;
+		_deinterlacingMode = mode;
+		_originalSize = size;
 		_frameRate = frameRate;
 		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
 		_bufferSize = [self pixelSize].height * [self bytesPerRow];
@@ -55,7 +56,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 @synthesize numberOfBuffers = _numberOfBuffers;
 @synthesize pixelFormatType = _pixelFormatType;
-@synthesize pixelSize = _pixelSize;
+@synthesize deinterlacingMode = _deinterlacingMode;
+- (BOOL)halfHeight
+{
+	return _deinterlacingMode == ECVBlur || _deinterlacingMode == ECVLineDouble;
+}
+@synthesize originalSize = _originalSize;
+- (ECVPixelSize)pixelSize
+{
+	return [self halfHeight] ? (ECVPixelSize){_originalSize.width, _originalSize.height / 2} : _originalSize;
+}
 @synthesize frameRate = _frameRate;
 - (size_t)bytesPerPixel
 {

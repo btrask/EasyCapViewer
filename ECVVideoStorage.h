@@ -37,7 +37,8 @@ enum {
 	@private
 	NSUInteger _numberOfBuffers;
 	OSType _pixelFormatType;
-	ECVPixelSize _pixelSize;
+	ECVDeinterlacingMode _deinterlacingMode;
+	ECVPixelSize _originalSize;
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
@@ -48,9 +49,12 @@ enum {
 	NSMutableIndexSet *_unusedBufferIndexes;
 }
 
-- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType size:(ECVPixelSize)size frameRate:(QTTime)frameRate;
+- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
 @property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) OSType pixelFormatType;
+@property(readonly) ECVDeinterlacingMode deinterlacingMode;
+@property(readonly) BOOL halfHeight;
+@property(readonly) ECVPixelSize originalSize;
 @property(readonly) ECVPixelSize pixelSize;
 @property(readonly) QTTime frameRate;
 @property(readonly) size_t bytesPerPixel;

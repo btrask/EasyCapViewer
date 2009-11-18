@@ -34,17 +34,25 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	return 0;
 }
 
+@interface ECVVideoFrame(Private)
+
+- (void)_resetLength;
+
+@end
+
 @implementation ECVVideoFrame
 
 #pragma mark -ECVAttachedFrame
 
 - (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type
 {
+	NSAssert((ECVFullFrame == type) == (ECVProgressiveScan == [storage deinterlacingMode]), @"Field type and deinterlacing mode must match.");
 	if((self = [super init])) {
 		_lock = [[NSLock alloc] init];
 		_videoStorage = storage;
 		_bufferIndex = index;
 		_fieldType = type;
+		[self _resetLength];
 	}
 	return self;
 }
@@ -111,6 +119,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
 	memset_pattern8([self bufferBytes], &val, [_videoStorage bufferSize]);
+	[self _resetLength];
 }
 - (void)fillWithFrame:(ECVVideoFrame *)frame
 {
@@ -119,6 +128,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		[frame lock];
 		if([frame isValid]) {
 			memcpy([self bufferBytes], [frame bufferBytes], [_videoStorage bufferSize]);
+			[self _resetLength];
 			filled = YES;
 		}
 		[frame unlock];
@@ -137,6 +147,44 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		for(i = 0; i < l; i++) dst[i] = dst[i] / 2 + src[i] / 2;
 	}
 	[frame unlock];
+	[self _resetLength];
+}
+- (void)appendBytes:(void const *)bytes length:(size_t)length
+{
+	if(!bytes || !length) return;
+	UInt8 *const dest = [self bufferBytes];
+	if(!dest) return;
+	size_t const maxLength = [_videoStorage bufferSize];
+	size_t const theoreticalRowLength = [_videoStorage pixelSize].width * [_videoStorage bytesPerPixel];
+	size_t const actualRowLength = [_videoStorage bytesPerRow];
+	size_t const rowPadding = actualRowLength - theoreticalRowLength;
+	BOOL const skipLines = ECVFullFrame != _fieldType && ![_videoStorage halfHeight];
+
+	size_t used = 0;
+	size_t rowOffset = _length % actualRowLength;
+	while(used < length) {
+		size_t const remainingRowLength = theoreticalRowLength - rowOffset;
+		size_t const unused = length - used;
+		BOOL const isFinishingRow = unused >= remainingRowLength;
+		size_t const rowFillLength = MIN(maxLength - _length, MIN(remainingRowLength, unused));
+		memcpy(dest + _length, bytes + used, rowFillLength);
+		_length += rowFillLength;
+		if(_length >= maxLength) break;
+		if(isFinishingRow) {
+			_length += rowPadding;
+			if(skipLines) _length += actualRowLength;
+		}
+		used += rowFillLength;
+		rowOffset = 0;
+	}
+}
+
+#pragma mark -ECVVideoFrame(Private)
+
+- (void)_resetLength
+{
+	ECVDeinterlacingMode const m = [_videoStorage deinterlacingMode];
+	_length = ECVLowField == _fieldType && (ECVWeave == m || ECVAlternate == m) ? [_videoStorage bytesPerRow] : 0;
 }
 
 #pragma mark -NSObject

@@ -35,14 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAudioDevice.h"
 @class ECVAudioPipe;
 
-enum {
-	ECVWeave = 0,
-	ECVLineDouble = 1,
-	ECVAlternate = 2,
-	ECVBlur = 3,
-};
-typedef NSInteger ECVDeinterlacingMode;
-
 extern NSString *const ECVDeinterlacingModeKey;
 extern NSString *const ECVBrightnessKey;
 extern NSString *const ECVContrastKey;
@@ -64,7 +56,6 @@ extern NSString *const ECVSaturationKey;
 	UInt32 _frameTime;
 
 	ECVVideoStorage *_videoStorage;
-	size_t _pendingImageLength;
 	ECVDeinterlacingMode _deinterlacingMode;
 	NSConditionLock *_playLock;
 	BOOL _firstFrame;
