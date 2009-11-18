@@ -38,17 +38,19 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 #pragma mark -ECVAttachedFrame
 
-- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index
+- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type
 {
 	if((self = [super init])) {
 		_lock = [[NSLock alloc] init];
 		_videoStorage = storage;
 		_bufferIndex = index;
+		_fieldType = type;
 	}
 	return self;
 }
 @synthesize videoStorage = _videoStorage;
 @synthesize bufferIndex = _bufferIndex;
+@synthesize fieldType = _fieldType;
 
 #pragma mark -
 

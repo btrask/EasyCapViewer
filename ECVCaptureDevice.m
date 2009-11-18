@@ -452,7 +452,7 @@ bail:
 	size_t const theoreticalRowLength = [_videoStorage pixelSize].width * [_videoStorage bytesPerPixel];
 	size_t const actualRowLength = [_videoStorage bytesPerRow];
 	size_t const rowPadding = actualRowLength - theoreticalRowLength;
-	BOOL const skipLines = ECVFullFrame != _fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
+	BOOL const skipLines = ECVFullFrame != [_pendingFrame fieldType] && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode);
 
 	size_t used = 0;
 	size_t rowOffset = _pendingImageLength % actualRowLength;
@@ -495,14 +495,13 @@ bail:
 		[_lastCompletedFrame release];
 		_lastCompletedFrame = _pendingFrame;
 	}
-	_pendingFrame = [[_videoStorage nextFrame] retain];
+	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
 
 	switch(_deinterlacingMode) {
 		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
 		case ECVAlternate: [_pendingFrame clear]; break;
 	}
 	_pendingImageLength = ECVLowField == fieldType && (ECVWeave == _deinterlacingMode || ECVAlternate == _deinterlacingMode) ? [_videoStorage bytesPerRow] : 0;
-	_fieldType = fieldType;
 }
 
 #pragma mark -

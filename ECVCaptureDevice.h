@@ -36,12 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVAudioPipe;
 
 enum {
-	ECVFullFrame = 0,
-	ECVHighField = 1,
-	ECVLowField = 2,
-};
-typedef NSUInteger ECVFieldType;
-enum {
 	ECVWeave = 0,
 	ECVLineDouble = 1,
 	ECVAlternate = 2,
@@ -71,7 +65,6 @@ extern NSString *const ECVSaturationKey;
 
 	ECVVideoStorage *_videoStorage;
 	size_t _pendingImageLength;
-	ECVFieldType _fieldType;
 	ECVDeinterlacingMode _deinterlacingMode;
 	NSConditionLock *_playLock;
 	BOOL _firstFrame;

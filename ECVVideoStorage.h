@@ -60,7 +60,7 @@ enum {
 
 - (void *)bufferBytesAtIndex:(NSUInteger)index;
 
-- (ECVVideoFrame *)nextFrame;
+- (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 - (ECVVideoFrame *)frameAtIndex:(NSUInteger)i;
 - (void)removeFrame:(ECVVideoFrame *)frame;
 

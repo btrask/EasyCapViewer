@@ -31,12 +31,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	BOOL _detachInsteadOfInvalidatingWhenRemoved;
 	ECVVideoStorage *_videoStorage;
 	NSUInteger _bufferIndex;
+	ECVFieldType _fieldType;
 	NSMutableData *_bufferData;
 }
 
-- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index;
+- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type;
 @property(readonly) ECVVideoStorage *videoStorage;
 @property(readonly) NSUInteger bufferIndex;
+@property(readonly) ECVFieldType fieldType;
 
 @property(readonly) BOOL isValid;
 @property(readonly) BOOL isDropped;

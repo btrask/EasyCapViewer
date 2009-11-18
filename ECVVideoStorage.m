@@ -80,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-- (ECVVideoFrame *)nextFrame
+- (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
 	[_lock lock];
 	NSUInteger index = [_unusedBufferIndexes firstIndex];
@@ -90,7 +90,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	}
 	ECVVideoFrame *frame = nil;
 	if(NSNotFound != index) {
-		frame = [[[ECVVideoFrame alloc] initWithStorage:self bufferIndex:index] autorelease];
+		frame = [[[ECVVideoFrame alloc] initWithStorage:self bufferIndex:index fieldType:type] autorelease];
 		[_frames insertObject:frame atIndex:0];
 		[_unusedBufferIndexes removeIndex:index];
 	}
