@@ -49,7 +49,7 @@ enum {
 	NSMutableIndexSet *_unusedBufferIndexes;
 }
 
-- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
 @property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) ECVDeinterlacingMode deinterlacingMode;
@@ -61,11 +61,12 @@ enum {
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
 @property(readonly) void *allBufferBytes;
-
-- (void *)bufferBytesAtIndex:(NSUInteger)index;
+@property(readonly) NSUInteger frameGroupSize;
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 - (ECVVideoFrame *)frameAtIndex:(NSUInteger)i;
-- (void)removeFrame:(ECVVideoFrame *)frame;
+
+- (void *)bufferBytesAtIndex:(NSUInteger)index;
+- (BOOL)removeFrame:(ECVVideoFrame *)frame;
 
 @end

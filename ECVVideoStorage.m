@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
+#define ECVExtraBufferCount 10
+
 @interface ECVVideoStorage(Private)
 
 - (void)_dropFrames;
@@ -36,10 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithNumberOfBuffers:(NSUInteger)count pixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
-		_numberOfBuffers = count;
+		_numberOfBuffers = ECVUndroppableFrameCount + ECVExtraBufferCount;
 		_pixelFormatType = formatType;
 		_deinterlacingMode = mode;
 		_originalSize = size;
@@ -80,12 +82,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [_allBufferData mutableBytes];
 }
-
-#pragma mark -
-
-- (void *)bufferBytesAtIndex:(NSUInteger)index
+- (NSUInteger)frameGroupSize
 {
-	return [_allBufferData mutableBytes] + _bufferSize * index;
+	return ECVProgressiveScan == _deinterlacingMode ? 1 : 2;
 }
 
 #pragma mark -
@@ -114,17 +113,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[_lock unlock];
 	return frame;
 }
-- (void)removeFrame:(ECVVideoFrame *)frame
+
+#pragma mark -
+
+- (void *)bufferBytesAtIndex:(NSUInteger)index
 {
-	if(!frame) return;
+	return [_allBufferData mutableBytes] + _bufferSize * index;
+}
+- (BOOL)removeFrame:(ECVVideoFrame *)frame
+{
+	if(!frame) return NO;
 	[_lock lock];
 	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
-	if(NSNotFound != i && i >= ECVUndroppableFrameCount) {
+	BOOL drop = NSNotFound != i && i >= ECVUndroppableFrameCount;
+	if(drop) {
 		[[frame retain] autorelease];
 		[_frames removeObjectAtIndex:i];
 		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
 	}
 	[_lock unlock];
+	return drop;
 }
 
 #pragma mark -ECVVideoStorage(Private)
@@ -132,9 +140,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)_dropFrames
 {
 	NSArray *const frames = [[_frames copy] autorelease];
-	NSUInteger const count = MAX([frames count] - ECVUndroppableFrameCount, 0);
-	NSUInteger i = count % 2 + ECVUndroppableFrameCount;
-	for(; i < count; i++) [[frames objectAtIndex:i] removeFromStorage];
+	NSUInteger const count = [frames count];
+	NSUInteger const drop = MIN(MAX(count, ECVUndroppableFrameCount) - ECVUndroppableFrameCount, [self frameGroupSize]);
+	[[frames subarrayWithRange:NSMakeRange(count - drop, drop)] makeObjectsPerformSelector:@selector(removeFromStorage)];
 }
 
 #pragma mark -NSObject

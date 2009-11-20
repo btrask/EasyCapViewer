@@ -148,8 +148,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
 	int const error = pthread_rwlock_trywrlock(&_lock);
 	if(!error) {
-		[_videoStorage removeFrame:self];
-		_bufferIndex = NSNotFound;
+		if([_videoStorage removeFrame:self]) _bufferIndex = NSNotFound;
 		ECVErrno(pthread_rwlock_unlock(&_lock));
 	} else if(EBUSY != error) ECVErrno(error);
 }

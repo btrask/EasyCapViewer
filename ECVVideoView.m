@@ -203,6 +203,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(!frame) return;
 	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
 	CGLLockContext(contextObj);
+	NSUInteger const count = [_frames count];
+	NSUInteger const frameGroupSize = [_videoStorage frameGroupSize];
+	if(count > frameGroupSize) {
+		NSUInteger const keep = count % frameGroupSize;
+		[_frames removeObjectsInRange:NSMakeRange(count - keep, keep)];
+		_frameDropStrength = 1.0f;
+	}
 	[_frames insertObject:frame atIndex:0];
 	CGLUnlockContext(contextObj);
 }
@@ -225,7 +232,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	_frameDropStrength *= 0.75f;
 	BOOL drawn = NO;
 	while([_frames count]) {
 		ECVVideoFrame *const frame = [[[_frames lastObject] retain] autorelease];
@@ -239,6 +245,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(!drawn) [self _drawFrame:[_videoStorage frameAtIndex:ECVLastCompletedFrameIndex]];
 
 	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
+	_frameDropStrength *= 0.75f;
+
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
 	glFlush();
