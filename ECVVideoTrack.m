@@ -58,6 +58,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 - (id)initWithTrack:(QTTrack *)track videoStorage:(ECVVideoStorage *)storage size:(ECVPixelSize)size codec:(OSType)codec quality:(CGFloat)quality
 {
 	if((self = [super initWithTrack:track])) {
+		_videoStorage = [storage retain];
+
 		ICMCompressionSessionOptionsRef options = NULL;
 		ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
 		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_DurationsNeeded, (Boolean)true);
@@ -103,15 +105,22 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 - (void)addFrame:(ECVVideoFrame *)frame
 {
-	if([frame lockIfHasBuffer]) {
-		[frame retain];
-		ECVPixelSize const size = [_videoStorage pixelSize];
-		CVPixelBufferRef pixelBuffer = NULL;
-		ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, [_videoStorage pixelFormatType], [frame bufferBytes], [_videoStorage bytesPerRow], (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
-		if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
-		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeScale, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
-		CVPixelBufferRelease(pixelBuffer);
-	} else [self _addEncodedFrame:NULL];
+	if(![frame lockIfHasBuffer]) {
+		[self _addEncodedFrame:NULL];
+		return;
+	}
+	ECVPixelSize const size = [_videoStorage pixelSize];
+	CVPixelBufferRef pixelBuffer = NULL;
+	ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, [_videoStorage pixelFormatType], [frame bufferBytes], [_videoStorage bytesPerRow], (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+	if(!pixelBuffer) {
+		[frame unlock];
+		[self _addEncodedFrame:NULL];
+		return;
+	}
+	[frame retain];
+	if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
+	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+	CVPixelBufferRelease(pixelBuffer);
 }
 - (void)finish
 {
@@ -126,13 +135,14 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		ICMEncodedFrameRelease(_encodedFrame);
 		_encodedFrame = ICMEncodedFrameRetain(frame);
 	}
-	if(_encodedFrame) ECVOSStatus(AddMediaSampleFromEncodedFrame([[self.track media] quickTimeMedia], _encodedFrame, NULL));
+	if(_encodedFrame) ECVOSStatus(AddMediaSampleFromEncodedFrame([[[self track] media] quickTimeMedia], _encodedFrame, NULL));
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
+	[_videoStorage release];
 	[_cleanAperture release];
 	ICMCompressionSessionRelease(_compressionSession);
 	ICMEncodedFrameRelease(_encodedFrame);

@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	ByteCount const size = buffer->mDataByteSize;
 	if(!size || !buffer->mData) return;
-	AddMediaSample2([[self.track media] quickTimeMedia], buffer->mData, size, 1, 0, (SampleDescriptionHandle)_soundDescriptionHandle, size / _basicDescription.mBytesPerFrame, 0, NULL);
+	AddMediaSample2([[[self track] media] quickTimeMedia], buffer->mData, size, 1, 0, (SampleDescriptionHandle)_soundDescriptionHandle, size / _basicDescription.mBytesPerFrame, 0, NULL);
 }
 - (void)addSamples:(AudioBufferList const *)bufferList
 {
