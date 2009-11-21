@@ -62,9 +62,20 @@ NS_INLINE ECVPixelSize ECVPixelSizeFromNSSize(NSSize s)
 {
 	return (ECVPixelSize){round(s.width), round(s.height)};
 }
+NS_INLINE BOOL ECVEqualPixelSizes(ECVPixelSize a, ECVPixelSize b)
+{
+	return a.width == b.width && a.height == b.height;
+}
 NS_INLINE NSRect ECVScaledRect(NSRect r, NSSize s)
 {
 	return NSMakeRect(NSMinX(r) * s.width, NSMinY(r) * s.height, NSWidth(r) * s.width, NSHeight(r) * s.height);
+}
+static size_t ECVPixelFormatBytesPerPixel(OSType format)
+{
+	switch(format) {
+		case k2vuyPixelFormat: return 2;
+		default: return 0;
+	}
 }
 
 #endif // __OBJC__

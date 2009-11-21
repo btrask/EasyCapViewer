@@ -30,6 +30,48 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+typedef struct {
+	void *bytes;
+	size_t length;
+	BOOL interlaced;
+	size_t bytesPerRow;
+	OSType pixelFormatType;
+	ECVPixelSize pixelSize;
+} ECVBufferInfo;
+static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src, off_t dstOffset, NSRange srcRange)
+{
+	if(!dst.bytes || !dst.length || !src.bytes || !src.length) return dstOffset;
+	NSCAssert(dst.pixelFormatType == src.pixelFormatType, @"ECVBufferCopy doesn't convert formats.");
+	NSCAssert(ECVEqualPixelSizes(dst.pixelSize, src.pixelSize), @"ECVBufferCopy doesn't convert sizes.");
+	size_t const dstTheoretical = ECVPixelFormatBytesPerPixel(dst.pixelFormatType) * dst.pixelSize.width;
+	size_t const srcTheoretical = ECVPixelFormatBytesPerPixel(src.pixelFormatType) * src.pixelSize.width;
+	size_t const dstActual = dst.bytesPerRow;
+	size_t const srcActual = src.bytesPerRow;
+	NSCAssert(dstActual >= dstTheoretical, @"ECVBufferCopy destination row padding must be non-negative.");
+	NSCAssert(srcActual >= srcTheoretical, @"ECVBufferCopy source row padding must be non-negative.");
+	size_t const dstPadding = dstActual - dstTheoretical;
+	size_t const srcPadding = srcActual - srcTheoretical;
+	off_t i = dstOffset;
+	off_t j = srcRange.location;
+	while(i < dst.length && j < MIN(src.length, NSMaxRange(srcRange))) {
+		size_t const dstRemaining = dstTheoretical - i % dstActual;
+		size_t const srcRemaining = srcTheoretical - j % srcActual;
+		size_t const length = MIN(MIN(NSMaxRange(srcRange) - j, srcRemaining), dstRemaining);
+		memcpy(dst.bytes + i, src.bytes + j, length);
+		i += length;
+		j += length;
+		if(length == dstRemaining) {
+			i += dstPadding;
+			if(dst.interlaced && !src.interlaced) i += dstActual;
+		}
+		if(length == srcRemaining) {
+			j += srcPadding;
+			if(src.interlaced && !dst.interlaced) j += srcActual;
+		}
+	}
+	return i;
+}
+
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	switch(t) {
@@ -40,6 +82,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 @interface ECVVideoFrame(Private)
 
+- (ECVBufferInfo)_bufferInfo;
 - (void)_resetLength;
 
 @end
@@ -113,32 +156,31 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 }
 - (void)appendBytes:(void const *)bytes length:(size_t)length
 {
-	if(!bytes || !length) return;
-	UInt8 *const dest = [self bufferBytes];
-	if(!dest) return;
-	size_t const maxLength = [_videoStorage bufferSize];
-	size_t const theoreticalRowLength = [_videoStorage pixelSize].width * [_videoStorage bytesPerPixel];
-	size_t const actualRowLength = [_videoStorage bytesPerRow];
-	size_t const rowPadding = actualRowLength - theoreticalRowLength;
-	BOOL const skipLines = ECVFullFrame != _fieldType && ![_videoStorage halfHeight];
-
-	size_t used = 0;
-	size_t rowOffset = _length % actualRowLength;
-	while(used < length) {
-		size_t const remainingRowLength = theoreticalRowLength - rowOffset;
-		size_t const unused = length - used;
-		BOOL const isFinishingRow = unused >= remainingRowLength;
-		size_t const rowFillLength = MIN(maxLength - _length, MIN(remainingRowLength, unused));
-		memcpy(dest + _length, bytes + used, rowFillLength);
-		_length += rowFillLength;
-		if(_length >= maxLength) break;
-		if(isFinishingRow) {
-			_length += rowPadding;
-			if(skipLines) _length += actualRowLength;
-		}
-		used += rowFillLength;
-		rowOffset = 0;
-	}
+	ECVBufferInfo const dstInfo = [self _bufferInfo];
+	ECVBufferInfo const srcInfo = {
+		(void *)bytes,
+		length,
+		NO,
+		dstInfo.bytesPerRow,
+		dstInfo.pixelFormatType,
+		dstInfo.pixelSize,
+	};
+	_length = ECVBufferCopyToOffsetFromRange(dstInfo, srcInfo, _length, NSMakeRange(0, srcInfo.length));
+}
+- (void)copyToPixelBuffer:(CVPixelBufferRef)pixelBuffer
+{
+	ECVCVReturn(CVPixelBufferLockBaseAddress(pixelBuffer, kNilOptions));
+	ECVBufferInfo const srcInfo = [self _bufferInfo];
+	ECVBufferInfo const dstInfo = {
+		CVPixelBufferGetBaseAddress(pixelBuffer),
+		CVPixelBufferGetDataSize(pixelBuffer),
+		srcInfo.interlaced,
+		CVPixelBufferGetBytesPerRow(pixelBuffer),
+		CVPixelBufferGetPixelFormatType(pixelBuffer),
+		{CVPixelBufferGetWidth(pixelBuffer), CVPixelBufferGetHeight(pixelBuffer)},
+	};
+	(void)ECVBufferCopyToOffsetFromRange(dstInfo, srcInfo, 0, NSMakeRange(0, srcInfo.length));
+	ECVCVReturn(CVPixelBufferUnlockBaseAddress(pixelBuffer, kNilOptions));
 }
 
 #pragma mark -
@@ -155,6 +197,17 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 #pragma mark -ECVVideoFrame(Private)
 
+- (ECVBufferInfo)_bufferInfo
+{
+	return (ECVBufferInfo){
+		[self bufferBytes],
+		[_videoStorage bufferSize],
+		ECVFullFrame != _fieldType && ![_videoStorage halfHeight],
+		[_videoStorage bytesPerRow],
+		[_videoStorage pixelFormatType],
+		[_videoStorage pixelSize],
+	};
+}
 - (void)_resetLength
 {
 	ECVDeinterlacingMode const m = [_videoStorage deinterlacingMode];

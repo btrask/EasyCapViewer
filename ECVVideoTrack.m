@@ -40,11 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @end
 
-static void ECVPixelBufferReleaseBytesCallback(ECVVideoFrame *frame, const void *baseAddress)
-{
-	[frame unlock];
-	[frame release];
-}
 static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMCompressionSessionRef session, OSStatus error, ICMEncodedFrameRef frame)
 {
 	[videoTrack _addEncodedFrame:noErr == error ? frame : NULL];
@@ -68,12 +63,16 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, (UInt32)QTMakeTimeScaled([_videoStorage frameRate], ECVMicrosecondsPerSecond).timeValue);
 		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
 		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_Quality, (CodecQ)round(quality * codecMaxQuality));
+		ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_Depth, [_videoStorage pixelFormatType]);
 
 		ICMEncodedFrameOutputRecord callback = {};
 		callback.frameDataAllocator = kCFAllocatorDefault;
 		callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
 		callback.encodedFrameOutputRefCon = self;
-		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, size.width, size.height, codec, [_videoStorage frameRate].timeScale, options, NULL, &callback, &_compressionSession));
+		ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, size.width, size.height, codec, [_videoStorage frameRate].timeScale, options, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+			[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].width], kCVPixelBufferWidthKey,
+			[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].height], kCVPixelBufferHeightKey,
+			nil], &callback, &_compressionSession));
 
 		ICMCompressionSessionOptionsRelease(options);
 	}
@@ -105,21 +104,18 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 
 - (void)addFrame:(ECVVideoFrame *)frame
 {
-	if(![frame lockIfHasBuffer]) {
-		[self _addEncodedFrame:NULL];
-		return;
-	}
-	ECVPixelSize const size = [_videoStorage pixelSize];
 	CVPixelBufferRef pixelBuffer = NULL;
-	ECVCVReturn(CVPixelBufferCreateWithBytes(kCFAllocatorDefault, size.width, size.height, [_videoStorage pixelFormatType], [frame bufferBytes], [_videoStorage bytesPerRow], (CVPixelBufferReleaseBytesCallback)ECVPixelBufferReleaseBytesCallback, frame, NULL, &pixelBuffer));
+	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(_compressionSession), &pixelBuffer));
 	if(!pixelBuffer) {
-		[frame unlock];
 		[self _addEncodedFrame:NULL];
 		return;
 	}
-	[frame retain];
-	if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
-	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+	if([frame lockIfHasBuffer]) {
+		[frame copyToPixelBuffer:pixelBuffer];
+		[frame unlock];
+		if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
+		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+	} else [self _addEncodedFrame:NULL];
 	CVPixelBufferRelease(pixelBuffer);
 }
 - (void)finish

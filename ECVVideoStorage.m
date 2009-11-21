@@ -71,10 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @synthesize frameRate = _frameRate;
 - (size_t)bytesPerPixel
 {
-	switch(_pixelFormatType) {
-		case k2vuyPixelFormat: return 2;
-	}
-	return 0;
+	return ECVPixelFormatBytesPerPixel(_pixelFormatType);
 }
 @synthesize bytesPerRow = _bytesPerRow;
 @synthesize bufferSize = _bufferSize;
