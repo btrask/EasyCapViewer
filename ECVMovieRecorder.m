@@ -169,6 +169,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, _outputSize.width, _outputSize.height, _videoCodec, [_videoStorage frameRate].timeScale, options, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].width], kCVPixelBufferWidthKey,
 		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].height], kCVPixelBufferHeightKey,
+		[NSNumber numberWithUnsignedInt:[_videoStorage pixelFormatType]], kCVPixelBufferPixelFormatTypeKey,
 		nil], &callback, &_compressionSession));
 	ICMCompressionSessionOptionsRelease(options);
 	_pixelBufferPool = ICMCompressionSessionGetPixelBufferPool(_compressionSession);
