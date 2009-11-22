@@ -43,6 +43,7 @@ enum {
 	size_t _bytesPerRow;
 	size_t _bufferSize;
 	NSMutableData *_allBufferData;
+	NSOperationQueue *_frameOperationQueue;
 
 	NSRecursiveLock *_lock;
 	NSMutableArray *_frames;
@@ -65,6 +66,7 @@ enum {
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 - (ECVVideoFrame *)frameAtIndex:(NSUInteger)i;
+- (void)addFrameOperation:(NSOperation *)operation;
 
 - (void *)bufferBytesAtIndex:(NSUInteger)index;
 - (BOOL)removeFrame:(ECVVideoFrame *)frame;

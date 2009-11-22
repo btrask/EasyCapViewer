@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	ECVVideoStorage *_videoStorage;
+	NSMutableArray *_operations;
 	NSRect _cropRect;
 	NSDictionary *_cleanAperture;
 	ICMCompressionSessionRef _compressionSession;

@@ -34,8 +34,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVCSOSetProperty(obj, prop, val) ECVOSStatus({ __typeof__(val) __val = (val); ICMCompressionSessionOptionsSetProperty(obj, kQTPropertyClass_ICMCompressionSessionOptions, (prop), sizeof(__val), &__val); }) // Be sure to cast val to the right type, since no implicit conversion occurs.
 
+@interface ECVBufferCopyOperation : NSOperation
+{
+	@private
+	ECVVideoTrack *_track;
+	ECVVideoFrame *_frame;
+	CVPixelBufferRef _pixelBuffer;
+	BOOL _success;
+}
+
+- (id)initWithTrack:(ECVVideoTrack *)track frame:(ECVVideoFrame *)frame pixelBuffer:(CVPixelBufferRef)pixelBuffer;
+@property(readonly) CVPixelBufferRef pixelBuffer;
+@property(readonly) BOOL success;
+
+@end
+
 @interface ECVVideoTrack(Private)
 
+- (void)_bufferCopyOperationComplete:(ECVBufferCopyOperation *)op;
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
 
 @end
@@ -54,6 +70,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 {
 	if((self = [super initWithTrack:track])) {
 		_videoStorage = [storage retain];
+		_operations = [[NSMutableArray alloc] init];
 
 		ICMCompressionSessionOptionsRef options = NULL;
 		ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
@@ -106,25 +123,30 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 {
 	CVPixelBufferRef pixelBuffer = NULL;
 	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(_compressionSession), &pixelBuffer));
-	if(!pixelBuffer) {
-		[self _addEncodedFrame:NULL];
-		return;
-	}
-	if([frame lockIfHasBuffer]) {
-		[frame copyToPixelBuffer:pixelBuffer];
-		[frame unlock];
-		if(_cleanAperture) CVBufferSetAttachment(pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
-		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, pixelBuffer, 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
-	} else [self _addEncodedFrame:NULL];
+	if(!pixelBuffer) return [self _addEncodedFrame:NULL];
+	ECVBufferCopyOperation *const op = [[[ECVBufferCopyOperation alloc] initWithTrack:self frame:frame pixelBuffer:pixelBuffer] autorelease];
+	[_operations insertObject:op atIndex:0];
+	[_videoStorage addFrameOperation:op];
 	CVPixelBufferRelease(pixelBuffer);
 }
 - (void)finish
 {
+	[_operations removeAllObjects]; // FIXME: These frames just get dropped.
 	ECVOSStatus(ICMCompressionSessionCompleteFrames(_compressionSession, true, 0, 0));
 }
 
 #pragma mark -ECVVideoTrack(Private)
 
+- (void)_bufferCopyOperationComplete:(ECVBufferCopyOperation *)op
+{
+	if([_operations lastObject] != op) return;
+	[_operations removeLastObject];
+	if([op success]) {
+		if(_cleanAperture) CVBufferSetAttachment([op pixelBuffer], kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
+		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, [op pixelBuffer], 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+	} else [self _addEncodedFrame:NULL];
+	if([_operations count]) [self performSelector:_cmd withObject:[_operations lastObject] afterDelay:0.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]];
+}
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame
 {
 	if(frame && frame != _encodedFrame) {
@@ -139,6 +161,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 - (void)dealloc
 {
 	[_videoStorage release];
+	[_operations release];
 	[_cleanAperture release];
 	ICMCompressionSessionRelease(_compressionSession);
 	ICMEncodedFrameRelease(_encodedFrame);
@@ -160,6 +183,47 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVVideoTrack *videoTrack, ICMComp
 		return nil;
 	}
 	return [[[ECVVideoTrack alloc] initWithTrack:[QTTrack trackWithQuickTimeTrack:track error:NULL] videoStorage:storage size:size codec:codec quality:quality] autorelease];
+}
+
+@end
+
+@implementation ECVBufferCopyOperation
+
+#pragma mark -ECVBufferCopyOperation
+
+- (id)initWithTrack:(ECVVideoTrack *)track frame:(ECVVideoFrame *)frame pixelBuffer:(CVPixelBufferRef)pixelBuffer
+{
+	if((self = [super init])) {
+		_track = [track retain];
+		_frame = [frame retain];
+		_pixelBuffer = CVPixelBufferRetain(pixelBuffer);
+	}
+	return self;
+}
+@synthesize pixelBuffer = _pixelBuffer;
+@synthesize success = _success;
+
+#pragma mark -NSOperation
+
+- (void)main
+{
+	if([self isCancelled]) return;
+	if([_frame lockIfHasBuffer]) {
+		[_frame copyToPixelBuffer:_pixelBuffer];
+		[_frame unlock];
+		_success = YES;
+	}
+	[_track performSelectorOnMainThread:@selector(_bufferCopyOperationComplete:) withObject:self waitUntilDone:NO];
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_track release];
+	[_frame release];
+	CVPixelBufferRelease(_pixelBuffer);
+	[super dealloc];
 }
 
 @end
