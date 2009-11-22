@@ -26,16 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 @class ECVVideoFrame;
+@class ECVMovieRecorder;
 
 // Views
 #import "ECVVideoView.h"
 @class ECVPlayButtonCell;
 #import "ECVCropCell.h"
-
-// Other Sources
-@class ECVAudioPipe;
-@class ECVSoundTrack;
-@class ECVVideoTrack;
 
 enum {
 	ECV1x1AspectRatio = 3,
@@ -66,11 +62,7 @@ typedef NSUInteger ECVCropType;
 
 	BOOL _fullScreen;
 	ECVPlayButtonCell *_playButtonCell;
-
-	QTMovie *_movie;
-	ECVVideoTrack *_videoTrack;
-	ECVSoundTrack *_soundTrack;
-	ECVAudioPipe *_audioRecordingPipe;
+	ECVMovieRecorder *_movieRecorder;
 }
 
 - (IBAction)cloneViewer:(id)sender;

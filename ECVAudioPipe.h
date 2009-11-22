@@ -43,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat volume;
 @property(assign) BOOL dropsBuffers;
 
+@property(readonly) BOOL hasReadyBuffers;
 - (void)receiveInputBufferList:(AudioBufferList const *)inputBufferList;
 - (void)requestOutputBufferList:(inout AudioBufferList *)outputBufferList;
 

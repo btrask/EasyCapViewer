@@ -58,9 +58,9 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 			return nil;
 		}
 		UInt32 quality = kAudioConverterQuality_Max;
-		ECVOSStatus(AudioConverterSetProperty(_converter, kAudioConverterSampleRateConverterQuality, sizeof(quality), &quality));
+		(void)AudioConverterSetProperty(_converter, kAudioConverterSampleRateConverterQuality, sizeof(quality), &quality);
 		UInt32 primeMethod = kConverterPrimeMethod_Normal;
-		ECVOSStatus(AudioConverterSetProperty(_converter, kAudioConverterPrimeMethod, sizeof(primeMethod), &primeMethod));
+		(void)AudioConverterSetProperty(_converter, kAudioConverterPrimeMethod, sizeof(primeMethod), &primeMethod);
 
 		_inputStreamDescription = inputDesc;
 		_outputStreamDescription = outputDesc;
@@ -79,6 +79,13 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 
 #pragma mark -
 
+- (BOOL)hasReadyBuffers
+{
+	[_lock lock];
+	BOOL const hasReadyBuffers = !![_unusedBuffers count];
+	[_lock unlock];
+	return hasReadyBuffers;
+}
 - (void)receiveInputBufferList:(AudioBufferList const *)inputBufferList
 {
 	NSMutableArray *const buffers = [NSMutableArray arrayWithCapacity:inputBufferList->mNumberBuffers];

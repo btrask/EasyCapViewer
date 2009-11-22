@@ -22,11 +22,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
+#import <libkern/OSAtomic.h>
 
 // Models
 #import "ECVCaptureDevice.h"
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
+#import "ECVMovieRecorder.h"
 
 // Views
 #import "MPLWindow.h"
@@ -37,12 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVConfigController.h"
 
-// Other Sources
-#import "ECVAudioPipe.h"
-#import "ECVSoundTrack.h"
-#import "ECVQTKitAdditions.h"
-#import "ECVVideoTrack.h"
-
 static NSString *const ECVAspectRatio2Key = @"ECVAspectRatio2";
 static NSString *const ECVVsyncKey = @"ECVVsync";
 static NSString *const ECVMagFilterKey = @"ECVMagFilter";
@@ -51,29 +47,9 @@ static NSString *const ECVVideoCodecKey = @"ECVVideoCodec";
 static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 static NSString *const ECVCropRectKey = @"ECVCropRect";
 
-#if !__LP64__
-#define ECVFramesPerPacket 1u
-#define ECVChannelsPerFrame 2u
-#define ECVBitsPerByte 8u
-static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
-	48000.0f,
-	kAudioFormatLinearPCM,
-	kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsPacked,
-	sizeof(Float32) * ECVChannelsPerFrame * ECVFramesPerPacket,
-	ECVFramesPerPacket,
-	sizeof(Float32) * ECVChannelsPerFrame,
-	ECVChannelsPerFrame,
-	sizeof(Float32) * ECVBitsPerByte,
-	0u,
-};
-#endif
-
 @interface ECVCaptureController(Private)
 
 - (void)_hideMenuBar;
-
-- (void)_recordVideoFrame:(ECVVideoFrame *)frame;
-- (void)_recordBufferedAudio;
 
 @end
 
@@ -128,7 +104,7 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
 	[alert runModal];
 #else
-	if(_movie) return;
+	if(_movieRecorder) return;
 
 	NSSavePanel *const savePanel = [NSSavePanel savePanel];
 	[savePanel setAllowedFileTypes:[NSArray arrayWithObject:@"mov"]];
@@ -155,40 +131,27 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
 	if(NSFileHandlingPanelOKButton != returnCode) return;
 
-	_movie = [[QTMovie alloc] initToWritableFile:[savePanel filename] error:NULL];
-	ECVVideoStorage *const storage = [[self document] videoStorage];
-	_videoTrack = [[_movie ECV_videoTrackVideoStorage:storage size:ECVPixelSizeFromNSSize([self outputSize]) codec:(OSType)[videoCodecPopUp selectedTag] quality:[videoQualitySlider doubleValue]] retain];
-	[_videoTrack setCropRect:[self cropRect]];
+	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithURL:[savePanel URL] videoStorage:[[self document] videoStorage] audioDevice:[[self document] audioInput]] autorelease];
+	[recorder setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
+	[recorder setVideoQuality:[videoQualitySlider doubleValue]];
+	[recorder setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
+	[recorder setCropRect:[self cropRect]];
 
-	ECVAudioStream *const inputStream = [[[[[self document] audioInput] streams] objectEnumerator] nextObject];
-	if(inputStream) {
-		_audioRecordingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription];
-		[_audioRecordingPipe setDropsBuffers:NO];
-		_soundTrack = [[_movie ECV_soundTrackWithDescription:[_audioRecordingPipe outputStreamDescription] volume:1.0f] retain];
-	}
-
-	[[[_soundTrack track] media] ECV_beginEdits];
-	[[[_videoTrack track] media] ECV_beginEdits];
+	NSError *error = nil;
+	if([recorder startRecordingError:&error]) {
+		OSMemoryBarrier();
+		_movieRecorder = [recorder retain];
+	} else [[NSAlert alertWithError:error] runModal];
 #endif
 }
 - (IBAction)stopRecording:(id)sender
 {
 #if !__LP64__
-	if(!_movie) return;
-	[_videoTrack finish];
-	[[_soundTrack track] ECV_insertMediaAtTime:QTZeroTime];
-	[[_videoTrack track] ECV_insertMediaAtTime:QTZeroTime];
-	[[[_soundTrack track] media] ECV_endEdits];
-	[[[_videoTrack track] media] ECV_endEdits];
-	[_soundTrack release];
-	[_videoTrack release];
-	_soundTrack = nil;
-	_videoTrack = nil;
-	[_audioRecordingPipe release];
-	_audioRecordingPipe = nil;
-	[_movie updateMovieFile];
-	[_movie release];
-	_movie = nil;
+	if(!_movieRecorder) return;
+	ECVMovieRecorder *const recorder = _movieRecorder;
+	_movieRecorder = nil;
+	OSMemoryBarrier();
+	[[recorder autorelease] stopRecording];
 #endif
 }
 - (IBAction)changeCodec:(id)sender
@@ -382,14 +345,17 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame
 {
 	[videoView pushFrame:frame];
-	if(!_videoTrack) return;
-	[self performSelectorOnMainThread:@selector(_recordVideoFrame:) withObject:frame waitUntilDone:NO];
+	if(_movieRecorder) {
+		OSMemoryBarrier();
+		[_movieRecorder addVideoFrame:frame];
+	}
 }
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue
 {
-	if(!_soundTrack) return;
-	[_audioRecordingPipe receiveInputBufferList:[bufferListValue pointerValue]];
-	[self performSelectorOnMainThread:@selector(_recordBufferedAudio) withObject:nil waitUntilDone:NO];
+	if(_movieRecorder) {
+		OSMemoryBarrier();
+		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
+	}
 }
 
 #pragma mark -ECVCaptureController(Private)
@@ -400,26 +366,6 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	[NSApp setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationAutoHideDock];
 #else
 	SetSystemUIMode(kUIModeAllSuppressed, kNilOptions);
-#endif
-}
-
-#pragma mark -
-
-- (void)_recordVideoFrame:(ECVVideoFrame *)frame
-{
-#if !__LP64__
-	[_videoTrack addFrame:frame];
-#endif
-}
-- (void)_recordBufferedAudio
-{
-#if !__LP64__
-	UInt32 const bufferSize = ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000; // Should be more than enough to keep up with the incoming data.
-	static u_int8_t *bytes;
-	if(!bytes) bytes = malloc(bufferSize);
-	AudioBufferList outputBufferList = {1, {2, bufferSize, bytes}};
-	[_audioRecordingPipe requestOutputBufferList:&outputBufferList];
-	[_soundTrack addSamples:&outputBufferList];
 #endif
 }
 
@@ -456,10 +402,7 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 - (void)dealloc
 {
 	[_playButtonCell release];
-	[_movie release];
-	[_videoTrack release];
-	[_soundTrack release];
-	[_audioRecordingPipe release];
+	[_movieRecorder release];
 	[super dealloc];
 }
 
@@ -488,7 +431,7 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	if([self isFullScreen]) {
 		if(@selector(changeScale:) == action) return NO;
 	}
-	if(_movie) {
+	if(_movieRecorder) {
 		if(@selector(startRecording:) == action) return NO;
 	} else {
 		if(@selector(stopRecording:) == action) return NO;

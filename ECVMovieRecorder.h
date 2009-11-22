@@ -22,25 +22,64 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #if !__LP64__
+#import <CoreVideo/CoreVideo.h>
+#import <QTKit/QTKit.h>
 
-#import "ECVTrack.h"
-@interface ECVSoundTrack : ECVTrack
+// Models
+@class ECVVideoStorage;
+@class ECVVideoFrame;
+
+// Other Sources
+@class ECVAudioDevice;
+@class ECVAudioPipe;
+
+@interface ECVMovieRecorder : NSObject
 {
 	@private
-	AudioStreamBasicDescription _basicDescription;
-	SoundDescriptionHandle _soundDescriptionHandle;
+	NSURL *_URL;
+	ECVVideoStorage *_videoStorage;
+	ECVAudioDevice *_audioDevice;
+
+	OSType _videoCodec;
+	CGFloat _videoQuality;
+	ECVPixelSize _outputSize;
+	NSRect _cropRect;
+	NSDictionary *_cleanAperture;
+
+	CGFloat _volume;
+
+	NSConditionLock *_lock;
+	BOOL _stop;
+	CVPixelBufferPoolRef _pixelBufferPool;
+	NSMutableArray *_videoOperations;
+	NSMutableSet *_completedVideoOperations;
+
+	Media _videoMedia;
+	ICMCompressionSessionRef _compressionSession;
+	ICMEncodedFrameRef _encodedFrame;
+	Media _audioMedia;
+	ECVAudioPipe *_audioPipe;
+	SoundDescriptionHandle _audioDescriptionHandle;
+	void *_audioBufferBytes;
 }
 
-- (id)initWithTrack:(QTTrack *)track description:(AudioStreamBasicDescription)desc;
+- (id)initWithURL:(NSURL *)URL videoStorage:(ECVVideoStorage *)videoStorage audioDevice:(ECVAudioDevice *)audioDevice;
+@property(readonly) NSURL *URL;
+@property(readonly) ECVVideoStorage *videoStorage;
+@property(readonly) ECVAudioDevice *audioDevice;
 
-- (void)addSample:(AudioBuffer const *)buffer;
-- (void)addSamples:(AudioBufferList const *)bufferList;
+@property(assign) OSType videoCodec;
+@property(assign) CGFloat videoQuality;
+@property(assign) ECVPixelSize outputSize;
+@property(assign) NSRect cropRect;
 
-@end
+@property(assign) CGFloat volume;
 
-@interface QTMovie(ECVSoundTrackCreation)
+- (BOOL)startRecordingError:(out NSError **)outError;
+- (void)stopRecording;
 
-- (ECVSoundTrack *)ECV_soundTrackWithDescription:(AudioStreamBasicDescription)desc volume:(CGFloat)volume;
+- (void)addVideoFrame:(ECVVideoFrame *)frame;
+- (void)addAudioBufferList:(AudioBufferList const *)bufferList;
 
 @end
 

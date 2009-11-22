@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <AudioToolbox/AudioToolbox.h>
 #import <IOKit/usb/IOUSBLib.h>
 #import <mach/mach_port.h>
+#import <Foundation/NSDebug.h>
 
 // Controllers
 #import "ECVErrorLogController.h"
@@ -33,6 +34,9 @@ void ECVLog(ECVErrorLevel level, NSString *format, ...)
 {
 	va_list arguments;
 	va_start(arguments, format);
+#ifdef ECV_DEBUG
+	NSLogv(format, arguments);
+#endif
 	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
 	va_end(arguments);
 }
