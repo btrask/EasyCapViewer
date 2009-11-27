@@ -238,7 +238,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		[_frames removeLastObject];
 		if([frame lockIfHasBuffer]) break;
 		frame = nil;
-		_frameDropStrength = 1.0f;
 	}
 	if(!frame) {
 		frame = [_videoStorage frameAtIndex:ECVLastCompletedFrameIndex];
@@ -246,8 +245,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 
 	[self _drawFrame:frame];
+	if(frame) _frameDropStrength *= 0.75f;
+	else _frameDropStrength = 1.0f;
 	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
-	_frameDropStrength *= 0.75f;
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
 	glFinish();
