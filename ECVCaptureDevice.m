@@ -276,7 +276,7 @@ ECVNoDeviceError:
 }
 - (void)setAudioInput:(ECVAudioDevice *)device
 {
-	if(device) NSParameterAssert(device.isInput);
+	NSParameterAssert(device.isInput || !device);
 	if(ECVEqualObjects(device, _audioInput)) return;
 	BOOL const playing = [self isPlaying];
 	if(playing) [self setPlaying:NO];
@@ -293,7 +293,7 @@ ECVNoDeviceError:
 }
 - (void)setAudioOutput:(ECVAudioDevice *)device
 {
-	if(device) NSParameterAssert(!device.isInput);
+	NSParameterAssert(!device.isInput || !device);
 	if(ECVEqualObjects(device, _audioOutput)) return;
 	BOOL const playing = [self isPlaying];
 	if(playing) [self setPlaying:NO];
