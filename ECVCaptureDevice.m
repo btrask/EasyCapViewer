@@ -563,6 +563,11 @@ ECVNoDeviceError:
 {
 	return _productName ? _productName : @"";
 }
+- (void)close
+{
+	[self setPlaying:NO];
+	[super close];
+}
 
 #pragma mark -NSObject
 
