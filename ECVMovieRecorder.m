@@ -56,27 +56,11 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 };
 #define ECVAudioBufferBytesSize (ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000) // Should be more than enough to keep up with the incoming data.
 
-@interface ECVBufferCopyOperation : NSOperation
-{
-	@private
-	ECVMovieRecorder *_recorder;
-	ECVVideoFrame *_frame;
-	CVPixelBufferRef _pixelBuffer;
-	BOOL _success;
-}
-
-- (id)initWithRecorder:(ECVMovieRecorder *)recorder frame:(ECVVideoFrame *)frame pixelBuffer:(CVPixelBufferRef)pixelBuffer;
-@property(readonly) CVPixelBufferRef pixelBuffer;
-@property(readonly) BOOL success;
-
-@end
-
 @interface ECVMovieRecorder(Private)
 
 - (void)_threaded_recordToMovie:(QTMovie *)movie;
 
-- (void)_videoOperationComplete:(ECVBufferCopyOperation *)op;
-- (void)_recordVideoOperation:(ECVBufferCopyOperation *)op;
+- (void)_encodeFrame:(ECVVideoFrame *)frame;
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
 
 - (void)_recordAudioBuffer;
@@ -150,8 +134,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	QTMovie *const movie = [[[QTMovie alloc] initToWritableFile:[_URL path] error:outError] autorelease];
 	if(!movie) return NO;
 
-	_videoOperations = [[NSMutableArray alloc] init];
-	_completedVideoOperations = [[NSMutableSet alloc] init];
+	_videoFrames = [[NSMutableArray alloc] init];
 
 	ICMCompressionSessionOptionsRef options = NULL;
 	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
@@ -172,7 +155,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		[NSNumber numberWithUnsignedInt:[_videoStorage pixelFormatType]], kCVPixelBufferPixelFormatTypeKey,
 		nil], &callback, &_compressionSession));
 	ICMCompressionSessionOptionsRelease(options);
-	_pixelBufferPool = ICMCompressionSessionGetPixelBufferPool(_compressionSession);
 
 	ECVAudioStream *const inputStream = [[[_audioDevice streams] objectEnumerator] nextObject];
 	if(inputStream) {
@@ -196,13 +178,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 - (void)addVideoFrame:(ECVVideoFrame *)frame
 {
 	[_lock lock];
-	CVPixelBufferRef pixelBuffer = NULL;
-	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, _pixelBufferPool, &pixelBuffer));
-	ECVBufferCopyOperation *const op = [[[ECVBufferCopyOperation alloc] initWithRecorder:self frame:frame pixelBuffer:pixelBuffer] autorelease];
-	CVPixelBufferRelease(pixelBuffer);
-	[_videoOperations insertObject:op atIndex:0];
-	[_lock unlock];
-	[_videoStorage addFrameOperation:op];
+	[_videoFrames insertObject:frame atIndex:0];
+	[_lock unlockWithCondition:ECVRecordThreadRun];
 }
 - (void)addAudioBufferList:(AudioBufferList const *)bufferList
 {
@@ -225,6 +202,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	_audioMedia = NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0);
 	ECVOSErr(BeginMediaEdits(_videoMedia));
 	ECVOSErr(BeginMediaEdits(_audioMedia));
+	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(_compressionSession), &_pixelBuffer));
+	if(_cleanAperture) CVBufferSetAttachment(_pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
 
 	ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_audioDescriptionHandle));
 	_audioBufferBytes = malloc(ECVAudioBufferBytesSize);
@@ -234,16 +213,13 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
 
 		[_lock lockWhenCondition:ECVRecordThreadRun];
-		ECVBufferCopyOperation *const op = [_completedVideoOperations member:[[[_videoOperations lastObject] retain] autorelease]];
-		if(op) {
-			[_videoOperations removeObjectIdenticalTo:op];
-			[_completedVideoOperations removeObject:op];
-		}
-		BOOL const moreToDo = [_completedVideoOperations containsObject:[_videoOperations lastObject]] || [_audioPipe hasReadyBuffers];
+		ECVVideoFrame *const frame = [[[_videoFrames lastObject] retain] autorelease];
+		if(frame) [_videoFrames removeLastObject];
+		BOOL const moreToDo = [_videoFrames count] || [_audioPipe hasReadyBuffers];
 		if(_stop && !moreToDo) stop = YES;
 		[_lock unlockWithCondition:moreToDo ? ECVRecordThreadRun : ECVRecordThreadWait];
 
-		if(op) [self _recordVideoOperation:op];
+		[self _encodeFrame:frame];
 		[self _recordAudioBuffer];
 
 		[innerPool release];
@@ -257,10 +233,10 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[movie updateMovieFile];
 
 	if(_compressionSession) ICMCompressionSessionRelease(_compressionSession);
-	_completedVideoOperations = NULL;
 	if(_encodedFrame) ICMEncodedFrameRelease(_encodedFrame);
 	_encodedFrame = NULL;
-	_pixelBufferPool = NULL;
+	CVPixelBufferRelease(_pixelBuffer);
+	_pixelBuffer = NULL;
 
 	[_audioPipe release];
 	_audioPipe = nil;
@@ -271,10 +247,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	_videoMedia = NULL;
 	_audioMedia = NULL;
 
-	[_videoOperations release];
-	_videoOperations = nil;
-	[_completedVideoOperations release];
-	_completedVideoOperations = nil;
+	[_videoFrames release];
+	_videoFrames = nil;
 
 	[movie detachFromCurrentThread];
 	[QTMovie exitQTKitOnThread];
@@ -283,19 +257,13 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 #pragma mark -
 
-- (void)_videoOperationComplete:(ECVBufferCopyOperation *)op
+- (void)_encodeFrame:(ECVVideoFrame *)frame
 {
-	[_lock lock];
-	[_completedVideoOperations addObject:op];
-	[_lock unlockWithCondition:ECVRecordThreadRun];
-}
-- (void)_recordVideoOperation:(ECVBufferCopyOperation *)op
-{
-	NSParameterAssert(op);
-	if([op success]) {
-		if(_cleanAperture) CVBufferSetAttachment([op pixelBuffer], kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
-		ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, [op pixelBuffer], 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
-	} else [self _addEncodedFrame:NULL];
+	if(!frame) return;
+	if(![frame lockIfHasBuffer]) return [self _addEncodedFrame:NULL];
+	[frame copyToPixelBuffer:_pixelBuffer];
+	[frame unlock];
+	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, _pixelBuffer, 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 }
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame
 {
@@ -329,47 +297,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[_cleanAperture release];
 
 	[_lock release];
-	[super dealloc];
-}
-
-@end
-
-@implementation ECVBufferCopyOperation
-
-#pragma mark -ECVBufferCopyOperation
-
-- (id)initWithRecorder:(ECVMovieRecorder *)recorder frame:(ECVVideoFrame *)frame pixelBuffer:(CVPixelBufferRef)pixelBuffer
-{
-	if((self = [super init])) {
-		_recorder = [recorder retain];
-		_frame = [frame retain];
-		_pixelBuffer = CVPixelBufferRetain(pixelBuffer);
-	}
-	return self;
-}
-@synthesize pixelBuffer = _pixelBuffer;
-@synthesize success = _success;
-
-#pragma mark -NSOperation
-
-- (void)main
-{
-	if([self isCancelled]) return;
-	if([_frame lockIfHasBuffer]) {
-		[_frame copyToPixelBuffer:_pixelBuffer];
-		[_frame unlock];
-		_success = YES;
-	}
-	[_recorder _videoOperationComplete:self];
-}
-
-#pragma mark -NSObject
-
-- (void)dealloc
-{
-	[_recorder release];
-	[_frame release];
-	CVPixelBufferRelease(_pixelBuffer);
 	[super dealloc];
 }
 

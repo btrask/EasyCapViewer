@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
-#define ECVMaxConcurrentFrameOperationCount 4
 #define ECVExtraBufferCount 4
 
 @interface ECVVideoStorage(Private)
@@ -42,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
-		_numberOfBuffers = ECVUndroppableFrameCount + ECVMaxConcurrentFrameOperationCount + ECVExtraBufferCount;
+		_numberOfBuffers = ECVUndroppableFrameCount + ECVExtraBufferCount;
 		_pixelFormatType = formatType;
 		_deinterlacingMode = mode;
 		_originalSize = size;
@@ -50,8 +49,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
 		_bufferSize = [self pixelSize].height * [self bytesPerRow];
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * _bufferSize];
-		_frameOperationQueue = [[NSOperationQueue alloc] init];
-		[_frameOperationQueue setMaxConcurrentOperationCount:ECVMaxConcurrentFrameOperationCount];
 
 		_lock = [[NSRecursiveLock alloc] init];
 		_frames = [[NSMutableArray alloc] init];
@@ -113,10 +110,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[_lock unlock];
 	return frame;
 }
-- (void)addFrameOperation:(NSOperation *)operation
-{
-	[_frameOperationQueue addOperation:operation];
-}
 
 #pragma mark -
 
@@ -153,9 +146,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)dealloc
 {
-	[_frameOperationQueue cancelAllOperations];
 	[_allBufferData release];
-	[_frameOperationQueue release];
 	[_lock release];
 	[_frames release];
 	[_unusedBufferIndexes release];

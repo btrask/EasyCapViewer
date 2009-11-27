@@ -50,9 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSConditionLock *_lock;
 	BOOL _stop;
-	CVPixelBufferPoolRef _pixelBufferPool;
-	NSMutableArray *_videoOperations;
-	NSMutableSet *_completedVideoOperations;
+	CVPixelBufferRef _pixelBuffer;
+	NSMutableArray *_videoFrames;
 
 	Media _videoMedia;
 	ICMCompressionSessionRef _compressionSession;
