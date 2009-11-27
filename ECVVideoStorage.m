@@ -136,10 +136,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)_dropFrames
 {
-	NSArray *const frames = [[_frames copy] autorelease];
-	NSUInteger const count = [frames count];
+	NSUInteger const count = [_frames count];
 	NSUInteger const drop = MIN(MAX(count, ECVUndroppableFrameCount) - ECVUndroppableFrameCount, [self frameGroupSize]);
-	[[frames subarrayWithRange:NSMakeRange(count - drop, drop)] makeObjectsPerformSelector:@selector(removeFromStorage)];
+	[[_frames subarrayWithRange:NSMakeRange(count - drop, drop)] makeObjectsPerformSelector:@selector(removeFromStorage)];
 }
 
 #pragma mark -NSObject
