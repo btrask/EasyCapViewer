@@ -141,6 +141,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	if([recorder startRecordingError:&error]) {
 		OSMemoryBarrier();
 		_movieRecorder = [recorder retain];
+		[[self window] setDocumentEdited:YES];
 	} else [[NSAlert alertWithError:error] runModal];
 #endif
 }
@@ -152,6 +153,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	_movieRecorder = nil;
 	OSMemoryBarrier();
 	[[recorder autorelease] stopRecording];
+	[[self window] setDocumentEdited:NO];
 #endif
 }
 - (IBAction)changeCodec:(id)sender
@@ -392,6 +394,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[w center];
 	[super windowDidLoad];
 }
+- (void)setDocumentEdited:(BOOL)flag {} // We keep track of recording, not the document.
 
 #pragma mark -NSObject
 
@@ -476,6 +479,10 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 #else
 	SetSystemUIMode(kUIModeNormal, kNilOptions);
 #endif
+}
+- (void)windowWillClose:(NSNotification *)aNotif
+{
+	[self stopRecording:self];
 }
 
 @end
