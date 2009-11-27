@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
-#define ECVExtraBufferCount 4
+#define ECVExtraBufferCount 15
 
 @interface ECVVideoStorage(Private)
 

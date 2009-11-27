@@ -268,9 +268,9 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[w setLevel:[oldWindow level]];
 	[w setContentAspectRatio:[oldWindow contentAspectRatio]];
 	[w setMinSize:[oldWindow minSize]];
-	[w setDocumentEdited:[oldWindow isDocumentEdited]];
 	[self setWindow:w];
 	[self synchronizeWindowTitleWithDocumentName];
+	[w setDocumentEdited:[oldWindow isDocumentEdited]];
 	[w makeKeyAndOrderFront:self];
 	[oldWindow close];
 	if(!flag) [w center];
@@ -483,7 +483,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 }
 - (void)windowWillClose:(NSNotification *)aNotif
 {
-	[self stopRecording:self];
+	if([aNotif object] == [self window]) [self stopRecording:self];
 }
 
 @end
