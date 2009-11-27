@@ -58,7 +58,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 - (GLuint)_textureNameAtIndex:(NSUInteger)index;
 
 - (void)_drawOneFrame;
-- (BOOL)_drawFrame:(ECVVideoFrame *)frame;
+- (void)_drawFrame:(ECVVideoFrame *)frame;
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength;
 - (void)_drawCropAdjustmentBox;
 - (void)_drawResizeHandle;
@@ -232,30 +232,32 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	BOOL drawn = NO;
+	ECVVideoFrame *frame = nil;
 	while([_frames count]) {
-		ECVVideoFrame *const frame = [[[_frames lastObject] retain] autorelease];
+		frame = [[[_frames lastObject] retain] autorelease];
 		[_frames removeLastObject];
-		if([self _drawFrame:frame]) {
-			drawn = YES;
-			break;
-		}
+		if([frame lockIfHasBuffer]) break;
+		frame = nil;
 		_frameDropStrength = 1.0f;
 	}
-	if(!drawn) [self _drawFrame:[_videoStorage frameAtIndex:ECVLastCompletedFrameIndex]];
+	if(!frame) {
+		frame = [_videoStorage frameAtIndex:ECVLastCompletedFrameIndex];
+		if(![frame lockIfHasBuffer]) frame = nil;
+	}
 
+	[self _drawFrame:frame];
 	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
 	_frameDropStrength *= 0.75f;
-
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
-	glFlush();
+	glFinish();
+	[frame unlock];
+
 	CGLUnlockContext(contextObj);
 }
-- (BOOL)_drawFrame:(ECVVideoFrame *)frame
+- (void)_drawFrame:(ECVVideoFrame *)frame
 {
-	if(!frame) return NO;
-	if(![frame lockIfHasBuffer]) return NO;
+	if(!frame) return;
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVPixelSize const s = [_videoStorage pixelSize];
 	OSType const f = [_videoStorage pixelFormatType];
@@ -264,8 +266,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToNSSize(s)));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
-	[frame unlock];
-	return YES;
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength
 {
@@ -375,10 +375,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	[self _drawFrame:[_videoStorage frameAtIndex:ECVLastCompletedFrameIndex]];
+	ECVVideoFrame *frame = [_videoStorage frameAtIndex:ECVLastCompletedFrameIndex];
+	if(![frame lockIfHasBuffer]) frame = nil;
+	[self _drawFrame:frame];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
 	[self _drawResizeHandle];
-	glFlush();
+	glFinish();
+	[frame unlock];
 
 	CGLUnlockContext(contextObj);
 }
