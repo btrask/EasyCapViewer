@@ -268,6 +268,7 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[w setLevel:[oldWindow level]];
 	[w setContentAspectRatio:[oldWindow contentAspectRatio]];
 	[w setMinSize:[oldWindow minSize]];
+	[w setDocumentEdited:[oldWindow isDocumentEdited]];
 	[self setWindow:w];
 	[self synchronizeWindowTitleWithDocumentName];
 	[w makeKeyAndOrderFront:self];
