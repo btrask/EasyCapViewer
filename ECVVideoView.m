@@ -203,14 +203,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(!frame) return;
 	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
 	CGLLockContext(contextObj);
+	[_frames insertObject:frame atIndex:0];
 	NSUInteger const count = [_frames count];
 	NSUInteger const frameGroupSize = [_videoStorage frameGroupSize];
-	if(count > frameGroupSize) {
+	if(count >= frameGroupSize) {
 		NSUInteger const keep = count % frameGroupSize;
-		[_frames removeObjectsInRange:NSMakeRange(count - keep, keep)];
+		[_frames removeObjectsInRange:NSMakeRange(keep, count - keep)];
 		_frameDropStrength = 1.0f;
 	}
-	[_frames insertObject:frame atIndex:0];
 	CGLUnlockContext(contextObj);
 }
 
