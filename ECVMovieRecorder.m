@@ -138,7 +138,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 	ICMCompressionSessionOptionsRef options = NULL;
 	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
-	ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_DurationsNeeded, (Boolean)true);
+	ECVOSStatus(ICMCompressionSessionOptionsSetDurationsNeeded(options, true));
 	NSTimeInterval frameRateInterval = 0.0f;
 	if(QTGetTimeInterval([_videoStorage frameRate], &frameRateInterval)) ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, X2Fix(frameRateInterval));
 	ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, (UInt32)QTMakeTimeScaled([_videoStorage frameRate], ECVMicrosecondsPerSecond).timeValue);
