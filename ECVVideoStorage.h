@@ -66,6 +66,9 @@ enum {
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 - (ECVVideoFrame *)frameAtIndex:(NSUInteger)i;
 
+- (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
+- (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
+
 - (void *)bufferBytesAtIndex:(NSUInteger)index;
 - (BOOL)removeFrame:(ECVVideoFrame *)frame;
 

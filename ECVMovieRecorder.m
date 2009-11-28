@@ -213,12 +213,14 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
 
 		[_lock lockWhenCondition:ECVRecordThreadRun];
+		NSUInteger dropCount = [_videoStorage dropFramesFromArray:_videoFrames];
 		ECVVideoFrame *const frame = [[[_videoFrames lastObject] retain] autorelease];
 		if(frame) [_videoFrames removeLastObject];
 		BOOL const moreToDo = [_videoFrames count] || [_audioPipe hasReadyBuffers];
 		if(_stop && !moreToDo) stop = YES;
 		[_lock unlockWithCondition:moreToDo ? ECVRecordThreadRun : ECVRecordThreadWait];
 
+		while(dropCount--) [self _addEncodedFrame:NULL];
 		[self _encodeFrame:frame];
 		[self _recordAudioBuffer];
 

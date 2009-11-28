@@ -113,6 +113,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
+- (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c
+{
+	NSUInteger const g = [self frameGroupSize];
+	return c < g ? 0 : c - c % g;
+}
+- (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames
+{
+	NSUInteger const count = [frames count];
+	NSUInteger const drop = [self numberOfFramesToDropWithCount:count];
+	[frames removeObjectsInRange:NSMakeRange(count - drop, drop)];
+	return drop;
+}
+
+#pragma mark -
+
 - (void *)bufferBytesAtIndex:(NSUInteger)index
 {
 	return [_allBufferData mutableBytes] + _bufferSize * index;
