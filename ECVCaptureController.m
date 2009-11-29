@@ -195,8 +195,8 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 - (IBAction)enterCropMode:(id)sender
 {
 	ECVCropCell *const cell = [[[ECVCropCell alloc] initWithOpenGLContext:[videoView openGLContext]] autorelease];
-	cell.delegate = self;
-	cell.cropRect = [self cropRect];
+	[cell setDelegate:self];
+	[cell setCropRect:[self cropRect]];
 	[videoView setCropRect:ECVUncroppedRect];
 	[videoView setCell:cell];
 }
@@ -388,8 +388,8 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
 	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];
-	_playButtonCell.target = self;
-	_playButtonCell.action = @selector(togglePlaying:);
+	[_playButtonCell setTarget:self];
+	[_playButtonCell setAction:@selector(togglePlaying:)];
 	[videoView setCell:_playButtonCell];
 
 	[w center];

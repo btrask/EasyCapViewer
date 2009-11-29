@@ -52,21 +52,21 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
 	if(source == _videoSource) return;
-	BOOL const playing = self.playing;
-	if(playing) self.playing = NO;
+	BOOL const playing = [self isPlaying];
+	if(playing) [self setPlaying:NO];
 	_videoSource = source;
 	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
-	if(playing) self.playing = YES;
+	if(playing) [self setPlaying:YES];
 }
 @synthesize videoFormat = _videoFormat;
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format
 {
 	if(format == _videoFormat) return;
-	BOOL const playing = self.playing;
-	if(playing) self.playing = NO;
+	BOOL const playing = [self isPlaying];
+	if(playing) [self setPlaying:NO];
 	_videoFormat = format;
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
-	if(playing) self.playing = YES;
+	if(playing) [self setPlaying:YES];
 }
 
 #pragma mark -ECVCaptureDevice
@@ -108,7 +108,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (ECVPixelSize)captureSize
 {
-	return (ECVPixelSize){720, self.is60HzFormat ? 480 : 576};
+	return (ECVPixelSize){720, [self is60HzFormat] ? 480 : 576};
 }
 - (NSUInteger)simultaneousTransfers
 {
@@ -124,7 +124,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (QTTime)frameRate
 {
-	return self.is60HzFormat ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50);
+	return [self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50);
 }
 
 #pragma mark -
@@ -180,11 +180,11 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (id)videoSourceObject
 {
-	return [NSNumber numberWithUnsignedInteger:self.videoSource];
+	return [NSNumber numberWithUnsignedInteger:[self videoSource]];
 }
 - (void)setVideoSourceObject:(id)obj
 {
-	self.videoSource = [obj unsignedIntegerValue];
+	[self setVideoSource:[obj unsignedIntegerValue]];
 }
 - (NSString *)localizedStringForVideoSourceObject:(id)obj
 {
@@ -227,11 +227,11 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (id)videoFormatObject
 {
-	return [NSNumber numberWithUnsignedInteger:self.videoFormat];
+	return [NSNumber numberWithUnsignedInteger:[self videoFormat]];
 }
 - (void)setVideoFormatObject:(id)obj
 {
-	self.videoFormat = [obj unsignedIntegerValue];
+	[self setVideoFormat:[obj unsignedIntegerValue]];
 }
 - (NSString *)localizedStringForVideoFormatObject:(id)obj
 {
@@ -319,7 +319,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (BOOL)SVideo
 {
-	return ECVSTK1160SVideoInput == self.videoSource;
+	return ECVSTK1160SVideoInput == [self videoSource];
 }
 - (SAA711XCSTDFormat)SAA711XCSTDFormat
 {

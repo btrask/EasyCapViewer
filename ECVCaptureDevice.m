@@ -265,7 +265,7 @@ ECVNoDeviceError:
 - (ECVAudioDevice *)audioInputOfCaptureHardware
 {
 	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
-	input.name = _productName;
+	[input setName:_productName];
 	return input;
 }
 - (ECVAudioDevice *)audioInput
@@ -276,7 +276,7 @@ ECVNoDeviceError:
 }
 - (void)setAudioInput:(ECVAudioDevice *)device
 {
-	NSParameterAssert(device.isInput || !device);
+	NSParameterAssert([device isInput] || !device);
 	if(ECVEqualObjects(device, _audioInput)) return;
 	BOOL const playing = [self isPlaying];
 	if(playing) [self setPlaying:NO];
@@ -293,7 +293,7 @@ ECVNoDeviceError:
 }
 - (void)setAudioOutput:(ECVAudioDevice *)device
 {
-	NSParameterAssert(!device.isInput || !device);
+	NSParameterAssert(![device isInput] || !device);
 	if(ECVEqualObjects(device, _audioOutput)) return;
 	BOOL const playing = [self isPlaying];
 	if(playing) [self setPlaying:NO];
@@ -322,9 +322,9 @@ ECVNoDeviceError:
 	}
 
 	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
-	_audioPreviewingPipe.volume = _volume;
-	input.delegate = self;
-	output.delegate = self;
+	[_audioPreviewingPipe setVolume:_volume];
+	[input setDelegate:self];
+	[output setDelegate:self];
 
 	if(![input start]) {
 		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
@@ -343,8 +343,8 @@ ECVNoDeviceError:
 	ECVAudioDevice *const output = [self audioOutput];
 	[input stop];
 	[output stop];
-	input.delegate = nil;
-	output.delegate = nil;
+	[input setDelegate:nil];
+	[output setDelegate:nil];
 	[_audioPreviewingPipe release];
 	_audioPreviewingPipe = nil;
 }
@@ -619,7 +619,7 @@ ECVNoDeviceError:
 - (void)setVolume:(CGFloat)value
 {
 	_volume = value;
-	_audioPreviewingPipe.volume = value;
+	[_audioPreviewingPipe setVolume:value];
 	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
 }
 

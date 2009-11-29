@@ -140,7 +140,7 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 	NSRect const firstMaskRect = [self maskRectWithCropRect:_cropRect frame:aRect];
 	ECVRectEdgeMask const handle = [self handlePositionForPoint:firstLocation withMaskRect:firstMaskRect inFrame:aRect view:aView];
 	if(!handle) {
-		[self.delegate cropCellDidFinishCropping:self];
+		[[self delegate] cropCellDidFinishCropping:self];
 		return YES; // Claim the mouse is up.
 	}
 	NSPoint const handlePoint = ECVRectPoint(firstMaskRect, handle);
