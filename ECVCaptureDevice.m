@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAudioDevice.h"
 #import "ECVAudioPipe.h"
 #import "ECVDebug.h"
+#import "ECVReadWriteLock.h"
 
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";
 NSString *const ECVBrightnessKey = @"ECVBrightness";
@@ -110,7 +111,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	if(outError) *outError = nil;
 	if(!(self = [super init])) return nil;
 
-	_windowControllersLock = [[NSLock alloc] init];
+	_windowControllersLock = [[ECVReadWriteLock alloc] init];
 	_windowControllers2 = [[NSMutableArray alloc] init];
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
@@ -456,7 +457,7 @@ bail:
 		frameToDraw = _lastCompletedFrame;
 	}
 	if(frameToDraw) {
-		[_windowControllersLock lock];
+		[_windowControllersLock readLock];
 		NSArray *const controllers = [[_windowControllers2 copy] autorelease];
 		[_windowControllersLock unlock];
 		[controllers makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
@@ -540,14 +541,14 @@ ECVNoDeviceError:
 - (void)addWindowController:(NSWindowController *)windowController
 {
 	[super addWindowController:windowController];
-	[_windowControllersLock lock];
+	[_windowControllersLock writeLock];
 	if(NSNotFound == [_windowControllers2 indexOfObjectIdenticalTo:windowController]) [_windowControllers2 addObject:windowController];
 	[_windowControllersLock unlock];
 }
 - (void)removeWindowController:(NSWindowController *)windowController
 {
 	[super removeWindowController:windowController];
-	[_windowControllersLock lock];
+	[_windowControllersLock writeLock];
 	[_windowControllers2 removeObjectIdenticalTo:windowController];
 	[_windowControllersLock unlock];
 }
@@ -598,7 +599,7 @@ ECVNoDeviceError:
 {
 	NSParameterAssert(sender == _audioInput);
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
-	[_windowControllersLock lock];
+	[_windowControllersLock readLock];
 	NSArray *const controllers = [[_windowControllers2 copy] autorelease];
 	[_windowControllersLock unlock];
 	[controllers makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];

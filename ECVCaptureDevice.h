@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVAudioDevice.h"
 @class ECVAudioPipe;
+@class ECVReadWriteLock;
 
 extern NSString *const ECVDeinterlacingModeKey;
 extern NSString *const ECVBrightnessKey;
@@ -52,7 +53,7 @@ extern NSString *const ECVSaturationKey;
 @interface ECVCaptureDevice : NSDocument <ECVAudioDeviceDelegate, ECVCaptureDeviceConfiguring>
 {
 	@private
-	NSLock *_windowControllersLock;
+	ECVReadWriteLock *_windowControllersLock;
 	NSMutableArray *_windowControllers2;
 
 	io_service_t _service;
