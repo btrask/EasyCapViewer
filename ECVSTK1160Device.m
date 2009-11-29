@@ -52,21 +52,15 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
 	if(source == _videoSource) return;
-	BOOL const playing = [self isPlaying];
-	if(playing) [self setPlaying:NO];
-	_videoSource = source;
+	ECVPauseWhile(self, { _videoSource = source; });
 	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
-	if(playing) [self setPlaying:YES];
 }
 @synthesize videoFormat = _videoFormat;
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format
 {
 	if(format == _videoFormat) return;
-	BOOL const playing = [self isPlaying];
-	if(playing) [self setPlaying:NO];
-	_videoFormat = format;
+	ECVPauseWhile(self, { _videoFormat = format; });
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
-	if(playing) [self setPlaying:YES];
 }
 
 #pragma mark -ECVCaptureDevice

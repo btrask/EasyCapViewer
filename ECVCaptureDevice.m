@@ -252,11 +252,8 @@ ECVNoDeviceError:
 - (void)setDeinterlacingMode:(ECVDeinterlacingMode)mode
 {
 	if(mode == _deinterlacingMode) return;
-	BOOL const playing = [self isPlaying];
-	if(playing) [self setPlaying:NO];
-	_deinterlacingMode = mode;
+	ECVPauseWhile(self, { _deinterlacingMode = mode; });
 	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
-	if(playing) [self setPlaying:YES];
 }
 @synthesize videoStorage = _videoStorage;
 
@@ -278,13 +275,12 @@ ECVNoDeviceError:
 {
 	NSParameterAssert([device isInput] || !device);
 	if(ECVEqualObjects(device, _audioInput)) return;
-	BOOL const playing = [self isPlaying];
-	if(playing) [self setPlaying:NO];
-	[_audioInput release];
-	_audioInput = [device retain];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
-	if(playing) [self setPlaying:YES];
+	ECVPauseWhile(self, {
+		[_audioInput release];
+		_audioInput = [device retain];
+		[_audioPreviewingPipe release];
+		_audioPreviewingPipe = nil;
+	});
 }
 - (ECVAudioDevice *)audioOutput
 {
@@ -295,17 +291,19 @@ ECVNoDeviceError:
 {
 	NSParameterAssert(![device isInput] || !device);
 	if(ECVEqualObjects(device, _audioOutput)) return;
-	BOOL const playing = [self isPlaying];
-	if(playing) [self setPlaying:NO];
-	[_audioOutput release];
-	_audioOutput = [device retain];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
-	if(playing) [self setPlaying:YES];
+	ECVPauseWhile(self, {
+		[_audioOutput release];
+		_audioOutput = [device retain];
+		[_audioPreviewingPipe release];
+		_audioPreviewingPipe = nil;
+	});
 }
 - (BOOL)startAudio
 {
 	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
+
+	NSTimeInterval const timeSinceLastStop = [NSDate timeIntervalSinceReferenceDate] - _audioStopTime;
+	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
 
 	ECVAudioDevice *const input = [self audioInput];
 	ECVAudioDevice *const output = [self audioOutput];
@@ -347,6 +345,7 @@ ECVNoDeviceError:
 	[output setDelegate:nil];
 	[_audioPreviewingPipe release];
 	_audioPreviewingPipe = nil;
+	_audioStopTime = [NSDate timeIntervalSinceReferenceDate];
 }
 
 #pragma mark -

@@ -41,6 +41,14 @@ extern NSString *const ECVContrastKey;
 extern NSString *const ECVHueKey;
 extern NSString *const ECVSaturationKey;
 
+#define ECVPauseWhile(obj, code) {\
+	ECVCaptureDevice *const __obj = (obj);\
+	BOOL const __p = [__obj isPlaying];\
+	if(__p) [__obj setPlaying:NO];\
+	({code});\
+	if(__p) [__obj setPlaying:YES];\
+} while(NO)
+
 @interface ECVCaptureDevice : NSDocument <ECVAudioDeviceDelegate, ECVCaptureDeviceConfiguring>
 {
 	@private
@@ -66,6 +74,7 @@ extern NSString *const ECVSaturationKey;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
 	CGFloat _volume;
+	NSTimeInterval _audioStopTime;
 }
 
 + (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator;
