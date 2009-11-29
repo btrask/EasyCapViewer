@@ -30,6 +30,7 @@
 		0E7FFD1B1089CEE0000C8217 /* ECVPlayButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E7FFD1A1089CEE0000C8217 /* ECVPlayButtonCell.m */; };
 		0E7FFD1E1089D60A000C8217 /* ECVCropCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E7FFD1D1089D60A000C8217 /* ECVCropCell.m */; };
 		0E7FFD211089D651000C8217 /* ECVOpenGLAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E7FFD201089D651000C8217 /* ECVOpenGLAdditions.m */; };
+		0E89833F10C2D740006BA9C6 /* ECVReadWriteLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E89833E10C2D740006BA9C6 /* ECVReadWriteLock.m */; };
 		0E8CE0CC107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */; };
 		0E8CE155107BE51C004F05A7 /* ECVAppKitAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE154107BE51C004F05A7 /* ECVAppKitAdditions.m */; };
 		0E8CE1D1107BE953004F05A7 /* ECVHUDSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */; };
@@ -108,6 +109,8 @@
 		0E7FFD1D1089D60A000C8217 /* ECVCropCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCropCell.m; sourceTree = "<group>"; };
 		0E7FFD1F1089D651000C8217 /* ECVOpenGLAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVOpenGLAdditions.h; sourceTree = "<group>"; };
 		0E7FFD201089D651000C8217 /* ECVOpenGLAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVOpenGLAdditions.m; sourceTree = "<group>"; };
+		0E89833D10C2D740006BA9C6 /* ECVReadWriteLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVReadWriteLock.h; sourceTree = "<group>"; };
+		0E89833E10C2D740006BA9C6 /* ECVReadWriteLock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVReadWriteLock.m; sourceTree = "<group>"; };
 		0E8CE0CA107BCE12004F05A7 /* ECVHUDPopUpButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDPopUpButtonCell.h; sourceTree = "<group>"; };
 		0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDPopUpButtonCell.m; sourceTree = "<group>"; };
 		0E8CE153107BE51C004F05A7 /* ECVAppKitAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAppKitAdditions.h; sourceTree = "<group>"; };
@@ -311,6 +314,8 @@
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
 				0E7FFD1F1089D651000C8217 /* ECVOpenGLAdditions.h */,
 				0E7FFD201089D651000C8217 /* ECVOpenGLAdditions.m */,
+				0E89833D10C2D740006BA9C6 /* ECVReadWriteLock.h */,
+				0E89833E10C2D740006BA9C6 /* ECVReadWriteLock.m */,
 				0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */,
 				0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */,
 			);
@@ -434,6 +439,7 @@
 				0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */,
 				0EB070DD10B0992400B9575B /* ECVCaptureDevice.m in Sources */,
 				0E0C489D10B91DC2008731F2 /* ECVMovieRecorder.m in Sources */,
+				0E89833F10C2D740006BA9C6 /* ECVReadWriteLock.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,40 +21,72 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <CoreVideo/CoreVideo.h>
-
-// Models
-@class ECVVideoStorage;
+#import "ECVReadWriteLock.h"
+#import <pthread.h>
 
 // Other Sources
-@class ECVReadWriteLock;
+#import "ECVDebug.h"
 
-@interface ECVVideoFrame : NSObject <NSLocking>
+@interface ECVReadWriteLock(Private)
+
+- (BOOL)_tryLockResult:(int)error;
+
+@end
+
+@implementation ECVReadWriteLock
+
+#pragma mark -ECVReadWriteLock
+
+- (void)readLock
 {
-	@protected
-	ECVVideoStorage *_videoStorage;
-	ECVFieldType _fieldType;
-	off_t _length;
-
-	ECVReadWriteLock *_lock;
-	NSUInteger _bufferIndex;
+	ECVErrno(pthread_rwlock_rdlock(&_lock));
+}
+- (void)writeLock
+{
+	ECVErrno(pthread_rwlock_wrlock(&_lock));
+}
+- (BOOL)tryReadLock
+{
+	return [self _tryLockResult:pthread_rwlock_tryrdlock(&_lock)];
+}
+- (BOOL)tryWriteLock
+{
+	return [self _tryLockResult:pthread_rwlock_trywrlock(&_lock)];
 }
 
-- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type;
-@property(readonly) ECVVideoStorage *videoStorage;
-@property(readonly) NSUInteger bufferIndex;
-@property(readonly) ECVFieldType fieldType;
+#pragma mark -ECVReadWriteLock(Private)
 
-@property(readonly) BOOL hasBuffer;
-@property(readonly) void *bufferBytes;
-- (BOOL)lockIfHasBuffer;
+- (BOOL)_tryLockResult:(int)error
+{
+	if(!error) return YES;
+	if(EBUSY != error) ECVErrno(error);
+	return NO;
+}
 
-- (void)clear;
-- (void)fillWithFrame:(ECVVideoFrame *)frame;
-- (void)blurWithFrame:(ECVVideoFrame *)frame;
-- (void)appendBytes:(void const *)bytes length:(size_t)length;
-- (void)copyToPixelBuffer:(CVPixelBufferRef)pixelBuffer;
+#pragma mark -NSObject
 
-- (void)removeFromStorage;
+- (id)init
+{
+	if((self = [super init])) {
+		ECVErrno(pthread_rwlock_init(&_lock, NULL));
+	}
+	return self;
+}
+- (void)dealloc
+{
+	ECVErrno(pthread_rwlock_destroy(&_lock));
+	[super dealloc];
+}
+
+#pragma mark -<NSLocking>
+
+- (void)lock
+{
+	[self writeLock];
+}
+- (void)unlock
+{
+	ECVErrno(pthread_rwlock_unlock(&_lock));
+}
 
 @end

@@ -22,13 +22,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
-#import <pthread.h>
 
 // Models
 #import "ECVVideoStorage.h"
 
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVReadWriteLock.h"
 
 typedef struct {
 	void *bytes;
@@ -95,7 +95,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	NSAssert((ECVFullFrame == type) == (ECVProgressiveScan == [storage deinterlacingMode]), @"Field type and deinterlacing mode must match.");
 	if((self = [super init])) {
-		ECVErrno(pthread_rwlock_init(&_lock, NULL));
+		_lock = [[ECVReadWriteLock alloc] init];
 		_videoStorage = storage;
 		_bufferIndex = index;
 		_fieldType = type;
@@ -189,11 +189,9 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 - (void)removeFromStorage
 {
 	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
-	int const error = pthread_rwlock_trywrlock(&_lock);
-	if(!error) {
-		if([_videoStorage removeFrame:self]) _bufferIndex = NSNotFound;
-		ECVErrno(pthread_rwlock_unlock(&_lock));
-	} else if(EBUSY != error) ECVErrno(error);
+	if(![_lock tryWriteLock]) return;
+	if([_videoStorage removeFrame:self]) _bufferIndex = NSNotFound;
+	[_lock unlock];
 }
 
 #pragma mark -ECVVideoFrame(Private)
@@ -219,7 +217,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (void)dealloc
 {
-	ECVErrno(pthread_rwlock_destroy(&_lock));
+	[_lock release];
 	[super dealloc];
 }
 
@@ -227,11 +225,11 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (void)lock
 {
-	ECVErrno(pthread_rwlock_rdlock(&_lock));
+	[_lock readLock];
 }
 - (void)unlock
 {
-	ECVErrno(pthread_rwlock_unlock(&_lock));
+	[_lock unlock];
 }
 
 @end
