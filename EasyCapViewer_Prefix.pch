@@ -36,7 +36,8 @@ NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
 enum {
 	ECVProgressiveScan = 4,
 	ECVWeave = 0,
-	ECVLineDouble = 1,
+	ECVLineDoubleLQ = 1,
+	ECVLineDoubleHQ = 5,
 	ECVAlternate = 2,
 	ECVBlur = 3,
 };

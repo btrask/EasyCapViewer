@@ -61,7 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @synthesize deinterlacingMode = _deinterlacingMode;
 - (BOOL)halfHeight
 {
-	return _deinterlacingMode == ECVBlur || _deinterlacingMode == ECVLineDouble;
+	return _deinterlacingMode == ECVBlur || _deinterlacingMode == ECVLineDoubleLQ;
 }
 @synthesize originalSize = _originalSize;
 - (ECVPixelSize)pixelSize

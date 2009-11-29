@@ -469,8 +469,11 @@ bail:
 	}
 	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
 	switch(_deinterlacingMode) {
-		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
-		case ECVAlternate: [_pendingFrame clear]; break;
+		case ECVWeave:
+			[_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
+		case ECVLineDoubleHQ:
+		case ECVAlternate:
+			[_pendingFrame clear]; break;
 	}
 }
 

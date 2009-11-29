@@ -33,7 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 typedef struct {
 	void *bytes;
 	size_t length;
-	BOOL interlaced;
+	ECVFieldType fieldType;
+	BOOL doubledLines;
 	size_t bytesPerRow;
 	OSType pixelFormatType;
 	ECVPixelSize pixelSize;
@@ -58,15 +59,19 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 		size_t const srcRemaining = srcTheoretical - j % srcActual;
 		size_t const length = MIN(MIN(NSMaxRange(srcRange) - j, srcRemaining), dstRemaining);
 		memcpy(dst.bytes + i, src.bytes + j, length);
+		if(dst.doubledLines && !src.doubledLines) {
+			size_t const alternate = i + dstActual;
+			if(alternate + length < dst.length) memcpy(dst.bytes + alternate, src.bytes + j, length);
+		}
 		i += length;
 		j += length;
 		if(length == dstRemaining) {
 			i += dstPadding;
-			if(dst.interlaced && !src.interlaced) i += dstActual;
+			if(ECVFullFrame != dst.fieldType) i += dstActual;
 		}
 		if(length == srcRemaining) {
 			j += srcPadding;
-			if(src.interlaced && !dst.interlaced) j += srcActual;
+			if(ECVFullFrame != src.fieldType) j += srcActual;
 		}
 	}
 	return i;
@@ -100,6 +105,10 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		_bufferIndex = index;
 		_fieldType = type;
 		[self _resetLength];
+		if([_videoStorage deinterlacingMode] == ECVLineDoubleHQ) {
+			uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
+			memset_pattern8([self bufferBytes], &val, _length);
+		}
 	}
 	return self;
 }
@@ -160,6 +169,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	ECVBufferInfo const srcInfo = {
 		(void *)bytes,
 		length,
+		ECVFullFrame,
 		NO,
 		dstInfo.bytesPerRow,
 		dstInfo.pixelFormatType,
@@ -175,7 +185,8 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	ECVBufferInfo const dstInfo = {
 		CVPixelBufferGetBaseAddress(pixelBuffer),
 		CVPixelBufferGetDataSize(pixelBuffer),
-		srcInfo.interlaced,
+		srcInfo.fieldType,
+		srcInfo.doubledLines,
 		CVPixelBufferGetBytesPerRow(pixelBuffer),
 		CVPixelBufferGetPixelFormatType(pixelBuffer),
 		{CVPixelBufferGetWidth(pixelBuffer), CVPixelBufferGetHeight(pixelBuffer)},
@@ -201,7 +212,8 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	return (ECVBufferInfo){
 		[self bufferBytes],
 		[_videoStorage bufferSize],
-		ECVFullFrame != _fieldType && ![_videoStorage halfHeight],
+		[_videoStorage halfHeight] ? ECVFullFrame : _fieldType,
+		[_videoStorage deinterlacingMode] == ECVLineDoubleHQ,
 		[_videoStorage bytesPerRow],
 		[_videoStorage pixelFormatType],
 		[_videoStorage pixelSize],
@@ -210,7 +222,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 - (void)_resetLength
 {
 	ECVDeinterlacingMode const m = [_videoStorage deinterlacingMode];
-	_length = ECVLowField == _fieldType && (ECVWeave == m || ECVAlternate == m) ? [_videoStorage bytesPerRow] : 0;
+	_length = ECVLowField == _fieldType && (ECVWeave == m || ECVAlternate == m || ECVLineDoubleHQ == m) ? [_videoStorage bytesPerRow] : 0;
 }
 
 #pragma mark -NSObject
