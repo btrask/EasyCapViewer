@@ -600,7 +600,7 @@ ECVNoDeviceError:
 
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
-	NSParameterAssert(sender == _audioInput);
+	if(sender != _audioInput) return;
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
 	[_windowControllersLock readLock];
 	NSArray *const controllers = [[_windowControllers2 copy] autorelease];
@@ -609,7 +609,7 @@ ECVNoDeviceError:
 }
 - (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
 {
-	NSParameterAssert(sender == _audioOutput);
+	if(sender != _audioOutput) return;
 	[_audioPreviewingPipe requestOutputBufferList:bufferList];
 }
 
