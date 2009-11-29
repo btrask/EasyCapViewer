@@ -181,7 +181,8 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	if(!pixelBuffer) return;
 	ECVCVReturn(CVPixelBufferLockBaseAddress(pixelBuffer, kNilOptions));
-	ECVBufferInfo const srcInfo = [self _bufferInfo];
+	ECVBufferInfo srcInfo = [self _bufferInfo];
+	srcInfo.fieldType = ECVFullFrame;
 	ECVBufferInfo const dstInfo = {
 		CVPixelBufferGetBaseAddress(pixelBuffer),
 		CVPixelBufferGetDataSize(pixelBuffer),
