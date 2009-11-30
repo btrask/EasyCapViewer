@@ -525,7 +525,7 @@
 											</object>
 											<object class="NSMenuItem" id="1002741171">
 												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">From 4:3</string>
+												<string key="NSTitle">Preserve 4:3</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="35465992"/>
@@ -533,7 +533,7 @@
 											</object>
 											<object class="NSMenuItem" id="269675214">
 												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">From 16:10</string>
+												<string key="NSTitle">Preserve 16:10</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="35465992"/>
@@ -542,7 +542,7 @@
 											</object>
 											<object class="NSMenuItem" id="97387494">
 												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">From 16:9</string>
+												<string key="NSTitle">Preserve 16:9</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="35465992"/>
@@ -1870,7 +1870,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{1180, 228}, {139, 233}}</string>
+					<string>{{1180, 228}, {154, 233}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
