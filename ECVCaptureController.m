@@ -46,10 +46,13 @@ static NSString *const ECVShowDroppedFramesKey = @"ECVShowDroppedFrames";
 static NSString *const ECVVideoCodecKey = @"ECVVideoCodec";
 static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 static NSString *const ECVCropRectKey = @"ECVCropRect";
+static NSString *const ECVCropSourceAspectRatioKey = @"ECVCropSourceAspectRatio";
+static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 @interface ECVCaptureController(Private)
 
 - (void)_hideMenuBar;
+- (void)_updateCropRect;
 
 @end
 
@@ -60,11 +63,13 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 + (void)initialize
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithUnsignedInteger:ECV4x3AspectRatio], ECVAspectRatio2Key,
+		[NSNumber numberWithUnsignedInteger:ECVAspectRatio4x3], ECVAspectRatio2Key,
 		[NSNumber numberWithBool:NO], ECVVsyncKey,
 		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
 		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
 		NSStringFromRect(ECVUncroppedRect), ECVCropRectKey,
+		[NSNumber numberWithInteger:ECVAspectRatioUnknown], ECVCropSourceAspectRatioKey,
+		[NSNumber numberWithInteger:ECVCropBorderNone], ECVCropBorderKey,
 		nil]];
 }
 
@@ -183,16 +188,27 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[self setAspectRatio:[self sizeWithAspectRatio:[sender tag]]];
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:[sender tag]] forKey:ECVAspectRatio2Key];
 }
-- (IBAction)changeCropType:(id)sender
+
+#pragma mark -
+
+- (IBAction)uncrop:(id)sender
 {
-	NSRect const r = [self cropRectWithType:[sender tag]];
-	if([[videoView cell] respondsToSelector:@selector(setCropRect:)]) {
-		[(ECVCropCell *)[videoView cell] setCropRect:r];
-		[videoView setNeedsDisplay:YES];
-		[[self window] invalidateCursorRectsForView:videoView];
-	}else [self setCropRect:r];
+	_cropSourceAspectRatio = ECVAspectRatioUnknown;
+	_cropBorder = ECVCropBorderNone;
+	[self _updateCropRect];
 }
-- (IBAction)enterCropMode:(id)sender
+- (IBAction)changeCropSourceAspectRatio:(id)sender
+{
+	_cropSourceAspectRatio = [sender tag];
+	if(ECVCropBorderCustom == _cropBorder) _cropBorder = ECVCropBorderNone;
+	[self _updateCropRect];
+}
+- (IBAction)changeCropBorder:(id)sender
+{
+	_cropBorder = [sender tag];
+	[self _updateCropRect];
+}
+- (IBAction)enterCustomCropMode:(id)sender
 {
 	ECVCropCell *const cell = [[[ECVCropCell alloc] initWithOpenGLContext:[videoView openGLContext]] autorelease];
 	[cell setDelegate:self];
@@ -200,6 +216,9 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	[videoView setCropRect:ECVUncroppedRect];
 	[videoView setCell:cell];
 }
+
+#pragma mark -
+
 - (IBAction)toggleVsync:(id)sender
 {
 	[videoView setVsync:![videoView vsync]];
@@ -234,15 +253,11 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	s.height = s.width * r;
 	[self setWindowContentSize:s];
 	[[self window] setMinSize:NSMakeSize(200.0f, 200.0f * r)];
+	[self _updateCropRect];
 }
 - (NSRect)cropRect
 {
 	return [[videoView cell] respondsToSelector:@selector(cropRect)] ? [(ECVCropCell *)[videoView cell] cropRect] : [videoView cropRect];
-}
-- (void)setCropRect:(NSRect)aRect
-{
-	[videoView setCropRect:aRect];
-	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect(aRect) forKey:ECVCropRectKey];
 }
 @synthesize fullScreen = _fullScreen;
 - (void)setFullScreen:(BOOL)flag
@@ -305,32 +320,32 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio
 {
 	switch(ratio) {
-		case ECV1x1AspectRatio:   return NSMakeSize( 1.0f,  1.0f);
-		case ECV4x3AspectRatio:   return NSMakeSize( 4.0f,  3.0f);
-		case ECV3x2AspectRatio:   return NSMakeSize( 3.0f,  2.0f);
-		case ECV16x10AspectRatio: return NSMakeSize(16.0f, 10.0f);
-		case ECV16x9AspectRatio:  return NSMakeSize(16.0f,  9.0f);
+		case ECVAspectRatio1x1:   return NSMakeSize( 1.0f,  1.0f);
+		case ECVAspectRatio4x3:   return NSMakeSize( 4.0f,  3.0f);
+		case ECVAspectRatio3x2:   return NSMakeSize( 3.0f,  2.0f);
+		case ECVAspectRatio16x10: return NSMakeSize(16.0f, 10.0f);
+		case ECVAspectRatio16x9:  return NSMakeSize(16.0f,  9.0f);
 	}
 	return NSZeroSize;
 }
-- (NSRect)cropRectWithType:(ECVCropType)type
+- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)type
 {
-	switch(type) {
-		case ECVCrop2_5Percent: return NSMakeRect(0.025f, 0.025f, 0.95f, 0.95f);
-		case ECVCrop5Percent: return NSMakeRect(0.05f, 0.05f, 0.9f, 0.9f);
-		case ECVCrop10Percent: return NSMakeRect(0.1f, 0.1f, 0.8f, 0.8f);
-		case ECVCrop4x3to16x9: return [self cropRectWithSourceAspectRatio:ECV4x3AspectRatio croppedToAspectRatio:ECV16x9AspectRatio];
-		case ECVCrop4x3to16x10: return [self cropRectWithSourceAspectRatio:ECV4x3AspectRatio croppedToAspectRatio:ECV16x10AspectRatio];
-		case ECVCrop16x9to16x10: return [self cropRectWithSourceAspectRatio:ECV16x9AspectRatio croppedToAspectRatio:ECV16x10AspectRatio];
-		default: return ECVUncroppedRect;
-	}
-}
-- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)r1 croppedToAspectRatio:(ECVAspectRatio)r2
-{
-	NSSize const standard = [self sizeWithAspectRatio:r1];
-	NSSize const user = [self sizeWithAspectRatio:r2];
-	CGFloat const correction = (user.height / user.width) / (standard.height / standard.width);
+	if(ECVAspectRatioUnknown == type) return ECVUncroppedRect;
+	NSSize const src = [self sizeWithAspectRatio:type];
+	NSSize const dst = [self aspectRatio];
+	CGFloat const correction = (dst.height / dst.width) / (src.height / src.width);
 	return correction < 1.0f ? NSMakeRect(0.0f, (1.0f - correction) / 2.0f, 1.0f, correction) : NSMakeRect((1.0f - (1.0f / correction)) / 2.0f, 0.0f, 1.0f / correction, 1.0f);
+}
+- (NSRect)cropRect:(NSRect)r withBorder:(ECVCropBorder)border
+{
+	CGFloat b = 0.0f;
+	switch(border) {
+		case ECVCropBorder2_5Percent: b = 0.025f; break;
+		case ECVCropBorder5Percent: b = 0.05f; break;
+		case ECVCropBorder10Percent: b = 0.1f; break;
+	}
+	CGFloat const b2 = 1.0f - b * 2.0f;
+	return NSMakeRect(NSMinX(r) + NSWidth(r) * b, NSMinY(r) + NSHeight(r) * b, NSWidth(r) * b2, NSHeight(r) * b2);
 }
 
 #pragma mark -
@@ -371,6 +386,19 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	SetSystemUIMode(kUIModeAllSuppressed, kNilOptions);
 #endif
 }
+- (void)_updateCropRect
+{
+	if(ECVCropBorderCustom != _cropBorder) {
+		BOOL const hasCropCell = [[videoView cell] respondsToSelector:@selector(setCropRect:)];
+		[hasCropCell ? (id)[videoView cell] : (id)videoView setCropRect:[self cropRect:[self cropRectWithSourceAspectRatio:_cropSourceAspectRatio] withBorder:_cropBorder]];
+		if(hasCropCell) {
+			[videoView setNeedsDisplay:YES];
+			[[self window] invalidateCursorRectsForView:videoView];
+		}
+	}
+	[[NSUserDefaults standardUserDefaults] setInteger:_cropSourceAspectRatio forKey:ECVCropSourceAspectRatioKey];
+	[[NSUserDefaults standardUserDefaults] setInteger:_cropBorder forKey:ECVCropBorderKey];
+}
 
 #pragma mark -NSWindowController
 
@@ -379,9 +407,14 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	NSWindow *const w = [self window];
 	ECVPixelSize const s = [[self document] captureSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
+
+	_cropSourceAspectRatio = [[NSUserDefaults standardUserDefaults] integerForKey:ECVCropSourceAspectRatioKey];
+	_cropBorder = [[NSUserDefaults standardUserDefaults] integerForKey:ECVCropBorderKey];
+	[videoView setCropRect:NSRectFromString([[NSUserDefaults standardUserDefaults] objectForKey:ECVCropRectKey])];
+	[self _updateCropRect];
+
 	[self setAspectRatio:[self sizeWithAspectRatio:[[[NSUserDefaults standardUserDefaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
 
-	[videoView setCropRect:NSRectFromString([[NSUserDefaults standardUserDefaults] stringForKey:ECVCropRectKey])];
 	[videoView setVsync:[[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey]];
 	[videoView setShowDroppedFrames:[[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey]];
 	[videoView setMagFilter:[[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey]];
@@ -417,13 +450,18 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 	SEL const action = [anItem action];
 	if(@selector(toggleFullScreen:) == action) [anItem setTitle:[self isFullScreen] ? NSLocalizedString(@"Exit Full Screen", nil) : NSLocalizedString(@"Enter Full Screen", nil)];
 	if(@selector(togglePlaying:) == action) [anItem setTitle:[[self document] isPlaying] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
+	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([self windowContentSize], [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(changeAspectRatio:) == action) {
 		NSSize const s1 = [self sizeWithAspectRatio:[anItem tag]];
 		NSSize const s2 = [videoView aspectRatio];
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
-	if(@selector(changeCropType:) == action) [anItem setState:NSEqualRects([self cropRectWithType:[anItem tag]], [self cropRect])];
-	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([self windowContentSize], [self outputSizeWithScale:[anItem tag]])];
+
+	if(@selector(uncrop:) == action) [anItem setState:ECVAspectRatioUnknown == _cropSourceAspectRatio && ECVCropBorderNone == _cropBorder];
+	if(@selector(changeCropBorder:) == action) [anItem setState:[anItem tag] == _cropBorder];
+	if(@selector(changeCropSourceAspectRatio:) == action) [anItem setState:[anItem tag] == _cropSourceAspectRatio && ECVCropBorderCustom != _cropBorder];
+	if(@selector(enterCustomCropMode:) == action) [anItem setState:ECVCropBorderCustom == _cropBorder];
+
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:[videoView vsync] ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
 	if(@selector(toggleSmoothing:) == action) [anItem setTitle:GL_LINEAR == [videoView magFilter] ? NSLocalizedString(@"Turn Smoothing Off", nil) : NSLocalizedString(@"Turn Smoothing On", nil)];
@@ -450,8 +488,12 @@ static NSString *const ECVCropRectKey = @"ECVCropRect";
 
 - (void)cropCellDidFinishCropping:(ECVCropCell *)sender
 {
-	[self setCropRect:[sender cropRect]];
+	[videoView setCropRect:[sender cropRect]];
 	[videoView setCell:_playButtonCell];
+	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect([sender cropRect]) forKey:ECVCropRectKey];
+	_cropSourceAspectRatio = ECVAspectRatioUnknown;
+	_cropBorder = ECVCropBorderCustom;
+	[self _updateCropRect];
 }
 
 #pragma mark -<ECVVideoViewDelegate>

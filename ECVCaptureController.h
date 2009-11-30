@@ -34,23 +34,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCropCell.h"
 
 enum {
-	ECV1x1AspectRatio = 3,
-	ECV4x3AspectRatio = 0,
-	ECV3x2AspectRatio = 4,
-	ECV16x10AspectRatio = 2,
-	ECV16x9AspectRatio = 1,
+	ECVAspectRatioUnknown = -1,
+	ECVAspectRatio1x1 = 3,
+	ECVAspectRatio4x3 = 0,
+	ECVAspectRatio3x2 = 4,
+	ECVAspectRatio16x10 = 2,
+	ECVAspectRatio16x9 = 1,
 };
-typedef NSUInteger ECVAspectRatio;
+typedef NSInteger ECVAspectRatio;
 enum {
-	ECVUncropped = 0,
-	ECVCrop2_5Percent = 1,
-	ECVCrop5Percent = 2,
-	ECVCrop10Percent = 3,
-	ECVCrop4x3to16x9 = 4,
-	ECVCrop4x3to16x10 = 5,
-	ECVCrop16x9to16x10 = 6,
+	ECVCropBorderCustom = -1,
+	ECVCropBorderNone = 0,
+	ECVCropBorder2_5Percent = 1,
+	ECVCropBorder5Percent = 2,
+	ECVCropBorder10Percent = 3,
 };
-typedef NSUInteger ECVCropType;
+typedef NSInteger ECVCropBorder;
 
 @interface ECVCaptureController : NSWindowController <ECVCropCellDelegate, ECVVideoViewDelegate, NSWindowDelegate>
 {
@@ -63,6 +62,9 @@ typedef NSUInteger ECVCropType;
 	BOOL _fullScreen;
 	ECVPlayButtonCell *_playButtonCell;
 	ECVMovieRecorder *_movieRecorder;
+
+	ECVCropBorder _cropBorder;
+	ECVAspectRatio _cropSourceAspectRatio;
 }
 
 - (IBAction)cloneViewer:(id)sender;
@@ -78,22 +80,26 @@ typedef NSUInteger ECVCropType;
 - (IBAction)toggleFullScreen:(id)sender;
 - (IBAction)changeScale:(id)sender;
 - (IBAction)changeAspectRatio:(id)sender;
-- (IBAction)changeCropType:(id)sender;
-- (IBAction)enterCropMode:(id)sender;
+
+- (IBAction)uncrop:(id)sender;
+- (IBAction)changeCropSourceAspectRatio:(id)sender;
+- (IBAction)changeCropBorder:(id)sender;
+- (IBAction)enterCustomCropMode:(id)sender;
+
 - (IBAction)toggleFloatOnTop:(id)sender;
 - (IBAction)toggleVsync:(id)sender;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
 @property(assign) NSSize aspectRatio;
-@property(assign) NSRect cropRect;
+@property(readonly) NSRect cropRect;
 @property(assign, getter = isFullScreen) BOOL fullScreen;
 @property(assign) NSSize windowContentSize;
 @property(readonly) NSSize outputSize;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;
-- (NSRect)cropRectWithType:(ECVCropType)type;
-- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)r1 croppedToAspectRatio:(ECVAspectRatio)r2;
+- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)type;
+- (NSRect)cropRect:(NSRect)rect withBorder:(ECVCropBorder)border;
 
 - (void)startPlaying;
 - (void)stopPlaying;

@@ -2,10 +2,10 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10B504</string>
+		<string key="IBDocument.SystemVersion">10C540</string>
 		<string key="IBDocument.InterfaceBuilderVersion">740</string>
-		<string key="IBDocument.AppKitVersion">1038.2</string>
-		<string key="IBDocument.HIToolboxVersion">437.00</string>
+		<string key="IBDocument.AppKitVersion">1038.25</string>
+		<string key="IBDocument.HIToolboxVersion">458.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">740</string>
@@ -459,6 +459,24 @@
 												<reference key="NSOnImage" ref="35465992"/>
 												<reference key="NSMixedImage" ref="502551668"/>
 											</object>
+											<object class="NSMenuItem" id="968930124">
+												<reference key="NSMenu" ref="1070066135"/>
+												<bool key="NSIsDisabled">YES</bool>
+												<bool key="NSIsSeparator">YES</bool>
+												<string key="NSTitle"/>
+												<string key="NSKeyEquiv"/>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="35465992"/>
+												<reference key="NSMixedImage" ref="502551668"/>
+											</object>
+											<object class="NSMenuItem" id="433055405">
+												<reference key="NSMenu" ref="1070066135"/>
+												<string key="NSTitle">0%</string>
+												<string key="NSKeyEquiv"/>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="35465992"/>
+												<reference key="NSMixedImage" ref="502551668"/>
+											</object>
 											<object class="NSMenuItem" id="46357795">
 												<reference key="NSMenu" ref="1070066135"/>
 												<string key="NSTitle">2.5%</string>
@@ -486,34 +504,52 @@
 												<reference key="NSMixedImage" ref="502551668"/>
 												<int key="NSTag">3</int>
 											</object>
-											<object class="NSMenuItem" id="1002741171">
+											<object class="NSMenuItem" id="102737785">
 												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">4:3 ▸ 16:9</string>
+												<bool key="NSIsDisabled">YES</bool>
+												<bool key="NSIsSeparator">YES</bool>
+												<string key="NSTitle"/>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="35465992"/>
 												<reference key="NSMixedImage" ref="502551668"/>
-												<int key="NSTag">4</int>
+											</object>
+											<object class="NSMenuItem" id="83361924">
+												<reference key="NSMenu" ref="1070066135"/>
+												<string key="NSTitle">Stretch</string>
+												<string key="NSKeyEquiv"/>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="35465992"/>
+												<reference key="NSMixedImage" ref="502551668"/>
+												<int key="NSTag">-1</int>
+											</object>
+											<object class="NSMenuItem" id="1002741171">
+												<reference key="NSMenu" ref="1070066135"/>
+												<string key="NSTitle">From 4:3</string>
+												<string key="NSKeyEquiv"/>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="35465992"/>
+												<reference key="NSMixedImage" ref="502551668"/>
 											</object>
 											<object class="NSMenuItem" id="269675214">
 												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">4:3 ▸ 16:10</string>
+												<string key="NSTitle">From 16:10</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="35465992"/>
 												<reference key="NSMixedImage" ref="502551668"/>
-												<int key="NSTag">5</int>
+												<int key="NSTag">2</int>
 											</object>
 											<object class="NSMenuItem" id="97387494">
 												<reference key="NSMenu" ref="1070066135"/>
-												<string key="NSTitle">16:9 ▸ 16:10</string>
+												<string key="NSTitle">From 16:9</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="35465992"/>
 												<reference key="NSMixedImage" ref="502551668"/>
-												<int key="NSTag">6</int>
+												<int key="NSTag">1</int>
 											</object>
-											<object class="NSMenuItem" id="102737785">
+											<object class="NSMenuItem" id="25228654">
 												<reference key="NSMenu" ref="1070066135"/>
 												<bool key="NSIsDisabled">YES</bool>
 												<bool key="NSIsSeparator">YES</bool>
@@ -947,62 +983,6 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="1054210726"/>
-					</object>
-					<int key="connectionID">558</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="46357795"/>
-					</object>
-					<int key="connectionID">559</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="157762793"/>
-					</object>
-					<int key="connectionID">560</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="626088662"/>
-					</object>
-					<int key="connectionID">561</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="1002741171"/>
-					</object>
-					<int key="connectionID">562</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="269675214"/>
-					</object>
-					<int key="connectionID">563</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
-						<string key="label">enterCropMode:</string>
-						<reference key="source" ref="1014"/>
-						<reference key="destination" ref="969894588"/>
-					</object>
-					<int key="connectionID">565</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBActionConnection" key="connection">
 						<string key="label">showErrorLog:</string>
 						<reference key="source" ref="1009542059"/>
 						<reference key="destination" ref="1060031244"/>
@@ -1027,11 +1007,83 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">changeCropType:</string>
+						<string key="label">changeCropBorder:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="46357795"/>
+					</object>
+					<int key="connectionID">580</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropBorder:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="157762793"/>
+					</object>
+					<int key="connectionID">581</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropBorder:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="626088662"/>
+					</object>
+					<int key="connectionID">582</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropSourceAspectRatio:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="1002741171"/>
+					</object>
+					<int key="connectionID">583</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropSourceAspectRatio:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="269675214"/>
+					</object>
+					<int key="connectionID">584</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropSourceAspectRatio:</string>
 						<reference key="source" ref="1014"/>
 						<reference key="destination" ref="97387494"/>
 					</object>
-					<int key="connectionID">577</int>
+					<int key="connectionID">585</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">uncrop:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="1054210726"/>
+					</object>
+					<int key="connectionID">586</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">enterCustomCropMode:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="969894588"/>
+					</object>
+					<int key="connectionID">587</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropSourceAspectRatio:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="83361924"/>
+					</object>
+					<int key="connectionID">589</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">changeCropBorder:</string>
+						<reference key="source" ref="1014"/>
+						<reference key="destination" ref="433055405"/>
+					</object>
+					<int key="connectionID">591</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -1476,14 +1528,18 @@
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<reference ref="1054210726"/>
-							<reference ref="269675214"/>
+							<reference ref="969894588"/>
+							<reference ref="25228654"/>
 							<reference ref="1002741171"/>
+							<reference ref="269675214"/>
+							<reference ref="97387494"/>
+							<reference ref="968930124"/>
+							<reference ref="83361924"/>
+							<reference ref="433055405"/>
 							<reference ref="46357795"/>
 							<reference ref="157762793"/>
 							<reference ref="626088662"/>
 							<reference ref="102737785"/>
-							<reference ref="969894588"/>
-							<reference ref="97387494"/>
 						</object>
 						<reference key="parent" ref="123033761"/>
 					</object>
@@ -1560,6 +1616,26 @@
 					<object class="IBObjectRecord">
 						<int key="objectID">576</int>
 						<reference key="object" ref="97387494"/>
+						<reference key="parent" ref="1070066135"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">578</int>
+						<reference key="object" ref="25228654"/>
+						<reference key="parent" ref="1070066135"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">579</int>
+						<reference key="object" ref="968930124"/>
+						<reference key="parent" ref="1070066135"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">588</int>
+						<reference key="object" ref="83361924"/>
+						<reference key="parent" ref="1070066135"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">590</int>
+						<reference key="object" ref="433055405"/>
 						<reference key="parent" ref="1070066135"/>
 					</object>
 				</object>
@@ -1687,8 +1763,12 @@
 					<string>572.IBPluginDependency</string>
 					<string>573.IBPluginDependency</string>
 					<string>576.IBPluginDependency</string>
+					<string>578.IBPluginDependency</string>
+					<string>579.IBPluginDependency</string>
 					<string>58.IBPluginDependency</string>
 					<string>58.ImportedFromIB2</string>
+					<string>588.IBPluginDependency</string>
+					<string>590.IBPluginDependency</string>
 					<string>92.IBPluginDependency</string>
 					<string>92.ImportedFromIB2</string>
 				</object>
@@ -1754,13 +1834,13 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
-					<string>{{573, 579}, {408, 20}}</string>
+					<string>{{727, 571}, {408, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
 					<string>{{6, 978}, {478, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{799, 356}, {227, 223}}</string>
+					<string>{{953, 348}, {227, 223}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1790,7 +1870,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{1026, 296}, {139, 173}}</string>
+					<string>{{1180, 228}, {139, 233}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1814,7 +1894,11 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 				</object>
@@ -1835,7 +1919,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">577</int>
+			<int key="maxID">591</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1849,10 +1933,11 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>changeAspectRatio:</string>
 							<string>changeCodec:</string>
-							<string>changeCropType:</string>
+							<string>changeCropBorder:</string>
+							<string>changeCropSourceAspectRatio:</string>
 							<string>changeScale:</string>
 							<string>cloneViewer:</string>
-							<string>enterCropMode:</string>
+							<string>enterCustomCropMode:</string>
 							<string>pause:</string>
 							<string>play:</string>
 							<string>startRecording:</string>
@@ -1863,9 +1948,12 @@
 							<string>toggleShowDroppedFrames:</string>
 							<string>toggleSmoothing:</string>
 							<string>toggleVsync:</string>
+							<string>uncrop:</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
