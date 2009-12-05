@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@protected
 	ECVVideoStorage *_videoStorage;
 	ECVFieldType _fieldType;
-	off_t _length;
+	NSRange _byteRange;
 
 	ECVReadWriteLock *_lock;
 	NSUInteger _bufferIndex;

@@ -74,7 +74,7 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 			if(ECVFullFrame != src.fieldType) j += srcActual;
 		}
 	}
-	return MIN(i, dst.length);
+	return MIN(i, dst.length) - dstOffset;
 }
 
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
@@ -88,7 +88,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 @interface ECVVideoFrame(Private)
 
 - (ECVBufferInfo)_bufferInfo;
-- (void)_resetLength;
 
 @end
 
@@ -104,7 +103,13 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		_videoStorage = storage;
 		_bufferIndex = index;
 		_fieldType = type;
-		[self _resetLength];
+		switch([_videoStorage deinterlacingMode]) {
+			case ECVWeave:
+			case ECVLineDoubleHQ:
+			case ECVAlternate:
+				if(ECVLowField == _fieldType) _byteRange.location = [_videoStorage bytesPerRow];
+				break;
+		}
 	}
 	return self;
 }
@@ -138,7 +143,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
 		memset_pattern8([self bufferBytes] + range.location, &val, range.length);
 	}
-	if(flag) [self _resetLength];
+	if(flag) _byteRange.length = 0;
 }
 - (void)clear
 {
@@ -146,11 +151,11 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 }
 - (void)clearHead
 {
-	[self clearRange:NSMakeRange(0, _length) resetLength:NO];
+	[self clearRange:NSMakeRange(0, _byteRange.location) resetLength:NO];
 }
 - (void)clearTail
 {
-	[self clearRange:NSMakeRange(_length, [_videoStorage bufferSize] - _length) resetLength:NO];
+	[self clearRange:NSMakeRange(NSMaxRange(_byteRange), [_videoStorage bufferSize] - NSMaxRange(_byteRange)) resetLength:NO];
 }
 
 #pragma mark -
@@ -160,7 +165,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if([frame lockIfHasBuffer]) {
 		memcpy([self bufferBytes], [frame bufferBytes], [_videoStorage bufferSize]);
 		[frame unlock];
-		[self _resetLength];
+		_byteRange.length = 0;
 	} else [self clear];
 }
 - (void)blurWithFrame:(ECVVideoFrame *)frame
@@ -174,7 +179,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		for(i = 0; i < l; i++) dst[i] = dst[i] / 2 + src[i] / 2;
 		[frame unlock];
 	}
-	[self _resetLength];
 }
 - (void)appendBytes:(void const *)bytes length:(size_t)length
 {
@@ -188,7 +192,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		dstInfo.pixelFormatType,
 		dstInfo.pixelSize,
 	};
-	_length = ECVBufferCopyToOffsetFromRange(dstInfo, srcInfo, _length, NSMakeRange(0, srcInfo.length));
+	_byteRange.length += ECVBufferCopyToOffsetFromRange(dstInfo, srcInfo, NSMaxRange(_byteRange), NSMakeRange(0, srcInfo.length));
 }
 - (void)copyToPixelBuffer:(CVPixelBufferRef)pixelBuffer
 {
@@ -232,11 +236,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		[_videoStorage pixelFormatType],
 		[_videoStorage pixelSize],
 	};
-}
-- (void)_resetLength
-{
-	ECVDeinterlacingMode const m = [_videoStorage deinterlacingMode];
-	_length = ECVLowField == _fieldType && (ECVWeave == m || ECVAlternate == m || ECVLineDoubleHQ == m) ? [_videoStorage bytesPerRow] : 0;
 }
 
 #pragma mark -NSObject
