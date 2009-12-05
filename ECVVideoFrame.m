@@ -61,7 +61,7 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 		memcpy(dst.bytes + i, src.bytes + j, length);
 		if(dst.doubledLines && !src.doubledLines) {
 			size_t const alternate = i + dstActual;
-			if(alternate + length < dst.length) memcpy(dst.bytes + alternate, src.bytes + j, length);
+			memcpy(dst.bytes + alternate, src.bytes + j, MIN(length, dst.length - alternate));
 		}
 		i += length;
 		j += length;
@@ -74,7 +74,7 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 			if(ECVFullFrame != src.fieldType) j += srcActual;
 		}
 	}
-	return i;
+	return MIN(i, dst.length);
 }
 
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
@@ -105,10 +105,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		_bufferIndex = index;
 		_fieldType = type;
 		[self _resetLength];
-		if([_videoStorage deinterlacingMode] == ECVLineDoubleHQ) {
-			uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
-			memset_pattern8([self bufferBytes], &val, _length);
-		}
 	}
 	return self;
 }
@@ -136,12 +132,29 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 #pragma mark -
 
+- (void)clearRange:(NSRange)range resetLength:(BOOL)flag
+{
+	if(range.length) {
+		uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
+		memset_pattern8([self bufferBytes] + range.location, &val, range.length);
+	}
+	if(flag) [self _resetLength];
+}
 - (void)clear
 {
-	uint64_t const val = ECVPixelFormatBlackPattern([_videoStorage pixelFormatType]);
-	memset_pattern8([self bufferBytes], &val, [_videoStorage bufferSize]);
-	[self _resetLength];
+	[self clearRange:NSMakeRange(0, [_videoStorage bufferSize]) resetLength:YES];
 }
+- (void)clearHead
+{
+	[self clearRange:NSMakeRange(0, _length) resetLength:NO];
+}
+- (void)clearTail
+{
+	[self clearRange:NSMakeRange(_length, [_videoStorage bufferSize] - _length) resetLength:NO];
+}
+
+#pragma mark -
+
 - (void)fillWithFrame:(ECVVideoFrame *)frame
 {
 	if([frame lockIfHasBuffer]) {

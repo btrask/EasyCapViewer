@@ -451,6 +451,7 @@ bail:
 		return;
 	}
 
+	[_pendingFrame clearTail];
 	ECVVideoFrame *frameToDraw = _pendingFrame;
 	if(ECVBlur == _deinterlacingMode && _lastCompletedFrame) {
 		[_lastCompletedFrame blurWithFrame:_pendingFrame];
@@ -470,6 +471,7 @@ bail:
 	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
 	switch(_deinterlacingMode) {
 		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
+		case ECVLineDoubleHQ: [_pendingFrame clearHead]; break;
 		case ECVAlternate: [_pendingFrame clear]; break;
 	}
 }

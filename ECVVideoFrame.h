@@ -49,7 +49,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) void *bufferBytes;
 - (BOOL)lockIfHasBuffer;
 
+- (void)clearRange:(NSRange)range resetLength:(BOOL)flag;
 - (void)clear;
+- (void)clearHead;
+- (void)clearTail;
+
 - (void)fillWithFrame:(ECVVideoFrame *)frame;
 - (void)blurWithFrame:(ECVVideoFrame *)frame;
 - (void)appendBytes:(void const *)bytes length:(size_t)length;
