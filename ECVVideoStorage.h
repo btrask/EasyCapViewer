@@ -26,12 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 @class ECVVideoFrame;
 
-enum {
-	ECVPendingFrameIndex,
-	ECVLastCompletedFrameIndex,
-	ECVUndroppableFrameCount,
-};
-
 @interface ECVVideoStorage : NSObject
 {
 	@private
@@ -64,7 +58,7 @@ enum {
 @property(readonly) NSUInteger frameGroupSize;
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
-- (ECVVideoFrame *)frameAtIndex:(NSUInteger)i;
+- (ECVVideoFrame *)lastCompletedFrame;
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;

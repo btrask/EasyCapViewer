@@ -26,10 +26,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
+enum {
+	ECVPendingFrameIndex,
+	ECVPotentiallyCompletedFrameIndex, // May not be fully processed, depending on the deinterlacing mode.
+	ECVGuaranteedCompletedFrame2Index,
+	ECVUndroppableFrameCount,
+};
 #define ECVExtraBufferCount 15
 
 @interface ECVVideoStorage(Private)
 
+- (ECVVideoFrame *)_frameAtIndex:(NSUInteger)i;
 - (void)_dropFrames;
 
 @end
@@ -103,12 +110,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[_lock unlock];
 	return frame;
 }
-- (ECVVideoFrame *)frameAtIndex:(NSUInteger)i
+- (ECVVideoFrame *)lastCompletedFrame
 {
-	[_lock lock];
-	ECVVideoFrame *const frame = i < [_frames count] ? [[[_frames objectAtIndex:i] retain] autorelease] : nil;
-	[_lock unlock];
-	return frame;
+	return [self _frameAtIndex:ECVBlur == _deinterlacingMode ? ECVGuaranteedCompletedFrame2Index : ECVPotentiallyCompletedFrameIndex];
 }
 
 #pragma mark -
@@ -149,6 +153,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage(Private)
 
+- (ECVVideoFrame *)_frameAtIndex:(NSUInteger)i
+{
+	[_lock lock];
+	ECVVideoFrame *const frame = i < [_frames count] ? [[[_frames objectAtIndex:i] retain] autorelease] : nil;
+	[_lock unlock];
+	return frame;
+}
 - (void)_dropFrames
 {
 	NSUInteger const count = [_frames count];

@@ -234,7 +234,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		frame = nil;
 	}
 	if(!frame) {
-		frame = [_videoStorage frameAtIndex:ECVLastCompletedFrameIndex];
+		frame = [_videoStorage lastCompletedFrame];
 		if(![frame lockIfHasBuffer]) frame = nil;
 	}
 
@@ -369,7 +369,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	ECVVideoFrame *frame = [_videoStorage frameAtIndex:ECVLastCompletedFrameIndex];
+	ECVVideoFrame *frame = [_videoStorage lastCompletedFrame];
 	if(![frame lockIfHasBuffer]) frame = nil;
 	[self _drawFrame:frame];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
