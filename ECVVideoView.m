@@ -203,8 +203,8 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(!frame) return;
 	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
 	CGLLockContext(contextObj);
-	[_frames insertObject:frame atIndex:0];
 	if([_videoStorage dropFramesFromArray:_frames]) _frameDropStrength = 1.0f;
+	[_frames insertObject:frame atIndex:0];
 	CGLUnlockContext(contextObj);
 }
 
