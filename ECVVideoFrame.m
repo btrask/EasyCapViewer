@@ -52,16 +52,18 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 	NSCAssert(srcActual >= srcTheoretical, @"ECVBufferCopy source row padding must be non-negative.");
 	size_t const dstPadding = dstActual - dstTheoretical;
 	size_t const srcPadding = srcActual - srcTheoretical;
+	size_t const dstMax = dst.length;
+	size_t const srcMax = MIN(src.length, NSMaxRange(srcRange));
 	off_t i = dstOffset;
 	off_t j = srcRange.location;
-	while(i < dst.length && j < MIN(src.length, NSMaxRange(srcRange))) {
+	while(i < dstMax && j < srcMax) {
 		size_t const dstRemaining = dstTheoretical - i % dstActual;
 		size_t const srcRemaining = srcTheoretical - j % srcActual;
-		size_t const length = MIN(MIN(NSMaxRange(srcRange) - j, srcRemaining), dstRemaining);
+		size_t const length = MIN(MIN(dstMax - i, dstRemaining), MIN(srcMax - j, srcRemaining));
 		memcpy(dst.bytes + i, src.bytes + j, length);
 		if(dst.doubledLines && !src.doubledLines) {
 			size_t const alternate = i + dstActual;
-			memcpy(dst.bytes + alternate, src.bytes + j, MIN(length, dst.length - alternate));
+			memcpy(dst.bytes + alternate, src.bytes + j, MIN(dstMax - alternate, length));
 		}
 		i += length;
 		j += length;
@@ -74,7 +76,7 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 			if(ECVFullFrame != src.fieldType) j += srcActual;
 		}
 	}
-	return MIN(i, dst.length) - dstOffset;
+	return MIN(i, dstMax) - dstOffset;
 }
 
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
