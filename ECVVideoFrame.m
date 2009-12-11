@@ -53,8 +53,9 @@ static NSRange ECVBufferNextRowInRange(ECVBufferInfo info, NSRange range)
 static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src, off_t dstOffset, NSRange srcRange)
 {
 	if(!dst.bytes || !dst.length || !src.bytes || !src.length) return dstOffset;
-	NSCAssert(dst.pixelFormatType == src.pixelFormatType, @"ECVBufferCopy doesn't convert formats.");
-	NSCAssert(ECVEqualPixelSizes(dst.pixelSize, src.pixelSize), @"ECVBufferCopy doesn't convert sizes.");
+	NSCAssert(ECVFullFrame != dst.fieldType || !dst.doubledLines, @"Full frames cannot be line doubled.");
+	NSCAssert(dst.pixelFormatType == src.pixelFormatType, @"ECVBufferCopyToOffsetFromRange doesn't convert formats.");
+	NSCAssert(ECVEqualPixelSizes(dst.pixelSize, src.pixelSize), @"ECVBufferCopyToOffsetFromRange doesn't convert sizes.");
 	size_t const dstMax = dst.length;
 	size_t const srcMax = MIN(src.length, NSMaxRange(srcRange));
 	off_t i = dstOffset;
@@ -64,7 +65,7 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 		NSRange const srcRow = ECVBufferNextRowInRange(src, NSMakeRange(j, srcMax - j));
 		size_t const length = MIN(dstRow.length, srcRow.length);
 		memcpy(dst.bytes + dstRow.location, src.bytes + srcRow.location, length);
-		if(dst.doubledLines && !src.doubledLines) {
+		if(dst.doubledLines) {
 			size_t const alternate = dstRow.location + dst.bytesPerRow;
 			memcpy(dst.bytes + alternate, src.bytes + j, MIN(dstMax - alternate, length));
 		}
@@ -199,11 +200,12 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	ECVCVReturn(CVPixelBufferLockBaseAddress(pixelBuffer, kNilOptions));
 	ECVBufferInfo srcInfo = [self _bufferInfo];
 	srcInfo.fieldType = ECVFullFrame;
+	srcInfo.doubledLines = NO;
 	ECVBufferInfo const dstInfo = {
 		CVPixelBufferGetBaseAddress(pixelBuffer),
 		CVPixelBufferGetDataSize(pixelBuffer),
-		srcInfo.fieldType,
-		srcInfo.doubledLines,
+		ECVFullFrame,
+		NO,
 		CVPixelBufferGetBytesPerRow(pixelBuffer),
 		CVPixelBufferGetPixelFormatType(pixelBuffer),
 		{CVPixelBufferGetWidth(pixelBuffer), CVPixelBufferGetHeight(pixelBuffer)},
