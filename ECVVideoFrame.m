@@ -39,6 +39,17 @@ typedef struct {
 	OSType pixelFormatType;
 	ECVPixelSize pixelSize;
 } ECVBufferInfo;
+static size_t ECVBufferRemainingInRange(ECVBufferInfo info, NSRange range)
+{
+	size_t const actual = info.bytesPerRow;
+	size_t const theoretical = ECVPixelFormatBytesPerPixel(info.pixelFormatType) * info.pixelSize.width;
+	NSCAssert(actual >= theoretical, @"Row padding must be non-negative.");
+	size_t const actualOffset = range.location % actual;
+	NSAssert(theoretical >= actualOffset, @"Invalid position.");
+	size_t const remaining = theoretical - actualOffset;
+	size_t const max = MIN(info.length, NSMaxRange(range));
+	return MIN(remaining, max - range.location);
+}
 static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src, off_t dstOffset, NSRange srcRange)
 {
 	if(!dst.bytes || !dst.length || !src.bytes || !src.length) return dstOffset;
@@ -57,9 +68,9 @@ static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src
 	off_t i = dstOffset;
 	off_t j = srcRange.location;
 	while(i < dstMax && j < srcMax) {
-		size_t const dstRemaining = dstTheoretical - i % dstActual;
-		size_t const srcRemaining = srcTheoretical - j % srcActual;
-		size_t const length = MIN(MIN(dstMax - i, dstRemaining), MIN(srcMax - j, srcRemaining));
+		size_t const dstRemaining = ECVBufferRemainingInRange(dst, NSMakeRange(i, dstMax - i));
+		size_t const srcRemaining = ECVBufferRemainingInRange(src, NSMakeRange(j, srcMax - j));
+		size_t const length = MIN(dstRemaining, srcRemaining);
 		memcpy(dst.bytes + i, src.bytes + j, length);
 		if(dst.doubledLines && !src.doubledLines) {
 			size_t const alternate = i + dstActual;
