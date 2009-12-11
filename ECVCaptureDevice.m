@@ -451,7 +451,10 @@ bail:
 		return;
 	}
 
-	[_pendingFrame clearTail];
+	switch(_deinterlacingMode) {
+		case ECVLineDoubleHQ: [_pendingFrame fillHead]; break;
+		default: [_pendingFrame clearTail]; break;
+	}
 	ECVVideoFrame *frameToDraw = _pendingFrame;
 	if(ECVBlur == _deinterlacingMode && _lastCompletedFrame) {
 		[_lastCompletedFrame blurWithFrame:_pendingFrame];

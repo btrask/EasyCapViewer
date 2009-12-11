@@ -168,6 +168,12 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		_byteRange.length = 0;
 	} else [self clear];
 }
+- (void)fillHead
+{
+	if(!_byteRange.location) return;
+	void *const bytes = [self bufferBytes];
+	memcpy(bytes, bytes + _byteRange.location, _byteRange.location);
+}
 - (void)blurWithFrame:(ECVVideoFrame *)frame
 {
 	if(!frame) return;

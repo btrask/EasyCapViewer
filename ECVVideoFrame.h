@@ -55,6 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)clearTail;
 
 - (void)fillWithFrame:(ECVVideoFrame *)frame;
+- (void)fillHead;
 - (void)blurWithFrame:(ECVVideoFrame *)frame;
 - (void)appendBytes:(void const *)bytes length:(size_t)length;
 - (void)copyToPixelBuffer:(CVPixelBufferRef)pixelBuffer;
