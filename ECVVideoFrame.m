@@ -39,53 +39,39 @@ typedef struct {
 	OSType pixelFormatType;
 	ECVPixelSize pixelSize;
 } ECVBufferInfo;
-static size_t ECVBufferRemainingInRange(ECVBufferInfo info, NSRange range)
+static NSRange ECVBufferNextRowInRange(ECVBufferInfo info, NSRange range)
 {
-	size_t const actual = info.bytesPerRow;
-	size_t const theoretical = ECVPixelFormatBytesPerPixel(info.pixelFormatType) * info.pixelSize.width;
-	NSCAssert(actual >= theoretical, @"Row padding must be non-negative.");
-	size_t const actualOffset = range.location % actual;
-	NSAssert(theoretical >= actualOffset, @"Invalid position.");
-	size_t const remaining = theoretical - actualOffset;
+	size_t const rowActual = info.bytesPerRow;
+	size_t const rowTheoretical = ECVPixelFormatBytesPerPixel(info.pixelFormatType) * info.pixelSize.width;
+	NSCAssert(rowActual >= rowTheoretical, @"Rows must have non-negative padding.");
+	size_t const rowOffset = range.location % rowActual;
 	size_t const max = MIN(info.length, NSMaxRange(range));
-	return MIN(remaining, max - range.location);
+	if(rowTheoretical > rowOffset) return NSMakeRange(range.location, MIN(rowTheoretical - rowOffset, max - range.location));
+	off_t const nextOffset = range.location - rowOffset + rowActual;
+	return NSMakeRange(nextOffset, MIN(rowTheoretical, max - nextOffset));
 }
 static off_t ECVBufferCopyToOffsetFromRange(ECVBufferInfo dst, ECVBufferInfo src, off_t dstOffset, NSRange srcRange)
 {
 	if(!dst.bytes || !dst.length || !src.bytes || !src.length) return dstOffset;
 	NSCAssert(dst.pixelFormatType == src.pixelFormatType, @"ECVBufferCopy doesn't convert formats.");
 	NSCAssert(ECVEqualPixelSizes(dst.pixelSize, src.pixelSize), @"ECVBufferCopy doesn't convert sizes.");
-	size_t const dstTheoretical = ECVPixelFormatBytesPerPixel(dst.pixelFormatType) * dst.pixelSize.width;
-	size_t const srcTheoretical = ECVPixelFormatBytesPerPixel(src.pixelFormatType) * src.pixelSize.width;
-	size_t const dstActual = dst.bytesPerRow;
-	size_t const srcActual = src.bytesPerRow;
-	NSCAssert(dstActual >= dstTheoretical, @"ECVBufferCopy destination row padding must be non-negative.");
-	NSCAssert(srcActual >= srcTheoretical, @"ECVBufferCopy source row padding must be non-negative.");
-	size_t const dstPadding = dstActual - dstTheoretical;
-	size_t const srcPadding = srcActual - srcTheoretical;
 	size_t const dstMax = dst.length;
 	size_t const srcMax = MIN(src.length, NSMaxRange(srcRange));
 	off_t i = dstOffset;
 	off_t j = srcRange.location;
 	while(i < dstMax && j < srcMax) {
-		size_t const dstRemaining = ECVBufferRemainingInRange(dst, NSMakeRange(i, dstMax - i));
-		size_t const srcRemaining = ECVBufferRemainingInRange(src, NSMakeRange(j, srcMax - j));
-		size_t const length = MIN(dstRemaining, srcRemaining);
-		memcpy(dst.bytes + i, src.bytes + j, length);
+		NSRange const dstRow = ECVBufferNextRowInRange(dst, NSMakeRange(i, dstMax - i));
+		NSRange const srcRow = ECVBufferNextRowInRange(src, NSMakeRange(j, srcMax - j));
+		size_t const length = MIN(dstRow.length, srcRow.length);
+		memcpy(dst.bytes + dstRow.location, src.bytes + srcRow.location, length);
 		if(dst.doubledLines && !src.doubledLines) {
-			size_t const alternate = i + dstActual;
+			size_t const alternate = dstRow.location + dst.bytesPerRow;
 			memcpy(dst.bytes + alternate, src.bytes + j, MIN(dstMax - alternate, length));
 		}
-		i += length;
-		j += length;
-		if(length == dstRemaining) {
-			i += dstPadding;
-			if(ECVFullFrame != dst.fieldType) i += dstActual;
-		}
-		if(length == srcRemaining) {
-			j += srcPadding;
-			if(ECVFullFrame != src.fieldType) j += srcActual;
-		}
+		i = dstRow.location + length;
+		j = srcRow.location + length;
+		if(length >= dstRow.length && ECVFullFrame != dst.fieldType) i += dst.bytesPerRow;
+		if(length >= srcRow.length && ECVFullFrame != src.fieldType) j += src.bytesPerRow;
 	}
 	return MIN(i, dstMax) - dstOffset;
 }
