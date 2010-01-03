@@ -78,7 +78,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	BOOL created = NO;
 	while((service = IOIteratorNext(iterator))) {
 		NSError *error = nil;
-		ECVCaptureDevice *const device = [[self alloc] initWithService:service error:&error];
+		ECVCaptureDevice *const device = [[[self alloc] initWithService:service error:&error] autorelease];
 		if(device) {
 			[[NSDocumentController sharedDocumentController] addDocument:device];
 			[device makeWindowControllers];

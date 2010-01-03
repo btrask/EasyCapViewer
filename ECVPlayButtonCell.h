@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	NSOpenGLContext *_context;
-	NSBitmapImageRep *_imageRep;
 	GLuint _textureName;
 }
 
