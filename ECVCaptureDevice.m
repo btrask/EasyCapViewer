@@ -226,7 +226,6 @@ ECVNoDeviceError:
 		if([self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
-			usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
 		}
 		[_playLock unlock];
 	}
@@ -244,7 +243,6 @@ ECVNoDeviceError:
 		case ECVPlaying:
 			[_playLock unlockWithCondition:ECVStopPlaying];
 			[_playLock lockWhenCondition:ECVNotPlaying];
-			usleep(0.5f * ECVMicrosecondsPerSecond); // Don't restart the device too quickly.
 			[_playLock unlock];
 			break;
 	}
