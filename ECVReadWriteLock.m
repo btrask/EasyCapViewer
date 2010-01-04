@@ -82,7 +82,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)lock
 {
-	[self writeLock];
+	ECVAssertNotReached(@"-[ECVReadWriteLock lock] is ambiguous. Use -readLock or -writeLock instead.");
 }
 - (void)unlock
 {
