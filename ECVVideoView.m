@@ -451,13 +451,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[super dealloc];
 }
 
-#pragma mark -NSObejct(NSKeyboardUI)
-
-- (BOOL)canBecomeKeyView
-{
-	return YES;
-}
-
 #pragma mark -NSObject(NSNibAwaking)
 
 - (void)awakeFromNib
