@@ -156,14 +156,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	IOCFPlugInInterface **interfacePlugInInterface = NULL;
 	ECVIOReturn(IOCreatePlugInInterfaceForService(interface, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored));
 
-	CFUUIDRef const refs[] = {
-		kIOUSBInterfaceInterfaceID300,
-		kIOUSBInterfaceInterfaceID245,
-		kIOUSBInterfaceInterfaceID220,
-		kIOUSBInterfaceInterfaceID197,
-	};
-	NSUInteger i;
-	for(i = 0; i < numberof(refs); i++) if(SUCCEEDED((*interfacePlugInInterface)->QueryInterface(interfacePlugInInterface, CFUUIDGetUUIDBytes(refs[i]), (LPVOID)&_interfaceInterface))) break;
+	if(FAILED((*interfacePlugInInterface)->QueryInterface(interfacePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID300), (LPVOID)&_interfaceInterface))) goto ECVGenericError;
 	NSParameterAssert(_interfaceInterface);
 	ECVIOReturn((*_interfaceInterface)->USBInterfaceOpenSeize(_interfaceInterface));
 
