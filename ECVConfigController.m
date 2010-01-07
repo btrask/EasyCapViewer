@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVAudioDevice.h"
+#import "ECVFoundationAdditions.h"
 
 @interface ECVConfigController(Private)
 

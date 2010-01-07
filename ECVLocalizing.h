@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -21,13 +21,14 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Other Sources
-#import "ECVLocalizing.h"
+@interface NSObject(ECVLocalizing)
 
-int main(int argc, char *argv[])
-{
-	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[NSBundle ECV_prepareToAutoLocalize];
-	[pool drain];
-	return NSApplicationMain(argc, (const char **)argv);
-}
+- (void)ECV_localizeFromTable:(NSString *)tableName;
+
+@end
+
+@interface NSBundle(ECVLocalizing)
+
++ (void)ECV_prepareToAutoLocalize;
+
+@end

@@ -26,13 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVUncroppedRect (NSRect){{0.0f, 0.0f}, {1.0f, 1.0f}}
 
-NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
-{
-	if(a == b) return YES;
-	if(!a || !b) return NO;
-	return [a isEqual:b];
-}
-
 enum {
 	ECVProgressiveScan = 4,
 	ECVWeave = 0,

@@ -21,7 +21,7 @@
 	<key>CFBundleVersion</key>
 	<string>0.4</string>
 	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
+	<string>ECVMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>LSMinimumSystemVersion</key>
