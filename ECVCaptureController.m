@@ -22,7 +22,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
-#import <libkern/OSAtomic.h>
 
 // Models
 #import "ECVCaptureDevice.h"
@@ -144,8 +143,9 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	NSError *error = nil;
 	if([recorder startRecordingError:&error]) {
-		OSMemoryBarrier();
-		_movieRecorder = [recorder retain];
+		@synchronized(self) {
+			_movieRecorder = [recorder retain];
+		}
 		[[self window] setDocumentEdited:YES];
 	} else [[NSAlert alertWithError:error] runModal];
 #endif
@@ -154,10 +154,11 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 #if !__LP64__
 	if(!_movieRecorder) return;
-	ECVMovieRecorder *const recorder = _movieRecorder;
-	_movieRecorder = nil;
-	OSMemoryBarrier();
-	[[recorder autorelease] stopRecording];
+	@synchronized(self) {
+		[_movieRecorder stopRecording];
+		[_movieRecorder release];
+		_movieRecorder = nil;
+	}
 	[[self window] setDocumentEdited:NO];
 #endif
 }
@@ -363,15 +364,13 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame
 {
 	[videoView pushFrame:frame];
-	if(_movieRecorder) {
-		OSMemoryBarrier();
+	if(_movieRecorder) @synchronized(self) {
 		[_movieRecorder addVideoFrame:frame];
 	}
 }
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue
 {
-	if(_movieRecorder) {
-		OSMemoryBarrier();
+	if(_movieRecorder) @synchronized(self) {
 		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
 	}
 }

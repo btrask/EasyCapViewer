@@ -183,8 +183,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 }
 - (void)addAudioBufferList:(AudioBufferList const *)bufferList
 {
-	[_audioPipe receiveInputBufferList:bufferList];
 	[_lock lock];
+	[_audioPipe receiveInputBufferList:bufferList];
 	[_lock unlockWithCondition:ECVRecordThreadRun];
 }
 
@@ -227,6 +227,13 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		[innerPool release];
 	}
 
+	[_lock lock];
+	[_videoFrames release];
+	_videoFrames = nil;
+	[_audioPipe release];
+	_audioPipe = nil;
+	[_lock unlock];
+
 	ECVOSStatus(ICMCompressionSessionCompleteFrames(_compressionSession, true, 0, 0));
 	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_videoMedia), 0, GetMediaDisplayStartTime(_videoMedia), GetMediaDisplayDuration(_videoMedia), fixed1));
 	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_audioMedia), 0, GetMediaDisplayStartTime(_audioMedia), GetMediaDisplayDuration(_audioMedia), fixed1));
@@ -240,17 +247,12 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	CVPixelBufferRelease(_pixelBuffer);
 	_pixelBuffer = NULL;
 
-	[_audioPipe release];
-	_audioPipe = nil;
 	if(_audioDescriptionHandle) DisposeHandle((Handle)_audioDescriptionHandle);
 	if(_audioBufferBytes) free(_audioBufferBytes);
 	_audioBufferBytes = NULL;
 
 	_videoMedia = NULL;
 	_audioMedia = NULL;
-
-	[_videoFrames release];
-	_videoFrames = nil;
 
 	[movie detachFromCurrentThread];
 	[QTMovie exitQTKitOnThread];
