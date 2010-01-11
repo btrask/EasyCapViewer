@@ -66,6 +66,8 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		[NSNumber numberWithBool:NO], ECVVsyncKey,
 		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
 		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
+		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
+		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
 		NSStringFromRect(ECVUncroppedRect), ECVCropRectKey,
 		[NSNumber numberWithInteger:ECVAspectRatioUnknown], ECVCropSourceAspectRatioKey,
 		[NSNumber numberWithInteger:ECVCropBorderNone], ECVCropBorderKey,
