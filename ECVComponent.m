@@ -277,41 +277,49 @@ pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned sh
 }
 pascal VideoDigitizerError ECVGetBrightness(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(brightness)]) return digiUnimpErr;
 	*v = [storage->device brightness] * DEFAULT_MAX;
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetBrightness(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(setBrightness:)]) return digiUnimpErr;
 	[storage->device setBrightness:(CGFloat)*v / DEFAULT_MAX];
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetHue(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(hue)]) return digiUnimpErr;
 	*v = [storage->device hue] * DEFAULT_MAX;
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetHue(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(setHue:)]) return digiUnimpErr;
 	[storage->device setHue:(CGFloat)*v / DEFAULT_MAX];
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetSaturation(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(saturation)]) return digiUnimpErr;
 	*v = [storage->device saturation] * DEFAULT_MAX;
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetSaturation(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(setSaturation:)]) return digiUnimpErr;
 	[storage->device setSaturation:(CGFloat)*v / DEFAULT_MAX];
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetContrast(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(contrast)]) return digiUnimpErr;
 	*v = [storage->device contrast] * DEFAULT_MAX;
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetContrast(ECVCStorage *storage, unsigned short *v)
 {
+	if(![storage->device respondsToSelector:@selector(setContrast:)]) return digiUnimpErr;
 	[storage->device setContrast:(CGFloat)*v / DEFAULT_MAX];
 	return noErr;
 }
