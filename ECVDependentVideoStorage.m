@@ -192,7 +192,10 @@ enum {
 
 #pragma mark -ECVVideoFrame(ECVDependentVideoFrame)
 
-@synthesize bufferIndex = _bufferIndex;
+- (NSUInteger)bufferIndex
+{
+	return _bufferIndex;
+}
 
 #pragma mark -NSObject
 
