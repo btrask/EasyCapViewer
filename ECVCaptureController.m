@@ -25,7 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVCaptureDevice.h"
-#import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 #import "ECVMovieRecorder.h"
 
@@ -137,7 +136,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
 	if(NSFileHandlingPanelOKButton != returnCode) return;
 
-	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithURL:[savePanel URL] videoStorage:[[self document] videoStorage] audioDevice:[[self document] audioInput]] autorelease];
+	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithURL:[savePanel URL] videoStorage:[(ECVCaptureDevice *)[self document] videoStorage] audioDevice:[[self document] audioInput]] autorelease];
 	[recorder setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[recorder setVideoQuality:[videoQualitySlider doubleValue]];
 	[recorder setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];

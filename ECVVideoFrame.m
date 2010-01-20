@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
-#import "ECVReadWriteLock.h"
 
 typedef struct {
 	void *bytes;
@@ -93,15 +92,14 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 @implementation ECVVideoFrame
 
-#pragma mark -ECVAttachedFrame
+#pragma mark -ECVVideoFrame
 
-- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type
+- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage
 {
+	NSAssert(![self isMemberOfClass:[ECVVideoFrame class]], @"ECVVideoFrame is an abstract class and should never be instantiated directly.");
 	NSAssert((ECVFullFrame == type) == (ECVProgressiveScan == [storage deinterlacingMode]), @"Field type and deinterlacing mode must match.");
 	if((self = [super init])) {
-		_lock = [[ECVReadWriteLock alloc] init];
 		_videoStorage = storage;
-		_bufferIndex = index;
 		_fieldType = type;
 		switch([_videoStorage deinterlacingMode]) {
 			case ECVWeave:
@@ -114,26 +112,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	return self;
 }
 @synthesize videoStorage = _videoStorage;
-@synthesize bufferIndex = _bufferIndex;
 @synthesize fieldType = _fieldType;
-
-#pragma mark -
-
-- (BOOL)hasBuffer
-{
-	return NSNotFound != _bufferIndex;
-}
-- (void *)bufferBytes
-{
-	return [_videoStorage bufferBytesAtIndex:_bufferIndex];
-}
-- (BOOL)lockIfHasBuffer
-{
-	[self lock];
-	if([self hasBuffer]) return YES;
-	[self unlock];
-	return NO;
-}
 
 #pragma mark -
 
@@ -220,16 +199,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	ECVCVReturn(CVPixelBufferUnlockBaseAddress(pixelBuffer, kNilOptions));
 }
 
-#pragma mark -
-
-- (void)removeFromStorage
-{
-	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
-	if(![_lock tryWriteLock]) return;
-	if([_videoStorage removeFrame:self]) _bufferIndex = NSNotFound;
-	[_lock unlock];
-}
-
 #pragma mark -ECVVideoFrame(Private)
 
 - (ECVBufferInfo)_bufferInfo
@@ -243,25 +212,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 		[_videoStorage pixelFormatType],
 		[_videoStorage pixelSize],
 	};
-}
-
-#pragma mark -NSObject
-
-- (void)dealloc
-{
-	[_lock release];
-	[super dealloc];
-}
-
-#pragma mark -<NSLocking>
-
-- (void)lock
-{
-	[_lock readLock];
-}
-- (void)unlock
-{
-	[_lock unlock];
 }
 
 @end

@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2009-2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,25 +29,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 @class ECVReadWriteLock;
 
-@interface ECVVideoFrame : NSObject <NSLocking>
+@interface ECVVideoFrame : NSObject
 {
-	@protected
-	ECVVideoStorage *_videoStorage;
+	@private
 	ECVFieldType _fieldType;
+	id _videoStorage;
 	NSRange _byteRange;
-
-	ECVReadWriteLock *_lock;
-	NSUInteger _bufferIndex;
 }
 
-- (id)initWithStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index fieldType:(ECVFieldType)type;
-@property(readonly) ECVVideoStorage *videoStorage;
-@property(readonly) NSUInteger bufferIndex;
-@property(readonly) ECVFieldType fieldType;
+- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage;
 
-@property(readonly) BOOL hasBuffer;
-@property(readonly) void *bufferBytes;
-- (BOOL)lockIfHasBuffer;
+@property(readonly) ECVFieldType fieldType;
+@property(readonly) id videoStorage;
 
 - (void)clearRange:(NSRange)range resetLength:(BOOL)flag;
 - (void)clear;
@@ -60,6 +53,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)appendBytes:(void const *)bytes length:(size_t)length;
 - (void)copyToPixelBuffer:(CVPixelBufferRef)pixelBuffer;
 
-- (void)removeFromStorage;
+@end
+
+@interface ECVVideoFrame(ECVAbstract) <NSLocking>
+
+@property(readonly) void *bufferBytes;
+@property(readonly) BOOL hasBuffer;
+- (BOOL)lockIfHasBuffer;
 
 @end

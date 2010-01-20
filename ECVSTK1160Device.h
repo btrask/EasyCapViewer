@@ -36,7 +36,7 @@ enum {
 	ECVSTK1160Composite1Input = 1,
 	ECVSTK1160Composite2Input = 2,
 	ECVSTK1160Composite3Input = 3,
-	ECVSTK1160Composite4Input = 4
+	ECVSTK1160Composite4Input = 4,
 };
 typedef NSUInteger ECVSTK1160VideoSource;
 enum {

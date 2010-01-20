@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2009-2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <mach/mach_time.h>
 
 // Models
-#import "ECVVideoStorage.h"
+#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+	#import "ECVDependentVideoStorage.h"
+	#define ECV_VIDEO_STORAGE_CLASS ECVDependentVideoStorage
+#else
+	#import "ECVVideoStorage.h"
+	#define ECV_VIDEO_STORAGE_CLASS ECVVideoStorage
+#endif
 #import "ECVVideoFrame.h"
 
 // Controllers
+#ifndef ECV_NO_CONTROLLERS
 #import "ECVController.h"
 #import "ECVCaptureController.h"
+#endif
 
 // Other Sources
 #import "ECVAudioDevice.h"
@@ -46,6 +54,8 @@ NSString *const ECVBrightnessKey = @"ECVBrightness";
 NSString *const ECVContrastKey = @"ECVContrast";
 NSString *const ECVHueKey = @"ECVHue";
 NSString *const ECVSaturationKey = @"ECVSaturation";
+
+NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";
 
@@ -73,6 +83,22 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 #pragma mark +ECVCaptureDevice
 
++ (NSArray *)deviceDictionaries
+{
+	return [NSArray arrayWithContentsOfURL:[[NSBundle bundleForClass:self] URLForResource:@"ECVDevices" withExtension:@"plist"]];
+}
++ (Class)getMatchingDictionary:(out NSDictionary **)outDict forDeviceDictionary:(NSDictionary *)deviceDict
+{
+	Class const class = NSClassFromString([deviceDict objectForKey:@"ECVCaptureClass"]);
+	if(!class) return Nil;
+	if(outDict) {
+		NSMutableDictionary *const d = [(NSMutableDictionary *)IOServiceMatching(kIOUSBDeviceClassName) autorelease];
+		[d setObject:[deviceDict objectForKey:@"ECVVendorID"] forKey:[NSString stringWithUTF8String:kUSBVendorID]];
+		[d setObject:[deviceDict objectForKey:@"ECVProductID"] forKey:[NSString stringWithUTF8String:kUSBProductID]];
+		*outDict = d;
+	}
+	return class;
+}
 + (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator
 {
 	io_service_t service = IO_OBJECT_NULL;
@@ -110,6 +136,10 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 - (id)initWithService:(io_service_t)service error:(out NSError **)outError
 {
 	if(outError) *outError = nil;
+	if(!service) {
+		[self release];
+		return nil;
+	}
 	if(!(self = [super init])) return nil;
 
 	_windowControllersLock = [[ECVReadWriteLock alloc] init];
@@ -119,7 +149,9 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	[self setVolume:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey]];
 
+#ifndef ECV_NO_CONTROLLERS
 	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
+#endif
 
 	_service = service;
 	IOObjectRetain(_service);
@@ -163,7 +195,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	ECVIOReturn((*_interfaceInterface)->GetFrameListTime(_interfaceInterface, &_frameTime));
 	if([self requiresHighSpeed] && kUSBHighSpeedMicrosecondsInFrame != _frameTime) {
-		if(outError) *outError = [NSError errorWithDomain:ECVGeneralErrorDomain code:0 userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
+		if(outError) *outError = [NSError errorWithDomain:ECVCaptureDeviceErrorDomain code:0 userInfo:[NSDictionary dictionaryWithObjectsAndKeys:
 			NSLocalizedString(@"This device requires a USB 2.0 High Speed port in order to operate.", nil), NSLocalizedDescriptionKey,
 			NSLocalizedString(@"Make sure it is plugged into a port that supports high speed.", nil), NSLocalizedRecoverySuggestionErrorKey,
 			[NSArray array], NSLocalizedRecoveryOptionsErrorKey,
@@ -252,6 +284,7 @@ ECVNoDeviceError:
 
 #pragma mark -
 
+#ifndef ECV_DISABLE_AUDIO
 - (ECVAudioDevice *)audioInputOfCaptureHardware
 {
 	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
@@ -340,6 +373,7 @@ ECVNoDeviceError:
 	_audioPreviewingPipe = nil;
 	_audioStopTime = [NSDate timeIntervalSinceReferenceDate];
 }
+#endif
 
 #pragma mark -
 
@@ -385,7 +419,7 @@ ECVNoDeviceError:
 
 	_firstFrame = YES;
 
-	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithPixelFormatType:k2vuyPixelFormat deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA kCVPixelFormatType_422YpCbCr8.
+	ECVVideoStorage *const storage = [[[ECV_VIDEO_STORAGE_CLASS alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
 	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {
@@ -521,15 +555,23 @@ ECVNoDeviceError:
 {
 	[_videoStorage autorelease];
 	_videoStorage = [storage retain];
+#ifndef ECV_NO_CONTROLLERS
 	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
+#endif
+#ifndef ECV_DISABLE_AUDIO
 	(void)[self startAudio];
+#endif
 	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
 }
 - (void)_stopPlaying
 {
 	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
+#ifndef ECV_DISABLE_AUDIO
 	[self stopAudio];
+#endif
+#ifndef ECV_NO_CONTROLLERS
 	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
+#endif
 }
 
 #pragma mark -NSDocument
@@ -553,7 +595,9 @@ ECVNoDeviceError:
 
 - (void)makeWindowControllers
 {
+#ifndef ECV_NO_CONTROLLERS
 	[self addWindowController:[[[ECVCaptureController alloc] init] autorelease]];
+#endif
 }
 - (NSString *)displayName
 {
@@ -570,8 +614,10 @@ ECVNoDeviceError:
 - (void)dealloc
 {
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
+#ifndef ECV_NO_CONTROLLERS
 	ECVConfigController *const config = [ECVConfigController sharedConfigController];
 	if([config captureDevice] == self) [config setCaptureDevice:nil];
+#endif
 
 	if(_deviceInterface) (*_deviceInterface)->USBDeviceClose(_deviceInterface);
 	if(_deviceInterface) (*_deviceInterface)->Release(_deviceInterface);
@@ -583,14 +629,17 @@ ECVNoDeviceError:
 	[_productName release];
 	IOObjectRelease(_deviceRemovedNotification);
 	[_playLock release];
+#ifndef ECV_DISABLE_AUDIO
 	[_audioInput release];
 	[_audioOutput release];
 	[_audioPreviewingPipe release];
+#endif
 	[super dealloc];
 }
 
 #pragma mark -<ECVAudioDeviceDelegate>
 
+#ifndef ECV_DISABLE_AUDIO
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
 {
 	if(sender != _audioInput) return;
@@ -604,9 +653,11 @@ ECVNoDeviceError:
 	if(sender != _audioOutput) return;
 	[_audioPreviewingPipe requestOutputBufferList:bufferList];
 }
+#endif
 
 #pragma mark -<ECVCaptureControllerConfiguring>
 
+#ifndef ECV_DISABLE_AUDIO
 - (CGFloat)volume
 {
 	return _volume;
@@ -617,5 +668,6 @@ ECVNoDeviceError:
 	[_audioPreviewingPipe setVolume:value];
 	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
 }
+#endif
 
 @end

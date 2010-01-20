@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2009-2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -25,15 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
-@class ECVVideoStorage;
 @class ECVVideoFrame;
 
 // Controllers
 #import "ECVConfigController.h"
 
 // Other Sources
+#ifndef ECV_DISABLE_AUDIO
 #import "ECVAudioDevice.h"
 @class ECVAudioPipe;
+#endif
 @class ECVReadWriteLock;
 
 extern NSString *const ECVDeinterlacingModeKey;
@@ -41,6 +42,8 @@ extern NSString *const ECVBrightnessKey;
 extern NSString *const ECVContrastKey;
 extern NSString *const ECVHueKey;
 extern NSString *const ECVSaturationKey;
+
+extern NSString *const ECVCaptureDeviceErrorDomain;
 
 #define ECVPauseWhile(obj, code) {\
 	ECVCaptureDevice *const __obj = (obj);\
@@ -50,7 +53,11 @@ extern NSString *const ECVSaturationKey;
 	if(__p) [__obj setPlaying:YES];\
 } while(NO)
 
-@interface ECVCaptureDevice : NSDocument <ECVAudioDeviceDelegate, ECVCaptureDeviceConfiguring>
+@interface ECVCaptureDevice : NSDocument <ECVCaptureDeviceConfiguring
+#ifndef ECV_DISABLE_AUDIO
+, ECVAudioDeviceDelegate
+#endif
+>
 {
 	@private
 	ECVReadWriteLock *_windowControllersLock;
@@ -64,20 +71,24 @@ extern NSString *const ECVSaturationKey;
 	IOUSBInterfaceInterface197 **_interfaceInterface;
 	UInt32 _frameTime;
 
-	ECVVideoStorage *_videoStorage;
 	ECVDeinterlacingMode _deinterlacingMode;
+	id _videoStorage;
 	NSConditionLock *_playLock;
 	BOOL _firstFrame;
 	ECVVideoFrame *_pendingFrame;
 	ECVVideoFrame *_lastCompletedFrame;
 
+#ifndef ECV_DISABLE_AUDIO
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
 	CGFloat _volume;
 	NSTimeInterval _audioStopTime;
+#endif
 }
 
++ (NSArray *)deviceDictionaries;
++ (Class)getMatchingDictionary:(out NSDictionary **)outDict forDeviceDictionary:(NSDictionary *)deviceDict;
 + (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator;
 
 - (id)initWithService:(io_service_t)service error:(out NSError **)outError;
@@ -86,15 +97,9 @@ extern NSString *const ECVSaturationKey;
 
 @property(assign, getter = isPlaying) BOOL playing;
 - (void)togglePlaying;
+
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
-@property(readonly) ECVVideoStorage *videoStorage;
-
-@property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
-@property(retain) ECVAudioDevice *audioInput;
-@property(retain) ECVAudioDevice *audioOutput;
-- (BOOL)startAudio;
-- (void)stopAudio;
-
+@property(readonly) id videoStorage;
 - (void)threaded_readIsochPipeAsync;
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length;
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType;
@@ -104,6 +109,14 @@ extern NSString *const ECVSaturationKey;
 - (BOOL)writeValue:(UInt16)value atIndex:(UInt16)index;
 - (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)index;
 - (BOOL)setFeatureAtIndex:(UInt16)index;
+
+#ifndef ECV_DISABLE_AUDIO
+@property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
+@property(retain) ECVAudioDevice *audioInput;
+@property(retain) ECVAudioDevice *audioOutput;
+- (BOOL)startAudio;
+- (void)stopAudio;
+#endif
 
 @end
 

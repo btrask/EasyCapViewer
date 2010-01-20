@@ -27,8 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glu.h>
 
 // Models
+#import "ECVDependentVideoStorage.h"
 #import "ECVVideoFrame.h"
-#import "ECVVideoStorage.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -95,11 +95,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 #pragma mark -
 
 @synthesize delegate;
-- (ECVVideoStorage *)videoStorage
+- (ECVDependentVideoStorage *)videoStorage
 {
 	return [[_videoStorage retain] autorelease];
 }
-- (void)setVideoStorage:(ECVVideoStorage *)storage
+- (void)setVideoStorage:(ECVDependentVideoStorage *)storage
 {
 	if(storage == _videoStorage) return;
 	NSOpenGLContext *const context = [self openGLContext];

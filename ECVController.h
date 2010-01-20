@@ -24,12 +24,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 @class ECVCaptureDevice;
 
-extern NSString *const ECVGeneralErrorDomain;
-
 @interface ECVController : NSDocumentController
 {
 	@private
 	IONotificationPortRef _notificationPort;
+	NSMutableArray *_notifications;
 	NSUInteger _playCount;
 	NSTimer *_userActivityTimer;
 }

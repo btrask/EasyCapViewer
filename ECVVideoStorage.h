@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2009-2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,22 +29,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVVideoStorage : NSObject
 {
 	@private
-	NSUInteger _numberOfBuffers;
 	OSType _pixelFormatType;
 	ECVDeinterlacingMode _deinterlacingMode;
 	ECVPixelSize _originalSize;
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
-	NSMutableData *_allBufferData;
-
-	NSRecursiveLock *_lock;
-	NSMutableArray *_frames;
-	NSMutableIndexSet *_unusedBufferIndexes;
 }
 
 - (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
-@property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) ECVDeinterlacingMode deinterlacingMode;
 @property(readonly) BOOL halfHeight;
@@ -54,16 +47,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
-@property(readonly) void *allBufferBytes;
 @property(readonly) NSUInteger frameGroupSize;
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
-- (ECVVideoFrame *)lastCompletedFrame;
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
-
-- (void *)bufferBytesAtIndex:(NSUInteger)index;
-- (BOOL)removeFrame:(ECVVideoFrame *)frame;
 
 @end

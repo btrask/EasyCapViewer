@@ -26,19 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
-enum {
-	ECVPendingFrameIndex,
-	ECVPotentiallyCompletedFrameIndex, // May not be fully processed, depending on the deinterlacing mode.
-	ECVGuaranteedCompletedFrame2Index,
-	ECVUndroppableFrameCount,
-};
-#define ECVExtraBufferCount 15
-
-@interface ECVVideoStorage(Private)
-
-- (ECVVideoFrame *)_frameAtIndex:(NSUInteger)i;
-- (void)_dropFrames;
-
+@interface ECVIndependentVideoFrame : ECVVideoFrame
+{
+	@private
+	void *_bufferBytes;
+}
 @end
 
 @implementation ECVVideoStorage
@@ -48,22 +40,15 @@ enum {
 - (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
-		_numberOfBuffers = ECVUndroppableFrameCount + ECVExtraBufferCount;
 		_pixelFormatType = formatType;
 		_deinterlacingMode = mode;
 		_originalSize = size;
 		_frameRate = frameRate;
 		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
 		_bufferSize = [self pixelSize].height * [self bytesPerRow];
-		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * _bufferSize];
-
-		_lock = [[NSRecursiveLock alloc] init];
-		_frames = [[NSMutableArray alloc] init];
-		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
 	}
 	return self;
 }
-@synthesize numberOfBuffers = _numberOfBuffers;
 @synthesize pixelFormatType = _pixelFormatType;
 @synthesize deinterlacingMode = _deinterlacingMode;
 - (BOOL)halfHeight
@@ -82,10 +67,6 @@ enum {
 }
 @synthesize bytesPerRow = _bytesPerRow;
 @synthesize bufferSize = _bufferSize;
-- (void *)allBufferBytes
-{
-	return [_allBufferData mutableBytes];
-}
 - (NSUInteger)frameGroupSize
 {
 	return ECVProgressiveScan == _deinterlacingMode ? 1 : 2;
@@ -95,24 +76,7 @@ enum {
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
-	[_lock lock];
-	NSUInteger index = [_unusedBufferIndexes firstIndex];
-	if(NSNotFound == index) {
-		[self _dropFrames];
-		index = [_unusedBufferIndexes firstIndex];
-	}
-	ECVVideoFrame *frame = nil;
-	if(NSNotFound != index) {
-		frame = [[[ECVVideoFrame alloc] initWithStorage:self bufferIndex:index fieldType:type] autorelease];
-		[_frames insertObject:frame atIndex:0];
-		[_unusedBufferIndexes removeIndex:index];
-	}
-	[_lock unlock];
-	return frame;
-}
-- (ECVVideoFrame *)lastCompletedFrame
-{
-	return [self _frameAtIndex:ECVBlur == _deinterlacingMode ? ECVGuaranteedCompletedFrame2Index : ECVPotentiallyCompletedFrameIndex];
+	return [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
 }
 
 #pragma mark -
@@ -130,52 +94,46 @@ enum {
 	return drop;
 }
 
-#pragma mark -
+@end
 
-- (void *)bufferBytesAtIndex:(NSUInteger)index
+@implementation ECVIndependentVideoFrame
+
+#pragma mark -ECVIndependentVideoFrame
+
+- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage
 {
-	return [_allBufferData mutableBytes] + _bufferSize * index;
-}
-- (BOOL)removeFrame:(ECVVideoFrame *)frame
-{
-	if(!frame) return NO;
-	[_lock lock];
-	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
-	BOOL drop = NSNotFound != i && i >= ECVUndroppableFrameCount;
-	if(drop) {
-		[[frame retain] autorelease];
-		[_frames removeObjectAtIndex:i];
-		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
+	if((self = [super initWithFieldType:type storage:storage])) {
+		_bufferBytes = malloc([storage bufferSize]);
 	}
-	[_lock unlock];
-	return drop;
+	return self;
 }
 
-#pragma mark -ECVVideoStorage(Private)
+#pragma mark -ECVVideoFrame(ECVAbstract)
 
-- (ECVVideoFrame *)_frameAtIndex:(NSUInteger)i
+- (void *)bufferBytes
 {
-	[_lock lock];
-	ECVVideoFrame *const frame = i < [_frames count] ? [[[_frames objectAtIndex:i] retain] autorelease] : nil;
-	[_lock unlock];
-	return frame;
+	return _bufferBytes;
 }
-- (void)_dropFrames
+- (BOOL)hasBuffer
 {
-	NSUInteger const count = [_frames count];
-	NSUInteger const drop = MIN(MAX(count, ECVUndroppableFrameCount) - ECVUndroppableFrameCount, [self frameGroupSize]);
-	[[_frames subarrayWithRange:NSMakeRange(count - drop, drop)] makeObjectsPerformSelector:@selector(removeFromStorage)];
+	return YES;
+}
+- (BOOL)lockIfHasBuffer
+{
+	return YES;
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[_allBufferData release];
-	[_lock release];
-	[_frames release];
-	[_unusedBufferIndexes release];
+	free(_bufferBytes);
 	[super dealloc];
 }
+
+#pragma mark -<NSLocking>
+
+- (void)lock {}
+- (void)unlock {}
 
 @end

@@ -35,8 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAppKitAdditions.h"
 #import "ECVDebug.h"
 
-NSString *const ECVGeneralErrorDomain = @"ECVGeneralErrorDomain";
-
 static ECVController *ECVSharedController;
 
 static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
@@ -108,20 +106,20 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 
 - (void)workspaceDidWake:(NSNotification *)aNotif
 {
-	NSArray *const types = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVCaptureTypes"];
-	BOOL found = NO;
-	for(NSDictionary *const type in types) {
-		Class const class = NSClassFromString([type objectForKey:@"ECVCaptureClass"]);
-		if(!class) continue;
+	for(NSNumber *const notif in _notifications) IOObjectRelease([notif unsignedIntValue]);
+	[_notifications removeAllObjects];
 
-		NSMutableDictionary *const match = (NSMutableDictionary *)IOServiceMatching(kIOUSBDeviceClassName);
-		[match setObject:[type objectForKey:@"ECVVendorID"] forKey:[NSString stringWithUTF8String:kUSBVendorID]];
-		[match setObject:[type objectForKey:@"ECVProductID"] forKey:[NSString stringWithUTF8String:kUSBProductID]];
+	BOOL found = NO;
+	for(NSDictionary *const deviceDict in [ECVCaptureDevice deviceDictionaries]) {
+		NSDictionary *matchDict = nil;
+		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:deviceDict];
+		if(!class) continue;
 		io_iterator_t iterator = IO_OBJECT_NULL;
-		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)match, (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
+		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
 ECVGenericError:
 ECVNoDeviceError:
 		if([class deviceAddedWithIterator:iterator]) found = YES;
+		if(iterator) [_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
 	}
 	if(found) return;
 	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
@@ -145,6 +143,7 @@ ECVNoDeviceError:
 	if((self = [super init])) {
 		if(!ECVSharedController) ECVSharedController = [self retain];
 		_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
+		_notifications = [[NSMutableArray alloc] init];
 		CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopDefaultMode);
 	}
 	return self;
@@ -152,6 +151,9 @@ ECVNoDeviceError:
 - (void)dealloc
 {
 	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
+	for(NSNumber *const notif in _notifications) IOObjectRelease([notif unsignedIntValue]);
+
+	[_notifications release];
 	IONotificationPortDestroy(_notificationPort);
 	[_userActivityTimer invalidate];
 	[super dealloc];

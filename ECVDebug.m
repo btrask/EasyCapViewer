@@ -22,7 +22,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
+#ifndef ECV_DISABLE_AUDIO
 #import <AudioToolbox/AudioToolbox.h>
+#endif
 #import <IOKit/usb/IOUSBLib.h>
 #import <mach/mach_port.h>
 #import <Foundation/NSDebug.h>
@@ -34,10 +36,12 @@ void ECVLog(ECVErrorLevel level, NSString *format, ...)
 {
 	va_list arguments;
 	va_start(arguments, format);
-#ifdef ECV_DEBUG
+#if !defined(ECV_DEBUG) || defined(ECV_SIMPLE_LOGGING)
 	NSLogv(format, arguments);
 #endif
+#ifndef ECV_SIMPLE_LOGGING
 	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
+#endif
 	va_end(arguments);
 }
 
@@ -123,6 +127,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(invalidImageIndexErr)
 		ERROR_CASE(invalidSpriteIDErr)
 
+#ifndef ECV_DISABLE_AUDIO
 		// AudioConverter:
 		ERROR_CASE(kAudioConverterErr_FormatNotSupported)
 		ERROR_CASE(kAudioConverterErr_OperationNotSupported)
@@ -134,6 +139,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(kAudioConverterErr_RequiresPacketDescriptionsError)
 		ERROR_CASE(kAudioConverterErr_InputSampleRateOutOfRange)
 		ERROR_CASE(kAudioConverterErr_OutputSampleRateOutOfRange)
+#endif
 	}
 	return [NSString stringWithFormat:@"Unknown error %d", error];
 }

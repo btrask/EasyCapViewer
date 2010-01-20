@@ -26,17 +26,6 @@
 	<string>NSApplication</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.5.8</string>
-	<key>ECVCaptureTypes</key>
-	<array>
-		<dict>
-			<key>ECVCaptureClass</key>
-			<string>ECVSTK1160Device</string>
-			<key>ECVVendorID</key>
-			<integer>1505</integer>
-			<key>ECVProductID</key>
-			<integer>1032</integer>
-		</dict>
-	</array>
 	<key>ECVVideoCodecs</key>
 	<array>
 		<string>'jpeg'</string>

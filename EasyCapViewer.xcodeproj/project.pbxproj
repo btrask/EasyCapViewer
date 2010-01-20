@@ -14,6 +14,17 @@
 		0E26A999100314E6002FF95A /* ECVConfigController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E26A998100314E6002FF95A /* ECVConfigController.m */; };
 		0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
 		0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
+		0E4D75C511044A7A00FE3DDC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		0E4D75E911044A8400FE3DDC /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE548391071019600F003AF /* QuickTime.framework */; };
+		0E4D76A311044A9100FE3DDC /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E9F5E621085D06F00375752 /* Carbon.framework */; };
+		0E4D76CC110454E100FE3DDC /* ECVComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E4D76CA110454C000FE3DDC /* ECVComponent.m */; };
+		0E4D76D711046C2500FE3DDC /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78C9F20FC8FA1000E9C148 /* IOKit.framework */; };
+		0E4D778711046F9E00FE3DDC /* EasyCapViewer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E4D778611046F9E00FE3DDC /* EasyCapViewer.m */; };
+		0E4D77FF11062C6200FE3DDC /* ECVSTK1160Device.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CAAD0FC91B6500E9C148 /* ECVSTK1160Device.m */; };
+		0E4D780011062C6600FE3DDC /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
+		0E4D780111062C6900FE3DDC /* SAA711XChip.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E16F6AD10AE92C600730A18 /* SAA711XChip.m */; };
+		0E4D783D1106772000FE3DDC /* ECVCaptureDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */; };
+		0E4D78411107856600FE3DDC /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E4D78401107856600FE3DDC /* ECVDependentVideoStorage.m */; };
 		0E78C93E0FC8F98100E9C148 /* ECVCaptureController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */; };
 		0E78C9F30FC8FA1000E9C148 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78C9F20FC8FA1000E9C148 /* IOKit.framework */; };
 		0E78CA4F0FC9128000E9C148 /* ECVController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CA4E0FC9128000E9C148 /* ECVController.m */; };
@@ -47,6 +58,14 @@
 		0E9F9B4310F679B800935C48 /* ECVConfig.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B3F10F679B800935C48 /* ECVConfig.xib */; };
 		0E9F9B4410F679B800935C48 /* ECVErrorLog.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */; };
 		0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B4110F679B800935C48 /* ECVMenu.xib */; };
+		0E9FAA861107A5A7005C55CE /* ECVDevices.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0E9FAA851107A5A7005C55CE /* ECVDevices.plist */; };
+		0E9FAA871107A662005C55CE /* ECVDevices.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0E9FAA851107A5A7005C55CE /* ECVDevices.plist */; };
+		0E9FAABE1107B135005C55CE /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
+		0E9FAABF1107B138005C55CE /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
+		0E9FAAC81107B202005C55CE /* ECVReadWriteLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E89833E10C2D740006BA9C6 /* ECVReadWriteLock.m */; };
+		0E9FAAC91107B207005C55CE /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0AC92310203FB300C12D88 /* QTKit.framework */; };
+		0E9FAAE81107B210005C55CE /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE547931070F34C00F003AF /* CoreVideo.framework */; };
+		0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CB970FC92D8300E9C148 /* ECVDebug.m */; };
 		0EB070DD10B0992400B9575B /* ECVCaptureDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */; };
 		0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D341101903F200CFBDFF /* CoreAudio.framework */; };
 		0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */; };
@@ -59,7 +78,6 @@
 		0EEFA5C2103BB79A0038C135 /* ECVVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EEFA5C1103BB79A0038C135 /* ECVVideoView.m */; };
 		0EFEE896109205C300312653 /* Cursor-Resize-45.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */; };
 		0EFEE897109205C300312653 /* Cursor-Resize-135.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */; };
-		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
@@ -89,6 +107,13 @@
 		0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoFrame.m; sourceTree = "<group>"; };
 		0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoStorage.h; sourceTree = "<group>"; };
 		0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoStorage.m; sourceTree = "<group>"; };
+		0E4D75C011044A5900FE3DDC /* ECVComponent.component */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ECVComponent.component; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E4D75C111044A5900FE3DDC /* ECVComponent-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ECVComponent-Info.plist"; sourceTree = "<group>"; };
+		0E4D76AF11044B1000FE3DDC /* EasyCapViewer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EasyCapViewer-Info.plist"; sourceTree = "<group>"; };
+		0E4D76CA110454C000FE3DDC /* ECVComponent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVComponent.m; sourceTree = "<group>"; };
+		0E4D778611046F9E00FE3DDC /* EasyCapViewer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EasyCapViewer.m; sourceTree = "<group>"; };
+		0E4D783F1107856600FE3DDC /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
+		0E4D78401107856600FE3DDC /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		0E78C93C0FC8F98100E9C148 /* ECVCaptureController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVCaptureController.h; sourceTree = "<group>"; };
 		0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCaptureController.m; sourceTree = "<group>"; };
 		0E78C9F20FC8FA1000E9C148 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
@@ -139,6 +164,7 @@
 		0E9F9B3F10F679B800935C48 /* ECVConfig.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVConfig.xib; sourceTree = "<group>"; };
 		0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVErrorLog.xib; sourceTree = "<group>"; };
 		0E9F9B4110F679B800935C48 /* ECVMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVMenu.xib; sourceTree = "<group>"; };
+		0E9FAA851107A5A7005C55CE /* ECVDevices.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ECVDevices.plist; sourceTree = "<group>"; };
 		0EB070DB10B0992400B9575B /* ECVCaptureDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVCaptureDevice.h; sourceTree = "<group>"; };
 		0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCaptureDevice.m; sourceTree = "<group>"; };
 		0EC7D341101903F200CFBDFF /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -158,15 +184,26 @@
 		0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = "Cursor-Resize-135.tiff"; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
-		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* EasyCapViewer_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EasyCapViewer_Prefix.pch; sourceTree = "<group>"; };
-		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* EasyCapViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EasyCapViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0E4D75BE11044A5900FE3DDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E4D76A311044A9100FE3DDC /* Carbon.framework in Frameworks */,
+				0E4D75C511044A7A00FE3DDC /* Cocoa.framework in Frameworks */,
+				0E9FAAE81107B210005C55CE /* CoreVideo.framework in Frameworks */,
+				0E4D76D711046C2500FE3DDC /* IOKit.framework in Frameworks */,
+				0E9FAAC91107B207005C55CE /* QTKit.framework in Frameworks */,
+				0E4D75E911044A8400FE3DDC /* QuickTime.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -214,10 +251,21 @@
 				0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */,
 				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
 				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
+				0E4D783F1107856600FE3DDC /* ECVDependentVideoStorage.h */,
+				0E4D78401107856600FE3DDC /* ECVDependentVideoStorage.m */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		0E4D76C8110454AA00FE3DDC /* Entry Points */ = {
+			isa = PBXGroup;
+			children = (
+				0E4D778611046F9E00FE3DDC /* EasyCapViewer.m */,
+				0E4D76CA110454C000FE3DDC /* ECVComponent.m */,
+			);
+			name = "Entry Points";
 			sourceTree = "<group>";
 		};
 		0E78CD500FC9F8E500E9C148 /* STK1160 */ = {
@@ -295,6 +343,7 @@
 			isa = PBXGroup;
 			children = (
 				8D1107320486CEB800E47090 /* EasyCapViewer.app */,
+				0E4D75C011044A5900FE3DDC /* ECVComponent.component */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -306,6 +355,7 @@
 				0E78CE870FC9FA5F00E9C148 /* Views */,
 				080E96DDFE201D6D7F000001 /* Controllers */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				0E4D76C8110454AA00FE3DDC /* Entry Points */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
@@ -316,7 +366,6 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
-				29B97316FDCFA39411CA2CEA /* main.m */,
 				32CA4F630368D1EE00C91783 /* EasyCapViewer_Prefix.pch */,
 				0E8CE153107BE51C004F05A7 /* ECVAppKitAdditions.h */,
 				0E8CE154107BE51C004F05A7 /* ECVAppKitAdditions.m */,
@@ -343,17 +392,19 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				8D1107310486CEB800E47090 /* Info.plist */,
+				0E4D76AF11044B1000FE3DDC /* EasyCapViewer-Info.plist */,
+				0E4D75C111044A5900FE3DDC /* ECVComponent-Info.plist */,
+				0E9FAA851107A5A7005C55CE /* ECVDevices.plist */,
 				0E9F9B3E10F679B800935C48 /* ECVCapture.xib */,
 				0E9F9B3F10F679B800935C48 /* ECVConfig.xib */,
 				0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */,
 				0E9F9B4110F679B800935C48 /* ECVMenu.xib */,
+				0E9F9B3310F679A400935C48 /* InfoPlist.strings */,
 				0E9F9B2910F679A400935C48 /* Credits.rtf */,
 				0E9F9B2B10F679A400935C48 /* ECVCapture.strings */,
 				0E9F9B2D10F679A400935C48 /* ECVConfig.strings */,
 				0E9F9B2F10F679A400935C48 /* ECVErrorLog.strings */,
 				0E9F9B3110F679A400935C48 /* ECVMenu.strings */,
-				0E9F9B3310F679A400935C48 /* InfoPlist.strings */,
 				0E9F9B3510F679A400935C48 /* Localizable.strings */,
 				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
@@ -374,6 +425,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0E4D75BF11044A5900FE3DDC /* ECVComponent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0E4D75C411044A5A00FE3DDC /* Build configuration list for PBXNativeTarget "ECVComponent" */;
+			buildPhases = (
+				0E4D75BC11044A5900FE3DDC /* Resources */,
+				0E4D75BD11044A5900FE3DDC /* Sources */,
+				0E4D75BE11044A5900FE3DDC /* Frameworks */,
+				0E4D76A511044ACA00FE3DDC /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ECVComponent;
+			productName = ECVComponent;
+			productReference = 0E4D75C011044A5900FE3DDC /* ECVComponent.component */;
+			productType = "com.apple.product-type.bundle";
+		};
 		8D1107260486CEB800E47090 /* EasyCapViewer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "EasyCapViewer" */;
@@ -413,11 +482,20 @@
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* EasyCapViewer */,
+				0E4D75BF11044A5900FE3DDC /* ECVComponent */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0E4D75BC11044A5900FE3DDC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E9FAA871107A662005C55CE /* ECVDevices.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1107290486CEB800E47090 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -436,17 +514,43 @@
 				0E9F9B4310F679B800935C48 /* ECVConfig.xib in Resources */,
 				0E9F9B4410F679B800935C48 /* ECVErrorLog.xib in Resources */,
 				0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */,
+				0E9FAA861107A5A7005C55CE /* ECVDevices.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXRezBuildPhase section */
+		0E4D76A511044ACA00FE3DDC /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		0E4D75BD11044A5900FE3DDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E4D76CC110454E100FE3DDC /* ECVComponent.m in Sources */,
+				0E4D77FF11062C6200FE3DDC /* ECVSTK1160Device.m in Sources */,
+				0E4D780011062C6600FE3DDC /* stk11xx-dev-0408.m in Sources */,
+				0E4D780111062C6900FE3DDC /* SAA711XChip.m in Sources */,
+				0E4D783D1106772000FE3DDC /* ECVCaptureDevice.m in Sources */,
+				0E9FAABE1107B135005C55CE /* ECVVideoStorage.m in Sources */,
+				0E9FAABF1107B138005C55CE /* ECVVideoFrame.m in Sources */,
+				0E9FAAC81107B202005C55CE /* ECVReadWriteLock.m in Sources */,
+				0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				0E78C93E0FC8F98100E9C148 /* ECVCaptureController.m in Sources */,
 				0E78CA4F0FC9128000E9C148 /* ECVController.m in Sources */,
 				0E78CAAE0FC91B6500E9C148 /* ECVSTK1160Device.m in Sources */,
@@ -475,6 +579,8 @@
 				0E89833F10C2D740006BA9C6 /* ECVReadWriteLock.m in Sources */,
 				0E9F9B1D10F6753C00935C48 /* ECVLocalizing.m in Sources */,
 				0E9F9B2210F6764500935C48 /* ECVFoundationAdditions.m in Sources */,
+				0E4D778711046F9E00FE3DDC /* EasyCapViewer.m in Sources */,
+				0E4D78411107856600FE3DDC /* ECVDependentVideoStorage.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -540,6 +646,60 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0E4D75C211044A5A00FE3DDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
+					"$(inherited)",
+					ECV_DISABLE_AUDIO,
+					ECV_SIMPLE_LOGGING,
+					ECV_NO_CONTROLLERS,
+				);
+				INFOPLIST_FILE = "ECVComponent-Info.plist";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+				);
+				PRODUCT_NAME = ECVComponent;
+				WRAPPER_EXTENSION = component;
+			};
+			name = Debug;
+		};
+		0E4D75C311044A5A00FE3DDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
+					"$(inherited)",
+					ECV_DISABLE_AUDIO,
+					ECV_SIMPLE_LOGGING,
+					ECV_NO_CONTROLLERS,
+				);
+				INFOPLIST_FILE = "ECVComponent-Info.plist";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+				);
+				PRODUCT_NAME = ECVComponent;
+				WRAPPER_EXTENSION = component;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -555,7 +715,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
-				INFOPLIST_FILE = Info.plist;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
+					"$(inherited)",
+					ECV_DEPENDENT_VIDEO_STORAGE,
+				);
+				INFOPLIST_FILE = "EasyCapViewer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				PRODUCT_NAME = EasyCapViewer;
 			};
@@ -573,7 +737,11 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
-				INFOPLIST_FILE = Info.plist;
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
+					"$(inherited)",
+					ECV_DEPENDENT_VIDEO_STORAGE,
+				);
+				INFOPLIST_FILE = "EasyCapViewer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				PRODUCT_NAME = EasyCapViewer;
 			};
@@ -617,6 +785,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0E4D75C411044A5A00FE3DDC /* Build configuration list for PBXNativeTarget "ECVComponent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E4D75C211044A5A00FE3DDC /* Debug */,
+				0E4D75C311044A5A00FE3DDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "EasyCapViewer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

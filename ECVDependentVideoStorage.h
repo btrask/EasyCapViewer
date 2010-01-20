@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -21,32 +21,32 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#ifndef ECV_DISABLE_AUDIO
-#import <AudioToolbox/AudioToolbox.h>
-#import <CoreAudio/CoreAudio.h>
+// Models
+#import "ECVVideoStorage.h"
+#import "ECVVideoFrame.h"
 
-@interface ECVAudioPipe : NSObject
+@interface ECVDependentVideoStorage : ECVVideoStorage
 {
 	@private
-	AudioStreamBasicDescription _inputStreamDescription;
-	AudioStreamBasicDescription _outputStreamDescription;
-	AudioConverterRef _converter;
-	CGFloat _volume;
-	BOOL _dropsBuffers;
-	NSLock *_lock;
-	NSMutableArray *_unusedBuffers;
-	NSMutableArray *_usedBuffers;
+	NSUInteger _numberOfBuffers;
+	NSMutableData *_allBufferData;
+
+	NSRecursiveLock *_lock;
+	NSMutableArray *_frames;
+	NSMutableIndexSet *_unusedBufferIndexes;
 }
 
-- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc;
-@property(readonly) AudioStreamBasicDescription inputStreamDescription;
-@property(readonly) AudioStreamBasicDescription outputStreamDescription;
-@property(assign) CGFloat volume;
-@property(assign) BOOL dropsBuffers;
+@property(readonly) NSUInteger numberOfBuffers;
+@property(readonly) void *allBufferBytes;
+- (void *)bufferBytesAtIndex:(NSUInteger)index;
 
-@property(readonly) BOOL hasReadyBuffers;
-- (void)receiveInputBufferList:(AudioBufferList const *)inputBufferList;
-- (void)requestOutputBufferList:(inout AudioBufferList *)outputBufferList;
+- (ECVVideoFrame *)lastCompletedFrame;
+- (BOOL)removeFrame:(ECVVideoFrame *)frame;
 
 @end
-#endif
+
+@interface ECVVideoFrame(ECVDependentVideoFrame)
+
+@property(readonly) NSUInteger bufferIndex;
+
+@end
