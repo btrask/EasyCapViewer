@@ -38,10 +38,29 @@ typedef struct {
 
 #define VD_BASENAME() ECV
 #define VD_GLOBALS() ECVCStorage *
-#include <QuickTime/QuickTimeComponents.k.h>
 
+#define COMPONENT_DISPATCH_FILE "ECVComponentDispatch.h"
+#define CALLCOMPONENT_BASENAME() VD_BASENAME()
+#define	CALLCOMPONENT_GLOBALS() VD_GLOBALS() storage
+#define COMPONENT_UPP_SELECT_ROOT() VD
+
+#include <CoreServices/Components.k.h>
+#include <QuickTime/QuickTimeComponents.k.h>
+#include <QuickTime/ComponentDispatchHelper.c>
+
+pascal ComponentResult ECVRegister(ECVCStorage *storage)
+{
+	fprintf(stderr, "ECVRegister!");
+	NSLog(@"ECVRegister...");
+	NSRunAlertPanel(@"TEST", @"ECVRegister...", @"OK", nil, nil);
+	return noErr;
+}
 pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 {
+	fprintf(stderr, "ECVOpen!");
+	NSLog(@"ECVOpen...");
+	NSRunAlertPanel(@"TEST", @"ECVOpen...", @"OK", nil, nil);
+
 	if(!storage) {
 		storage = calloc(1, sizeof(ECVCStorage));
 		NSDictionary *matchDict = nil;
@@ -275,6 +294,10 @@ pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned sh
 	*sharpness = 0;
 	return noErr;
 }
+pascal VideoDigitizerError ECVGetBlackLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVSetBlackLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVGetWhiteLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVSetWhiteLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
 pascal VideoDigitizerError ECVGetBrightness(ECVCStorage *storage, unsigned short *v)
 {
 	if(![storage->device respondsToSelector:@selector(brightness)]) return digiUnimpErr;
@@ -323,3 +346,37 @@ pascal VideoDigitizerError ECVSetContrast(ECVCStorage *storage, unsigned short *
 	[storage->device setContrast:(CGFloat)*v / DEFAULT_MAX];
 	return noErr;
 }
+pascal VideoDigitizerError ECVGetSharpness(ECVCStorage *storage, unsigned short *sharpness) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVSetSharpness(ECVCStorage *storage, unsigned short *sharpness) { return digiUnimpErr; }
+
+
+
+pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd, Rect *vBlankRect)
+{
+	*vBlankRect = (Rect){};
+	return noErr;
+}
+pascal VideoDigitizerError ECVCaptureStateChanging(ECVCStorage *storage, UInt32 inStateFlags) { return noErr; }
+pascal VideoDigitizerError ECVGetPLLFilterType(ECVCStorage *storage, short *pllType)
+{
+	*pllType = 0;
+	return noErr;
+}
+pascal VideoDigitizerError ECVSetPLLFilterType(ECVCStorage *storage, short pllType) { return digiUnimpErr; }
+
+
+
+pascal VideoDigitizerError ECVGetPreferredImageDimensions(ECVCStorage *storage, long *width, long *height) { return noErr; }
+pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime) { return noErr; }
+pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond) { return noErr; }
+pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage) { return noErr; }
+pascal VideoDigitizerError ECVGetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect) { return noErr; }
+pascal VideoDigitizerError ECVSetDataRate(ECVCStorage *storage, long bytesPerSecond) { return noErr; }
+pascal VideoDigitizerError ECVGetCompressionTime(ECVCStorage *storage, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime) { return noErr; }
+pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond) { return noErr; }
+pascal VideoDigitizerError ECVCompressOneFrameAsync(ECVCStorage *storage) { return noErr; }
+pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t) { return noErr; }
+pascal VideoDigitizerError ECVSetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect) { return noErr; }
+pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputCurrentFlag, long *outputCurrentFlag) { return noErr; }
+pascal VideoDigitizerError ECVGetActiveSrcRect(ECVCStorage *storage, short inputStd, Rect *activeSrcRect) { return noErr; }
+pascal VideoDigitizerError ECVGetMaxSrcRect(ECVCStorage *storage, short inputStd, Rect *maxSrcRect) { return noErr; }

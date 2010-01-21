@@ -15,6 +15,7 @@
 		0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
 		0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
 		0E3B7BF21108CC2C003A8A39 /* ECVComponent.r in Rez */ = {isa = PBXBuildFile; fileRef = 0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */; };
+		0E3B7F8B11091253003A8A39 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B3310F679A400935C48 /* InfoPlist.strings */; };
 		0E4D75C511044A7A00FE3DDC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		0E4D75E911044A8400FE3DDC /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE548391071019600F003AF /* QuickTime.framework */; };
 		0E4D76A311044A9100FE3DDC /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E9F5E621085D06F00375752 /* Carbon.framework */; };
@@ -109,6 +110,7 @@
 		0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoStorage.h; sourceTree = "<group>"; };
 		0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoStorage.m; sourceTree = "<group>"; };
 		0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; path = ECVComponent.r; sourceTree = "<group>"; };
+		0E3B7CB21108E8F0003A8A39 /* ECVComponentDispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVComponentDispatch.h; sourceTree = "<group>"; };
 		0E4D75C011044A5900FE3DDC /* ECVComponent.component */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ECVComponent.component; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E4D75C111044A5900FE3DDC /* ECVComponent-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ECVComponent-Info.plist"; sourceTree = "<group>"; };
 		0E4D76AF11044B1000FE3DDC /* EasyCapViewer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EasyCapViewer-Info.plist"; sourceTree = "<group>"; };
@@ -375,6 +377,7 @@
 				0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */,
 				0EC7D4AA1019B60100CFBDFF /* ECVAudioPipe.h */,
 				0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */,
+				0E3B7CB21108E8F0003A8A39 /* ECVComponentDispatch.h */,
 				0E78CB960FC92D8300E9C148 /* ECVDebug.h */,
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
 				0E9F9B2010F6764500935C48 /* ECVFoundationAdditions.h */,
@@ -496,6 +499,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0E9FAA871107A662005C55CE /* ECVDevices.plist in Resources */,
+				0E3B7F8B11091253003A8A39 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -653,13 +657,6 @@
 		0E4D75C211044A5A00FE3DDC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
@@ -668,10 +665,6 @@
 					ECV_NO_CONTROLLERS,
 				);
 				INFOPLIST_FILE = "ECVComponent-Info.plist";
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-				);
 				PRODUCT_NAME = ECVComponent;
 				WRAPPER_EXTENSION = component;
 			};
@@ -680,12 +673,6 @@
 		0E4D75C311044A5A00FE3DDC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
@@ -694,13 +681,8 @@
 					ECV_NO_CONTROLLERS,
 				);
 				INFOPLIST_FILE = "ECVComponent-Info.plist";
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-				);
 				PRODUCT_NAME = ECVComponent;
 				WRAPPER_EXTENSION = component;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -763,6 +745,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 			};
@@ -781,6 +764,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 			};

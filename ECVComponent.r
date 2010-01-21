@@ -1,11 +1,13 @@
+#define thng_RezTemplateVersion 1
+
 #include <Carbon/Carbon.r>
 #include <QuickTime/QuickTime.r>
 
 resource 'thng' (256)
 {
 	'vdig', // Type
-	0, // SubType
-	0, // Manufacturer
+	'soft', // SubType
+	'asdf', // Manufacturer
 	0, // use componentHasMultiplePlatforms
 	0,
 	0,
@@ -17,7 +19,7 @@ resource 'thng' (256)
 	0, // Icon Type
 	0, // Icon ID
 	0, // Version
-	componentHasMultiplePlatforms | myComponentRegistrationFlags, // Registration Flags
+	componentHasMultiplePlatforms + componentDoAutoVersion, // Registration flags
 	0, // Resource ID of Icon Family
 	{
 		0,
