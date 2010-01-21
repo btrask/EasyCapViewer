@@ -14,6 +14,7 @@
 		0E26A999100314E6002FF95A /* ECVConfigController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E26A998100314E6002FF95A /* ECVConfigController.m */; };
 		0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
 		0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
+		0E3B7BF21108CC2C003A8A39 /* ECVComponent.r in Rez */ = {isa = PBXBuildFile; fileRef = 0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */; };
 		0E4D75C511044A7A00FE3DDC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		0E4D75E911044A8400FE3DDC /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE548391071019600F003AF /* QuickTime.framework */; };
 		0E4D76A311044A9100FE3DDC /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E9F5E621085D06F00375752 /* Carbon.framework */; };
@@ -107,6 +108,7 @@
 		0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoFrame.m; sourceTree = "<group>"; };
 		0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoStorage.h; sourceTree = "<group>"; };
 		0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoStorage.m; sourceTree = "<group>"; };
+		0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; path = ECVComponent.r; sourceTree = "<group>"; };
 		0E4D75C011044A5900FE3DDC /* ECVComponent.component */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ECVComponent.component; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E4D75C111044A5900FE3DDC /* ECVComponent-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ECVComponent-Info.plist"; sourceTree = "<group>"; };
 		0E4D76AF11044B1000FE3DDC /* EasyCapViewer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EasyCapViewer-Info.plist"; sourceTree = "<group>"; };
@@ -409,6 +411,7 @@
 				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
+				0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -525,6 +528,7 @@
 			isa = PBXRezBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E3B7BF21108CC2C003A8A39 /* ECVComponent.r in Rez */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
