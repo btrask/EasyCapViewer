@@ -22,12 +22,16 @@ resource 'thng' (256)
 	componentHasMultiplePlatforms + componentDoAutoVersion, // Registration flags
 	0, // Resource ID of Icon Family
 	{
-		0,
-		'dlle', // Entry point found by symbol name 'dlle' resource
-		256, // ID of 'dlle' resource
 #if defined(ppc_YES)
+		0, // Component Flags
+		'dlle', // Code Resource type - Entry point found by symbol name 'dlle' resource
+		256, // ID of 'dlle' resource
 		platformPowerPCNativeEntryPoint,
-#elif defined(i386_YES)
+#endif
+#if defined(i386_YES)
+		0, // Component Flags
+		'dlle', // Code Resource type - Entry point found by symbol name 'dlle' resource
+		256, // ID of 'dlle' resource
 		platformIA32NativeEntryPoint,
 #endif
 	};
