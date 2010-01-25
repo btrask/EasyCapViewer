@@ -48,8 +48,14 @@ typedef struct {
 #include <QuickTime/QuickTimeComponents.k.h>
 #include <QuickTime/ComponentDispatchHelper.c>
 
+static Rect ECVNSRectToRect(NSRect r)
+{
+	return (Rect){NSMinX(r), NSMinY(r), NSMaxX(r), NSMaxY(r)};
+}
+
 pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 {
+	if(CountComponentInstances((Component)self) > 1) return -1;
 	if(!storage) {
 		storage = calloc(1, sizeof(ECVCStorage));
 		NSDictionary *matchDict = nil;
@@ -63,6 +69,7 @@ pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 }
 pascal ComponentResult ECVClose(ECVCStorage *storage, ComponentInstance self)
 {
+	if(!storage) return noErr;
 	[storage->device release];
 	[storage->bufferMap release];
 	free(storage);
@@ -87,6 +94,14 @@ pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerIn
 	info->maxDestWidth = s.width;
 	info->maxDestHeight = s.height;
 
+	return noErr;
+}
+pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputCurrentFlag, long *outputCurrentFlag)
+{
+	DigitizerInfo info;
+	if(!ECVGetDigitizerInfo(storage, &info)) return -1;
+	*inputCurrentFlag = info.inputCurrentFlags;
+	*outputCurrentFlag = info.outputCurrentFlags;
 	return noErr;
 }
 
@@ -174,6 +189,14 @@ pascal VideoDigitizerError ECVSetCompressionOnOff(ECVCStorage *storage, Boolean 
 	[storage->device setPlaying:!!state];
 	return noErr;
 }
+pascal VideoDigitizerError ECVGetCompressionTime(ECVCStorage *storage, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime)
+{
+	if(compressionType && k422YpCbCr8CodecType != compressionType) return noCodecErr; // TODO: Get the real type.
+	*spatialQuality = codecLosslessQuality;
+	*temporalQuality = 0;
+	*compressTime = 0;
+	return noErr;
+}
 pascal VideoDigitizerError ECVGetCompressionTypes(ECVCStorage *storage, VDCompressionListHandle h)
 {
 	SInt8 const handleState = HGetState((Handle)h);
@@ -199,6 +222,14 @@ pascal VideoDigitizerError ECVSetCompression(ECVCStorage *storage, OSType compre
 {
 	if(compressType && k422YpCbCr8CodecType != compressType) return noCodecErr; // TODO: Get the real type.
 	// TODO: Most of these settings don't apply to us...
+	return noErr;
+}
+pascal VideoDigitizerError ECVCompressOneFrameAsync(ECVCStorage *storage)
+{
+	return noErr;
+}
+pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage)
+{
 	return noErr;
 }
 pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, Boolean *done, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t) // TODO: done -> UInt8 *queuedFrameCount
@@ -341,11 +372,6 @@ pascal VideoDigitizerError ECVSetSharpness(ECVCStorage *storage, unsigned short 
 
 
 
-pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd, Rect *vBlankRect)
-{
-	*vBlankRect = (Rect){};
-	return noErr;
-}
 pascal VideoDigitizerError ECVCaptureStateChanging(ECVCStorage *storage, UInt32 inStateFlags) { return noErr; }
 pascal VideoDigitizerError ECVGetPLLFilterType(ECVCStorage *storage, short *pllType)
 {
@@ -356,17 +382,53 @@ pascal VideoDigitizerError ECVSetPLLFilterType(ECVCStorage *storage, short pllTy
 
 
 
-pascal VideoDigitizerError ECVGetPreferredImageDimensions(ECVCStorage *storage, long *width, long *height) { return noErr; }
-pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime) { return noErr; }
-pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond) { return noErr; }
-pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage) { return noErr; }
-pascal VideoDigitizerError ECVGetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect) { return noErr; }
-pascal VideoDigitizerError ECVSetDataRate(ECVCStorage *storage, long bytesPerSecond) { return noErr; }
-pascal VideoDigitizerError ECVGetCompressionTime(ECVCStorage *storage, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime) { return noErr; }
-pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond) { return noErr; }
-pascal VideoDigitizerError ECVCompressOneFrameAsync(ECVCStorage *storage) { return noErr; }
+
+pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd, Rect *vBlankRect)
+{
+	if(vBlankRect) *vBlankRect = (Rect){};
+	return noErr;
+}
+pascal VideoDigitizerError ECVGetMaxSrcRect(ECVCStorage *storage, short inputStd, Rect *maxSrcRect)
+{
+	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize([storage->device captureSize])});
+	return noErr;
+}
+pascal VideoDigitizerError ECVGetActiveSrcRect(ECVCStorage *storage, short inputStd, Rect *activeSrcRect)
+{
+	return ECVGetMaxSrcRect(storage, inputStd, activeSrcRect);
+}
+pascal VideoDigitizerError ECVGetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect)
+{
+	return ECVGetMaxSrcRect(storage, ntscIn, digitizerRect);
+}
+pascal VideoDigitizerError ECVSetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect)
+{
+//	Rect activeSrcRect;
+//	if(!ECVGetActiveSrcRect(storage, ntscIn, &activeSrcRect)) return -1;
+//	if(!MacEqualRect(digitizerRect, &activeSrcRect)) return qtParamErr;
+	return noErr;
+}
+pascal VideoDigitizerError ECVGetPreferredImageDimensions(ECVCStorage *storage, long *width, long *height) { return digiUnimpErr; }
+
+pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond)
+{
+	*milliSecPerFrame = 0;
+	NSTimeInterval frameRate = 1.0f / 60.0f;
+	if(QTGetTimeInterval([storage->device frameRate], &frameRate)) *framesPerSecond = X2Fix(frameRate);
+	else *framesPerSecond = 0;
+	*bytesPerSecond = (1.0f / frameRate) * [[storage->device videoStorage] bufferSize];
+	return noErr;
+}
+pascal VideoDigitizerError ECVSetDataRate(ECVCStorage *storage, long bytesPerSecond)
+{
+	return digiUnimpErr;
+}
+
+
+
+
+
+
+pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond) { return digiUnimpErr; }
 pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t) { return noErr; }
-pascal VideoDigitizerError ECVSetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect) { return noErr; }
-pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputCurrentFlag, long *outputCurrentFlag) { return noErr; }
-pascal VideoDigitizerError ECVGetActiveSrcRect(ECVCStorage *storage, short inputStd, Rect *activeSrcRect) { return noErr; }
-pascal VideoDigitizerError ECVGetMaxSrcRect(ECVCStorage *storage, short inputStd, Rect *maxSrcRect) { return noErr; }
