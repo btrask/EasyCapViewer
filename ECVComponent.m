@@ -48,19 +48,8 @@ typedef struct {
 #include <QuickTime/QuickTimeComponents.k.h>
 #include <QuickTime/ComponentDispatchHelper.c>
 
-pascal ComponentResult ECVRegister(ECVCStorage *storage)
-{
-	fprintf(stderr, "ECVRegister!");
-	NSLog(@"ECVRegister...");
-	NSRunAlertPanel(@"TEST", @"ECVRegister...", @"OK", nil, nil);
-	return noErr;
-}
 pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 {
-	fprintf(stderr, "ECVOpen!");
-	NSLog(@"ECVOpen...");
-	NSRunAlertPanel(@"TEST", @"ECVOpen...", @"OK", nil, nil);
-
 	if(!storage) {
 		storage = calloc(1, sizeof(ECVCStorage));
 		NSDictionary *matchDict = nil;
@@ -92,10 +81,11 @@ pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerIn
 	info->inputCurrentFlags = info->inputCapabilityFlags;
 	info->outputCurrentFlags = info->outputCurrentFlags;
 
-	info->minDestHeight = 0;
+	ECVPixelSize const s = [storage->device captureSize];
 	info->minDestWidth = 0;
-	info->maxDestHeight = 720;
-	info->maxDestWidth = 480; // TODO: 60Hz vs 50Hz.
+	info->minDestHeight = 0;
+	info->maxDestWidth = s.width;
+	info->maxDestHeight = s.height;
 
 	return noErr;
 }
@@ -133,7 +123,7 @@ pascal VideoDigitizerError ECVGetInputName(ECVCStorage *storage, long videoInput
 		case 4: str = @"Composite 4"; break;
 		default: return qtParamErr;
 	}
-	CFStringGetPascalString((CFStringRef)str, name, numberof(name), NSUTF8StringEncoding);
+	CFStringGetPascalString((CFStringRef)str, name, 256, kCFStringEncodingUTF8);
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetInput(ECVCStorage *storage, short *input)
@@ -160,7 +150,7 @@ pascal VideoDigitizerError ECVSetInputStandard(ECVCStorage *storage, short input
 pascal VideoDigitizerError ECVGetDeviceNameAndFlags(ECVCStorage *storage, Str255 outName, UInt32 *outNameFlags)
 {
 	*outNameFlags = kNilOptions;
-	CFStringGetPascalString(CFSTR("Test Device"), outName, numberof(outName), NSUTF8StringEncoding);
+	CFStringGetPascalString(CFSTR("Test Device"), outName, 256, kCFStringEncodingUTF8);
 	// TODO: Enumerate the devices and register vdigs for each. Use vdDeviceFlagHideDevice for ourself. Not sure if this is actually necessary (?)
 	return noErr;
 }

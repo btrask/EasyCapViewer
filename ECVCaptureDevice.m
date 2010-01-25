@@ -147,7 +147,9 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 
+#ifndef ECV_DISABLE_AUDIO
 	[self setVolume:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey]];
+#endif
 
 #ifndef ECV_NO_CONTROLLERS
 	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
