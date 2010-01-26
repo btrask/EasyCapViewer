@@ -82,6 +82,7 @@ pascal ComponentResult ECVVersion(ECVCStorage *storage)
 
 pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerInfo *info)
 {
+	*info = (DigitizerInfo){};
 	info->vdigType = vdTypeBasic;
 	info->inputCapabilityFlags = digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
 	info->outputCapabilityFlags = digiOutDoes32 | digiOutDoesCompress | digiOutDoesCompressOnly | digiOutDoesNotNeedCopyOfCompressData;
@@ -169,26 +170,7 @@ pascal VideoDigitizerError ECVGetDeviceNameAndFlags(ECVCStorage *storage, Str255
 	// TODO: Enumerate the devices and register vdigs for each. Use vdDeviceFlagHideDevice for ourself. Not sure if this is actually necessary (?)
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetUniqueIDs(ECVCStorage *storage, UInt64 *outDeviceID, UInt64 * outInputID)
-{
-	*outDeviceID = 0; // TODO: Implement me.
-	short input = 0;
-	ECVGetInput(storage, &input);
-	*outInputID = input;
-	return noErr;
-}
-pascal VideoDigitizerError ECVSelectUniqueIDs(ECVCStorage *storage, const UInt64 *inDeviceID, const UInt64 *inInputID)
-{
-	// TODO: Implement me.
-	ECVSetInput(storage, (short)*inInputID);
-	return noErr;
-}
 
-pascal VideoDigitizerError ECVSetCompressionOnOff(ECVCStorage *storage, Boolean state)
-{
-	[storage->device setPlaying:!!state];
-	return noErr;
-}
 pascal VideoDigitizerError ECVGetCompressionTime(ECVCStorage *storage, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime)
 {
 	if(compressionType && k422YpCbCr8CodecType != compressionType) return noCodecErr; // TODO: Get the real type.
@@ -206,16 +188,22 @@ pascal VideoDigitizerError ECVGetCompressionTypes(ECVCStorage *storage, VDCompre
 
 	CodecType const codec = k422YpCbCr8CodecType; // TODO: Get the real type.
 	ComponentDescription cd = {compressorComponentType, codec, 0, kNilOptions, kAnyComponentFlagsMask};
-	*h[0] = (VDCompressionList){
-		FindNextComponent(NULL, &cd),
-		codec,
-		"Test Type Name",
-		"Test Name",
-		codecInfoDepth24,
-		codecInfoDoes32,
+	VDCompressionListPtr const p = *h;
+	p[0] = (VDCompressionList){
+		.codec = FindNextComponent(NULL, &cd),
+		.cType = codec,
+		.formatFlags = codecInfoDepth24,
+		.compressFlags = codecInfoDoes32,
 	};
+	CFStringGetPascalString(CFSTR("Test Type Name"), p[0].typeName, 64, kCFStringEncodingUTF8);
+	CFStringGetPascalString(CFSTR("Test Name"), p[0].name, 64, kCFStringEncodingUTF8);
 
 	HSetState((Handle)h, handleState);
+	return noErr;
+}
+pascal VideoDigitizerError ECVSetCompressionOnOff(ECVCStorage *storage, Boolean state)
+{
+	[storage->device setPlaying:!!state];
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetCompression(ECVCStorage *storage, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
@@ -226,6 +214,7 @@ pascal VideoDigitizerError ECVSetCompression(ECVCStorage *storage, OSType compre
 }
 pascal VideoDigitizerError ECVCompressOneFrameAsync(ECVCStorage *storage)
 {
+	if(![storage->device isPlaying]) return badCallOrderErr;
 	return noErr;
 }
 pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage)
@@ -235,8 +224,11 @@ pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage)
 pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, Boolean *done, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t) // TODO: done -> UInt8 *queuedFrameCount
 {
 	ECVVideoFrame *const frame = nil; // TODO: Get an appropriate frame somehow.
+	*similarity = 0;
 	if(!frame) {
 		*done = false;
+		*theData = NULL;
+		*dataSize = 0;
 		return noErr;
 	}
 	Ptr const bufferBytes = [frame bufferBytes];
@@ -244,7 +236,6 @@ pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, Boolean *done, 
 	*done = true;
 	*theData = bufferBytes;
 	*dataSize = [[frame videoStorage] bufferSize];
-	*similarity = 0;
 	//*t = ;
 	return noErr;
 }
@@ -261,16 +252,17 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 {
 	ImageDescriptionPtr const descPtr = *desc;
 	SetHandleSize((Handle)desc, sizeof(ImageDescription));
-	*descPtr = (ImageDescription){};
-	descPtr->idSize = sizeof(ImageDescription);
-	descPtr->cType = k422YpCbCr8CodecType; // TODO: Get the real type.
-	descPtr->version = 2;
-	descPtr->spatialQuality = codecLosslessQuality;
-	descPtr->hRes = Long2Fix(72);
-	descPtr->vRes = Long2Fix(72);
-	descPtr->frameCount = 1;
-	descPtr->depth = 24;
-	descPtr->clutID = -1;
+	*descPtr = (ImageDescription){
+		.idSize = sizeof(ImageDescription),
+		.cType = k422YpCbCr8CodecType, // TODO: Get the real type.
+		.version = 2,
+		.spatialQuality = codecLosslessQuality,
+		.hRes = Long2Fix(72),
+		.vRes = Long2Fix(72),
+		.frameCount = 1,
+		.depth = 24,
+		.clutID = -1,
+	};
 
 	FieldInfoImageDescriptionExtension2 const fieldInfo = {kQTFieldsInterlaced, kQTFieldDetailUnknown};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_FieldInfo, sizeof(FieldInfoImageDescriptionExtension2), &fieldInfo));
@@ -315,10 +307,22 @@ pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned sh
 	*sharpness = 0;
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetBlackLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
-pascal VideoDigitizerError ECVSetBlackLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
-pascal VideoDigitizerError ECVGetWhiteLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
-pascal VideoDigitizerError ECVSetWhiteLevelValue(ECVCStorage *storage, unsigned short *v) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVGetBlackLevelValue(ECVCStorage *storage, unsigned short *v)
+{
+	return digiUnimpErr;
+}
+pascal VideoDigitizerError ECVSetBlackLevelValue(ECVCStorage *storage, unsigned short *v)
+{
+	return digiUnimpErr;
+}
+pascal VideoDigitizerError ECVGetWhiteLevelValue(ECVCStorage *storage, unsigned short *v)
+{
+	return digiUnimpErr;
+}
+pascal VideoDigitizerError ECVSetWhiteLevelValue(ECVCStorage *storage, unsigned short *v)
+{
+	return digiUnimpErr;
+}
 pascal VideoDigitizerError ECVGetBrightness(ECVCStorage *storage, unsigned short *v)
 {
 	if(![storage->device respondsToSelector:@selector(brightness)]) return digiUnimpErr;
@@ -367,18 +371,30 @@ pascal VideoDigitizerError ECVSetContrast(ECVCStorage *storage, unsigned short *
 	[storage->device setContrast:(CGFloat)*v / DEFAULT_MAX];
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetSharpness(ECVCStorage *storage, unsigned short *sharpness) { return digiUnimpErr; }
-pascal VideoDigitizerError ECVSetSharpness(ECVCStorage *storage, unsigned short *sharpness) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVGetSharpness(ECVCStorage *storage, unsigned short *sharpness)
+{
+	return digiUnimpErr;
+}
+pascal VideoDigitizerError ECVSetSharpness(ECVCStorage *storage, unsigned short *sharpness)
+{
+	return digiUnimpErr;
+}
 
 
 
-pascal VideoDigitizerError ECVCaptureStateChanging(ECVCStorage *storage, UInt32 inStateFlags) { return noErr; }
+pascal VideoDigitizerError ECVCaptureStateChanging(ECVCStorage *storage, UInt32 inStateFlags)
+{
+	return noErr;
+}
 pascal VideoDigitizerError ECVGetPLLFilterType(ECVCStorage *storage, short *pllType)
 {
 	*pllType = 0;
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetPLLFilterType(ECVCStorage *storage, short pllType) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVSetPLLFilterType(ECVCStorage *storage, short pllType)
+{
+	return digiUnimpErr;
+}
 
 
 
@@ -390,7 +406,10 @@ pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd
 }
 pascal VideoDigitizerError ECVGetMaxSrcRect(ECVCStorage *storage, short inputStd, Rect *maxSrcRect)
 {
-	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize([storage->device captureSize])});
+	if(!storage->device) return badCallOrderErr;
+	ECVPixelSize const s = [storage->device captureSize];
+	if(!s.width || !s.height) return badCallOrderErr;
+	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize(s)});
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetActiveSrcRect(ECVCStorage *storage, short inputStd, Rect *activeSrcRect)
@@ -403,12 +422,12 @@ pascal VideoDigitizerError ECVGetDigitizerRect(ECVCStorage *storage, Rect *digit
 }
 pascal VideoDigitizerError ECVSetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect)
 {
-//	Rect activeSrcRect;
-//	if(!ECVGetActiveSrcRect(storage, ntscIn, &activeSrcRect)) return -1;
-//	if(!MacEqualRect(digitizerRect, &activeSrcRect)) return qtParamErr;
-	return noErr;
+	return digiUnimpErr;
 }
-pascal VideoDigitizerError ECVGetPreferredImageDimensions(ECVCStorage *storage, long *width, long *height) { return digiUnimpErr; }
+pascal VideoDigitizerError ECVGetPreferredImageDimensions(ECVCStorage *storage, long *width, long *height)
+{
+	return digiUnimpErr;
+}
 
 pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond)
 {
@@ -424,11 +443,29 @@ pascal VideoDigitizerError ECVSetDataRate(ECVCStorage *storage, long bytesPerSec
 	return digiUnimpErr;
 }
 
+pascal VideoDigitizerError ECVGetUniqueIDs(ECVCStorage *storage, UInt64 *outDeviceID, UInt64 * outInputID)
+{
+	return digiUnimpErr;
+}
+pascal VideoDigitizerError ECVSelectUniqueIDs(ECVCStorage *storage, const UInt64 *inDeviceID, const UInt64 *inInputID)
+{
+	return digiUnimpErr;
+}
 
 
 
+pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond)
+{
+	return digiUnimpErr;
+}
 
 
-pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime) { return digiUnimpErr; }
-pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond) { return digiUnimpErr; }
-pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t) { return noErr; }
+
+pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime)
+{
+	return digiUnimpErr;
+}
+pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t)
+{
+	return noErr;
+}
