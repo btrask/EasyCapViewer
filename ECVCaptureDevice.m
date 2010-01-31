@@ -85,7 +85,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 + (NSArray *)deviceDictionaries
 {
-	return [NSArray arrayWithContentsOfURL:[[NSBundle bundleForClass:self] URLForResource:@"ECVDevices" withExtension:@"plist"]];
+	return [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:self] pathForResource:@"ECVDevices" ofType:@"plist"]];
 }
 + (Class)getMatchingDictionary:(out NSDictionary **)outDict forDeviceDictionary:(NSDictionary *)deviceDict
 {
