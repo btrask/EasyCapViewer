@@ -65,7 +65,7 @@ int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 		0x04a,0x000,0x002,0x000,0x000,0x00e,0x046,0x014,0x000,
 		0x012,0x02d,0x001,0x000,0x000,0x080,0x010,0x00f,
 	};
-	int i = 0;
+	unsigned i = 0;
 	for(; i < numberof(values); i++) usb_stk11xx_write_registry(dev, ids[i], values[i]);
 	usb_stk11xx_read_registry(dev, 0x0100, NULL);
 	usb_stk11xx_write_registry(dev, 0x0100, 0x0033);
