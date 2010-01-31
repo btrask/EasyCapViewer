@@ -127,7 +127,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	dev_stk0408_initialize_device(self);
 	if(![_SAA711XChip initializeRegisters]) return NO;
-	dev_stk0408_write0(self, 0x93, 1 << 7 | [self videoSource] << 3); // Guess.
+	if([self videoSource] != ECVSTK1160SVideoInput) dev_stk0408_write0(self, 0x93, 1 << 7 | ([self videoSource] - 1) << 3); // Guess.
 	dev_stk0408_init_camera(self);
 	dev_stk0408_set_resolution(self);
 	dev_stk11xx_camera_on(self);
