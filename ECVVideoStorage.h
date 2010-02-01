@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 
+- (NSUInteger)numberOfCompletedFrames;
 - (ECVVideoFrame *)newestCompletedFrame;
 - (ECVVideoFrame *)oldestFrame;
 

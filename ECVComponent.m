@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 typedef struct {
 	ECVCaptureDevice *device;
 	CFMutableDictionaryRef frameByBuffer;
+	TimeBase timeBase;
 } ECVCStorage;
 
 #define VD_BASENAME() ECV
@@ -87,6 +88,9 @@ pascal ComponentResult ECVVersion(ECVCStorage *storage)
 pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerInfo *info)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	ECVPixelSize const s = [storage->device captureSize];
+	[pool release];
+
 	*info = (DigitizerInfo){};
 	info->vdigType = vdTypeBasic;
 	info->inputCapabilityFlags = digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
@@ -94,12 +98,10 @@ pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerIn
 	info->inputCurrentFlags = info->inputCapabilityFlags;
 	info->outputCurrentFlags = info->outputCurrentFlags;
 
-	ECVPixelSize const s = [storage->device captureSize];
 	info->minDestWidth = 0;
 	info->minDestHeight = 0;
 	info->maxDestWidth = s.width;
 	info->maxDestHeight = s.height;
-	[pool release];
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputCurrentFlag, long *outputCurrentFlag)
@@ -228,23 +230,23 @@ pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage)
 {
 	return noErr;
 }
-pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, Boolean *done, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t) // TODO: done -> UInt8 *queuedFrameCount
+pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, UInt8 *queuedFrameCount, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVVideoFrame *const frame = [[storage->device videoStorage] oldestFrame];
-	*similarity = 0;
+	ECVVideoStorage *const vs = [storage->device videoStorage];
+	ECVVideoFrame *const frame = [vs oldestFrame];
+	*queuedFrameCount = (UInt8)[vs numberOfCompletedFrames];
 	if(frame) {
 		Ptr const bufferBytes = [frame bufferBytes];
 		CFDictionaryAddValue(storage->frameByBuffer, bufferBytes, frame);
-		*done = true;
 		*theData = bufferBytes;
 		*dataSize = [[frame videoStorage] bufferSize];
-		//*t = ;
+		GetTimeBaseTime(storage->timeBase, [storage->device frameRate].timeScale, t);
 	} else {
-		*done = false;
 		*theData = NULL;
 		*dataSize = 0;
 	}
+	*similarity = 0;
 	[pool release];
 	return noErr;
 }
@@ -254,7 +256,6 @@ pascal VideoDigitizerError ECVReleaseCompressBuffer(ECVCStorage *storage, Ptr bu
 	ECVVideoFrame *const frame = (ECVVideoFrame *)CFDictionaryGetValue(storage->frameByBuffer, bufferAddr);
 	NSCAssert(frame, @"Invalid buffer address.");
 	[frame removeFromStorage];
-	[frame release];
 	CFDictionaryRemoveValue(storage->frameByBuffer, bufferAddr);
 	[pool release];
 	return noErr;
@@ -298,12 +299,6 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 	};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_NCLCColorInfo, sizeof(NCLCColorInfoImageDescriptionExtension), &colorInfo));
 
-	return noErr;
-}
-
-pascal VideoDigitizerError ECVGetPreferredTimeScale(ECVCStorage *storage, TimeScale *preferred)
-{
-	*preferred = [storage->device frameRate].timeScale;
 	return noErr;
 }
 
@@ -470,6 +465,16 @@ pascal VideoDigitizerError ECVSelectUniqueIDs(ECVCStorage *storage, const UInt64
 
 
 
+pascal VideoDigitizerError ECVGetPreferredTimeScale(ECVCStorage *storage, TimeScale *preferred)
+{
+	*preferred = [storage->device frameRate].timeScale;
+	return noErr;
+}
+pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t)
+{
+	storage->timeBase = t;
+	return noErr;
+}
 pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond)
 {
 	return digiUnimpErr;
@@ -480,8 +485,4 @@ pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPer
 pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime)
 {
 	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t)
-{
-	return noErr;
 }

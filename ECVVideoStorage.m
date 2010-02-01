@@ -54,6 +54,7 @@ enum {
 
 @interface ECVVideoStorage(Private)
 
+- (NSUInteger)_newestCompletedFrameIndex;
 - (BOOL)_removeFrame:(ECVVideoFrame *)frame;
 
 @end
@@ -134,9 +135,16 @@ enum {
 
 #pragma mark -
 
+- (NSUInteger)numberOfCompletedFrames
+{
+	[_lock lock];
+	NSUInteger const count = [_frames count];
+	[_lock unlock];
+	return SUB_ZERO(count, [self _newestCompletedFrameIndex] + 1);
+}
 - (ECVVideoFrame *)newestCompletedFrame
 {
-	NSUInteger const i = ECVBlur == [self deinterlacingMode] ? ECVGuaranteedCompletedFrame2Index : ECVPotentiallyCompletedFrameIndex;
+	NSUInteger const i = [self _newestCompletedFrameIndex];
 	[_lock lock];
 	ECVVideoFrame *const frame = i < [_frames count] ? [[[_frames objectAtIndex:i] retain] autorelease] : nil;
 	[_lock unlock];
@@ -181,6 +189,10 @@ enum {
 
 #pragma mark -ECVVideoStorage(Private)
 
+- (NSUInteger)_newestCompletedFrameIndex
+{
+	return ECVBlur == [self deinterlacingMode] ? ECVGuaranteedCompletedFrame2Index : ECVPotentiallyCompletedFrameIndex;
+}
 - (BOOL)_removeFrame:(ECVVideoFrame *)frame
 {
 	if(!frame) return NO;
