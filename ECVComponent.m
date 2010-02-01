@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 typedef struct {
 	ECVCaptureDevice *device;
-	NSMapTable *bufferMap;
+	CFMutableDictionaryRef frameByBuffer;
 } ECVCStorage;
 
 #define VD_BASENAME() ECV
@@ -57,22 +57,26 @@ pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 {
 	if(CountComponentInstances((Component)self) > 1) return -1;
 	if(!storage) {
+		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 		storage = calloc(1, sizeof(ECVCStorage));
 		NSDictionary *matchDict = nil;
 		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:[[ECVCaptureDevice deviceDictionaries] lastObject]];
 		storage->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchDict retain]) error:NULL];
 		[storage->device setDeinterlacingMode:ECVLineDoubleLQ];
-		storage->bufferMap = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsOpaqueMemory valueOptions:NSPointerFunctionsObjectPersonality capacity:0];
+		storage->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(self, (Handle)storage);
+		[pool release];
 	}
 	return noErr;
 }
 pascal ComponentResult ECVClose(ECVCStorage *storage, ComponentInstance self)
 {
 	if(!storage) return noErr;
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[storage->device release];
-	[storage->bufferMap release];
+	CFRelease(storage->frameByBuffer);
 	free(storage);
+	[pool release];
 	return noErr;
 }
 pascal ComponentResult ECVVersion(ECVCStorage *storage)
@@ -82,6 +86,7 @@ pascal ComponentResult ECVVersion(ECVCStorage *storage)
 
 pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerInfo *info)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*info = (DigitizerInfo){};
 	info->vdigType = vdTypeBasic;
 	info->inputCapabilityFlags = digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
@@ -94,7 +99,7 @@ pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerIn
 	info->minDestHeight = 0;
 	info->maxDestWidth = s.width;
 	info->maxDestHeight = s.height;
-
+	[pool release];
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputCurrentFlag, long *outputCurrentFlag)
@@ -203,7 +208,9 @@ pascal VideoDigitizerError ECVGetCompressionTypes(ECVCStorage *storage, VDCompre
 }
 pascal VideoDigitizerError ECVSetCompressionOnOff(ECVCStorage *storage, Boolean state)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[storage->device setPlaying:!!state];
+	[pool release];
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetCompression(ECVCStorage *storage, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
@@ -223,28 +230,33 @@ pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage)
 }
 pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, Boolean *done, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t) // TODO: done -> UInt8 *queuedFrameCount
 {
-	ECVVideoFrame *const frame = nil; // TODO: Get an appropriate frame somehow.
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	ECVVideoFrame *const frame = [[storage->device videoStorage] oldestFrame];
 	*similarity = 0;
-	if(!frame) {
+	if(frame) {
+		Ptr const bufferBytes = [frame bufferBytes];
+		CFDictionaryAddValue(storage->frameByBuffer, bufferBytes, frame);
+		*done = true;
+		*theData = bufferBytes;
+		*dataSize = [[frame videoStorage] bufferSize];
+		//*t = ;
+	} else {
 		*done = false;
 		*theData = NULL;
 		*dataSize = 0;
-		return noErr;
 	}
-	Ptr const bufferBytes = [frame bufferBytes];
-	NSMapInsert(storage->bufferMap, bufferBytes, frame);
-	*done = true;
-	*theData = bufferBytes;
-	*dataSize = [[frame videoStorage] bufferSize];
-	//*t = ;
+	[pool release];
 	return noErr;
 }
 pascal VideoDigitizerError ECVReleaseCompressBuffer(ECVCStorage *storage, Ptr bufferAddr)
 {
-	ECVVideoFrame *const frame = NSMapGet(storage->bufferMap, bufferAddr);
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	ECVVideoFrame *const frame = (ECVVideoFrame *)CFDictionaryGetValue(storage->frameByBuffer, bufferAddr);
 	NSCAssert(frame, @"Invalid buffer address.");
+	[frame removeFromStorage];
 	[frame release];
-	NSMapRemove(storage->bufferMap, bufferAddr);
+	CFDictionaryRemoveValue(storage->frameByBuffer, bufferAddr);
+	[pool release];
 	return noErr;
 }
 
@@ -407,7 +419,9 @@ pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd
 pascal VideoDigitizerError ECVGetMaxSrcRect(ECVCStorage *storage, short inputStd, Rect *maxSrcRect)
 {
 	if(!storage->device) return badCallOrderErr;
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVPixelSize const s = [storage->device captureSize];
+	[pool release];
 	if(!s.width || !s.height) return badCallOrderErr;
 	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize(s)});
 	return noErr;
@@ -435,7 +449,9 @@ pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPe
 	NSTimeInterval frameRate = 1.0f / 60.0f;
 	if(QTGetTimeInterval([storage->device frameRate], &frameRate)) *framesPerSecond = X2Fix(frameRate);
 	else *framesPerSecond = 0;
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*bytesPerSecond = (1.0f / frameRate) * [[storage->device videoStorage] bufferSize];
+	[pool release];
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetDataRate(ECVCStorage *storage, long bytesPerSecond)

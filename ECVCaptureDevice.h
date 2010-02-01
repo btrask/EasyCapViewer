@@ -61,8 +61,10 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 >
 {
 	@private
+#ifndef ECV_NO_CONTROLLERS
 	ECVReadWriteLock *_windowControllersLock;
 	NSMutableArray *_windowControllers2;
+#endif
 
 	io_service_t _service;
 	NSString *_productName;

@@ -41,7 +41,6 @@ enum {
 }
 
 - (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index;
-- (void)removeFromStorage;
 
 @end
 
@@ -50,6 +49,12 @@ enum {
 	@private
 	void *_bufferBytes;
 }
+
+@end
+
+@interface ECVVideoStorage(Private)
+
+- (BOOL)_removeFrame:(ECVVideoFrame *)frame;
 
 @end
 
@@ -144,22 +149,6 @@ enum {
 	[_lock unlock];
 	return frame;
 }
-- (BOOL)removeFrame:(ECVVideoFrame *)frame
-{
-	if(!frame) return NO;
-	[_lock lock];
-	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
-	BOOL drop = NSNotFound != i && i >= ECVUndroppableFrameCount;
-	if(drop) {
-		[[frame retain] autorelease];
-		[_frames removeObjectAtIndex:i];
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
-		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
-#endif
-	}
-	[_lock unlock];
-	return drop;
-}
 
 #pragma mark -
 
@@ -190,6 +179,25 @@ enum {
 	return drop;
 }
 
+#pragma mark -ECVVideoStorage(Private)
+
+- (BOOL)_removeFrame:(ECVVideoFrame *)frame
+{
+	if(!frame) return NO;
+	[_lock lock];
+	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
+	BOOL drop = NSNotFound != i && i >= ECVUndroppableFrameCount;
+	if(drop) {
+		[[frame retain] autorelease];
+		[_frames removeObjectAtIndex:i];
+#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
+#endif
+	}
+	[_lock unlock];
+	return drop;
+}
+
 #pragma mark -NSObject
 
 - (void)dealloc
@@ -217,19 +225,16 @@ enum {
 	}
 	return self;
 }
-- (void)removeFromStorage
-{
-	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
-	if(![_lock tryWriteLock]) return;
-	if([[self videoStorage] removeFrame:self]) _bufferIndex = NSNotFound;
-	[_lock unlock];
-}
 
 #pragma mark -ECVVideoFrame(ECVAbstract)
 
 - (void *)bufferBytes
 {
+#ifdef ECV_DEPENDENT_VIDEO_STORAGE
 	return [[self videoStorage] bufferBytesAtIndex:_bufferIndex];
+#else
+	return NULL;
+#endif
 }
 - (BOOL)hasBuffer
 {
@@ -241,6 +246,13 @@ enum {
 	if([self hasBuffer]) return YES;
 	[self unlock];
 	return NO;
+}
+- (void)removeFromStorage
+{
+	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
+	if(![_lock tryWriteLock]) return;
+	if([[self videoStorage] _removeFrame:self]) _bufferIndex = NSNotFound;
+	[_lock unlock];
 }
 
 #pragma mark -ECVVideoFrame(ECVDependentVideoFrame)
@@ -296,6 +308,10 @@ enum {
 - (BOOL)lockIfHasBuffer
 {
 	return YES;
+}
+- (void)removeFromStorage
+{
+	(void)[[self videoStorage] _removeFrame:self];
 }
 
 #pragma mark -NSObject

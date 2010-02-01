@@ -62,7 +62,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVVideoFrame *)newestCompletedFrame;
 - (ECVVideoFrame *)oldestFrame;
-- (BOOL)removeFrame:(ECVVideoFrame *)frame;
 
 #ifdef ECV_DEPENDENT_VIDEO_STORAGE
 @property(readonly) NSUInteger numberOfBuffers;

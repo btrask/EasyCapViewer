@@ -136,8 +136,10 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	}
 	if(!(self = [super init])) return nil;
 
+#ifndef ECV_NO_CONTROLLERS
 	_windowControllersLock = [[ECVReadWriteLock alloc] init];
 	_windowControllers2 = [[NSMutableArray alloc] init];
+#endif
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 
@@ -482,11 +484,13 @@ bail:
 		[_lastCompletedFrame blurWithFrame:_pendingFrame];
 		frameToDraw = _lastCompletedFrame;
 	}
+#ifndef ECV_NO_CONTROLLERS
 	if(frameToDraw) {
 		[_windowControllersLock readLock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 		[_windowControllersLock unlock];
 	}
+#endif
 
 	if(_pendingFrame) {
 		[_lastCompletedFrame release];
@@ -551,27 +555,28 @@ ECVNoDeviceError:
 {
 	[_videoStorage autorelease];
 	_videoStorage = [storage retain];
-#ifndef ECV_NO_CONTROLLERS
-	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
-#endif
 #ifndef ECV_DISABLE_AUDIO
 	(void)[self startAudio];
 #endif
+#ifndef ECV_NO_CONTROLLERS
+	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
 	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
+#endif
 }
 - (void)_stopPlaying
 {
+#ifndef ECV_NO_CONTROLLERS
 	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
+	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
+#endif
 #ifndef ECV_DISABLE_AUDIO
 	[self stopAudio];
-#endif
-#ifndef ECV_NO_CONTROLLERS
-	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
 #endif
 }
 
 #pragma mark -NSDocument
 
+#ifndef ECV_NO_CONTROLLERS
 - (void)addWindowController:(NSWindowController *)windowController
 {
 	[super addWindowController:windowController];
@@ -586,6 +591,7 @@ ECVNoDeviceError:
 	[_windowControllers2 removeObjectIdenticalTo:windowController];
 	[_windowControllersLock unlock];
 }
+#endif
 
 #pragma mark -
 
@@ -619,8 +625,10 @@ ECVNoDeviceError:
 	if(_deviceInterface) (*_deviceInterface)->Release(_deviceInterface);
 	if(_interfaceInterface) (*_interfaceInterface)->Release(_interfaceInterface);
 
+#ifndef ECV_NO_CONTROLLERS
 	[_windowControllersLock release];
 	[_windowControllers2 release];
+#endif
 	IOObjectRelease(_service);
 	[_productName release];
 	IOObjectRelease(_deviceRemovedNotification);
