@@ -25,10 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QuartzCore/QuartzCore.h>
 
 // Models
-@class ECVDependentVideoStorage;
+@class ECVVideoStorage;
 @class ECVVideoFrame;
 
 @protocol ECVVideoViewCell, ECVVideoViewDelegate;
+
+#ifndef ECV_DEPENDENT_VIDEO_STORAGE
+#error "ECVVideoView requires dependent storage."
+#endif
 
 @interface ECVVideoView : NSOpenGLView <NSWindowDelegate>
 {
@@ -37,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSRect _outputRect;
 
 	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
-	ECVDependentVideoStorage *_videoStorage;
+	ECVVideoStorage *_videoStorage;
 	NSSize _aspectRatio;
 	NSRect _cropRect;
 	BOOL _vsync;
@@ -56,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(retain) ECVDependentVideoStorage *videoStorage;
+@property(retain) ECVVideoStorage *videoStorage;
 @property(assign) NSSize aspectRatio;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL vsync;

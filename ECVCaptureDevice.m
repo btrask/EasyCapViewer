@@ -27,13 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <mach/mach_time.h>
 
 // Models
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
-	#import "ECVDependentVideoStorage.h"
-	#define ECV_VIDEO_STORAGE_CLASS ECVDependentVideoStorage
-#else
-	#import "ECVVideoStorage.h"
-	#define ECV_VIDEO_STORAGE_CLASS ECVVideoStorage
-#endif
+#import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 
 // Controllers
@@ -421,7 +415,7 @@ ECVNoDeviceError:
 
 	_firstFrame = YES;
 
-	ECVVideoStorage *const storage = [[[ECV_VIDEO_STORAGE_CLASS alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
+	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
 	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
 
 	while([_playLock condition] == ECVPlaying) {

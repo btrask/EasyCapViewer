@@ -24,7 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
-@class ECVVideoFrame;
+#import "ECVVideoFrame.h"
 
 @interface ECVVideoStorage : NSObject
 {
@@ -35,6 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
+
+	NSRecursiveLock *_lock;
+	NSMutableArray *_frames;
+#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+	NSMutableIndexSet *_unusedBufferIndexes;
+
+	NSUInteger _numberOfBuffers;
+	NSMutableData *_allBufferData;
+#endif
 }
 
 - (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
@@ -51,7 +60,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 
+- (ECVVideoFrame *)newestCompletedFrame;
+- (ECVVideoFrame *)oldestFrame;
+- (BOOL)removeFrame:(ECVVideoFrame *)frame;
+
+#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+@property(readonly) NSUInteger numberOfBuffers;
+@property(readonly) void *allBufferBytes;
+- (void *)bufferBytesAtIndex:(NSUInteger)index;
+#endif
+
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
 
 @end
+
+#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+@interface ECVVideoFrame(ECVDependentVideoFrame)
+
+@property(readonly) NSUInteger bufferIndex;
+
+@end
+#endif

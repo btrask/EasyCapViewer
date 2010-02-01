@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
+@class ECVVideoStorage;
 @class ECVVideoFrame;
 
 // Controllers
@@ -72,7 +73,7 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 	UInt32 _frameTime;
 
 	ECVDeinterlacingMode _deinterlacingMode;
-	id _videoStorage;
+	ECVVideoStorage *_videoStorage;
 	NSConditionLock *_playLock;
 	BOOL _firstFrame;
 	ECVVideoFrame *_pendingFrame;
@@ -99,7 +100,7 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 - (void)togglePlaying;
 
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
-@property(readonly) id videoStorage;
+@property(readonly) ECVVideoStorage *videoStorage;
 - (void)threaded_readIsochPipeAsync;
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length;
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType;

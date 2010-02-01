@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glu.h>
 
 // Models
-#import "ECVDependentVideoStorage.h"
+#import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 
 // Other Sources
@@ -95,11 +95,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 #pragma mark -
 
 @synthesize delegate;
-- (ECVDependentVideoStorage *)videoStorage
+- (ECVVideoStorage *)videoStorage
 {
 	return [[_videoStorage retain] autorelease];
 }
-- (void)setVideoStorage:(ECVDependentVideoStorage *)storage
+- (void)setVideoStorage:(ECVVideoStorage *)storage
 {
 	if(storage == _videoStorage) return;
 	NSOpenGLContext *const context = [self openGLContext];
@@ -234,7 +234,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		frame = nil;
 	}
 	if(!frame) {
-		frame = [_videoStorage lastCompletedFrame];
+		frame = [_videoStorage newestCompletedFrame];
 		if(![frame lockIfHasBuffer]) frame = nil;
 	}
 
@@ -369,7 +369,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLLockContext(contextObj);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	ECVVideoFrame *frame = [_videoStorage lastCompletedFrame];
+	ECVVideoFrame *frame = [_videoStorage newestCompletedFrame];
 	if(![frame lockIfHasBuffer]) frame = nil;
 	[self _drawFrame:frame];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];

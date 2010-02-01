@@ -33,14 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	ECVFieldType _fieldType;
-	id _videoStorage;
+	ECVVideoStorage *_videoStorage;
 	NSRange _byteRange;
 }
 
 - (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage;
 
 @property(readonly) ECVFieldType fieldType;
-@property(readonly) id videoStorage;
+@property(readonly) ECVVideoStorage *videoStorage;
 
 - (void)clearRange:(NSRange)range resetLength:(BOOL)flag;
 - (void)clear;

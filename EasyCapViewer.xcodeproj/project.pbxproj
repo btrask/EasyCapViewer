@@ -26,7 +26,6 @@
 		0E4D780011062C6600FE3DDC /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
 		0E4D780111062C6900FE3DDC /* SAA711XChip.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E16F6AD10AE92C600730A18 /* SAA711XChip.m */; };
 		0E4D783D1106772000FE3DDC /* ECVCaptureDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */; };
-		0E4D78411107856600FE3DDC /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E4D78401107856600FE3DDC /* ECVDependentVideoStorage.m */; };
 		0E78C93E0FC8F98100E9C148 /* ECVCaptureController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */; };
 		0E78C9F30FC8FA1000E9C148 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E78C9F20FC8FA1000E9C148 /* IOKit.framework */; };
 		0E78CA4F0FC9128000E9C148 /* ECVController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CA4E0FC9128000E9C148 /* ECVController.m */; };
@@ -116,8 +115,6 @@
 		0E4D76AF11044B1000FE3DDC /* EasyCapViewer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EasyCapViewer-Info.plist"; sourceTree = "<group>"; };
 		0E4D76CA110454C000FE3DDC /* ECVComponent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVComponent.m; sourceTree = "<group>"; };
 		0E4D778611046F9E00FE3DDC /* EasyCapViewer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EasyCapViewer.m; sourceTree = "<group>"; };
-		0E4D783F1107856600FE3DDC /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
-		0E4D78401107856600FE3DDC /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		0E78C93C0FC8F98100E9C148 /* ECVCaptureController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVCaptureController.h; sourceTree = "<group>"; };
 		0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCaptureController.m; sourceTree = "<group>"; };
 		0E78C9F20FC8FA1000E9C148 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
@@ -255,8 +252,6 @@
 				0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */,
 				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
 				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
-				0E4D783F1107856600FE3DDC /* ECVDependentVideoStorage.h */,
-				0E4D78401107856600FE3DDC /* ECVDependentVideoStorage.m */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
 			);
@@ -588,7 +583,6 @@
 				0E9F9B1D10F6753C00935C48 /* ECVLocalizing.m in Sources */,
 				0E9F9B2210F6764500935C48 /* ECVFoundationAdditions.m in Sources */,
 				0E4D778711046F9E00FE3DDC /* EasyCapViewer.m in Sources */,
-				0E4D78411107856600FE3DDC /* ECVDependentVideoStorage.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
