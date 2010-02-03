@@ -62,8 +62,11 @@ enum {
 
 @interface ECVCaptureDevice(Private)
 
-- (void)_startPlayingWithStorage:(ECVVideoStorage *)storage;
-- (void)_stopPlaying;
+- (void)_setVideoStorage:(ECVVideoStorage *)storage;
+#ifndef ECV_NO_CONTROLLERS
+- (void)_startPlayingForControllers;
+- (void)_stopPlayingForControllers;
+#endif
 
 @end
 
@@ -418,7 +421,13 @@ ECVNoDeviceError:
 	_firstFrame = YES;
 
 	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
-	[self performSelectorOnMainThread:@selector(_startPlayingWithStorage:) withObject:storage waitUntilDone:YES];
+	[self performSelectorOnMainThread:@selector(_setVideoStorage:) withObject:storage waitUntilDone:YES];
+#ifndef ECV_DISABLE_AUDIO
+	[self performSelectorOnMainThread:@selector(startAudio) withObject:nil waitUntilDone:YES];
+#endif
+#ifndef ECV_NO_CONTROLLERS
+	[self performSelectorOnMainThread:@selector(_startPlayingForControllers) withObject:nil waitUntilDone:YES];
+#endif
 
 	while([_playLock condition] == ECVPlaying) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
@@ -449,7 +458,12 @@ ECVNoDeviceError:
 	[self threaded_pause];
 ECVGenericError:
 ECVNoDeviceError:
-	[self performSelectorOnMainThread:@selector(_stopPlaying) withObject:nil waitUntilDone:NO];
+#ifndef ECV_NO_CONTROLLERS
+	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
+#endif
+#ifndef ECV_DISABLE_AUDIO
+	[self performSelectorOnMainThread:@selector(stopAudio) withObject:nil waitUntilDone:NO];
+#endif
 
 	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);
 	if(fullFrameList) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameList);
@@ -551,28 +565,23 @@ ECVNoDeviceError:
 
 #pragma mark -ECVCaptureDevice(Private)
 
-- (void)_startPlayingWithStorage:(ECVVideoStorage *)storage
+- (void)_setVideoStorage:(ECVVideoStorage *)storage
 {
 	[_videoStorage autorelease];
 	_videoStorage = [storage retain];
-#ifndef ECV_DISABLE_AUDIO
-	(void)[self startAudio];
-#endif
+}
 #ifndef ECV_NO_CONTROLLERS
+- (void)_startPlayingForControllers
+{
 	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
 	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
-#endif
 }
-- (void)_stopPlaying
+- (void)_stopPlayingForControllers
 {
-#ifndef ECV_NO_CONTROLLERS
 	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
 	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
-#endif
-#ifndef ECV_DISABLE_AUDIO
-	[self stopAudio];
-#endif
 }
+#endif
 
 #pragma mark -NSDocument
 
