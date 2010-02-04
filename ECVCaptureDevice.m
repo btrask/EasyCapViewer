@@ -60,6 +60,11 @@ enum {
 	ECVStopPlaying
 }; // _playLock
 
+static NSTimeInterval ECVUptime(void)
+{
+	return (NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(UpTime())) * 1e-9f;
+}
+
 @interface ECVCaptureDevice(Private)
 
 - (void)_setVideoStorage:(ECVVideoStorage *)storage;
@@ -329,7 +334,7 @@ ECVNoDeviceError:
 {
 	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
 
-	NSTimeInterval const timeSinceLastStop = [NSDate timeIntervalSinceReferenceDate] - _audioStopTime;
+	NSTimeInterval const timeSinceLastStop = ECVUptime() - _audioStopTime;
 	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
 
 	ECVAudioDevice *const input = [self audioInput];
@@ -372,7 +377,7 @@ ECVNoDeviceError:
 	[output setDelegate:nil];
 	[_audioPreviewingPipe release];
 	_audioPreviewingPipe = nil;
-	_audioStopTime = [NSDate timeIntervalSinceReferenceDate];
+	_audioStopTime = ECVUptime();
 }
 #endif
 
