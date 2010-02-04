@@ -23,11 +23,12 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #ifndef ECV_DISABLE_AUDIO
-#import <AudioToolbox/AudioToolbox.h>
+	#import <AudioToolbox/AudioToolbox.h>
 #endif
 #import <IOKit/usb/IOUSBLib.h>
 #import <mach/mach_port.h>
 #import <Foundation/NSDebug.h>
+#import <string.h>
 
 // Controllers
 #import "ECVErrorLogController.h"
@@ -128,7 +129,6 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(invalidSpriteIDErr)
 
 #ifndef ECV_DISABLE_AUDIO
-		// AudioConverter:
 		ERROR_CASE(kAudioConverterErr_FormatNotSupported)
 		ERROR_CASE(kAudioConverterErr_OperationNotSupported)
 		ERROR_CASE(kAudioConverterErr_PropertyNotSupported)
@@ -266,39 +266,5 @@ NSString *ECVOpenGLErrorToString(GLenum error)
 }
 NSString *ECVErrnoToString(int error)
 {
-	switch(error) {
-		ERROR_CASE(EPERM)
-		ERROR_CASE(ENOENT)
-		ERROR_CASE(ESRCH)
-		ERROR_CASE(EINTR)
-		ERROR_CASE(EIO)
-		ERROR_CASE(ENXIO)
-		ERROR_CASE(E2BIG)
-		ERROR_CASE(ENOEXEC)
-		ERROR_CASE(EBADF)
-		ERROR_CASE(ECHILD)
-		ERROR_CASE(EDEADLK)
-		ERROR_CASE(ENOMEM)
-		ERROR_CASE(EACCES)
-		ERROR_CASE(EFAULT)
-		ERROR_CASE(ENOTBLK)
-		ERROR_CASE(EBUSY)
-		ERROR_CASE(EEXIST)
-		ERROR_CASE(EXDEV)
-		ERROR_CASE(ENODEV)
-		ERROR_CASE(ENOTDIR)
-		ERROR_CASE(EISDIR)
-		ERROR_CASE(EINVAL)
-		ERROR_CASE(ENFILE)
-		ERROR_CASE(EMFILE)
-		ERROR_CASE(ENOTTY)
-		ERROR_CASE(ETXTBSY)
-		ERROR_CASE(EFBIG)
-		ERROR_CASE(ENOSPC)
-		ERROR_CASE(ESPIPE)
-		ERROR_CASE(EROFS)
-		ERROR_CASE(EMLINK)
-		ERROR_CASE(EPIPE)
-	}
-	return [NSString stringWithFormat:@"Unknown errno %d", error];
+	return [NSString stringWithFormat:@"%s", strerror(error)];
 }
