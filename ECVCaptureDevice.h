@@ -103,7 +103,8 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
 @property(readonly) ECVVideoStorage *videoStorage;
-- (void)threaded_readIsochPipeAsync;
+- (void)startPlaying;
+- (void)threadMain_play;
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length;
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType;
 

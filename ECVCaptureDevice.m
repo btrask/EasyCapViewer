@@ -67,7 +67,6 @@ static NSTimeInterval ECVUptime(void)
 
 @interface ECVCaptureDevice(Private)
 
-- (void)_setVideoStorage:(ECVVideoStorage *)storage;
 #ifndef ECV_NO_CONTROLLERS
 - (void)_startPlayingForControllers;
 - (void)_stopPlayingForControllers;
@@ -250,10 +249,8 @@ ECVNoDeviceError:
 {
 	[_playLock lock];
 	if(flag) {
-		if(![self isPlaying]) {
-			[_playLock unlockWithCondition:ECVStartPlaying];
-			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
-		} else [_playLock unlock];
+		if(![self isPlaying]) [self startPlaying];
+		else [_playLock unlock];
 	} else {
 		if([self isPlaying]) {
 			[_playLock unlockWithCondition:ECVStopPlaying];
@@ -268,8 +265,7 @@ ECVNoDeviceError:
 	switch([_playLock condition]) {
 		case ECVNotPlaying:
 		case ECVStopPlaying:
-			[_playLock unlockWithCondition:ECVStartPlaying];
-			[NSThread detachNewThreadSelector:@selector(threaded_readIsochPipeAsync) toTarget:self withObject:nil];
+			[self startPlaying];
 			break;
 		case ECVStartPlaying:
 		case ECVPlaying:
@@ -383,7 +379,15 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-- (void)threaded_readIsochPipeAsync
+- (void)startPlaying
+{
+	_firstFrame = YES;
+	[_videoStorage release];
+	_videoStorage = [[ECVVideoStorage alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
+	[_playLock unlockWithCondition:ECVStartPlaying];
+	[NSThread detachNewThreadSelector:@selector(threadMain_play) toTarget:self withObject:nil];
+}
+- (void)threadMain_play
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 
@@ -423,10 +427,6 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored));
 	currentFrame += 10;
 
-	_firstFrame = YES;
-
-	ECVVideoStorage *const storage = [[[ECVVideoStorage alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]] autorelease]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
-	[self performSelectorOnMainThread:@selector(_setVideoStorage:) withObject:storage waitUntilDone:YES];
 #ifndef ECV_DISABLE_AUDIO
 	[self performSelectorOnMainThread:@selector(startAudio) withObject:nil waitUntilDone:YES];
 #endif
@@ -570,11 +570,6 @@ ECVNoDeviceError:
 
 #pragma mark -ECVCaptureDevice(Private)
 
-- (void)_setVideoStorage:(ECVVideoStorage *)storage
-{
-	[_videoStorage autorelease];
-	_videoStorage = [storage retain];
-}
 #ifndef ECV_NO_CONTROLLERS
 - (void)_startPlayingForControllers
 {
