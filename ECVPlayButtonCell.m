@@ -45,10 +45,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[[NSColor colorWithCalibratedWhite:0.5f alpha:0.67f] set];
 	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
 
-	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
-	[shadow setShadowBlurRadius:4.0f];
-	[shadow setShadowOffset:NSMakeSize(0.0f, -2.0f)];
-	[shadow set];
+	NSShadow *const s = [[[NSShadow alloc] init] autorelease];
+	[s setShadowBlurRadius:4.0f];
+	[s setShadowOffset:NSMakeSize(0.0f, -2.0f)];
+	[s set];
 	[[NSColor whiteColor] set];
 
 	NSBezierPath *const iconPath = [NSBezierPath bezierPath];

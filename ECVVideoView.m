@@ -210,10 +210,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -ECVVideoView(Private)
 
-- (GLuint)_textureNameAtIndex:(NSUInteger)index
+- (GLuint)_textureNameAtIndex:(NSUInteger)i
 {
-	if(NSNotFound == index) return 0;
-	return ((GLuint *)[_textureNames mutableBytes])[index];
+	if(NSNotFound == i) return 0;
+	return ((GLuint *)[_textureNames mutableBytes])[i];
 }
 
 #pragma mark -

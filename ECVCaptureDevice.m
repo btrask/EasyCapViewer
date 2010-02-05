@@ -407,12 +407,12 @@ ECVNoDeviceError:
 
 	NSUInteger const simultaneousTransfers = [self simultaneousTransfers];
 	NSUInteger const microframesPerTransfer = [self microframesPerTransfer];
-	UInt8 const pipe = [self isochReadingPipe];
+	UInt8 const pipeIndex = [self isochReadingPipe];
 	NSUInteger i;
 
 	UInt16 frameRequestSize = 0;
 	UInt8 ignored1 = 0, ignored2 = 0, ignored3 = 0 , ignored4 = 0;
-	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipe, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4));
+	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4));
 	NSParameterAssert(frameRequestSize);
 
 	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyReadBuffer));
@@ -454,7 +454,7 @@ ECVNoDeviceError:
 				[self threaded_readImageBytes:frameData + i * frameRequestSize length:(size_t)frameList[i].frActCount];
 				frameList[i].frStatus = kUSBLowLatencyIsochTransferKey;
 			}
-			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipe, frameData, currentFrame, microframesPerTransfer, 1, frameList, ECVDoNothing, NULL));
+			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipeIndex, frameData, currentFrame, microframesPerTransfer, 1, frameList, ECVDoNothing, NULL));
 			currentFrame += microframesPerTransfer / (kUSBFullSpeedMicrosecondsInFrame / _frameTime);
 		}
 		[innerPool drain];
@@ -538,9 +538,9 @@ ECVGenericError:
 ECVNoDeviceError:
 	return NO;
 }
-- (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)value index:(UInt16)index length:(UInt16)length data:(void *)data
+- (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)v index:(UInt16)i length:(UInt16)length data:(void *)data
 {
-	IOUSBDevRequest r = { type, request, value, index, length, data, 0 };
+	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
 	IOReturn const error = (*_interfaceInterface)->ControlRequest(_interfaceInterface, 0, &r);
 	switch(error) {
 		case kIOReturnSuccess: return YES;
@@ -552,20 +552,20 @@ ECVGenericError:
 ECVNoDeviceError:
 	return NO;
 }
-- (BOOL)writeValue:(UInt16)value atIndex:(UInt16)index
+- (BOOL)writeValue:(UInt16)v atIndex:(UInt16)i
 {
-	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:kUSBRqClearFeature value:value index:index length:0 data:NULL];
+	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:kUSBRqClearFeature value:v index:i length:0 data:NULL];
 }
-- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)index
+- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)i
 {
 	SInt32 v = 0;
-	BOOL const r = [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:kUSBRqGetStatus value:0 index:index length:sizeof(v) data:&v];
+	BOOL const r = [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:kUSBRqGetStatus value:0 index:i length:sizeof(v) data:&v];
 	if(outValue) *outValue = CFSwapInt32LittleToHost(v);
 	return r;
 }
-- (BOOL)setFeatureAtIndex:(UInt16)index
+- (BOOL)setFeatureAtIndex:(UInt16)i
 {
-	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:index length:0 data:NULL];
+	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:i length:0 data:NULL];
 }
 
 #pragma mark -ECVCaptureDevice(Private)
@@ -653,7 +653,7 @@ ECVNoDeviceError:
 #pragma mark -<ECVAudioDeviceDelegate>
 
 #ifndef ECV_DISABLE_AUDIO
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)time
+- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioInput) return;
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
@@ -661,7 +661,7 @@ ECVNoDeviceError:
 	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
 	[_windowControllersLock unlock];
 }
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)time
+- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioOutput) return;
 	[_audioPreviewingPipe requestOutputBufferList:bufferList];

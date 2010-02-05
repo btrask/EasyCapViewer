@@ -57,10 +57,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[NSGraphicsContext saveGraphicsState];
 
-	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
-	[shadow setShadowOffset:NSMakeSize(0.0f, -1.0f)];
-	[shadow setShadowBlurRadius:2.0f];
-	[shadow set];
+	NSShadow *const s = [[[NSShadow alloc] init] autorelease];
+	[s setShadowOffset:NSMakeSize(0.0f, -1.0f)];
+	[s setShadowBlurRadius:2.0f];
+	[s set];
 
 	CGContextRef const context = [[NSGraphicsContext currentContext] graphicsPort];
 	CGContextBeginTransparencyLayerWithRect(context, NSRectToCGRect(r), nil);

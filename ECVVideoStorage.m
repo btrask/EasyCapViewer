@@ -40,7 +40,7 @@ enum {
 	NSUInteger _bufferIndex;
 }
 
-- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index;
+- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i;
 
 @end
 
@@ -112,19 +112,19 @@ enum {
 {
 	[_lock lock];
 #ifdef ECV_DEPENDENT_VIDEO_STORAGE
-	NSUInteger index = [_unusedBufferIndexes firstIndex];
-	if(NSNotFound == index) {
+	NSUInteger i = [_unusedBufferIndexes firstIndex];
+	if(NSNotFound == i) {
 		NSUInteger const count = [_frames count];
 		NSUInteger const drop = MIN(MAX(count, ECVUndroppableFrameCount) - ECVUndroppableFrameCount, [self frameGroupSize]);
 		[[_frames subarrayWithRange:NSMakeRange(count - drop, drop)] makeObjectsPerformSelector:@selector(removeFromStorage)];
-		index = [_unusedBufferIndexes firstIndex];
-		if(NSNotFound == index) {
+		i = [_unusedBufferIndexes firstIndex];
+		if(NSNotFound == i) {
 			[_lock unlock];
 			return nil;
 		}
 	}
-	[_unusedBufferIndexes removeIndex:index];
-	ECVVideoFrame *const frame = [[[ECVDependentVideoFrame alloc] initWithFieldType:type storage:self bufferIndex:index] autorelease];
+	[_unusedBufferIndexes removeIndex:i];
+	ECVVideoFrame *const frame = [[[ECVDependentVideoFrame alloc] initWithFieldType:type storage:self bufferIndex:i] autorelease];
 #else
 	ECVVideoFrame *const frame = [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
 #endif
@@ -166,9 +166,9 @@ enum {
 {
 	return [_allBufferData mutableBytes];
 }
-- (void *)bufferBytesAtIndex:(NSUInteger)index
+- (void *)bufferBytesAtIndex:(NSUInteger)i
 {
-	return [_allBufferData mutableBytes] + [self bufferSize] * index;
+	return [_allBufferData mutableBytes] + [self bufferSize] * i;
 }
 #endif
 
@@ -229,11 +229,11 @@ enum {
 
 #pragma mark -ECVDependentVideoFrame
 
-- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)index
+- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i
 {
 	if((self = [super initWithFieldType:type storage:storage])) {
 		_lock = [[ECVReadWriteLock alloc] init];
-		_bufferIndex = index;
+		_bufferIndex = i;
 	}
 	return self;
 }

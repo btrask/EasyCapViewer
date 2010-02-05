@@ -44,17 +44,17 @@ int dev_stk0408_write0(ECVSTK1160Device *dev, int mask, int val);
 int dev_stk0408_set_resolution(ECVSTK1160Device *dev);
 int dev_stk0408_set_streaming(ECVSTK1160Device *dev, int streaming);
 
-static void usb_stk11xx_write_registry(ECVSTK1160Device *dev, u_int16_t index, u_int16_t value)
+static void usb_stk11xx_write_registry(ECVSTK1160Device *dev, u_int16_t i, u_int16_t v)
 {
-	(void)[dev writeValue:value atIndex:index];
+	(void)[dev writeValue:v atIndex:i];
 }
-static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t index, int32_t *value)
+static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t i, int32_t *v)
 {
-	(void)[dev readValue:(SInt32 *)value atIndex:index];
+	(void)[dev readValue:(SInt32 *)v atIndex:i];
 }
-static void usb_stk11xx_set_feature(ECVSTK1160Device *dev, int index)
+static void usb_stk11xx_set_feature(ECVSTK1160Device *dev, int i)
 {
-	(void)[dev setFeatureAtIndex:index];
+	(void)[dev setFeatureAtIndex:i];
 }
 static void dev_stk11xx_camera_on(ECVSTK1160Device *dev)
 {

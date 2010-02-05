@@ -100,19 +100,19 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 
 @property(assign, getter = isPlaying) BOOL playing;
 - (void)togglePlaying;
-
 @property(assign) ECVDeinterlacingMode deinterlacingMode;
 @property(readonly) ECVVideoStorage *videoStorage;
+
 - (void)startPlaying;
 - (void)threadMain_play;
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length;
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType;
 
 - (BOOL)setAlternateInterface:(UInt8)alternateSetting;
-- (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)value index:(UInt16)index length:(UInt16)length data:(void *)data;
-- (BOOL)writeValue:(UInt16)value atIndex:(UInt16)index;
-- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)index;
-- (BOOL)setFeatureAtIndex:(UInt16)index;
+- (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)v index:(UInt16)i length:(UInt16)length data:(void *)data;
+- (BOOL)writeValue:(UInt16)v atIndex:(UInt16)i;
+- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)i;
+- (BOOL)setFeatureAtIndex:(UInt16)i;
 
 #ifndef ECV_DISABLE_AUDIO
 @property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;

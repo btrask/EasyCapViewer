@@ -67,7 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #ifdef ECV_DEPENDENT_VIDEO_STORAGE
 @property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) void *allBufferBytes;
-- (void *)bufferBytesAtIndex:(NSUInteger)index;
+- (void *)bufferBytesAtIndex:(NSUInteger)i;
 #endif
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
