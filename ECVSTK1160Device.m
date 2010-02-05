@@ -295,6 +295,70 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
+#pragma mark -<ECVComponentConfiguring>
+
+- (long)inputCapabilityFlags
+{
+	return digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
+}
+
+#pragma mark -
+
+- (short)numberOfInputs
+{
+	return [[self allVideoSourceObjects] count];
+}
+- (short)inputIndex
+{
+	return [[self allVideoSourceObjects] indexOfObject:[self videoSourceObject]];
+}
+- (void)setInputIndex:(short)i
+{
+	[self setVideoSourceObject:[[self allVideoSourceObjects] objectAtIndex:i]];
+}
+- (short)inputFormatForInputAtIndex:(short)i
+{
+	switch([[[self allVideoSourceObjects] objectAtIndex:i] unsignedIntegerValue]) {
+		case ECVSTK1160SVideoInput:
+			return sVideoIn;
+		case ECVSTK1160Composite1Input:
+		case ECVSTK1160Composite2Input:
+		case ECVSTK1160Composite3Input:
+		case ECVSTK1160Composite4Input:
+			return compositeIn;
+		default:
+			ECVAssertNotReached(@"Invalid input %hi.", i);
+			return 0;
+	}
+}
+- (NSString *)localizedStringForInputAtIndex:(long)i
+{
+	return [self localizedStringForVideoSourceObject:[[self allVideoSourceObjects] objectAtIndex:i]];
+}
+
+#pragma mark -
+
+- (short)inputStandard
+{
+	switch([self videoFormat]) {
+		case ECVSTK1160NTSCMFormat: return ntscReallyIn;
+		case ECVSTK1160PALBGDHIFormat: return palIn;
+		case ECVSTK1160SECAMFormat: return secamIn;
+		default: return currentIn;
+	}
+}
+- (void)setInputStandard:(short)standard
+{
+	ECVSTK1160VideoFormat format;
+	switch(standard) {
+		case ntscReallyIn: format = ECVSTK1160NTSCMFormat; break;
+		case palIn: format = ECVSTK1160PALBGDHIFormat; break;
+		case secamIn: format = ECVSTK1160SECAMFormat; break;
+		default: return;
+	}
+	[self setVideoFormat:format];
+}
+
 #pragma mark -<SAA711XDevice>
 
 - (BOOL)writeSAA711XRegister:(u_int8_t)reg value:(int16_t)val

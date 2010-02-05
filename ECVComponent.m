@@ -30,9 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVComponentConfiguring.h"
 
 typedef struct {
-	ECVCaptureDevice *device;
+	ECVCaptureDevice<ECVComponentConfiguring> *device;
 	CFMutableDictionaryRef frameByBuffer;
 	TimeBase timeBase;
 } ECVCStorage;
@@ -59,14 +60,18 @@ pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 	if(CountComponentInstances((Component)self) > 1) return -1;
 	if(!storage) {
 		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-		storage = calloc(1, sizeof(ECVCStorage));
 		NSDictionary *matchDict = nil;
 		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:[[ECVCaptureDevice deviceDictionaries] lastObject]];
+		if(![class conformsToProtocol:@protocol(ECVComponentConfiguring)]) {
+			[pool drain];
+			return -1;
+		}
+		storage = calloc(1, sizeof(ECVCStorage));
 		storage->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchDict retain]) error:NULL];
 		[storage->device setDeinterlacingMode:ECVLineDoubleLQ];
 		storage->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(self, (Handle)storage);
-		[pool release];
+		[pool drain];
 	}
 	return noErr;
 }
@@ -115,58 +120,32 @@ pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputC
 
 pascal VideoDigitizerError ECVGetNumberOfInputs(ECVCStorage *storage, short *inputs)
 {
-	*inputs = 4;
+	*inputs = [storage->device numberOfInputs] - 1;
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetInputFormat(ECVCStorage *storage, short input, short *format)
 {
-	switch(input) {
-		case 0:
-			*format = sVideoIn;
-			break;
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			*format = compositeIn;
-			break;
-		default:
-			return qtParamErr;
-	}
+	*format = [storage->device inputFormatForInputAtIndex:input];
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetInputName(ECVCStorage *storage, long videoInput, Str255 name)
 {
-	NSString *str = @"";
-	switch(videoInput) {
-		case 0: str = @"S-Video"; break;
-		case 1: str = @"Composite 1"; break;
-		case 2: str = @"Composite 2"; break;
-		case 3: str = @"Composite 3"; break;
-		case 4: str = @"Composite 4"; break;
-		default: return qtParamErr;
-	}
-	CFStringGetPascalString((CFStringRef)str, name, 256, kCFStringEncodingUTF8);
+	CFStringGetPascalString((CFStringRef)[storage->device localizedStringForInputAtIndex:videoInput], name, 256, kCFStringEncodingUTF8);
 	return noErr;
 }
 pascal VideoDigitizerError ECVGetInput(ECVCStorage *storage, short *input)
 {
-	*input = 0; // TODO: Implement me.
+	*input = [storage->device inputIndex];
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetInput(ECVCStorage *storage, short input)
 {
-	if(input > 4) return qtParamErr;
-	// TODO: Implement me.
+	[storage->device setInputIndex:input];
 	return noErr;
 }
 pascal VideoDigitizerError ECVSetInputStandard(ECVCStorage *storage, short inputStandard)
 {
-	switch(inputStandard) {
-		case ntscReallyIn:
-			// TODO: Implement me.
-			break;
-	}
+	[storage->device setInputStandard:inputStandard];
 	return noErr;
 }
 

@@ -70,5 +70,5 @@ extern NSString *ECVErrnoToString(int error);
 	if(__e) ECVLog(ECVError, @"%s:%d: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVErrnoToString(__e));\
 } while(NO)
 
-#define ECVAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]
-#define ECVCAssertNotReached(desc) [[NSAssertionHandler currentHandler] handleFailureInFunction:[NSString stringWithUTF8String:__PRETTY_FUNCTION__] file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc)]
+#define ECVAssertNotReached(desc, args...) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc), ##args]
+#define ECVCAssertNotReached(desc, args...) [[NSAssertionHandler currentHandler] handleFailureInFunction:[NSString stringWithUTF8String:__PRETTY_FUNCTION__] file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc), ##args]
