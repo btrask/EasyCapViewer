@@ -260,7 +260,7 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_FieldInfo, sizeof(FieldInfoImageDescriptionExtension2), &fieldInfo));
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
-		720, 1,
+		720, 1, // TODO: Get the real size.
 		480, 1,
 		0, 1,
 		0, 1,
@@ -278,8 +278,8 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 	};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_NCLCColorInfo, sizeof(NCLCColorInfoImageDescriptionExtension), &colorInfo));
 
-	SInt32 const width = 720;
-	SInt32 const height = 480;
+	SInt32 const width = 720; // TODO: Get the real size.
+	SInt32 const height = 240;
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedWidth, sizeof(width), &width));
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedHeight, sizeof(height), &height));
 
