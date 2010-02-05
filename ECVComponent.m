@@ -50,6 +50,25 @@ typedef struct {
 #include <QuickTime/QuickTimeComponents.k.h>
 #include <QuickTime/ComponentDispatchHelper.c>
 
+#define ECV_NO_IMPLEMENTATION(name, args...) pascal VideoDigitizerError name(args) { return digiUnimpErr; }
+#define ECV_NO_GETTER_OR_SETTER(getter, setter) \
+	ECV_NO_IMPLEMENTATION(getter, ECVCStorage *storage, unsigned short *v)\
+	ECV_NO_IMPLEMENTATION(setter, ECVCStorage *storage, unsigned short *v)
+#define ECV_GETTER(name, selector) \
+	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
+	{\
+		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
+		*v = ECVMessageSend(CGFloat, storage->device, selector) * USHRT_MAX;\
+		return noErr;\
+	}
+#define ECV_SETTER(name, selector) \
+	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
+	{\
+		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
+		ECVMessageSend(void, storage->device, selector, (CGFloat)*v / USHRT_MAX);\
+		return noErr;\
+	}
+
 static Rect ECVNSRectToRect(NSRect r)
 {
 	return (Rect){NSMinX(r), NSMinY(r), NSMaxX(r), NSMaxY(r)};
@@ -286,110 +305,6 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 	return noErr;
 }
 
-#define DEFAULT_MAX USHRT_MAX
-pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned short *blackLevel, unsigned short *whiteLevel, unsigned short *brightness, unsigned short *hue, unsigned short *saturation, unsigned short *contrast, unsigned short *sharpness)
-{
-	*blackLevel = 0;
-	*whiteLevel = 0;
-	*brightness = round(0.5f * DEFAULT_MAX);
-	*hue = round(0.5f * DEFAULT_MAX);
-	*saturation = round(0.5f * DEFAULT_MAX);
-	*contrast = round(0.5f * DEFAULT_MAX);
-	*sharpness = 0;
-	return noErr;
-}
-pascal VideoDigitizerError ECVGetBlackLevelValue(ECVCStorage *storage, unsigned short *v)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVSetBlackLevelValue(ECVCStorage *storage, unsigned short *v)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVGetWhiteLevelValue(ECVCStorage *storage, unsigned short *v)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVSetWhiteLevelValue(ECVCStorage *storage, unsigned short *v)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVGetBrightness(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(brightness)]) return digiUnimpErr;
-	*v = [storage->device brightness] * DEFAULT_MAX;
-	return noErr;
-}
-pascal VideoDigitizerError ECVSetBrightness(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(setBrightness:)]) return digiUnimpErr;
-	[storage->device setBrightness:(CGFloat)*v / DEFAULT_MAX];
-	return noErr;
-}
-pascal VideoDigitizerError ECVGetHue(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(hue)]) return digiUnimpErr;
-	*v = [storage->device hue] * DEFAULT_MAX;
-	return noErr;
-}
-pascal VideoDigitizerError ECVSetHue(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(setHue:)]) return digiUnimpErr;
-	[storage->device setHue:(CGFloat)*v / DEFAULT_MAX];
-	return noErr;
-}
-pascal VideoDigitizerError ECVGetSaturation(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(saturation)]) return digiUnimpErr;
-	*v = [storage->device saturation] * DEFAULT_MAX;
-	return noErr;
-}
-pascal VideoDigitizerError ECVSetSaturation(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(setSaturation:)]) return digiUnimpErr;
-	[storage->device setSaturation:(CGFloat)*v / DEFAULT_MAX];
-	return noErr;
-}
-pascal VideoDigitizerError ECVGetContrast(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(contrast)]) return digiUnimpErr;
-	*v = [storage->device contrast] * DEFAULT_MAX;
-	return noErr;
-}
-pascal VideoDigitizerError ECVSetContrast(ECVCStorage *storage, unsigned short *v)
-{
-	if(![storage->device respondsToSelector:@selector(setContrast:)]) return digiUnimpErr;
-	[storage->device setContrast:(CGFloat)*v / DEFAULT_MAX];
-	return noErr;
-}
-pascal VideoDigitizerError ECVGetSharpness(ECVCStorage *storage, unsigned short *sharpness)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVSetSharpness(ECVCStorage *storage, unsigned short *sharpness)
-{
-	return digiUnimpErr;
-}
-
-
-
-pascal VideoDigitizerError ECVCaptureStateChanging(ECVCStorage *storage, UInt32 inStateFlags)
-{
-	return noErr;
-}
-pascal VideoDigitizerError ECVGetPLLFilterType(ECVCStorage *storage, short *pllType)
-{
-	*pllType = 0;
-	return noErr;
-}
-pascal VideoDigitizerError ECVSetPLLFilterType(ECVCStorage *storage, short pllType)
-{
-	return digiUnimpErr;
-}
-
-
-
-
 pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd, Rect *vBlankRect)
 {
 	if(vBlankRect) *vBlankRect = (Rect){};
@@ -413,14 +328,6 @@ pascal VideoDigitizerError ECVGetDigitizerRect(ECVCStorage *storage, Rect *digit
 {
 	return ECVGetMaxSrcRect(storage, ntscIn, digitizerRect);
 }
-pascal VideoDigitizerError ECVSetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVGetPreferredImageDimensions(ECVCStorage *storage, long *width, long *height)
-{
-	return digiUnimpErr;
-}
 
 pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond)
 {
@@ -433,21 +340,6 @@ pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPe
 	[pool release];
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetDataRate(ECVCStorage *storage, long bytesPerSecond)
-{
-	return digiUnimpErr;
-}
-
-pascal VideoDigitizerError ECVGetUniqueIDs(ECVCStorage *storage, UInt64 *outDeviceID, UInt64 * outInputID)
-{
-	return digiUnimpErr;
-}
-pascal VideoDigitizerError ECVSelectUniqueIDs(ECVCStorage *storage, const UInt64 *inDeviceID, const UInt64 *inInputID)
-{
-	return digiUnimpErr;
-}
-
-
 
 pascal VideoDigitizerError ECVGetPreferredTimeScale(ECVCStorage *storage, TimeScale *preferred)
 {
@@ -459,14 +351,37 @@ pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t)
 	storage->timeBase = t;
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetFrameRate(ECVCStorage *storage, Fixed framesPerSecond)
+
+pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned short *blackLevel, unsigned short *whiteLevel, unsigned short *brightness, unsigned short *hue, unsigned short *saturation, unsigned short *contrast, unsigned short *sharpness)
 {
-	return digiUnimpErr;
+	*blackLevel = 0;
+	*whiteLevel = 0;
+	*brightness = round(0.5f * USHRT_MAX);
+	*hue = round(0.5f * USHRT_MAX);
+	*saturation = round(0.5f * USHRT_MAX);
+	*contrast = round(0.5f * USHRT_MAX);
+	*sharpness = 0;
+	return noErr;
 }
+ECV_NO_GETTER_OR_SETTER(ECVGetBlackLevelValue, ECVSetBlackLevelValue);
+ECV_NO_GETTER_OR_SETTER(ECVGetWhiteLevelValue, ECVSetWhiteLevelValue);
+ECV_GETTER(ECVGetBrightness, @selector(brightness));
+ECV_SETTER(ECVSetBrightness, @selector(setBrightness:));
+ECV_GETTER(ECVGetHue, @selector(hue));
+ECV_SETTER(ECVSetHue, @selector(setHue:));
+ECV_GETTER(ECVGetSaturation, @selector(saturation));
+ECV_SETTER(ECVSetSaturation, @selector(setSaturation:));
+ECV_GETTER(ECVGetContrast, @selector(contrast));
+ECV_SETTER(ECVSetContrast, @selector(setContrast:));
+ECV_NO_GETTER_OR_SETTER(ECVGetSharpness, ECVSetSharpness);
 
-
-
-pascal VideoDigitizerError ECVGetTimeCode(ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime)
-{
-	return digiUnimpErr;
-}
+ECV_NO_IMPLEMENTATION(ECVCaptureStateChanging, ECVCStorage *storage, UInt32 inStateFlags);
+ECV_NO_IMPLEMENTATION(ECVGetPLLFilterType, ECVCStorage *storage, short *pllType);
+ECV_NO_IMPLEMENTATION(ECVSetPLLFilterType, ECVCStorage *storage, short pllType);
+ECV_NO_IMPLEMENTATION(ECVSetDigitizerRect, ECVCStorage *storage, Rect *digitizerRect);
+ECV_NO_IMPLEMENTATION(ECVGetPreferredImageDimensions, ECVCStorage *storage, long *width, long *height);
+ECV_NO_IMPLEMENTATION(ECVSetDataRate, ECVCStorage *storage, long bytesPerSecond);
+ECV_NO_IMPLEMENTATION(ECVGetUniqueIDs, ECVCStorage *storage, UInt64 *outDeviceID, UInt64 * outInputID);
+ECV_NO_IMPLEMENTATION(ECVSelectUniqueIDs, ECVCStorage *storage, const UInt64 *inDeviceID, const UInt64 *inInputID);
+ECV_NO_IMPLEMENTATION(ECVGetTimeCode, ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime);
+ECV_NO_IMPLEMENTATION(ECVSetFrameRate, ECVCStorage *storage, Fixed framesPerSecond);

@@ -23,7 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #ifdef __OBJC__
 #import <Cocoa/Cocoa.h>
+#import <objc/objc-runtime.h>
 
+#define ECVMessageSend(retType, obj, sel, args...) (((retType (*)(id, SEL, ...))objc_msgSend)((obj), (sel), ##args))
 #define ECVUncroppedRect (NSRect){{0.0f, 0.0f}, {1.0f, 1.0f}}
 
 enum {
