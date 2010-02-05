@@ -52,6 +52,12 @@ typedef struct {
 #include <QuickTime/QuickTimeComponents.k.h>
 #include <QuickTime/ComponentDispatchHelper.c>
 
+#if defined(__i386__)
+	#define ECV_MSG_SEND_CGFLOAT ((CGFloat (*)(id, SEL))objc_msgSend_fpret)
+#else
+	#define ECV_MSG_SEND_CGFLOAT ((CGFloat (*)(id, SEL))objc_msgSend)
+#endif
+
 #define ECV_NO_IMPLEMENTATION(name, args...) pascal VideoDigitizerError name(args) { return digiUnimpErr; }
 #define ECV_NO_GETTER_OR_SETTER(getter, setter) \
 	ECV_NO_IMPLEMENTATION(getter, ECVCStorage *storage, unsigned short *v)\
@@ -60,7 +66,7 @@ typedef struct {
 	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
 	{\
 		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
-		*v = ((CGFloat (*)(id, SEL))objc_msgSend_fpret)(storage->device, selector) * USHRT_MAX;\
+		*v = ECV_MSG_SEND_CGFLOAT(storage->device, selector) * USHRT_MAX;\
 		return noErr;\
 	}
 #define ECV_SETTER(name, selector) \
