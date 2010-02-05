@@ -30,13 +30,6 @@
  *   $Author: nicklas79 $
  *   $HeadURL: https://syntekdriver.svn.sourceforge.net/svnroot/syntekdriver/trunk/driver/stk11xx.h $
  */
-#import "ECVDebug.h"
-
-#define STK11XX_PERCENT(x, y) (((int)x * (int)y) / 100)
-
-#define STK_ERROR(x, y...) ECVLog(ECVError, (NSString *)CFSTR(x), ##y)
-#define msleep(x) usleep((x) * ECVMicrosecondsPerMillisecond)
-
 int dev_stk0408_initialize_device(ECVSTK1160Device *dev);
 int dev_stk0408_init_camera(ECVSTK1160Device *dev);
 int dev_stk0408_check_device(ECVSTK1160Device *dev);

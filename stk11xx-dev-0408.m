@@ -30,6 +30,9 @@
 #import "stk11xx.h"
 #import <unistd.h>
 
+// Other Sources
+#import "ECVDebug.h"
+
 /**
  * @param dev Device structure
  *
@@ -47,7 +50,7 @@ int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 {
 	dev_stk0408_write0(dev, 0x0007, 0x0001);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
-	msleep(10);
+	usleep(10 * ECVMicrosecondsPerMillisecond);
 	dev_stk0408_write0(dev, 0x0078, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0203, 0x00a0);
 	dev_stk0408_write0(dev, 0x07f, 0x001);
@@ -258,7 +261,7 @@ int dev_stk0408_check_device(ECVSTK1160Device *dev)
 		// Writes to 208 return 1 on success.
 		if(0x04 == value || 0x01 == value) return 0;
 		if(0x00 != value) {
-			STK_ERROR("Check device return error (0x0201 = %02X) !\n", value);
+			ECVLog(ECVError, @"Check device return error (0x0201 = %02X) !\n", value);
 			return -1;
 		}
 	}

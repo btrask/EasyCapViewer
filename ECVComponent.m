@@ -21,6 +21,8 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#import <objc/objc-runtime.h>
+
 // Models
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
@@ -58,14 +60,14 @@ typedef struct {
 	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
 	{\
 		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
-		*v = ECVMessageSend(CGFloat, storage->device, selector) * USHRT_MAX;\
+		*v = ((CGFloat (*)(id, SEL))objc_msgSend_fpret)(storage->device, selector) * USHRT_MAX;\
 		return noErr;\
 	}
 #define ECV_SETTER(name, selector) \
 	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
 	{\
 		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
-		ECVMessageSend(void, storage->device, selector, (CGFloat)*v / USHRT_MAX);\
+		(void)objc_msgSend(storage->device, selector, (CGFloat)*v / USHRT_MAX);\
 		return noErr;\
 	}
 

@@ -23,10 +23,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #ifdef __OBJC__
 #import <Cocoa/Cocoa.h>
-#import <objc/objc-runtime.h>
 
-#define ECVMessageSend(retType, obj, sel, args...) (((retType (*)(id, SEL, ...))objc_msgSend)((obj), (sel), ##args))
-#define ECVUncroppedRect (NSRect){{0.0f, 0.0f}, {1.0f, 1.0f}}
+static NSRect const ECVUncroppedRect = {{0.0f, 0.0f}, {1.0f, 1.0f}};
+static NSUInteger const ECVMicrosecondsPerMillisecond = 1000;
+static NSUInteger const ECVMicrosecondsPerSecond = 1000 * 1000;
 
 enum {
 	ECVProgressiveScan = 4,
@@ -76,11 +76,6 @@ static size_t ECVPixelFormatBytesPerPixel(OSType format)
 
 #endif // __OBJC__
 
-#define numberof(x) (sizeof(x) / sizeof(*x))
+#define numberof(x) (sizeof(x) / sizeof(x[0]))
 #define CLAMP(min, x, max) MIN(MAX((min), (x)), (max))
 #define SUB_ZERO(minuend, subtrahend) ({ __typeof__(minuend) __m = (minuend); __typeof__(subtrahend) __s = (subtrahend); __m > __s ? __m - __s : 0; })
-
-#define ECVMicrosecondsPerMillisecond 1000
-
-#define ECVMillisecondsPerSecond 1000
-#define ECVMicrosecondsPerSecond (ECVMillisecondsPerSecond * ECVMicrosecondsPerMillisecond)
