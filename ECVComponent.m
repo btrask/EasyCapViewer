@@ -286,7 +286,7 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 	return noErr;
 }
 
-#define DEFAULT_MAX 65535U
+#define DEFAULT_MAX USHRT_MAX
 pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned short *blackLevel, unsigned short *whiteLevel, unsigned short *brightness, unsigned short *hue, unsigned short *saturation, unsigned short *contrast, unsigned short *sharpness)
 {
 	*blackLevel = 0;
