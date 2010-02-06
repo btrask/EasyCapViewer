@@ -58,22 +58,23 @@ typedef struct {
 	#define ECV_MSG_SEND_CGFLOAT ((CGFloat (*)(id, SEL))objc_msgSend)
 #endif
 
-#define ECV_NO_IMPLEMENTATION(name, args...) pascal VideoDigitizerError name(args) { return digiUnimpErr; }
-#define ECV_NO_GETTER_OR_SETTER(getter, setter) \
-	ECV_NO_IMPLEMENTATION(getter, ECVCStorage *storage, unsigned short *v)\
-	ECV_NO_IMPLEMENTATION(setter, ECVCStorage *storage, unsigned short *v)
-#define ECV_GETTER(name, selector) \
-	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
+#define ECV_CALLCOMPONENT_FUNCTION(name, args...) pascal ComponentResult ADD_CALLCOMPONENT_BASENAME(name)(VD_GLOBALS() self, ##args)
+#define ECV_VDIG_FUNCTION(name, args...) pascal VideoDigitizerError ADD_CALLCOMPONENT_BASENAME(name)(VD_GLOBALS() self, ##args)
+#define ECV_VDIG_FUNCTION_UNIMPLEMENTED(name, args...) ECV_VDIG_FUNCTION(name, ##args) { return digiUnimpErr; }
+#define ECV_VDIG_PROPERTY_UNIMPLEMENTED(prop) \
+	ECV_VDIG_FUNCTION_UNIMPLEMENTED(Get ## prop, unsigned short *v)\
+	ECV_VDIG_FUNCTION_UNIMPLEMENTED(Set ## prop, unsigned short *v)
+#define ECV_VDIG_PROPERTY(prop, getterSel, setterSel) \
+	ECV_VDIG_FUNCTION(Get ## prop, unsigned short *v)\
 	{\
-		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
-		*v = ECV_MSG_SEND_CGFLOAT(storage->device, selector) * USHRT_MAX;\
+		if(![self->device respondsToSelector:getterSel]) return digiUnimpErr;\
+		*v = ECV_MSG_SEND_CGFLOAT(self->device, getterSel) * USHRT_MAX;\
 		return noErr;\
-	}
-#define ECV_SETTER(name, selector) \
-	pascal VideoDigitizerError name(ECVCStorage *storage, unsigned short *v)\
+	}\
+	ECV_VDIG_FUNCTION(Set ## prop, unsigned short *v)\
 	{\
-		if(![storage->device respondsToSelector:selector]) return digiUnimpErr;\
-		(void)objc_msgSend(storage->device, selector, (CGFloat)*v / USHRT_MAX);\
+		if(![self->device respondsToSelector:setterSel]) return digiUnimpErr;\
+		(void)objc_msgSend(self->device, setterSel, (CGFloat)*v / USHRT_MAX);\
 		return noErr;\
 	}
 
@@ -82,10 +83,10 @@ static Rect ECVNSRectToRect(NSRect r)
 	return (Rect){NSMinX(r), NSMinY(r), NSMaxX(r), NSMaxY(r)};
 }
 
-pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
+ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 {
 	if(CountComponentInstances((Component)self) > 1) return -1;
-	if(!storage) {
+	if(!self) {
 		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 		NSDictionary *matchDict = nil;
 		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:[[ECVCaptureDevice deviceDictionaries] lastObject]];
@@ -93,34 +94,34 @@ pascal ComponentResult ECVOpen(ECVCStorage *storage, ComponentInstance self)
 			[pool drain];
 			return -1;
 		}
-		storage = calloc(1, sizeof(ECVCStorage));
-		storage->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchDict retain]) error:NULL];
-		[storage->device setDeinterlacingMode:ECVLineDoubleLQ];
-		storage->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
-		SetComponentInstanceStorage(self, (Handle)storage);
+		self = calloc(1, sizeof(ECVCStorage));
+		self->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchDict retain]) error:NULL];
+		[self->device setDeinterlacingMode:ECVLineDoubleLQ];
+		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
+		SetComponentInstanceStorage(instance, (Handle)self);
 		[pool drain];
 	}
 	return noErr;
 }
-pascal ComponentResult ECVClose(ECVCStorage *storage, ComponentInstance self)
+ECV_CALLCOMPONENT_FUNCTION(Close, ComponentInstance instance)
 {
-	if(!storage) return noErr;
+	if(!self) return noErr;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[storage->device release];
-	CFRelease(storage->frameByBuffer);
-	free(storage);
+	[self->device release];
+	CFRelease(self->frameByBuffer);
+	free(self);
 	[pool release];
 	return noErr;
 }
-pascal ComponentResult ECVVersion(ECVCStorage *storage)
+ECV_CALLCOMPONENT_FUNCTION(Version)
 {
 	return vdigInterfaceRev << 16;
 }
 
-pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerInfo *info)
+ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVPixelSize const s = [storage->device captureSize];
+	ECVPixelSize const s = [self->device captureSize];
 	[pool release];
 
 	*info = (DigitizerInfo){};
@@ -136,47 +137,47 @@ pascal VideoDigitizerError ECVGetDigitizerInfo(ECVCStorage *storage, DigitizerIn
 	info->maxDestHeight = s.height;
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetCurrentFlags(ECVCStorage *storage, long *inputCurrentFlag, long *outputCurrentFlag)
+ECV_VDIG_FUNCTION(GetCurrentFlags, long *inputCurrentFlag, long *outputCurrentFlag)
 {
 	DigitizerInfo info;
-	if(!ECVGetDigitizerInfo(storage, &info)) return -1;
+	if(!ADD_CALLCOMPONENT_BASENAME(GetDigitizerInfo)(self, &info)) return -1;
 	*inputCurrentFlag = info.inputCurrentFlags;
 	*outputCurrentFlag = info.outputCurrentFlags;
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetNumberOfInputs(ECVCStorage *storage, short *inputs)
+ECV_VDIG_FUNCTION(GetNumberOfInputs, short *inputs)
 {
-	*inputs = [storage->device numberOfInputs] - 1;
+	*inputs = [self->device numberOfInputs] - 1;
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetInputFormat(ECVCStorage *storage, short input, short *format)
+ECV_VDIG_FUNCTION(GetInputFormat, short input, short *format)
 {
-	*format = [storage->device inputFormatForInputAtIndex:input];
+	*format = [self->device inputFormatForInputAtIndex:input];
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetInputName(ECVCStorage *storage, long videoInput, Str255 name)
+ECV_VDIG_FUNCTION(GetInputName, long videoInput, Str255 name)
 {
-	CFStringGetPascalString((CFStringRef)[storage->device localizedStringForInputAtIndex:videoInput], name, 256, kCFStringEncodingUTF8);
+	CFStringGetPascalString((CFStringRef)[self->device localizedStringForInputAtIndex:videoInput], name, 256, kCFStringEncodingUTF8);
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetInput(ECVCStorage *storage, short *input)
+ECV_VDIG_FUNCTION(GetInput, short *input)
 {
-	*input = [storage->device inputIndex];
+	*input = [self->device inputIndex];
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetInput(ECVCStorage *storage, short input)
+ECV_VDIG_FUNCTION(SetInput, short input)
 {
-	[storage->device setInputIndex:input];
+	[self->device setInputIndex:input];
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetInputStandard(ECVCStorage *storage, short inputStandard)
+ECV_VDIG_FUNCTION(SetInputStandard, short inputStandard)
 {
-	[storage->device setInputStandard:inputStandard];
+	[self->device setInputStandard:inputStandard];
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetDeviceNameAndFlags(ECVCStorage *storage, Str255 outName, UInt32 *outNameFlags)
+ECV_VDIG_FUNCTION(GetDeviceNameAndFlags, Str255 outName, UInt32 *outNameFlags)
 {
 	*outNameFlags = kNilOptions;
 	CFStringGetPascalString(CFSTR("Test Device"), outName, 256, kCFStringEncodingUTF8);
@@ -184,7 +185,7 @@ pascal VideoDigitizerError ECVGetDeviceNameAndFlags(ECVCStorage *storage, Str255
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetCompressionTime(ECVCStorage *storage, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime)
+ECV_VDIG_FUNCTION(GetCompressionTime, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime)
 {
 	if(compressionType && k422YpCbCr8CodecType != compressionType) return noCodecErr; // TODO: Get the real type.
 	*spatialQuality = codecLosslessQuality;
@@ -192,7 +193,7 @@ pascal VideoDigitizerError ECVGetCompressionTime(ECVCStorage *storage, OSType co
 	*compressTime = 0;
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetCompressionTypes(ECVCStorage *storage, VDCompressionListHandle h)
+ECV_VDIG_FUNCTION(GetCompressionTypes, VDCompressionListHandle h)
 {
 	SInt8 const handleState = HGetState((Handle)h);
 	HUnlock((Handle)h);
@@ -214,40 +215,40 @@ pascal VideoDigitizerError ECVGetCompressionTypes(ECVCStorage *storage, VDCompre
 	HSetState((Handle)h, handleState);
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetCompressionOnOff(ECVCStorage *storage, Boolean state)
+ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[storage->device setPlaying:!!state];
+	[self->device setPlaying:!!state];
 	[pool release];
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetCompression(ECVCStorage *storage, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
+ECV_VDIG_FUNCTION(SetCompression, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
 {
 	if(compressType && k422YpCbCr8CodecType != compressType) return noCodecErr; // TODO: Get the real type.
 	// TODO: Most of these settings don't apply to us...
 	return noErr;
 }
-pascal VideoDigitizerError ECVCompressOneFrameAsync(ECVCStorage *storage)
+ECV_VDIG_FUNCTION(CompressOneFrameAsync)
 {
-	if(![storage->device isPlaying]) return badCallOrderErr;
+	if(![self->device isPlaying]) return badCallOrderErr;
 	return noErr;
 }
-pascal VideoDigitizerError ECVResetCompressSequence(ECVCStorage *storage)
+ECV_VDIG_FUNCTION(ResetCompressSequence)
 {
 	return noErr;
 }
-pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, UInt8 *queuedFrameCount, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t)
+ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVVideoStorage *const vs = [storage->device videoStorage];
+	ECVVideoStorage *const vs = [self->device videoStorage];
 	ECVVideoFrame *const frame = [vs oldestFrame];
 	*queuedFrameCount = (UInt8)[vs numberOfCompletedFrames];
 	if(frame) {
 		Ptr const bufferBytes = [frame bufferBytes];
-		CFDictionaryAddValue(storage->frameByBuffer, bufferBytes, frame);
+		CFDictionaryAddValue(self->frameByBuffer, bufferBytes, frame);
 		*theData = bufferBytes;
 		*dataSize = [[frame videoStorage] bufferSize];
-		GetTimeBaseTime(storage->timeBase, [storage->device frameRate].timeScale, t);
+		GetTimeBaseTime(self->timeBase, [self->device frameRate].timeScale, t);
 	} else {
 		*theData = NULL;
 		*dataSize = 0;
@@ -256,18 +257,18 @@ pascal VideoDigitizerError ECVCompressDone(ECVCStorage *storage, UInt8 *queuedFr
 	[pool release];
 	return noErr;
 }
-pascal VideoDigitizerError ECVReleaseCompressBuffer(ECVCStorage *storage, Ptr bufferAddr)
+ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVVideoFrame *const frame = (ECVVideoFrame *)CFDictionaryGetValue(storage->frameByBuffer, bufferAddr);
+	ECVVideoFrame *const frame = (ECVVideoFrame *)CFDictionaryGetValue(self->frameByBuffer, bufferAddr);
 	NSCAssert(frame, @"Invalid buffer address.");
 	[frame removeFromStorage];
-	CFDictionaryRemoveValue(storage->frameByBuffer, bufferAddr);
+	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
 	[pool release];
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDescriptionHandle desc)
+ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 {
 	ImageDescriptionPtr const descPtr = *desc;
 	SetHandleSize((Handle)desc, sizeof(ImageDescription));
@@ -313,54 +314,54 @@ pascal VideoDigitizerError ECVGetImageDescription(ECVCStorage *storage, ImageDes
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetVBlankRect(ECVCStorage *storage, short inputStd, Rect *vBlankRect)
+ECV_VDIG_FUNCTION(GetVBlankRect, short inputStd, Rect *vBlankRect)
 {
 	if(vBlankRect) *vBlankRect = (Rect){};
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetMaxSrcRect(ECVCStorage *storage, short inputStd, Rect *maxSrcRect)
+ECV_VDIG_FUNCTION(GetMaxSrcRect, short inputStd, Rect *maxSrcRect)
 {
-	if(!storage->device) return badCallOrderErr;
+	if(!self->device) return badCallOrderErr;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVPixelSize const s = [storage->device captureSize];
+	ECVPixelSize const s = [self->device captureSize];
 	[pool release];
 	if(!s.width || !s.height) return badCallOrderErr;
 	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize(s)});
 	return noErr;
 }
-pascal VideoDigitizerError ECVGetActiveSrcRect(ECVCStorage *storage, short inputStd, Rect *activeSrcRect)
+ECV_VDIG_FUNCTION(GetActiveSrcRect, short inputStd, Rect *activeSrcRect)
 {
-	return ECVGetMaxSrcRect(storage, inputStd, activeSrcRect);
+	return ADD_CALLCOMPONENT_BASENAME(GetMaxSrcRect)(self, inputStd, activeSrcRect);
 }
-pascal VideoDigitizerError ECVGetDigitizerRect(ECVCStorage *storage, Rect *digitizerRect)
+ECV_VDIG_FUNCTION(GetDigitizerRect, Rect *digitizerRect)
 {
-	return ECVGetMaxSrcRect(storage, ntscIn, digitizerRect);
+	return ADD_CALLCOMPONENT_BASENAME(GetMaxSrcRect)(self, ntscIn, digitizerRect);
 }
 
-pascal VideoDigitizerError ECVGetDataRate(ECVCStorage *storage, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond)
+ECV_VDIG_FUNCTION(GetDataRate, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond)
 {
 	*milliSecPerFrame = 0;
 	NSTimeInterval frameRate = 1.0f / 60.0f;
-	if(QTGetTimeInterval([storage->device frameRate], &frameRate)) *framesPerSecond = X2Fix(frameRate);
+	if(QTGetTimeInterval([self->device frameRate], &frameRate)) *framesPerSecond = X2Fix(frameRate);
 	else *framesPerSecond = 0;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	*bytesPerSecond = (1.0f / frameRate) * [[storage->device videoStorage] bufferSize];
+	*bytesPerSecond = (1.0f / frameRate) * [[self->device videoStorage] bufferSize];
 	[pool release];
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetPreferredTimeScale(ECVCStorage *storage, TimeScale *preferred)
+ECV_VDIG_FUNCTION(GetPreferredTimeScale, TimeScale *preferred)
 {
-	*preferred = [storage->device frameRate].timeScale;
+	*preferred = [self->device frameRate].timeScale;
 	return noErr;
 }
-pascal VideoDigitizerError ECVSetTimeBase(ECVCStorage *storage, TimeBase t)
+ECV_VDIG_FUNCTION(SetTimeBase, TimeBase t)
 {
-	storage->timeBase = t;
+	self->timeBase = t;
 	return noErr;
 }
 
-pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned short *blackLevel, unsigned short *whiteLevel, unsigned short *brightness, unsigned short *hue, unsigned short *saturation, unsigned short *contrast, unsigned short *sharpness)
+ECV_VDIG_FUNCTION(GetVideoDefaults, unsigned short *blackLevel, unsigned short *whiteLevel, unsigned short *brightness, unsigned short *hue, unsigned short *saturation, unsigned short *contrast, unsigned short *sharpness)
 {
 	*blackLevel = 0;
 	*whiteLevel = 0;
@@ -371,25 +372,21 @@ pascal VideoDigitizerError ECVGetVideoDefaults(ECVCStorage *storage, unsigned sh
 	*sharpness = 0;
 	return noErr;
 }
-ECV_NO_GETTER_OR_SETTER(ECVGetBlackLevelValue, ECVSetBlackLevelValue);
-ECV_NO_GETTER_OR_SETTER(ECVGetWhiteLevelValue, ECVSetWhiteLevelValue);
-ECV_GETTER(ECVGetBrightness, @selector(brightness));
-ECV_SETTER(ECVSetBrightness, @selector(setBrightness:));
-ECV_GETTER(ECVGetHue, @selector(hue));
-ECV_SETTER(ECVSetHue, @selector(setHue:));
-ECV_GETTER(ECVGetSaturation, @selector(saturation));
-ECV_SETTER(ECVSetSaturation, @selector(setSaturation:));
-ECV_GETTER(ECVGetContrast, @selector(contrast));
-ECV_SETTER(ECVSetContrast, @selector(setContrast:));
-ECV_NO_GETTER_OR_SETTER(ECVGetSharpness, ECVSetSharpness);
+ECV_VDIG_PROPERTY_UNIMPLEMENTED(BlackLevelValue);
+ECV_VDIG_PROPERTY_UNIMPLEMENTED(WhiteLevelValue);
+ECV_VDIG_PROPERTY(Brightness, @selector(brightness), @selector(setBrightness:));
+ECV_VDIG_PROPERTY(Hue, @selector(hue), @selector(setHue:));
+ECV_VDIG_PROPERTY(Saturation, @selector(saturation), @selector(setSaturation:));
+ECV_VDIG_PROPERTY(Contrast, @selector(contrast), @selector(setContrast:));
+ECV_VDIG_PROPERTY_UNIMPLEMENTED(Sharpness);
 
-ECV_NO_IMPLEMENTATION(ECVCaptureStateChanging, ECVCStorage *storage, UInt32 inStateFlags);
-ECV_NO_IMPLEMENTATION(ECVGetPLLFilterType, ECVCStorage *storage, short *pllType);
-ECV_NO_IMPLEMENTATION(ECVSetPLLFilterType, ECVCStorage *storage, short pllType);
-ECV_NO_IMPLEMENTATION(ECVSetDigitizerRect, ECVCStorage *storage, Rect *digitizerRect);
-ECV_NO_IMPLEMENTATION(ECVGetPreferredImageDimensions, ECVCStorage *storage, long *width, long *height);
-ECV_NO_IMPLEMENTATION(ECVSetDataRate, ECVCStorage *storage, long bytesPerSecond);
-ECV_NO_IMPLEMENTATION(ECVGetUniqueIDs, ECVCStorage *storage, UInt64 *outDeviceID, UInt64 * outInputID);
-ECV_NO_IMPLEMENTATION(ECVSelectUniqueIDs, ECVCStorage *storage, const UInt64 *inDeviceID, const UInt64 *inInputID);
-ECV_NO_IMPLEMENTATION(ECVGetTimeCode, ECVCStorage *storage, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime);
-ECV_NO_IMPLEMENTATION(ECVSetFrameRate, ECVCStorage *storage, Fixed framesPerSecond);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(CaptureStateChanging, UInt32 inStateFlags);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetPLLFilterType, short *pllType);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPLLFilterType, short pllType);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDigitizerRect, Rect *digitizerRect);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetPreferredImageDimensions, long *width, long *height);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDataRate, long bytesPerSecond);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetUniqueIDs, UInt64 *outDeviceID, UInt64 * outInputID);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SelectUniqueIDs, const UInt64 *inDeviceID, const UInt64 *inInputID);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetTimeCode, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetFrameRate, Fixed framesPerSecond);
