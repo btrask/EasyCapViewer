@@ -33,9 +33,9 @@
 int dev_stk0408_initialize_device(ECVSTK1160Device *dev);
 int dev_stk0408_init_camera(ECVSTK1160Device *dev);
 int dev_stk0408_check_device(ECVSTK1160Device *dev);
-int dev_stk0408_write0(ECVSTK1160Device *dev, int mask, int val);
+int dev_stk0408_write0(ECVSTK1160Device *dev, u_int16_t mask, u_int16_t val);
 int dev_stk0408_set_resolution(ECVSTK1160Device *dev);
-int dev_stk0408_set_streaming(ECVSTK1160Device *dev, int streaming);
+int dev_stk0408_set_streaming(ECVSTK1160Device *dev, BOOL streaming);
 
 static void usb_stk11xx_write_registry(ECVSTK1160Device *dev, u_int16_t i, u_int16_t v)
 {

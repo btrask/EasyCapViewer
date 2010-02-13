@@ -132,7 +132,7 @@ enum {
 	struct {
 		u_int8_t reg;
 		int16_t val;
-	} settings[] = {
+	} const settings[] = {
 		{0x01, 0x08},
 		{0x02, SAA711XFUSE0Antialias | SAA711XFUSE1Amplifier | [device SAA711XMODESource]},
 		{0x03, SAA711XHOLDGAutomaticGainControlEnabled | SAA711XVBSLLongVerticalBlanking},
