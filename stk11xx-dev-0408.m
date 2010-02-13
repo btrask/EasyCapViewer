@@ -110,7 +110,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Device *dev)
  */
 	int x,y,xsub,ysub;
 
-	switch (dev.captureSize.width)
+	switch ([dev captureSize].width)
 	{
 		case 720:
 			x = 0x5a0;
@@ -135,7 +135,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Device *dev)
 			return -1;
 	}
 
-	switch (dev.captureSize.height)
+	switch ([dev captureSize].height)
 	{
 		case 576:
 		case 288:
@@ -145,8 +145,8 @@ int dev_stk0408_set_resolution(ECVSTK1160Device *dev)
 			break;
 
 		case 480:
-			y = dev.is60HzFormat ? 0xf3 : 0x110;
-			ysub= dev.is60HzFormat ? 0x03 : 0x20;
+			y = [dev is60HzFormat] ? 0xf3 : 0x110;
+			ysub= [dev is60HzFormat] ? 0x03 : 0x20;
 			break;
 
 		case 120:
@@ -166,7 +166,7 @@ int dev_stk0408_set_resolution(ECVSTK1160Device *dev)
 	usb_stk11xx_write_registry(dev, 0x0114, x    ); // X
 	usb_stk11xx_write_registry(dev, 0x0115, 5    );
 	usb_stk11xx_write_registry(dev, 0x0116, y    ); // Y
-	usb_stk11xx_write_registry(dev, 0x0117, dev.is60HzFormat ? 0 : 1);
+	usb_stk11xx_write_registry(dev, 0x0117, [dev is60HzFormat] ? 0 : 1);
 
 	return 0;
 }
