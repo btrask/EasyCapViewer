@@ -48,18 +48,14 @@
  */
 int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 {
-	dev_stk0408_write0(dev, 0x0007, 0x0001);
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
-	usleep(10 * ECVMicrosecondsPerMillisecond);
-	dev_stk0408_write0(dev, 0x0078, 0x0000);
 	usb_stk11xx_write_registry(dev, 0x0203, 0x00a0);
-	dev_stk0408_write0(dev, 0x07f, 0x001);
 	dev_stk0408_check_device(dev);
 	usb_stk11xx_set_feature(dev, 1);
 
 	usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
 	usb_stk11xx_write_registry(dev, 0x0001, 0x0003);
-	dev_stk0408_write0(dev, 0x0078, 0x0030);
+	dev_stk0408_write0(dev, 0x67, 1 << 5 | 1 << 0);
 	int const ids[] = {
 		0x203,0x00d,0x00f,0x103,0x018,0x01b,0x01c,0x01a,0x019,
 		0x300,0x350,0x351,0x352,0x353,0x300,0x018,0x202,
