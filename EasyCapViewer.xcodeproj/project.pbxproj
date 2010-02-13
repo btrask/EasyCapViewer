@@ -758,7 +758,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
 				PREBINDING = NO;
-				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -784,7 +783,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
 				PREBINDING = NO;
-				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};

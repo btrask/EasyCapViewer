@@ -77,8 +77,8 @@ int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 
 int dev_stk0408_write0(ECVSTK1160Device *dev, int mask, int val)
 {
-	usb_stk11xx_write_registry(dev, 0x0002, mask);
 	usb_stk11xx_write_registry(dev, 0x0000, val);
+	usb_stk11xx_write_registry(dev, 0x0002, mask);
 	return 0;
 }
 
