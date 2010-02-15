@@ -201,6 +201,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[[ECVAudioDevice class] ECV_addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification];
 	[self setCaptureDevice:_captureDevice];
 }
+- (NSString *)windowFrameAutosaveName
+{
+	return NSStringFromClass([self class]);
+}
 
 #pragma mark -NSObject
 
