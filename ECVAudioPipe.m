@@ -75,6 +75,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 @synthesize inputStreamDescription = _inputStreamDescription;
 @synthesize outputStreamDescription = _outputStreamDescription;
 @synthesize volume = _volume;
+@synthesize upconvertsFromMono = _upconvertsFromMono;
 @synthesize dropsBuffers = _dropsBuffers;
 
 #pragma mark -
@@ -90,14 +91,20 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 {
 	NSMutableArray *const buffers = [NSMutableArray arrayWithCapacity:inputBufferList->mNumberBuffers];
 	NSUInteger i = 0;
-	float const volume = pow(_volume, 2);
+	float const volume = pow([self volume], 2);
+	BOOL const upconvertFromMono = [self upconvertsFromMono];
 	for(; i < inputBufferList->mNumberBuffers; i++) {
-		size_t const length = inputBufferList->mBuffers[i].mDataByteSize;
-		if(!length) continue;
-		void *const bytes = malloc(length);
-		if(!bytes) continue;
-		vDSP_vsmul(inputBufferList->mBuffers[i].mData, 1, &volume, bytes, 1, length / sizeof(float));
-		[buffers addObject:[NSMutableData dataWithBytesNoCopy:bytes length:length freeWhenDone:YES]];
+		size_t const totalLength = inputBufferList->mBuffers[i].mDataByteSize;
+		if(!totalLength) continue;
+		float *const floats = malloc(totalLength);
+		if(!floats) continue;
+		if(upconvertFromMono) {
+			UInt32 const channelCount = inputBufferList->mBuffers[i].mNumberChannels;
+			size_t const channelLength = totalLength / channelCount;
+			UInt32 j = 0;
+			for(; j < channelCount; j++) vDSP_vsmul(inputBufferList->mBuffers[i].mData, channelCount, &volume, floats + j, channelCount, channelLength / sizeof(float));
+		} else vDSP_vsmul(inputBufferList->mBuffers[i].mData, 1, &volume, floats, 1, totalLength / sizeof(float));
+		[buffers addObject:[NSMutableData dataWithBytesNoCopy:floats length:totalLength freeWhenDone:YES]];
 	}
 	[_lock lock];
 	if(_dropsBuffers) [_unusedBuffers setArray:buffers];

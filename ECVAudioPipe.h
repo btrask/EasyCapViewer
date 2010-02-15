@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	AudioStreamBasicDescription _outputStreamDescription;
 	AudioConverterRef _converter;
 	CGFloat _volume;
+	BOOL _upconvertsFromMono;
 	BOOL _dropsBuffers;
 	NSLock *_lock;
 	NSMutableArray *_unusedBuffers;
@@ -42,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) AudioStreamBasicDescription inputStreamDescription;
 @property(readonly) AudioStreamBasicDescription outputStreamDescription;
 @property(assign) CGFloat volume;
+@property(assign) BOOL upconvertsFromMono;
 @property(assign) BOOL dropsBuffers;
 
 @property(readonly) BOOL hasReadyBuffers;
