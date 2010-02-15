@@ -58,7 +58,7 @@ int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
 	usb_stk11xx_write_registry(dev, 0x0203, 0x00a0);
 	dev_stk0408_check_device(dev);
-	usb_stk11xx_set_feature(dev, 1);
+	(void)[dev setFeatureAtIndex:1];
 
 	usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
 	usb_stk11xx_write_registry(dev, 0x0001, 0x0003);

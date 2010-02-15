@@ -45,7 +45,3 @@ static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t i, int32_
 {
 	(void)[dev readValue:(SInt32 *)v atIndex:i];
 }
-static void usb_stk11xx_set_feature(ECVSTK1160Device *dev, int i)
-{
-	(void)[dev setFeatureAtIndex:i];
-}
