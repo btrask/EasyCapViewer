@@ -58,6 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) ECVCaptureDevice *captureDevice;
 
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
+- (void)volumeDidChange:(NSNotification *)aNotif;
 
 @end
 
@@ -80,6 +81,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat contrast;
 @property(assign) CGFloat saturation;
 @property(assign) CGFloat hue;
+@property(assign, getter=isMuted) BOOL muted;
 @property(assign) CGFloat volume;
 
 @end

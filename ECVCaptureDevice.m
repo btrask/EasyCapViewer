@@ -51,6 +51,8 @@ NSString *const ECVSaturationKey = @"ECVSaturation";
 
 NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
 
+NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
+
 static NSString *const ECVVolumeKey = @"ECVVolume";
 
 enum {
@@ -671,15 +673,27 @@ ECVNoDeviceError:
 #pragma mark -<ECVCaptureControllerConfiguring>
 
 #ifndef ECV_DISABLE_AUDIO
+- (BOOL)isMuted
+{
+	return _muted;
+}
+- (void)setMuted:(BOOL)flag
+{
+	if(flag == _muted) return;
+	_muted = flag;
+	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
+	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
+}
 - (CGFloat)volume
 {
 	return _volume;
 }
 - (void)setVolume:(CGFloat)value
 {
-	_volume = value;
-	[_audioPreviewingPipe setVolume:value];
+	_volume = CLAMP(0.0f, value, 1.0f);
+	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
 	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
+	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
 }
 #endif
 

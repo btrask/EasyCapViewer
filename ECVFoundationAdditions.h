@@ -35,4 +35,7 @@ NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
 
 + (void *)ECV_useInstance:(BOOL)instance implementationFromClass:(Class)class forSelector:(SEL)aSel;
 
+- (void)ECV_addObserver:(id)observer selector:(SEL)aSelector name:(NSString *)aName;
+- (void)ECV_removeObserver:(id)observer name:(NSString *)aName;
+
 @end

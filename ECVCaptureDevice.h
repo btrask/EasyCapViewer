@@ -46,6 +46,8 @@ extern NSString *const ECVSaturationKey;
 
 extern NSString *const ECVCaptureDeviceErrorDomain;
 
+extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
+
 #define ECVPauseWhile(obj, code) {\
 	ECVCaptureDevice *const __obj = (obj);\
 	BOOL const __p = [__obj isPlaying];\
@@ -85,6 +87,7 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
+	BOOL _muted;
 	CGFloat _volume;
 	NSTimeInterval _audioStopTime;
 #endif

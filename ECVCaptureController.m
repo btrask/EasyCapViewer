@@ -497,10 +497,31 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
 {
-	if([@" " isEqualToString:[anEvent charactersIgnoringModifiers]]) {
-		[self togglePlaying:self];
-		return YES;
+	NSString *const characters = [anEvent charactersIgnoringModifiers];
+	if(![characters length]) return NO;
+	unichar const character = [characters characterAtIndex:0];
+	NSUInteger const modifiers = [anEvent modifierFlags] & (NSCommandKeyMask | NSShiftKeyMask | NSAlternateKeyMask | NSControlKeyMask);
+	switch(character) {
+		case ' ':
+			[self togglePlaying:self];
+			return YES;
 	}
+#ifndef ECV_DISABLE_AUDIO
+	if(NSCommandKeyMask == modifiers) switch(character) {
+		case NSUpArrowFunctionKey:
+			[[self document] setVolume:[[self document] volume] + 0.05f];
+			return YES;
+		case NSDownArrowFunctionKey:
+			[[self document] setVolume:[[self document] volume] - 0.05f];
+			return YES;
+	}
+	if((NSCommandKeyMask | NSAlternateKeyMask) == modifiers) switch(character) {
+		case NSUpArrowFunctionKey:
+		case NSDownArrowFunctionKey:
+			[[self document] setMuted:![[self document] isMuted]];
+			return YES;
+	}
+#endif
 	return NO;
 }
 

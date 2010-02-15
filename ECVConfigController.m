@@ -91,6 +91,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeVolume:(id)sender
 {
 	[_captureDevice setVolume:[sender doubleValue]];
+	[_captureDevice setMuted:NO];
 }
 
 #pragma mark -
@@ -98,7 +99,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @synthesize captureDevice = _captureDevice;
 - (void)setCaptureDevice:(ECVCaptureDevice *)c
 {
+	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceVolumeDidChangeNotification];
 	_captureDevice = c;
+	[_captureDevice ECV_addObserver:self selector:@selector(volumeDidChange:) name:ECVCaptureDeviceVolumeDidChangeNotification];
+	[self volumeDidChange:nil];
 
 	if(![self isWindowLoaded]) return;
 
@@ -139,12 +143,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[contrastSlider setEnabled:[_captureDevice respondsToSelector:@selector(contrast)]];
 	[saturationSlider setEnabled:[_captureDevice respondsToSelector:@selector(saturation)]];
 	[hueSlider setEnabled:[_captureDevice respondsToSelector:@selector(hue)]];
-	[volumeSlider setEnabled:[_captureDevice respondsToSelector:@selector(volume)]];
 	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? [_captureDevice brightness] : 0.5f];
 	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? [_captureDevice contrast] : 0.5f];
 	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? [_captureDevice saturation] : 0.5f];
 	[hueSlider setDoubleValue:[hueSlider isEnabled] ? [_captureDevice hue] : 0.5f];
-	[volumeSlider setDoubleValue:[volumeSlider isEnabled] ? [_captureDevice volume] : 1.0f];
 	[self _snapSlider:brightnessSlider];
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];
@@ -174,6 +176,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:[_captureDevice audioInput]]];
 	[audioSourcePopUp setEnabled:!!_captureDevice];
 }
+- (void)volumeDidChange:(NSNotification *)aNotif
+{
+	if(![self isWindowLoaded]) return;
+	BOOL const volumeSupported = [_captureDevice respondsToSelector:@selector(volume)];
+	[volumeSlider setEnabled:volumeSupported];
+	if(volumeSupported) [volumeSlider setDoubleValue:[_captureDevice isMuted] ? 0.0f : [_captureDevice volume]];
+	else [volumeSlider setDoubleValue:1.0f];
+}
 
 #pragma mark -ECVConfigController(Private)
 
@@ -188,7 +198,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[super windowDidLoad];
 	[(NSPanel *)[self window] setBecomesKeyOnlyIfNeeded:YES];
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification object:[ECVAudioDevice class]];
+	[[ECVAudioDevice class] ECV_addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification];
 	[self setCaptureDevice:_captureDevice];
 }
 
@@ -197,6 +207,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)init
 {
 	return [super initWithWindowNibName:@"ECVConfig"];
+}
+- (void)dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[super dealloc];
 }
 
 @end

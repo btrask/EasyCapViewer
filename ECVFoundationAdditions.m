@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation NSObject(ECVFoundationAdditions)
 
+#pragma mark +NSObject(ECVFoundationAdditions)
+
 + (void *)ECV_useInstance:(BOOL)instance implementationFromClass:(Class)class forSelector:(SEL)aSel
 {
 	if(!instance) self = objc_getMetaClass(class_getName(self));
@@ -35,6 +37,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IMP const originalImplementation = class_getMethodImplementation(self, aSel); // Make sure the IMP we return is gotten using the normal method lookup mechanism.
 	(void)class_replaceMethod(self, aSel, method_getImplementation(newMethod), method_getTypeEncoding(newMethod)); // If this specific class doesn't provide its own implementation of aSel--even if a superclass does--class_replaceMethod() adds the method without replacing anything and returns NULL. This behavior is good because it prevents our change from spreading to a superclass, but it means the return value is worthless.
 	return originalImplementation;
+}
+
+#pragma mark -NSObject(ECVFoundationAdditions)
+
+- (void)ECV_addObserver:(id)observer selector:(SEL)aSelector name:(NSString *)aName
+{
+	[[NSNotificationCenter defaultCenter] addObserver:observer selector:aSelector name:aName object:self];
+}
+- (void)ECV_removeObserver:(id)observer name:(NSString *)aName
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:observer name:aName object:self];
 }
 
 @end
