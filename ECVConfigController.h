@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSSlider *saturationSlider;
 
 	IBOutlet NSPopUpButton *audioSourcePopUp;
+	IBOutlet NSButtonCell *upconvertsFromMonoSwitch;
 	IBOutlet NSSlider *volumeSlider;
 
 	ECVCaptureDevice *_captureDevice;
@@ -52,7 +53,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeContrast:(id)sender;
 - (IBAction)changeSaturation:(id)sender;
 - (IBAction)changeHue:(id)sender;
+
 - (IBAction)changeAudioInput:(id)sender;
+- (IBAction)changeUpconvertsFromMono:(id)sender;
 - (IBAction)changeVolume:(id)sender;
 
 @property(assign) ECVCaptureDevice *captureDevice;
@@ -83,5 +86,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat hue;
 @property(assign, getter=isMuted) BOOL muted;
 @property(assign) CGFloat volume;
+@property(assign) BOOL upconvertsFromMono;
 
 @end

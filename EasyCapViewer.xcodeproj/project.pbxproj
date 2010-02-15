@@ -76,6 +76,8 @@
 		0ECDB5D5111C693100D5899C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B3510F679A400935C48 /* Localizable.strings */; };
 		0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */; };
 		0ECDB5DA111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */; };
+		0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */; };
+		0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */; };
 		0EDF46C20FCE1B4F006630E1 /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
 		0EE547941070F34C00F003AF /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE547931070F34C00F003AF /* CoreVideo.framework */; };
 		0EE5483A1071019600F003AF /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE548391071019600F003AF /* QuickTime.framework */; };
@@ -181,6 +183,8 @@
 		0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVRectEdgeMask.m; sourceTree = "<group>"; };
 		0ECDB5D7111C6A7100D5899C /* ECVComponentConfiguring.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVComponentConfiguring.h; sourceTree = "<group>"; };
 		0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVComponentConfiguring.m; sourceTree = "<group>"; };
+		0EDC66951129186A00AF1803 /* ECVHUDSwitchButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDSwitchButtonCell.h; sourceTree = "<group>"; };
+		0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDSwitchButtonCell.m; sourceTree = "<group>"; };
 		0EDF451A0FCD2167006630E1 /* stk11xx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stk11xx.h; sourceTree = "<group>"; };
 		0EE547931070F34C00F003AF /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		0EE548391071019600F003AF /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
@@ -294,6 +298,8 @@
 				0E8CE0CB107BCE12004F05A7 /* ECVHUDPopUpButtonCell.m */,
 				0E8CE1CF107BE953004F05A7 /* ECVHUDSliderCell.h */,
 				0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */,
+				0EDC66951129186A00AF1803 /* ECVHUDSwitchButtonCell.h */,
+				0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */,
 				0E8CE216107BF845004F05A7 /* ECVTickMarkView.h */,
 				0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */,
 				0E7FFC4310899D4B000C8217 /* ECVDividerView.h */,
@@ -556,6 +562,7 @@
 				0E9FAAC81107B202005C55CE /* ECVReadWriteLock.m in Sources */,
 				0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */,
 				0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
+				0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -593,6 +600,7 @@
 				0E9F9B2210F6764500935C48 /* ECVFoundationAdditions.m in Sources */,
 				0E4D778711046F9E00FE3DDC /* EasyCapViewer.m in Sources */,
 				0ECDB5DA111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
+				0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

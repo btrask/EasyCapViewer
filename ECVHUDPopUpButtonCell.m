@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVAppKitAdditions.h"
 
-#define ECVMarginLeft 4.5f
-#define ECVMarginRight 4.5f
+#define ECVMarginLeft 3.5f
+#define ECVMarginRight 3.5f
 #define ECVMarginHorz (ECVMarginLeft + ECVMarginRight)
 #define ECVMarginTop 1.5f
 #define ECVMarginBottom 3.5f
@@ -68,17 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	BOOL const e = [self isEnabled];
 
 	NSBezierPath *const p = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(NSMinX(r) + ECVMarginLeft, NSMinY(r) + ECVMarginTop, NSWidth(r) - ECVMarginHorz, NSHeight(r) - ECVMarginVert) xRadius:4.0f yRadius:4.0f];
-
-	NSColor *startColor = nil, *endColor = nil;
-	if([self isHighlighted]) {
-		startColor = [NSColor colorWithCalibratedWhite:0.95f alpha:e ? 0.8f : 0.4f];
-		endColor = [NSColor colorWithCalibratedWhite:0.55f alpha:e ? 0.8f : 0.4f];
-	} else {
-		startColor = [NSColor colorWithCalibratedWhite:0.55f alpha:e ? 0.3f : 0.1f];
-		endColor = [NSColor colorWithCalibratedWhite:0.1f alpha:e ? 0.3f : 0.1f];
-	}
-	[p ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(r), NSMinY(r) + ECVMarginTop) toColor:endColor atPoint:NSMakePoint(NSMinX(r), NSMaxY(r) - ECVMarginBottom)];
-
+	[p ECV_fillWithHUDButtonGradientWithHighlight:[self isHighlighted] enabled:e];
 	[[NSColor colorWithCalibratedWhite:0.75f alpha:e ? 0.9f : 0.5f] set];
 	[p stroke];
 

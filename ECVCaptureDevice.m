@@ -54,6 +54,7 @@ NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
 NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";
+static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 
 enum {
 	ECVNotPlaying,
@@ -131,6 +132,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		[NSNumber numberWithDouble:0.5f], ECVHueKey,
 		[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
 		[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
+		[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,
 		nil]];
 }
 
@@ -154,6 +156,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 #ifdef ECV_ENABLE_AUDIO
 	[self setVolume:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey]];
+	[self setUpconvertsFromMono:[[NSUserDefaults standardUserDefaults] boolForKey:ECVUpconvertsFromMonoKey]];
 #endif
 
 #ifndef ECV_NO_CONTROLLERS
@@ -694,6 +697,16 @@ ECVNoDeviceError:
 	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
 	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
 	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
+}
+- (BOOL)upconvertsFromMono
+{
+	return _upconvertsFromMono;
+}
+- (void)setUpconvertsFromMono:(BOOL)flag
+{
+	_upconvertsFromMono = flag;
+	[_audioPreviewingPipe setUpconvertsFromMono:flag];
+	[[NSUserDefaults standardUserDefaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
 }
 #endif
 

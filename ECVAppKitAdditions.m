@@ -60,6 +60,19 @@ static void ECVGradientCallback(CGFloat colors[2][ECVNumberOfColorSpaceComponent
 	CGShadingRelease(shading);
 	[NSGraphicsContext restoreGraphicsState];
 }
+- (void)ECV_fillWithHUDButtonGradientWithHighlight:(BOOL)highlight enabled:(BOOL)enabled
+{
+	NSColor *startColor = nil, *endColor = nil;
+	if(highlight) {
+		startColor = [NSColor colorWithCalibratedWhite:0.95f alpha:enabled ? 0.8f : 0.4f];
+		endColor = [NSColor colorWithCalibratedWhite:0.55f alpha:enabled ? 0.8f : 0.4f];
+	} else {
+		startColor = [NSColor colorWithCalibratedWhite:0.55f alpha:enabled ? 0.3f : 0.1f];
+		endColor = [NSColor colorWithCalibratedWhite:0.1f alpha:enabled ? 0.3f : 0.1f];
+	}
+	NSRect const b = [self bounds];
+	[self ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(b), NSMinY(b)) toColor:endColor atPoint:NSMakePoint(NSMinX(b), NSMaxY(b))];
+}
 
 @end
 

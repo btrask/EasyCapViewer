@@ -88,6 +88,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[_captureDevice setAudioInput:[[sender selectedItem] representedObject]];
 }
+- (IBAction)changeUpconvertsFromMono:(id)sender
+{
+	[_captureDevice setUpconvertsFromMono:NSOnState == [sender state]];
+}
 - (IBAction)changeVolume:(id)sender
 {
 	[_captureDevice setVolume:[sender doubleValue]];
@@ -151,6 +155,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];
 	[self _snapSlider:hueSlider];
+
+	[upconvertsFromMonoSwitch setEnabled:[_captureDevice respondsToSelector:@selector(upconvertsFromMono)]];
+	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [_captureDevice upconvertsFromMono]];
 
 	[self audioHardwareDevicesDidChange:nil];
 }

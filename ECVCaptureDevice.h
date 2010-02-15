@@ -87,9 +87,10 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
+	NSTimeInterval _audioStopTime;
 	BOOL _muted;
 	CGFloat _volume;
-	NSTimeInterval _audioStopTime;
+	BOOL _upconvertsFromMono;
 #endif
 }
 

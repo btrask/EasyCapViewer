@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2010, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -21,21 +21,6 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-@interface NSBezierPath(ECVAppKitAdditions)
-
-- (void)ECV_fillWithGradientFromColor:(NSColor *)startColor atPoint:(NSPoint)startPoint toColor:(NSColor *)endColor atPoint:(NSPoint)endPoint;
-- (void)ECV_fillWithHUDButtonGradientWithHighlight:(BOOL)highlight enabled:(BOOL)enabled;
-
-@end
-
-@interface NSBitmapImageRep(ECVAppKitAdditions)
-
-- (GLuint)ECV_textureName;
-
-@end
-
-@interface NSWindowController(ECVAppKitAdditions)
-
-- (IBAction)ECV_toggleWindow:(id)sender;
+@interface ECVHUDSwitchButtonCell : NSButtonCell
 
 @end
