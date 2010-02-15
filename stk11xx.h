@@ -49,11 +49,3 @@ static void usb_stk11xx_set_feature(ECVSTK1160Device *dev, int i)
 {
 	(void)[dev setFeatureAtIndex:i];
 }
-static void dev_stk11xx_camera_on(ECVSTK1160Device *dev)
-{
-	(void)[dev setAlternateInterface:5];
-}
-static void dev_stk11xx_camera_off(ECVSTK1160Device *dev)
-{
-	(void)[dev setAlternateInterface:0];
-}

@@ -130,14 +130,14 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if([self videoSource] != ECVSTK1160SECAMFormat) dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | (4 - [self videoSource]) << 3);
 	dev_stk0408_init_camera(self);
 	dev_stk0408_set_resolution(self);
-	dev_stk11xx_camera_on(self);
+	(void)[self setAlternateInterface:5];
 	dev_stk0408_set_streaming(self, YES);
 	return YES;
 }
 - (BOOL)threaded_pause
 {
 	dev_stk0408_set_streaming(self, NO);
-	dev_stk11xx_camera_off(self);
+	(void)[self setAlternateInterface:0];
 	return YES;
 }
 - (BOOL)threaded_watchdog
