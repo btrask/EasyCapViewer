@@ -152,7 +152,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 	[self setVolume:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey]];
 #endif
 
@@ -288,7 +288,7 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 - (ECVAudioDevice *)audioInputOfCaptureHardware
 {
 	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
@@ -429,7 +429,7 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored));
 	currentFrame += 10;
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 	[self performSelectorOnMainThread:@selector(startAudio) withObject:nil waitUntilDone:YES];
 #endif
 #ifndef ECV_NO_CONTROLLERS
@@ -468,7 +468,7 @@ ECVNoDeviceError:
 #ifndef ECV_NO_CONTROLLERS
 	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
 #endif
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 	[self performSelectorOnMainThread:@selector(stopAudio) withObject:nil waitUntilDone:NO];
 #endif
 
@@ -644,7 +644,7 @@ ECVNoDeviceError:
 	[_productName release];
 	IOObjectRelease(_deviceRemovedNotification);
 	[_playLock release];
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 	[_audioInput release];
 	[_audioOutput release];
 	[_audioPreviewingPipe release];
@@ -654,7 +654,7 @@ ECVNoDeviceError:
 
 #pragma mark -<ECVAudioDeviceDelegate>
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioInput) return;
@@ -672,7 +672,7 @@ ECVNoDeviceError:
 
 #pragma mark -<ECVCaptureControllerConfiguring>
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 - (BOOL)isMuted
 {
 	return _muted;

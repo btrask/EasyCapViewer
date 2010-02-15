@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVConfigController.h"
 
 // Other Sources
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 #import "ECVAudioDevice.h"
 @class ECVAudioPipe;
 #endif
@@ -57,7 +57,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 } while(NO)
 
 @interface ECVCaptureDevice : NSDocument <ECVCaptureDeviceConfiguring
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 , ECVAudioDeviceDelegate
 #endif
 >
@@ -83,7 +83,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	ECVVideoFrame *_pendingFrame;
 	ECVVideoFrame *_lastCompletedFrame;
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
@@ -117,7 +117,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)i;
 - (BOOL)setFeatureAtIndex:(UInt16)i;
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 @property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
 @property(retain) ECVAudioDevice *audioInput;
 @property(retain) ECVAudioDevice *audioOutput;

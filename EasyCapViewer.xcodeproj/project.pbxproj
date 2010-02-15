@@ -664,7 +664,6 @@
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
-					ECV_DISABLE_AUDIO,
 					ECV_SIMPLE_LOGGING,
 					ECV_NO_CONTROLLERS,
 				);
@@ -680,7 +679,6 @@
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
-					ECV_DISABLE_AUDIO,
 					ECV_SIMPLE_LOGGING,
 					ECV_NO_CONTROLLERS,
 				);
@@ -708,6 +706,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
 					ECV_DEPENDENT_VIDEO_STORAGE,
+					ECV_ENABLE_AUDIO,
 				);
 				INFOPLIST_FILE = "EasyCapViewer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -730,6 +729,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
 					ECV_DEPENDENT_VIDEO_STORAGE,
+					ECV_ENABLE_AUDIO,
 				);
 				INFOPLIST_FILE = "EasyCapViewer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";

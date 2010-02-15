@@ -22,7 +22,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 	#import <AudioToolbox/AudioToolbox.h>
 #endif
 #import <IOKit/usb/IOUSBLib.h>
@@ -128,7 +128,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(invalidImageIndexErr)
 		ERROR_CASE(invalidSpriteIDErr)
 
-#ifndef ECV_DISABLE_AUDIO
+#ifdef ECV_ENABLE_AUDIO
 		ERROR_CASE(kAudioConverterErr_FormatNotSupported)
 		ERROR_CASE(kAudioConverterErr_OperationNotSupported)
 		ERROR_CASE(kAudioConverterErr_PropertyNotSupported)
