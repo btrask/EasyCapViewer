@@ -28,19 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation NSBezierPath(ECVAppKitAdditions)
 
-#pragma mark +NSBezierPath(ECVAppKitAdditions)
-
-+ (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius
-{
-	NSBezierPath *const path = [self bezierPath];
-	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(aRect) - radius, NSMaxY(aRect) - radius) radius:radius startAngle:0.0f endAngle:90.0f];
-	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(aRect) + radius, NSMaxY(aRect) - radius) radius:radius startAngle:90.0f endAngle:180.0f];
-	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(aRect) + radius, NSMinY(aRect) + radius) radius:radius startAngle:180.0f endAngle:270.0f];
-	[path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(aRect) - radius, NSMinY(aRect) + radius) radius:radius startAngle:270.0f endAngle:0.0f];
-	[path closePath];
-	return path;
-}
-
 #pragma mark -NSBezierPath(ECVAppKitAdditions)
 
 #define ECVNumberOfColorSpaceComponents 4

@@ -23,7 +23,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface NSBezierPath(ECVAppKitAdditions)
 
-+ (NSBezierPath *)ECV_bezierPathWithRoundRect:(NSRect)aRect cornerRadius:(CGFloat)radius;
 - (void)ECV_fillWithGradientFromColor:(NSColor *)startColor atPoint:(NSPoint)startPoint toColor:(NSColor *)endColor atPoint:(NSPoint)endPoint;
 
 @end

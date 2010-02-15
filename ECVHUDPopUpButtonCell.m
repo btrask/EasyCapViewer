@@ -67,7 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	BOOL const e = [self isEnabled];
 
-	NSBezierPath *const p = [NSBezierPath ECV_bezierPathWithRoundRect:NSMakeRect(NSMinX(r) + ECVMarginLeft, NSMinY(r) + ECVMarginTop, NSWidth(r) - ECVMarginHorz, NSHeight(r) - ECVMarginVert) cornerRadius:4.0f];
+	NSBezierPath *const p = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(NSMinX(r) + ECVMarginLeft, NSMinY(r) + ECVMarginTop, NSWidth(r) - ECVMarginHorz, NSHeight(r) - ECVMarginVert) xRadius:4.0f yRadius:4.0f];
 
 	NSColor *startColor = nil, *endColor = nil;
 	if([self isHighlighted]) {
