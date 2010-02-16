@@ -34,6 +34,12 @@ enum {
 static NSString *const ECVSTK1160VideoSourceKey = @"ECVSTK1160VideoSource";
 static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
+@interface ECVSTK1160Device(Private)
+
+- (void)_initializeResolution;
+
+@end
+
 @implementation ECVSTK1160Device
 
 #pragma mark +NSObject
@@ -61,6 +67,51 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(format == _videoFormat) return;
 	ECVPauseWhile(self, { _videoFormat = format; });
 	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
+}
+
+#pragma mark -ECVSTK1160Device(Private)
+
+- (void)_initializeResolution
+{
+	ECVPixelSize captureSize = [self captureSize];
+	ECVPixelSize standardSize = captureSize;
+	switch(captureSize.width) {
+		case 704:
+		case 352:
+		case 176:
+			captureSize.width = 704;
+			standardSize.width = 706;
+			break;
+		case 640:
+		case 320:
+		case 160:
+			captureSize.width = 640;
+			standardSize.width = 644;
+			break;
+	}
+	switch(captureSize.height) {
+		case 576:
+		case 288:
+		case 144:
+			captureSize.height = 576;
+			standardSize.height = 578;
+			break;
+		case 480:
+		case 240:
+		case 120:
+			captureSize.height = 480;
+			standardSize.height = 486;
+			break;
+	}
+	size_t const bpp = ECVPixelFormatBytesPerPixel([self pixelFormatType]);
+	(void)[self writeValue:(standardSize.width - captureSize.width) * bpp atIndex:0x110];
+	(void)[self writeValue:0 atIndex:0x111];
+	(void)[self writeValue:(standardSize.height - captureSize.height) / 2 atIndex:0x112];
+	(void)[self writeValue:0 atIndex:0x113];
+	(void)[self writeValue:standardSize.width * bpp atIndex:0x114];
+	(void)[self writeValue:5 atIndex:0x115];
+	(void)[self writeValue:standardSize.height / 2 atIndex:0x116];
+	(void)[self writeValue:![self is60HzFormat] atIndex:0x117];
 }
 
 #pragma mark -ECVCaptureDevice
@@ -120,6 +171,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return [self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50);
 }
+- (OSType)pixelFormatType
+{
+	return kCVPixelFormatType_422YpCbCr8; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
+}
 
 #pragma mark -
 
@@ -129,7 +184,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(![_SAA711XChip initializeRegisters]) return NO;
 	if([self videoSource] != ECVSTK1160SECAMFormat) dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | (4 - [self videoSource]) << 3);
 	dev_stk0408_init_camera(self);
-	dev_stk0408_set_resolution(self);
+	[self _initializeResolution];
 	(void)[self setAlternateInterface:5];
 	dev_stk0408_set_streaming(self, YES);
 	return YES;

@@ -388,7 +388,7 @@ ECVNoDeviceError:
 {
 	_firstFrame = YES;
 	[_videoStorage release];
-	_videoStorage = [[ECVVideoStorage alloc] initWithPixelFormatType:kCVPixelFormatType_422YpCbCr8 deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]]; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
+	_videoStorage = [[ECVVideoStorage alloc] initWithPixelFormatType:[self pixelFormatType] deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]];
 	[_playLock unlockWithCondition:ECVStartPlaying];
 	[NSThread detachNewThreadSelector:@selector(threadMain_play) toTarget:self withObject:nil];
 }
