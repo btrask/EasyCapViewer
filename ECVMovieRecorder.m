@@ -88,6 +88,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		_videoQuality = 0.5f;
 		_outputSize = [_videoStorage originalSize];
 		_cropRect = ECVUncroppedRect;
+		_recordsDirectlyToDisk = YES;
 
 		_volume = 1.0f;
 
@@ -122,6 +123,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0f)], kCVImageBufferCleanApertureVerticalOffsetKey,
 		nil];
 }
+@synthesize recordsDirectlyToDisk = _recordsDirectlyToDisk;
 
 #pragma mark -
 
@@ -131,7 +133,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 - (BOOL)startRecordingError:(out NSError **)outError
 {
-	QTMovie *const movie = [[[QTMovie alloc] initToWritableFile:[_URL path] error:outError] autorelease];
+	QTMovie *const movie = [[self recordsDirectlyToDisk] ? [[QTMovie alloc] initToWritableFile:[[self URL] path] error:outError] : [[QTMovie alloc] initToWritableData:[NSMutableData data] error:outError] autorelease];
 	if(!movie) return NO;
 
 	_videoFrames = [[NSMutableArray alloc] init];
@@ -253,6 +255,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 	_videoMedia = NULL;
 	_audioMedia = NULL;
+
+	if(![self recordsDirectlyToDisk]) [movie writeToFile:[[self URL] path] withAttributes:nil];
 
 	[movie detachFromCurrentThread];
 	[QTMovie exitQTKitOnThread];
