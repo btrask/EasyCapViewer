@@ -141,6 +141,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[recorder setVideoQuality:[videoQualitySlider doubleValue]];
 	[recorder setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
 	[recorder setCropRect:[self cropRect]];
+	[recorder setUpconvertsFromMono:[[self document] upconvertsFromMono]];
 
 	NSError *error = nil;
 	if([recorder startRecordingError:&error]) {

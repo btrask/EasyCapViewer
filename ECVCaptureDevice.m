@@ -352,7 +352,7 @@ ECVNoDeviceError:
 		return NO;
 	}
 
-	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription]];
+	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
 	[_audioPreviewingPipe setVolume:_volume];
 	[input setDelegate:self];
 	[output setDelegate:self];
@@ -704,8 +704,7 @@ ECVNoDeviceError:
 }
 - (void)setUpconvertsFromMono:(BOOL)flag
 {
-	_upconvertsFromMono = flag;
-	[_audioPreviewingPipe setUpconvertsFromMono:flag];
+	ECVPauseWhile(self, { _upconvertsFromMono = flag; });
 	[[NSUserDefaults standardUserDefaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
 }
 #endif

@@ -123,6 +123,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0f)], kCVImageBufferCleanApertureVerticalOffsetKey,
 		nil];
 }
+@synthesize upconvertsFromMono = _upconvertsFromMono;
 @synthesize recordsDirectlyToDisk = _recordsDirectlyToDisk;
 
 #pragma mark -
@@ -160,7 +161,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 	ECVAudioStream *const inputStream = [[[_audioDevice streams] objectEnumerator] nextObject];
 	if(inputStream) {
-		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription];
+		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription upconvertFromMono:[self upconvertsFromMono]];
 		[_audioPipe setDropsBuffers:NO];
 	}
 

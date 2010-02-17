@@ -44,13 +44,24 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 
 #pragma mark -ECVAudioPipe
 
-- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc
+- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc upconvertFromMono:(BOOL)flag
 {
 	if((self = [super init])) {
 		if(kAudioFormatLinearPCM != inputDesc.mFormatID) {
 			[self release];
 			return nil;
 		}
+
+		_inputStreamDescription = inputDesc;
+		_outputStreamDescription = outputDesc;
+		_upconvertsFromMono = flag;
+		_volume = 1.0f;
+		_dropsBuffers = YES;
+		_lock = [[NSLock alloc] init];
+		_unusedBuffers = [[NSMutableArray alloc] init];
+		_usedBuffers = [[NSMutableArray alloc] init];
+
+		if(_upconvertsFromMono) _inputStreamDescription.mChannelsPerFrame = _outputStreamDescription.mChannelsPerFrame;
 
 		ECVOSStatus(AudioConverterNew(&inputDesc, &outputDesc, &_converter));
 		if(!_converter) {
@@ -61,21 +72,13 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 		(void)AudioConverterSetProperty(_converter, kAudioConverterSampleRateConverterQuality, sizeof(quality), &quality);
 		UInt32 primeMethod = kConverterPrimeMethod_Normal;
 		(void)AudioConverterSetProperty(_converter, kAudioConverterPrimeMethod, sizeof(primeMethod), &primeMethod);
-
-		_inputStreamDescription = inputDesc;
-		_outputStreamDescription = outputDesc;
-		_volume = 1.0f;
-		_dropsBuffers = YES;
-		_lock = [[NSLock alloc] init];
-		_unusedBuffers = [[NSMutableArray alloc] init];
-		_usedBuffers = [[NSMutableArray alloc] init];
 	}
 	return self;
 }
 @synthesize inputStreamDescription = _inputStreamDescription;
 @synthesize outputStreamDescription = _outputStreamDescription;
-@synthesize volume = _volume;
 @synthesize upconvertsFromMono = _upconvertsFromMono;
+@synthesize volume = _volume;
 @synthesize dropsBuffers = _dropsBuffers;
 
 #pragma mark -
@@ -93,16 +96,18 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 	NSUInteger i = 0;
 	float const volume = pow([self volume], 2);
 	BOOL const upconvertFromMono = [self upconvertsFromMono];
+	UInt32 const intermediateChannelCount = [self inputStreamDescription].mChannelsPerFrame;
 	for(; i < inputBufferList->mNumberBuffers; i++) {
 		size_t const totalLength = inputBufferList->mBuffers[i].mDataByteSize;
 		if(!totalLength) continue;
-		float *const floats = malloc(totalLength);
+		UInt32 const sourceChannelCount = inputBufferList->mBuffers[i].mNumberChannels;
+		NSAssert(upconvertFromMono || sourceChannelCount == intermediateChannelCount, @"If we aren't upconverting, we can't change the number of channels.");
+		size_t const channelLength = totalLength / sourceChannelCount;
+		float *const floats = malloc(channelLength * intermediateChannelCount);
 		if(!floats) continue;
 		if(upconvertFromMono) {
-			UInt32 const channelCount = inputBufferList->mBuffers[i].mNumberChannels;
-			size_t const channelLength = totalLength / channelCount;
 			UInt32 j = 0;
-			for(; j < channelCount; j++) vDSP_vsmul(inputBufferList->mBuffers[i].mData, channelCount, &volume, floats + j, channelCount, channelLength / sizeof(float));
+			for(; j < intermediateChannelCount; j++) vDSP_vsmul(inputBufferList->mBuffers[i].mData, sourceChannelCount, &volume, floats + j, intermediateChannelCount, channelLength / sizeof(float));
 		} else vDSP_vsmul(inputBufferList->mBuffers[i].mData, 1, &volume, floats, 1, totalLength / sizeof(float));
 		[buffers addObject:[NSMutableData dataWithBytesNoCopy:floats length:totalLength freeWhenDone:YES]];
 	}

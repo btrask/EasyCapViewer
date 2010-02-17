@@ -39,11 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSMutableArray *_usedBuffers;
 }
 
-- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc;
+- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc upconvertFromMono:(BOOL)flag;
 @property(readonly) AudioStreamBasicDescription inputStreamDescription;
 @property(readonly) AudioStreamBasicDescription outputStreamDescription;
+@property(readonly) BOOL upconvertsFromMono;
 @property(assign) CGFloat volume;
-@property(assign) BOOL upconvertsFromMono;
 @property(assign) BOOL dropsBuffers;
 
 @property(readonly) BOOL hasReadyBuffers;
