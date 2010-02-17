@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSRect _cropRect;
 	NSDictionary *_cleanAperture;
 	BOOL _upconvertsFromMono;
-	BOOL _recordsDirectlyToDisk;
+	BOOL _recordsToRAM;
 
 	CGFloat _volume;
 
@@ -74,7 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) ECVPixelSize outputSize;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL upconvertsFromMono;
-@property(assign) BOOL recordsDirectlyToDisk;
+@property(assign) BOOL recordsToRAM;
 
 @property(assign) CGFloat volume;
 

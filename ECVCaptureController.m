@@ -142,6 +142,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[recorder setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
 	[recorder setCropRect:[self cropRect]];
 	[recorder setUpconvertsFromMono:[[self document] upconvertsFromMono]];
+	[recorder setRecordsToRAM:NSOnState == [recordToRAMButton state]];
 
 	NSError *error = nil;
 	if([recorder startRecordingError:&error]) {
@@ -170,6 +171,15 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[[NSUserDefaults standardUserDefaults] setObject:codec forKey:ECVVideoCodecKey];
 	NSNumber *const configurableQuality = [[[[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"] objectForKey:codec] objectForKey:@"ECVConfigurableQuality"];
 	[videoQualitySlider setEnabled:configurableQuality && [configurableQuality boolValue]];
+}
+- (IBAction)changeRecordsToRAM:(id)sender
+{
+	if(NSOnState != [sender state]) return;
+	NSAlert *const alert = [[NSAlert alloc] init];
+	[alert setMessageText:NSLocalizedString(@"Recording to RAM can enhance performance, but can also lead to performance degradation if used improperly.", nil)];
+	[alert setInformativeText:NSLocalizedString(@"Movies recorded to RAM are limited to 2GB in size. Make sure you have enough available RAM to store the entire movie.", nil)];
+	[[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)] setKeyEquivalent:@"\r"];
+	[alert beginSheetModalForWindow:[sender window] modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
 }
 
 #pragma mark -

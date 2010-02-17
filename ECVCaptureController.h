@@ -58,6 +58,7 @@ typedef NSInteger ECVCropBorder;
 	IBOutlet NSView *exportAccessoryView;
 	IBOutlet NSPopUpButton *videoCodecPopUp;
 	IBOutlet NSSlider *videoQualitySlider;
+	IBOutlet NSButton *recordToRAMButton;
 
 	BOOL _fullScreen;
 	ECVPlayButtonCell *_playButtonCell;
@@ -76,6 +77,7 @@ typedef NSInteger ECVCropBorder;
 - (IBAction)startRecording:(id)sender;
 - (IBAction)stopRecording:(id)sender;
 - (IBAction)changeCodec:(id)sender;
+- (IBAction)changeRecordsToRAM:(id)sender;
 
 - (IBAction)toggleFullScreen:(id)sender;
 - (IBAction)changeScale:(id)sender;
