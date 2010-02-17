@@ -242,7 +242,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_audioMedia), 0, GetMediaDisplayStartTime(_audioMedia), GetMediaDisplayDuration(_audioMedia), fixed1));
 	ECVOSErr(EndMediaEdits(_videoMedia));
 	ECVOSErr(EndMediaEdits(_audioMedia));
-	[movie updateMovieFile];
+	if([self recordsDirectlyToDisk]) [movie updateMovieFile];
+	else [movie writeToFile:[[self URL] path] withAttributes:nil];
 
 	if(_compressionSession) ICMCompressionSessionRelease(_compressionSession);
 	if(_encodedFrame) ICMEncodedFrameRelease(_encodedFrame);
@@ -254,10 +255,12 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	if(_audioBufferBytes) free(_audioBufferBytes);
 	_audioBufferBytes = NULL;
 
+	DisposeTrackMedia(_videoMedia);
+	DisposeTrackMedia(_audioMedia);
+	DisposeMovieTrack(videoTrack);
+	DisposeMovieTrack(audioTrack);
 	_videoMedia = NULL;
 	_audioMedia = NULL;
-
-	if(![self recordsDirectlyToDisk]) [movie writeToFile:[[self URL] path] withAttributes:nil];
 
 	[movie detachFromCurrentThread];
 	[QTMovie exitQTKitOnThread];
