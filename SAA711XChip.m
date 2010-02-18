@@ -23,6 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "SAA711XChip.h"
 
+// Other Sources
+#import "ECVDebug.h"
+
 enum {
 	SAA711XFUSE0Antialias = 1 << 6,
 	SAA711XFUSE1Amplifier = 1 << 7,
@@ -103,7 +106,7 @@ enum {
 - (void)setContrast:(CGFloat)val
 {
 	_contrast = val;
-	(void)[device writeSAA711XRegister:0x0b value:round(val * 0x88)];
+	(void)[device writeSAA711XRegister:0x0b value:round(val * 0x7f)];
 }
 - (CGFloat)saturation
 {
@@ -112,7 +115,7 @@ enum {
 - (void)setSaturation:(CGFloat)val
 {
 	_saturation = val;
-	(void)[device writeSAA711XRegister:0x0c value:round(val * 0x80)];
+	(void)[device writeSAA711XRegister:0x0c value:round(val * 0x7f)];
 }
 - (CGFloat)hue
 {
@@ -169,6 +172,12 @@ enum {
 	[self setSaturation:_saturation];
 	[self setHue:_hue];
 	return YES;
+}
+- (NSUInteger)versionNumber
+{
+	u_int8_t version = 0;
+	[device readSAA711XRegister:0x00 value:&version];
+	return version;
 }
 
 #pragma mark -SAA711XChip(Private)

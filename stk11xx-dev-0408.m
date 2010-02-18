@@ -50,7 +50,6 @@ int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 {
 	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
 	usb_stk11xx_write_registry(dev, 0x0203, 0x00a0);
-	dev_stk0408_check_device(dev);
 	(void)[dev setFeatureAtIndex:1];
 
 	usb_stk11xx_write_registry(dev, 0x0003, 0x0080);
@@ -88,22 +87,5 @@ int dev_stk0408_write0(ECVSTK1160Device *dev, u_int16_t mask, u_int16_t val)
 	NSCAssert((mask & val) == val, @"Don't set values that will be masked out.");
 	usb_stk11xx_write_registry(dev, 0x00, val);
 	usb_stk11xx_write_registry(dev, 0x02, mask);
-	return 0;
-}
-int dev_stk0408_check_device(ECVSTK1160Device *dev)
-{
-	int const retry = 2;
-	int i = 0;
-	for(; i < retry; i++) {
-		u_int8_t value;
-		usb_stk11xx_read_registry(dev, 0x201, &value);
-		// Writes to 204/205 return 4 on success.
-		// Writes to 208 return 1 on success.
-		if(0x04 == value || 0x01 == value) return 0;
-		if(0x00 != value) {
-			ECVLog(ECVError, @"Check device return error (0x0201 = %02X) !\n", value);
-			return -1;
-		}
-	}
 	return 0;
 }

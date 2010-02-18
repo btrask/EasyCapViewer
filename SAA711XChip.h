@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat hue;
 
 - (BOOL)initialize;
+@property(readonly) NSUInteger versionNumber;
 
 @end
 
@@ -76,6 +77,7 @@ typedef u_int8_t SAA711XMODESource;
 
 @required
 - (BOOL)writeSAA711XRegister:(u_int8_t)reg value:(int16_t)val;
+- (BOOL)readSAA711XRegister:(u_int8_t)reg value:(out u_int8_t *)outVal;
 @property(readonly) SAA711XMODESource SAA711XMODESource;
 @property(readonly) BOOL SVideo;
 @property(readonly) SAA711XCSTDFormat SAA711XCSTDFormat;

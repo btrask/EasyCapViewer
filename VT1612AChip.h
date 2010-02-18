@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) id<VT1612ADevice> device;
 
 - (BOOL)initialize;
-- (NSString *)vendorAndRevisionString;
+@property(readonly) NSString *vendorAndRevisionString;
 
 @end
 
