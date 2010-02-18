@@ -543,7 +543,7 @@ ECVGenericError:
 ECVNoDeviceError:
 	return NO;
 }
-- (BOOL)controlRequestWithType:(UInt8)type request:(UInt8)request value:(UInt16)v index:(UInt16)i length:(UInt16)length data:(void *)data
+- (BOOL)controlRequestWithType:(u_int8_t)type request:(u_int8_t)request value:(u_int16_t)v index:(u_int16_t)i length:(u_int16_t)length data:(void *)data
 {
 	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
 	IOReturn const error = (*_interfaceInterface)->ControlRequest(_interfaceInterface, 0, &r);
@@ -557,18 +557,18 @@ ECVGenericError:
 ECVNoDeviceError:
 	return NO;
 }
-- (BOOL)writeValue:(UInt16)v atIndex:(UInt16)i
+- (BOOL)writeIndex:(u_int16_t)i value:(u_int16_t)v
 {
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:kUSBRqClearFeature value:v index:i length:0 data:NULL];
 }
-- (BOOL)readValue:(out SInt32 *)outValue atIndex:(UInt16)i
+- (BOOL)readIndex:(u_int16_t)i value:(out u_int8_t *)outValue
 {
-	SInt32 v = 0;
+	u_int8_t v = 0;
 	BOOL const r = [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:kUSBRqGetStatus value:0 index:i length:sizeof(v) data:&v];
-	if(outValue) *outValue = CFSwapInt32LittleToHost(v);
+	if(outValue) *outValue = v;
 	return r;
 }
-- (BOOL)setFeatureAtIndex:(UInt16)i
+- (BOOL)setFeatureAtIndex:(u_int16_t)i
 {
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:i length:0 data:NULL];
 }

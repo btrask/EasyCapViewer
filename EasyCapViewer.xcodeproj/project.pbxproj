@@ -67,6 +67,8 @@
 		0E9FAAC91107B207005C55CE /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0AC92310203FB300C12D88 /* QTKit.framework */; };
 		0E9FAAE81107B210005C55CE /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE547931070F34C00F003AF /* CoreVideo.framework */; };
 		0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CB970FC92D8300E9C148 /* ECVDebug.m */; };
+		0EAE4FB7112BD420004D93B3 /* VT1612AChip.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EAE4FB6112BD420004D93B3 /* VT1612AChip.m */; };
+		0EAE4FB8112BD420004D93B3 /* VT1612AChip.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EAE4FB6112BD420004D93B3 /* VT1612AChip.m */; };
 		0EB070DD10B0992400B9575B /* ECVCaptureDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */; };
 		0EC7D342101903F200CFBDFF /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D341101903F200CFBDFF /* CoreAudio.framework */; };
 		0EC7D4A41019A29800CFBDFF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EC7D4A31019A29800CFBDFF /* AudioToolbox.framework */; };
@@ -171,6 +173,8 @@
 		0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVErrorLog.xib; sourceTree = "<group>"; };
 		0E9F9B4110F679B800935C48 /* ECVMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVMenu.xib; sourceTree = "<group>"; };
 		0E9FAA851107A5A7005C55CE /* ECVDevices.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ECVDevices.plist; sourceTree = "<group>"; };
+		0EAE4FB5112BD420004D93B3 /* VT1612AChip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VT1612AChip.h; sourceTree = "<group>"; };
+		0EAE4FB6112BD420004D93B3 /* VT1612AChip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VT1612AChip.m; sourceTree = "<group>"; };
 		0EB070DB10B0992400B9575B /* ECVCaptureDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVCaptureDevice.h; sourceTree = "<group>"; };
 		0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCaptureDevice.m; sourceTree = "<group>"; };
 		0EC7D341101903F200CFBDFF /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
@@ -317,6 +321,8 @@
 			children = (
 				0E16F6AC10AE92C600730A18 /* SAA711XChip.h */,
 				0E16F6AD10AE92C600730A18 /* SAA711XChip.m */,
+				0EAE4FB5112BD420004D93B3 /* VT1612AChip.h */,
+				0EAE4FB6112BD420004D93B3 /* VT1612AChip.m */,
 			);
 			name = Chipsets;
 			sourceTree = "<group>";
@@ -563,6 +569,7 @@
 				0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */,
 				0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
 				0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
+				0EAE4FB7112BD420004D93B3 /* VT1612AChip.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -601,6 +608,7 @@
 				0E4D778711046F9E00FE3DDC /* EasyCapViewer.m in Sources */,
 				0ECDB5DA111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
 				0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
+				0EAE4FB8112BD420004D93B3 /* VT1612AChip.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

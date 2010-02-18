@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) CGFloat saturation;
 @property(assign) CGFloat hue;
 
-- (BOOL)initializeRegisters;
+- (BOOL)initialize;
 
 @end
 

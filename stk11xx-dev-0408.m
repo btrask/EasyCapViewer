@@ -33,13 +33,6 @@
 // Other Sources
 #import "ECVDebug.h"
 
-enum {
-	STK0408StatusRegistryIndex = 0x100,
-};
-enum {
-	STK0408StatusStreaming = 1 << 7,
-};
-
 /**
  * @param dev Device structure
  *
@@ -90,7 +83,6 @@ int dev_stk0408_initialize_device(ECVSTK1160Device *dev)
 	usb_stk11xx_write_registry(dev, STK0408StatusRegistryIndex, 0x33);
 	return 0;
 }
-
 int dev_stk0408_write0(ECVSTK1160Device *dev, u_int16_t mask, u_int16_t val)
 {
 	NSCAssert((mask & val) == val, @"Don't set values that will be masked out.");
@@ -98,107 +90,12 @@ int dev_stk0408_write0(ECVSTK1160Device *dev, u_int16_t mask, u_int16_t val)
 	usb_stk11xx_write_registry(dev, 0x02, mask);
 	return 0;
 }
-
-/**
- * @param dev Device structure
- *
- * @returns 0 if all is OK
- *
- * @brief This function initializes the device for the stream.
- *
- * It's the start. This function has to be called at first, before
- * enabling the video stream.
- */
-int dev_stk0408_init_camera(ECVSTK1160Device *dev)
-{
-	usb_stk11xx_write_registry(dev, 0x0500, 0x0094);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-	usb_stk11xx_write_registry(dev, 0x0506, 0x0001);
-	usb_stk11xx_write_registry(dev, 0x0507, 0x0000);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0012);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0010);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x000e);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0016);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001a);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0004);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0004);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0080);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x0002);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008b);
-	usb_stk11xx_write_registry(dev, 0x0504, 0x001c);
-	usb_stk11xx_write_registry(dev, 0x0502, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0503, 0x0000);
-	usb_stk11xx_write_registry(dev, 0x0500, 0x008c);
-	return 0;
-}
-
 int dev_stk0408_check_device(ECVSTK1160Device *dev)
 {
 	int const retry = 2;
 	int i = 0;
 	for(; i < retry; i++) {
-		int value;
+		u_int8_t value;
 		usb_stk11xx_read_registry(dev, 0x201, &value);
 		// Writes to 204/205 return 4 on success.
 		// Writes to 208 return 1 on success.
@@ -208,15 +105,5 @@ int dev_stk0408_check_device(ECVSTK1160Device *dev)
 			return -1;
 		}
 	}
-	return 0;
-}
-
-int dev_stk0408_set_streaming(ECVSTK1160Device *dev, BOOL streaming)
-{
-	int value;
-	usb_stk11xx_read_registry(dev, STK0408StatusRegistryIndex, &value);
-	if(streaming) value |= STK0408StatusStreaming;
-	else value &= ~STK0408StatusStreaming;
-	usb_stk11xx_write_registry(dev, STK0408StatusRegistryIndex, value);
 	return 0;
 }

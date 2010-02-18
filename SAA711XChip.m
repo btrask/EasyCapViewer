@@ -126,7 +126,7 @@ enum {
 
 #pragma mark -
 
-- (BOOL)initializeRegisters
+- (BOOL)initialize
 {
 	// Based on Table 184 in the datasheet.
 	struct {

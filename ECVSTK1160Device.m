@@ -36,7 +36,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 @interface ECVSTK1160Device(Private)
 
-- (void)_initializeResolution;
+- (BOOL)_initializeAudio;
+- (BOOL)_initializeResolution;
+- (BOOL)_setStreaming:(BOOL)flag;
 
 @end
 
@@ -71,7 +73,16 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 #pragma mark -ECVSTK1160Device(Private)
 
-- (void)_initializeResolution
+- (BOOL)_initializeAudio
+{
+	if(![self writeVT1612ARegister:0x94 value:0x00]) return NO;
+	if(![self writeIndex:0x0506 value:0x01]) return NO;
+	if(![self writeIndex:0x0507 value:0x00]) return NO;
+	if(![_VT1612AChip initialize]) return NO;
+	ECVLog(ECVNotice, @"Audio vendor and revision: %@", [_VT1612AChip vendorAndRevisionString]);
+	return YES;
+}
+- (BOOL)_initializeResolution
 {
 	ECVPixelSize captureSize = [self captureSize];
 	ECVPixelSize standardSize = captureSize;
@@ -104,14 +115,30 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 			break;
 	}
 	size_t const bpp = ECVPixelFormatBytesPerPixel([self pixelFormatType]);
-	(void)[self writeValue:(standardSize.width - captureSize.width) * bpp atIndex:0x110];
-	(void)[self writeValue:0 atIndex:0x111];
-	(void)[self writeValue:(standardSize.height - captureSize.height) / 2 atIndex:0x112];
-	(void)[self writeValue:0 atIndex:0x113];
-	(void)[self writeValue:standardSize.width * bpp atIndex:0x114];
-	(void)[self writeValue:5 atIndex:0x115];
-	(void)[self writeValue:standardSize.height / 2 atIndex:0x116];
-	(void)[self writeValue:![self is60HzFormat] atIndex:0x117];
+	struct {
+		u_int16_t reg;
+		u_int16_t val;
+	} settings[] = {
+		{0x110, (standardSize.width - captureSize.width) * bpp},
+		{0x111, 0},
+		{0x112, (standardSize.height - captureSize.height) / 2},
+		{0x113, 0},
+		{0x114, standardSize.width * bpp},
+		{0x115, 5},
+		{0x116, standardSize.height / 2},
+		{0x117, ![self is60HzFormat]},
+	};
+	NSUInteger i = 0;
+	for(; i < numberof(settings); i++) if(![self writeIndex:settings[i].reg value:settings[i].val]) return NO;
+	return YES;
+}
+- (BOOL)_setStreaming:(BOOL)flag
+{
+	u_int8_t value;
+	if(![self readIndex:STK0408StatusRegistryIndex value:&value]) return NO;
+	if(flag) value |= STK0408StatusStreaming;
+	else value &= ~STK0408StatusStreaming;
+	return [self writeIndex:STK0408StatusRegistryIndex value:value];
 }
 
 #pragma mark -ECVCaptureDevice
@@ -128,6 +155,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
 		[_SAA711XChip setSaturation:[[d objectForKey:ECVSaturationKey] doubleValue]];
 		[_SAA711XChip setHue:[[d objectForKey:ECVHueKey] doubleValue]];
+		_VT1612AChip = [[VT1612AChip alloc] init];
+		[_VT1612AChip setDevice:self];
 	}
 	return self;
 }
@@ -181,24 +210,24 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (BOOL)threaded_play
 {
 	dev_stk0408_initialize_device(self);
-	if(![_SAA711XChip initializeRegisters]) return NO;
+	if(![_SAA711XChip initialize]) return NO;
+	if(![self _initializeAudio]) return NO;
 	if([self videoSource] != ECVSTK1160SECAMFormat) dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | (4 - [self videoSource]) << 3);
-	dev_stk0408_init_camera(self);
-	[self _initializeResolution];
-	(void)[self setAlternateInterface:5];
-	dev_stk0408_set_streaming(self, YES);
+	if(![self _initializeResolution]) return NO;
+	if(![self setAlternateInterface:5]) return NO;
+	if(![self _setStreaming:YES]) return NO;
 	return YES;
 }
 - (BOOL)threaded_pause
 {
-	dev_stk0408_set_streaming(self, NO);
+	(void)[self _setStreaming:NO];
 	(void)[self setAlternateInterface:0];
 	return YES;
 }
 - (BOOL)threaded_watchdog
 {
-	SInt32 value;
-	if(![self readValue:&value atIndex:0x01]) return NO;
+	u_int8_t value;
+	if(![self readIndex:0x01 value:&value]) return NO;
 	if(0x03 != value) {
 		ECVLog(ECVError, @"Device watchdog was 0x%02x (should be 0x03).", value);
 		return NO;
@@ -418,9 +447,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 - (BOOL)writeSAA711XRegister:(u_int8_t)reg value:(int16_t)val
 {
-	usb_stk11xx_write_registry(self, 0x0204, reg);
-	usb_stk11xx_write_registry(self, 0x0205, val);
-	usb_stk11xx_write_registry(self, 0x0200, 0x0001);
+	[self writeIndex:0x204 value:reg];
+	[self writeIndex:0x205 value:val];
+	[self writeIndex:0x200 value:0x01];
 	return dev_stk0408_check_device(self) == 0;
 }
 - (SAA711XMODESource)SAA711XMODESource
@@ -477,6 +506,35 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (BOOL)SAA711XRTP0OutputPolarityInverted
 {
+	return YES;
+}
+
+#pragma mark -<VT1612ADevice>
+
+- (BOOL)writeVT1612ARegister:(u_int8_t)reg value:(u_int16_t)val
+{
+	union {
+		u_int16_t v16;
+		u_int8_t v8[2];
+	} const v = {
+		.v16 = CFSwapInt16HostToLittle(val),
+	};
+	return [self writeIndex:0x504 value:reg] &&
+		[self writeIndex:0x502 value:v.v8[0]] &&
+		[self writeIndex:0x503 value:v.v8[1]] &&
+		[self writeIndex:0x500 value:0x8c];
+}
+- (BOOL)readVT1612ARegister:(u_int8_t)reg value:(out u_int16_t *)outVal
+{
+	[self writeIndex:0x504 value:reg];
+	[self writeIndex:0x500 value:0x8b];
+	union {
+		u_int8_t v8[2];
+		u_int16_t v16;
+	} val = {};
+	[self readIndex:0x502 value:val.v8 + 0];
+	[self readIndex:0x503 value:val.v8 + 1];
+	if(outVal) *outVal = CFSwapInt16LittleToHost(val.v16);
 	return YES;
 }
 

@@ -30,18 +30,22 @@
  *   $Author: nicklas79 $
  *   $HeadURL: https://syntekdriver.svn.sourceforge.net/svnroot/syntekdriver/trunk/driver/stk11xx.h $
  */
+enum {
+	STK0408StatusRegistryIndex = 0x100,
+};
+enum {
+	STK0408StatusStreaming = 1 << 7,
+};
+
 int dev_stk0408_initialize_device(ECVSTK1160Device *dev);
-int dev_stk0408_init_camera(ECVSTK1160Device *dev);
 int dev_stk0408_check_device(ECVSTK1160Device *dev);
 int dev_stk0408_write0(ECVSTK1160Device *dev, u_int16_t mask, u_int16_t val);
-int dev_stk0408_set_resolution(ECVSTK1160Device *dev);
-int dev_stk0408_set_streaming(ECVSTK1160Device *dev, BOOL streaming);
 
 static void usb_stk11xx_write_registry(ECVSTK1160Device *dev, u_int16_t i, u_int16_t v)
 {
-	(void)[dev writeValue:v atIndex:i];
+	(void)[dev writeIndex:i value:v];
 }
-static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t i, int32_t *v)
+static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t i, u_int8_t *v)
 {
-	(void)[dev readValue:(SInt32 *)v atIndex:i];
+	(void)[dev readIndex:i value:v];
 }
