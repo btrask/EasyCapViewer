@@ -270,6 +270,12 @@ ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 
 ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	ECVVideoStorage *const videoStorage = [self->device videoStorage];
+	ECVPixelSize const originalSize = [videoStorage originalSize];
+	ECVPixelSize const pixelSize = [videoStorage pixelSize];
+	[pool drain];
+
 	ImageDescriptionPtr const descPtr = *desc;
 	SetHandleSize((Handle)desc, sizeof(ImageDescription));
 	*descPtr = (ImageDescription){
@@ -277,6 +283,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		.cType = [self->device pixelFormatType],
 		.version = 2,
 		.spatialQuality = codecLosslessQuality,
+		.width = originalSize.width,
+		.height = originalSize.height,
 		.hRes = Long2Fix(72),
 		.vRes = Long2Fix(72),
 		.frameCount = 1,
@@ -288,14 +296,14 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_FieldInfo, sizeof(FieldInfoImageDescriptionExtension2), &fieldInfo));
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
-		720, 1, // TODO: Get the real size.
-		480, 1,
+		originalSize.width, 1,
+		originalSize.height, 1,
 		0, 1,
 		0, 1,
 	};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_CleanAperture, sizeof(CleanApertureImageDescriptionExtension), &cleanAperture));
 
-	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {1, 1};
+	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {originalSize.height, 540};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_PixelAspectRatio, sizeof(PixelAspectRatioImageDescriptionExtension), &pixelAspectRatio));
 
 	NCLCColorInfoImageDescriptionExtension const colorInfo = {
@@ -306,10 +314,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_NCLCColorInfo, sizeof(NCLCColorInfoImageDescriptionExtension), &colorInfo));
 
-	SInt32 const width = 720; // TODO: Get the real size.
-	SInt32 const height = 240;
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedWidth, sizeof(width), &width));
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedHeight, sizeof(height), &height));
+	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedWidth, sizeof(pixelSize.width), &pixelSize.width));
+	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedHeight, sizeof(pixelSize.height), &pixelSize.height));
 
 	return noErr;
 }
