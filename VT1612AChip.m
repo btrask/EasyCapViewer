@@ -95,11 +95,13 @@ static u_int8_t VT1612ARecordGain(CGFloat v)
 	union {
 		u_int8_t v8[4];
 		u_int16_t v16[2];
+		u_int32_t v32;
 	} val = {};
 	if(![device readVT1612ARegister:VT1612ARegisterVendorID1 value:val.v16 + 0]) return nil;
 	if(![device readVT1612ARegister:VT1612ARegisterVendorID2 value:val.v16 + 1]) return nil;
 	val.v16[0] = CFSwapInt16HostToBig(val.v16[0]);
 	val.v16[1] = CFSwapInt16HostToBig(val.v16[1]);
+	if(!val.v32) return @"(Unsupported)";
 	return [NSString stringWithFormat:@"%c%c%c-%x", val.v8[0], val.v8[1], val.v8[2], val.v8[3]];
 }
 
