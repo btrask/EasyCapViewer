@@ -7,11 +7,11 @@
 "Deinterlace:" = "Deinterlace:";
 "Weave" = "Weave";
 "Alternate" = "Alternate";
-"Line Double (LQ)" = "Line Double (LQ)";
+"None" = "None";
 "Blur" = "Blur";
 "Format:" = "Format:";
 "Volume:" = "Volume:";
 "Video" = "Video";
 "Audio" = "Audio";
-"Line Double (HQ)" = "Line Double (HQ)";
+"Line Double" = "Line Double";
 "Upconvert from mono" = "Upconvert from mono";
