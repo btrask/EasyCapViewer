@@ -172,9 +172,8 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	NSNumber *const configurableQuality = [[[[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"] objectForKey:codec] objectForKey:@"ECVConfigurableQuality"];
 	[videoQualitySlider setEnabled:configurableQuality && [configurableQuality boolValue]];
 }
-- (IBAction)changeRecordsToRAM:(id)sender
+- (IBAction)showRecordsToRAMInfo:(id)sender
 {
-	if(NSOnState != [sender state]) return;
 	NSAlert *const alert = [[NSAlert alloc] init];
 	[alert setMessageText:NSLocalizedString(@"Recording to RAM can enhance performance, but can also lead to performance degradation if used improperly.", nil)];
 	[alert setInformativeText:NSLocalizedString(@"Movies recorded to RAM are limited to 2GB in size. Make sure you have enough available RAM to store the entire movie.", nil)];
