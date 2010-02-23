@@ -272,6 +272,10 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVVideoStorage *const videoStorage = [self->device videoStorage];
+	if(!videoStorage) {
+		[pool drain];
+		return badCallOrderErr;
+	}
 	ECVPixelSize const originalSize = [videoStorage originalSize];
 	ECVPixelSize const pixelSize = [videoStorage pixelSize];
 	[pool drain];
@@ -327,7 +331,6 @@ ECV_VDIG_FUNCTION(GetVBlankRect, short inputStd, Rect *vBlankRect)
 }
 ECV_VDIG_FUNCTION(GetMaxSrcRect, short inputStd, Rect *maxSrcRect)
 {
-	if(!self->device) return badCallOrderErr;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVPixelSize const s = [self->device captureSize];
 	[pool release];
