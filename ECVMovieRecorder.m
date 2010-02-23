@@ -59,6 +59,7 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 @interface ECVMovieRecorder(Private)
 
 - (void)_threaded_recordToMovie:(QTMovie *)movie;
+- (NSDictionary *)_cleanAperatureDictionary;
 
 - (void)_encodeFrame:(ECVVideoFrame *)frame;
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
@@ -104,24 +105,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 @synthesize videoCodec = _videoCodec;
 @synthesize videoQuality = _videoQuality;
 @synthesize outputSize = _outputSize;
-- (NSRect)cropRect
-{
-	return _cropRect;
-}
-- (void)setCropRect:(NSRect)aRect
-{
-	_cropRect = aRect;
-	NSRect const c = aRect;
-	ECVPixelSize const s1 = [_videoStorage pixelSize];
-	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
-	[_cleanAperture release];
-	_cleanAperture = [[NSDictionary alloc] initWithObjectsAndKeys:
-		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
-		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,
-		[NSNumber numberWithDouble:round(NSMinX(c) * s1.width - (s1.width - s2.width) / 2.0f)], kCVImageBufferCleanApertureHorizontalOffsetKey,
-		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0f)], kCVImageBufferCleanApertureVerticalOffsetKey,
-		nil];
-}
+@synthesize cropRect = _cropRect;
 @synthesize upconvertsFromMono = _upconvertsFromMono;
 @synthesize recordsToRAM = _recordsToRAM;
 
@@ -205,7 +189,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	ECVOSErr(BeginMediaEdits(_videoMedia));
 	ECVOSErr(BeginMediaEdits(_audioMedia));
 	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(_compressionSession), &_pixelBuffer));
-	if(_cleanAperture) CVBufferSetAttachment(_pixelBuffer, kCVImageBufferCleanApertureKey, _cleanAperture, kCVAttachmentMode_ShouldNotPropagate);
+	CVBufferSetAttachment(_pixelBuffer, kCVImageBufferCleanApertureKey, [self _cleanAperatureDictionary], kCVAttachmentMode_ShouldNotPropagate);
 
 	ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_audioDescriptionHandle));
 	_audioBufferBytes = malloc(ECVAudioBufferBytesSize);
@@ -265,6 +249,18 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[QTMovie exitQTKitOnThread];
 	[outerPool release];
 }
+- (NSDictionary *)_cleanAperatureDictionary
+{
+	NSRect const c = [self cropRect];
+	ECVPixelSize const s1 = [_videoStorage pixelSize];
+	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
+	return [[NSDictionary alloc] initWithObjectsAndKeys:
+		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
+		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,
+		[NSNumber numberWithDouble:round(NSMinX(c) * s1.width - (s1.width - s2.width) / 2.0f)], kCVImageBufferCleanApertureHorizontalOffsetKey,
+		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0f)], kCVImageBufferCleanApertureVerticalOffsetKey,
+		nil];
+}
 
 #pragma mark -
 
@@ -304,8 +300,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[_URL release];
 	[_videoStorage release];
 	[_audioDevice release];
-
-	[_cleanAperture release];
 
 	[_lock release];
 	[super dealloc];

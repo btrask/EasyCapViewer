@@ -44,7 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	CGFloat _videoQuality;
 	ECVPixelSize _outputSize;
 	NSRect _cropRect;
-	NSDictionary *_cleanAperture;
 	BOOL _upconvertsFromMono;
 	BOOL _recordsToRAM;
 
