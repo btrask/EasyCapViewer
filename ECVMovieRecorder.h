@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	OSType _videoCodec;
 	CGFloat _videoQuality;
+	BOOL _stretchOutput;
 	ECVPixelSize _outputSize;
 	NSRect _cropRect;
 	BOOL _upconvertsFromMono;
@@ -70,6 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @property(assign) OSType videoCodec;
 @property(assign) CGFloat videoQuality;
+@property(assign) BOOL stretchOutput;
 @property(assign) ECVPixelSize outputSize;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL upconvertsFromMono;

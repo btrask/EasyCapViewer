@@ -58,6 +58,7 @@ typedef NSInteger ECVCropBorder;
 	IBOutlet NSView *exportAccessoryView;
 	IBOutlet NSPopUpButton *videoCodecPopUp;
 	IBOutlet NSSlider *videoQualitySlider;
+	IBOutlet NSButton *stretchTotAspectRatio;
 	IBOutlet NSButton *recordToRAMButton;
 
 	BOOL _fullScreen;

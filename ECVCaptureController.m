@@ -139,6 +139,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithURL:[savePanel URL] videoStorage:[(ECVCaptureDevice *)[self document] videoStorage] audioDevice:[[self document] audioInput]] autorelease];
 	[recorder setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[recorder setVideoQuality:[videoQualitySlider doubleValue]];
+	[recorder setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
 	[recorder setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
 	[recorder setCropRect:[self cropRect]];
 	[recorder setUpconvertsFromMono:[[self document] upconvertsFromMono]];

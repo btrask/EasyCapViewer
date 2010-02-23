@@ -87,6 +87,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 		_videoCodec = kJPEGCodecType;
 		_videoQuality = 0.5f;
+		_stretchOutput = YES;
 		_outputSize = [_videoStorage originalSize];
 		_cropRect = ECVUncroppedRect;
 
@@ -104,6 +105,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 @synthesize videoCodec = _videoCodec;
 @synthesize videoQuality = _videoQuality;
+@synthesize stretchOutput = _stretchOutput;
 @synthesize outputSize = _outputSize;
 @synthesize cropRect = _cropRect;
 @synthesize upconvertsFromMono = _upconvertsFromMono;
@@ -182,7 +184,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[QTMovie enterQTKitOnThread];
 	[movie attachToCurrentThread];
 
-	Track const videoTrack = NewMovieTrack([movie quickTimeMovie], Long2Fix(_outputSize.width), Long2Fix(_outputSize.height), kNoVolume);
+	ECVPixelSize const size = [self stretchOutput] ? [self outputSize] : [_videoStorage pixelSize];
+	Track const videoTrack = NewMovieTrack([movie quickTimeMovie], Long2Fix(size.width), Long2Fix(size.height), kNoVolume);
 	Track const audioTrack = NewMovieTrack([movie quickTimeMovie], 0, 0, (short)round(_volume * kFullVolume));
 	_videoMedia = NewTrackMedia(videoTrack, VideoMediaType, [_videoStorage frameRate].timeScale, NULL, 0);
 	_audioMedia = NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0);
