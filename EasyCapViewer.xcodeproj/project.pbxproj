@@ -6,6 +6,21 @@
 	objectVersion = 45;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		0E982B5E1134665B0062A2C8 /* Everything */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 0E982B7F113466900062A2C8 /* Build configuration list for PBXAggregateTarget "Everything" */;
+			buildPhases = (
+			);
+			dependencies = (
+				0E982B621134665F0062A2C8 /* PBXTargetDependency */,
+				0E982B64113466620062A2C8 /* PBXTargetDependency */,
+			);
+			name = Everything;
+			productName = Everything;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		0E053FF60FDF1FFD003688BB /* MPLWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E053FF40FDF1FFD003688BB /* MPLWindow.m */; };
 		0E0AC92410203FB300C12D88 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0AC92310203FB300C12D88 /* QTKit.framework */; };
@@ -88,6 +103,23 @@
 		0EFEE897109205C300312653 /* Cursor-Resize-135.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0E982B611134665F0062A2C8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D1107260486CEB800E47090 /* EasyCapViewer */;
+			remoteInfo = EasyCapViewer;
+		};
+		0E982B63113466620062A2C8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0E4D75BF11044A5900FE3DDC /* ECVComponent */;
+			remoteInfo = ECVComponent;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		0EB5348B101B3B2B000B7B2E /* CopyFiles */ = {
@@ -501,6 +533,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				0E982B5E1134665B0062A2C8 /* Everything */,
 				8D1107260486CEB800E47090 /* EasyCapViewer */,
 				0E4D75BF11044A5900FE3DDC /* ECVComponent */,
 			);
@@ -614,6 +647,19 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		0E982B621134665F0062A2C8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D1107260486CEB800E47090 /* EasyCapViewer */;
+			targetProxy = 0E982B611134665F0062A2C8 /* PBXContainerItemProxy */;
+		};
+		0E982B64113466620062A2C8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0E4D75BF11044A5900FE3DDC /* ECVComponent */;
+			targetProxy = 0E982B63113466620062A2C8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		0E9F9B2910F679A400935C48 /* Credits.rtf */ = {
 			isa = PBXVariantGroup;
@@ -701,6 +747,27 @@
 				INFOPLIST_FILE = "ECVComponent-Info.plist";
 				PRODUCT_NAME = ECVComponent;
 				WRAPPER_EXTENSION = component;
+			};
+			name = Release;
+		};
+		0E982B5F1134665B0062A2C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				PRODUCT_NAME = Everything;
+			};
+			name = Debug;
+		};
+		0E982B601134665B0062A2C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				PRODUCT_NAME = Everything;
+				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -810,6 +877,15 @@
 			buildConfigurations = (
 				0E4D75C211044A5A00FE3DDC /* Debug */,
 				0E4D75C311044A5A00FE3DDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0E982B7F113466900062A2C8 /* Build configuration list for PBXAggregateTarget "Everything" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E982B5F1134665B0062A2C8 /* Debug */,
+				0E982B601134665B0062A2C8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
