@@ -26,9 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 @class ECVVideoStorage;
 
-// Other Sources
-@class ECVReadWriteLock;
-
 @interface ECVVideoFrame : NSObject
 {
 	@private
