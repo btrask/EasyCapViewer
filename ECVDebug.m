@@ -37,7 +37,7 @@ void ECVLog(ECVErrorLevel level, NSString *format, ...)
 {
 	va_list arguments;
 	va_start(arguments, format);
-#if !defined(ECV_DEBUG) || defined(ECV_SIMPLE_LOGGING)
+#if defined(ECV_DEBUG) || defined(ECV_SIMPLE_LOGGING)
 	NSLogv(format, arguments);
 #endif
 #ifndef ECV_SIMPLE_LOGGING
