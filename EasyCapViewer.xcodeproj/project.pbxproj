@@ -109,14 +109,14 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 8D1107260486CEB800E47090 /* EasyCapViewer */;
+			remoteGlobalIDString = 8D1107260486CEB800E47090;
 			remoteInfo = EasyCapViewer;
 		};
 		0E982B63113466620062A2C8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 0E4D75BF11044A5900FE3DDC /* ECVComponent */;
+			remoteGlobalIDString = 0E4D75BF11044A5900FE3DDC;
 			remoteInfo = ECVComponent;
 		};
 /* End PBXContainerItemProxy section */

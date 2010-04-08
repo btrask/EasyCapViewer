@@ -48,7 +48,7 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 
 extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
-#define ECVPauseWhile(obj, code) {\
+#define ECVPauseWhile(obj, code) do {\
 	ECVCaptureDevice *const __obj = (obj);\
 	BOOL const __p = [__obj isPlaying];\
 	if(__p) [__obj setPlaying:NO];\
