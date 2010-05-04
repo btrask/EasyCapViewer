@@ -43,7 +43,7 @@ extern NSString *ECVErrnoToString(int error);
 } while(NO)
 
 #define ECVOSErr(x) ECVOSStatus((OSStatus)(x))
-#define ECVComponentResult(x) ECVOSStatus((OSSTatus)(x))
+#define ECVComponentResult(x) ECVOSStatus((OSStatus)(x))
 
 #define ECVIOReturn(x) do {\
 	IOReturn const __e = (x);\

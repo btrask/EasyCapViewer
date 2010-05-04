@@ -25,6 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVFoundationAdditions.h"
 #import <objc/runtime.h>
 
+@implementation NSDate(ECVFoundationAdditions)
+
++ (NSTimeInterval)ECV_timeIntervalSinceReferenceDate
+{
+	return (NSTimeInterval)UnsignedWideToUInt64(AbsoluteToNanoseconds(UpTime())) * 1e-9f;
+}
+
+@end
+
 @implementation NSObject(ECVFoundationAdditions)
 
 #pragma mark +NSObject(ECVFoundationAdditions)
