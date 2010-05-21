@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 enum {
 	ECVRecordThreadWait,
 	ECVRecordThreadRun,
+	ECVRecordThreadFinished,
 };
 
 #define ECVCSOSetProperty(obj, prop, val) ECVOSStatus({ __typeof__(val) __val = (val); ICMCompressionSessionOptionsSetProperty(obj, kQTPropertyClass_ICMCompressionSessionOptions, (prop), sizeof(__val), &__val); }) // Be sure to cast val to the right type, since no implicit conversion occurs.
@@ -159,6 +160,8 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[_lock lock];
 	_stop = YES;
 	[_lock unlockWithCondition:ECVRecordThreadRun];
+	[_lock lockWhenCondition:ECVRecordThreadFinished];
+	[_lock unlock];
 }
 
 #pragma mark -
@@ -166,12 +169,14 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 - (void)addVideoFrame:(ECVVideoFrame *)frame
 {
 	[_lock lock];
+	if(ECVRecordThreadFinished == [_lock condition]) return [_lock unlock];
 	[_videoFrames insertObject:frame atIndex:0];
 	[_lock unlockWithCondition:ECVRecordThreadRun];
 }
 - (void)addAudioBufferList:(AudioBufferList const *)bufferList
 {
 	[_lock lock];
+	if(ECVRecordThreadFinished == [_lock condition]) return [_lock unlock];
 	[_audioPipe receiveInputBufferList:bufferList];
 	[_lock unlockWithCondition:ECVRecordThreadRun];
 }
@@ -250,6 +255,10 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 	[movie detachFromCurrentThread];
 	[QTMovie exitQTKitOnThread];
+
+	[_lock lock];
+	[_lock unlockWithCondition:ECVRecordThreadFinished];
+
 	[outerPool release];
 }
 - (NSDictionary *)_cleanAperatureDictionary

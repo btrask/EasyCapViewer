@@ -158,8 +158,8 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 #if !__LP64__
 	if(!_movieRecorder) return;
+	[_movieRecorder stopRecording];
 	@synchronized(self) {
-		[_movieRecorder stopRecording];
 		[_movieRecorder release];
 		_movieRecorder = nil;
 	}

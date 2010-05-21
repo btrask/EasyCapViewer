@@ -463,11 +463,11 @@ ECVNoDeviceError:
 	[self threaded_pause];
 ECVGenericError:
 ECVNoDeviceError:
-#ifndef ECV_NO_CONTROLLERS
-	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
-#endif
 #ifdef ECV_ENABLE_AUDIO
 	[self performSelectorOnMainThread:@selector(stopAudio) withObject:nil waitUntilDone:NO];
+#endif
+#ifndef ECV_NO_CONTROLLERS
+	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
 #endif
 
 	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);
