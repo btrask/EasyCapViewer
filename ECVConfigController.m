@@ -172,7 +172,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[preferredInput name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:preferredInput];
 		[[audioSourcePopUp menu] addItem:item];
-		[[audioSourcePopUp menu] addItem:[NSMenuItem separatorItem]];
 	}
 	for(ECVAudioDevice *const device in [ECVAudioDevice allDevicesInput:YES]) {
 		if(ECVEqualObjects(device, preferredInput)) continue;
@@ -180,6 +179,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[item setRepresentedObject:device];
 		[[audioSourcePopUp menu] addItem:item];
 	}
+	if([[audioSourcePopUp menu] numberOfItems] > 1) [[audioSourcePopUp menu] insertItem:[NSMenuItem separatorItem] atIndex:1];
 	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:[_captureDevice audioInput]]];
 	[audioSourcePopUp setEnabled:!!_captureDevice];
 }
