@@ -181,7 +181,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	}
 	if([[audioSourcePopUp menu] numberOfItems] > 1) [[audioSourcePopUp menu] insertItem:[NSMenuItem separatorItem] atIndex:1];
 	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:[_captureDevice audioInput]]];
-	[audioSourcePopUp setEnabled:!!_captureDevice];
+	[audioSourcePopUp setEnabled:!![[audioSourcePopUp menu] numberOfItems]];
 }
 - (void)volumeDidChange:(NSNotification *)aNotif
 {
