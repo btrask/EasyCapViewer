@@ -134,14 +134,24 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(kAudioConverterErr_PropertyNotSupported)
 		ERROR_CASE(kAudioConverterErr_InvalidInputSize)
 		ERROR_CASE(kAudioConverterErr_InvalidOutputSize)
-		ERROR_CASE(kAudioConverterErr_UnspecifiedError)
-		ERROR_CASE(kAudioConverterErr_BadPropertySizeError)
+		ERROR_CASE(kAudioConverterErr_UnspecifiedError) // AKA kAudioHardwareUnspecifiedError
+		ERROR_CASE(kAudioConverterErr_BadPropertySizeError) // AKA kAudioHardwareBadPropertySizeError
 		ERROR_CASE(kAudioConverterErr_RequiresPacketDescriptionsError)
 		ERROR_CASE(kAudioConverterErr_InputSampleRateOutOfRange)
 		ERROR_CASE(kAudioConverterErr_OutputSampleRateOutOfRange)
+
+		ERROR_CASE(kAudioHardwareNotRunningError)
+		ERROR_CASE(kAudioHardwareUnknownPropertyError)
+		ERROR_CASE(kAudioHardwareIllegalOperationError)
+		ERROR_CASE(kAudioHardwareBadObjectError)
+		ERROR_CASE(kAudioHardwareBadDeviceError)
+		ERROR_CASE(kAudioHardwareBadStreamError)
+		ERROR_CASE(kAudioHardwareUnsupportedOperationError)
+		ERROR_CASE(kAudioDeviceUnsupportedFormatError)
+		ERROR_CASE(kAudioDevicePermissionsError)
 #endif
 	}
-	return [NSString stringWithFormat:@"Unknown error %d", error];
+	return [NSString stringWithFormat:@"Unknown error %d (%@)", error, [(NSString *)UTCreateStringForOSType((OSType)error) autorelease]];
 }
 NSString *ECVIOKitErrorToString(IOReturn error)
 {
