@@ -226,7 +226,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(![_SAA711XChip initialize]) return NO;
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
 	if(![self _initializeAudio]) return NO;
-	if([self videoSource] != ECVSTK1160SECAMFormat) dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | (4 - [self videoSource]) << 3);
+	if([self videoSource] != ECVSTK1160SVideoInput) dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | (4 - [self videoSource]) << 3);
 	if(![self _initializeResolution]) return NO;
 	if(![self setAlternateInterface:5]) return NO;
 	if(![self _setStreaming:YES]) return NO;
