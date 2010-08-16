@@ -464,13 +464,20 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(![self writeIndex:0x204 value:reg]) return NO;
 	if(![self writeIndex:0x205 value:val]) return NO;
 	if(![self writeIndex:0x200 value:0x01]) return NO;
-	return [self _SAA711XExpect:0x04];
+	if(![self _SAA711XExpect:0x04]) {
+		ECVLog(ECVError, @"SAA711X failed to write %x to %x", (unsigned)val, (unsigned)reg);
+		return NO;
+	}
+	return YES;
 }
 - (BOOL)readSAA711XRegister:(u_int8_t)reg value:(out u_int8_t *)outVal
 {
 	if(![self writeIndex:0x208 value:reg]) return NO;
 	if(![self writeIndex:0x200 value:0x20]) return NO;
-	if(![self _SAA711XExpect:0x01]) return NO;
+	if(![self _SAA711XExpect:0x01]) {
+		ECVLog(ECVError, @"SAA711X failed to read %x", (unsigned)reg);
+		return NO;
+	}
 	return [self readIndex:0x209 value:outVal];
 }
 - (SAA711XMODESource)SAA711XMODESource
