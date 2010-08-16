@@ -858,6 +858,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
 				PREBINDING = NO;
+				PROJECT_VERSION = 0.5.1a;
 			};
 			name = Release;
 		};

@@ -19,7 +19,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.5</string>
+	<string>${PROJECT_VERSION}</string>
 	<key>NSMainNibFile</key>
 	<string>ECVMenu</string>
 	<key>NSPrincipalClass</key>
