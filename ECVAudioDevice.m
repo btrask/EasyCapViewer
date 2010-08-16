@@ -101,7 +101,7 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 	};
 	UInt32 translationSize = sizeof(deviceUIDTranslation);
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDeviceForUID, &translationSize, &deviceUIDTranslation));
-	return kAudioDeviceUnknown == deviceID ? nil : [[[self alloc] initWithDeviceID:deviceID input:flag] autorelease];
+	return [[[self alloc] initWithDeviceID:deviceID input:flag] autorelease];
 }
 + (id)deviceWithIODevice:(io_service_t)device input:(BOOL)flag
 {
@@ -121,8 +121,12 @@ ECVNoDeviceError:
 
 - (id)initWithDeviceID:(AudioDeviceID)deviceID input:(BOOL)flag
 {
-	NSParameterAssert(kAudioDeviceUnknown != deviceID);
 	if((self = [super init])) {
+		if(kAudioDeviceUnknown == deviceID) {
+			[self release];
+			return nil;
+		}
+
 		_deviceID = deviceID;
 		_isInput = flag;
 
