@@ -77,14 +77,14 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 }
 + (id)defaultInputDevice
 {
-	AudioDeviceID deviceID = 0;
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	UInt32 deviceIDSize = sizeof(deviceID);
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &deviceIDSize, &deviceID));
 	return [[[self alloc] initWithDeviceID:deviceID input:YES] autorelease];
 }
 + (id)defaultOutputDevice
 {
-	AudioDeviceID deviceID = 0;
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	UInt32 deviceIDSize = sizeof(deviceID);
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &deviceIDSize, &deviceID));
 	return [[[self alloc] initWithDeviceID:deviceID input:NO] autorelease];
