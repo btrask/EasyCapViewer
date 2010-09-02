@@ -348,7 +348,7 @@ ECVNoDeviceError:
 	}
 
 	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
-	[_audioPreviewingPipe setVolume:_volume];
+	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
 	[input setDelegate:self];
 	[output setDelegate:self];
 
