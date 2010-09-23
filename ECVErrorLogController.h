@@ -24,7 +24,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #ifndef ECV_SIMPLE_LOGGING
 #import "ECVDebug.h"
 
-@interface ECVErrorLogController : NSWindowController <NSToolbarDelegate>
+@interface ECVErrorLogController : NSWindowController
+#ifdef MAC_OS_X_VERSION_10_6
+<NSToolbarDelegate>
+#endif
 {
 	@private
 	IBOutlet NSTextView *errorLogTextView;

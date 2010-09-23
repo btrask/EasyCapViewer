@@ -34,7 +34,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #error "ECVVideoView requires dependent storage."
 #endif
 
-@interface ECVVideoView : NSOpenGLView <NSWindowDelegate>
+@interface ECVVideoView : NSOpenGLView
+#ifdef MAC_OS_X_VERSION_10_6
+<NSWindowDelegate>
+#endif
 {
 	@private
 	CVDisplayLinkRef _displayLink;
