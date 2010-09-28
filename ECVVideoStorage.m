@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoStorage.h"
 
 // Other Sources
+#import "ECVDeinterlacingMode.h"
 #import "ECVReadWriteLock.h"
 
 enum {
@@ -85,14 +86,10 @@ enum {
 }
 @synthesize pixelFormatType = _pixelFormatType;
 @synthesize deinterlacingMode = _deinterlacingMode;
-- (BOOL)halfHeight
-{
-	return _deinterlacingMode == ECVBlur || _deinterlacingMode == ECVLineDoubleLQ;
-}
 @synthesize originalSize = _originalSize;
 - (ECVPixelSize)pixelSize
 {
-	return [self halfHeight] ? (ECVPixelSize){_originalSize.width, _originalSize.height / 2} : _originalSize;
+	return ECVDeinterlacingModePixelSize(_deinterlacingMode, _originalSize);
 }
 @synthesize frameRate = _frameRate;
 - (size_t)bytesPerPixel

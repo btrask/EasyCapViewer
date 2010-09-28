@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVDeinterlacingMode.h"
 
 typedef struct {
 	void *bytes;
@@ -101,13 +102,7 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	if((self = [super init])) {
 		_videoStorage = storage;
 		_fieldType = type;
-		switch([_videoStorage deinterlacingMode]) {
-			case ECVWeave:
-			case ECVLineDoubleHQ:
-			case ECVAlternate:
-				if(ECVLowField == _fieldType) _byteRange.location = [_videoStorage bytesPerRow];
-				break;
-		}
+		if(!ECVDeinterlacingModeUsesProgressiveBuffer([_videoStorage deinterlacingMode]) && ECVLowField == _fieldType) _byteRange.location = [_videoStorage bytesPerRow];
 	}
 	return self;
 }
@@ -203,11 +198,12 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (ECVBufferInfo)_bufferInfo
 {
+	ECVDeinterlacingMode const d = [_videoStorage deinterlacingMode];
 	return (ECVBufferInfo){
 		[self bufferBytes],
 		[_videoStorage bufferSize],
-		[_videoStorage halfHeight] ? ECVFullFrame : _fieldType,
-		[_videoStorage deinterlacingMode] == ECVLineDoubleHQ,
+		ECVDeinterlacingModeUsesProgressiveBuffer(d) ? ECVFullFrame : _fieldType,
+		ECVDeinterlacingModeUsesDoubledLines(d),
 		[_videoStorage bytesPerRow],
 		[_videoStorage pixelFormatType],
 		[_videoStorage pixelSize],

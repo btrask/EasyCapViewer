@@ -49,7 +49,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) ECVDeinterlacingMode deinterlacingMode;
-@property(readonly) BOOL halfHeight;
 @property(readonly) ECVPixelSize originalSize;
 @property(readonly) ECVPixelSize pixelSize;
 @property(readonly) QTTime frameRate;

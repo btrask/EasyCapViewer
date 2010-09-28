@@ -234,6 +234,8 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* EasyCapViewer_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EasyCapViewer_Prefix.pch; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* EasyCapViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EasyCapViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
+		B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacingMode.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -426,6 +428,8 @@
 				0E3B7CB21108E8F0003A8A39 /* ECVComponentDispatch.h */,
 				0E78CB960FC92D8300E9C148 /* ECVDebug.h */,
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
+				B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */,
+				B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */,
 				0E9F9B2010F6764500935C48 /* ECVFoundationAdditions.h */,
 				0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */,
 				0E9F9B1B10F6753C00935C48 /* ECVLocalizing.h */,
