@@ -415,9 +415,10 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4));
 	NSParameterAssert(frameRequestSize);
 
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyReadBuffer));
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * microframesPerTransfer * simultaneousTransfers, kUSBLowLatencyFrameListBuffer));
-	for(i = 0; i < microframesPerTransfer * simultaneousTransfers; i++) {
+	NSUInteger const numberOfFrames = microframesPerTransfer * simultaneousTransfers;
+	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * numberOfFrames, kUSBLowLatencyReadBuffer));
+	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * numberOfFrames, kUSBLowLatencyFrameListBuffer));
+	for(i = 0; i < numberOfFrames; i++) {
 		fullFrameList[i].frStatus = kIOReturnInvalid; // Ignore them to start out.
 		fullFrameList[i].frReqCount = frameRequestSize;
 	}
