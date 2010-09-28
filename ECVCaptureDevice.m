@@ -415,10 +415,10 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4));
 	NSParameterAssert(frameRequestSize);
 
-	NSUInteger const numberOfFrames = microframesPerTransfer * simultaneousTransfers;
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * numberOfFrames, kUSBLowLatencyReadBuffer));
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * numberOfFrames, kUSBLowLatencyFrameListBuffer));
-	for(i = 0; i < numberOfFrames; i++) {
+	NSUInteger const numberOfMicroframes = microframesPerTransfer * simultaneousTransfers;
+	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * numberOfMicroframes, kUSBLowLatencyReadBuffer));
+	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * numberOfMicroframes, kUSBLowLatencyFrameListBuffer));
+	for(i = 0; i < numberOfMicroframes; i++) {
 		fullFrameList[i].frStatus = kIOReturnInvalid; // Ignore them to start out.
 		fullFrameList[i].frReqCount = frameRequestSize;
 	}
@@ -444,8 +444,9 @@ ECVNoDeviceError:
 		}
 		NSUInteger transfer = 0;
 		for(; transfer < simultaneousTransfers; transfer++ ) {
-			UInt8 *const frameData = fullFrameData + frameRequestSize * microframesPerTransfer * transfer;
-			IOUSBLowLatencyIsocFrame *const frameList = fullFrameList + microframesPerTransfer * transfer;
+			NSUInteger const microframeIndex = microframesPerTransfer * transfer;
+			UInt8 *const frameData = fullFrameData + frameRequestSize * microframeIndex;
+			IOUSBLowLatencyIsocFrame *const frameList = fullFrameList + microframeIndex;
 			for(i = 0; i < microframesPerTransfer; i++) {
 				if(kUSBLowLatencyIsochTransferKey == frameList[i].frStatus && i) {
 					Nanoseconds const nextUpdateTime = UInt64ToUnsignedWide(UnsignedWideToUInt64(AbsoluteToNanoseconds(frameList[i - 1].frTimeStamp)) + 1e6); // LowLatencyReadIsochPipeAsync() only updates every millisecond at most.
