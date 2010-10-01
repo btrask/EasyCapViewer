@@ -147,7 +147,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	u_int8_t result = 0;
 	while(retry--) {
 		if(![self readIndex:0x201 value:&result]) return NO;
-		if(val == result) return YES;
+		if((val & result) == val) return YES;
 		usleep(100);
 	}
 	ECVLog(ECVError, @"Invalid SAA711X result %x (expected %x)", (unsigned)result, (unsigned)val);
