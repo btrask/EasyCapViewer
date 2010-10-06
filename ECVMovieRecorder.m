@@ -266,7 +266,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	NSRect const c = [self cropRect];
 	ECVPixelSize const s1 = [_videoStorage pixelSize];
 	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
-	return [[NSDictionary alloc] initWithObjectsAndKeys:
+	return [NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
 		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,
 		[NSNumber numberWithDouble:round(NSMinX(c) * s1.width - (s1.width - s2.width) / 2.0f)], kCVImageBufferCleanApertureHorizontalOffsetKey,
