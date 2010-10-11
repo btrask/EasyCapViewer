@@ -110,7 +110,7 @@ ECV_CALLCOMPONENT_FUNCTION(Close, ComponentInstance instance)
 	[self->device release];
 	CFRelease(self->frameByBuffer);
 	free(self);
-	[pool release];
+	[pool drain];
 	return noErr;
 }
 ECV_CALLCOMPONENT_FUNCTION(Version)
@@ -122,7 +122,7 @@ ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVPixelSize const s = [self->device captureSize];
-	[pool release];
+	[pool drain];
 
 	*info = (DigitizerInfo){};
 	info->vdigType = vdTypeBasic;
@@ -148,32 +148,44 @@ ECV_VDIG_FUNCTION(GetCurrentFlags, long *inputCurrentFlag, long *outputCurrentFl
 
 ECV_VDIG_FUNCTION(GetNumberOfInputs, short *inputs)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*inputs = [self->device numberOfInputs] - 1;
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(GetInputFormat, short input, short *format)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*format = [self->device inputFormatForInputAtIndex:input];
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(GetInputName, long videoInput, Str255 name)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	CFStringGetPascalString((CFStringRef)[self->device localizedStringForInputAtIndex:videoInput], name, 256, kCFStringEncodingUTF8);
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(GetInput, short *input)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*input = [self->device inputIndex];
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(SetInput, short input)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device setInputIndex:input];
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(SetInputStandard, short inputStandard)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device setInputStandard:inputStandard];
+	[pool drain];
 	return noErr;
 }
 
@@ -219,7 +231,7 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device setPlaying:!!state];
-	[pool release];
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(SetCompression, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
@@ -254,7 +266,7 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 		*dataSize = 0;
 	}
 	*similarity = 0;
-	[pool release];
+	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
@@ -264,7 +276,7 @@ ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 	NSCAssert(frame, @"Invalid buffer address.");
 	[frame removeFromStorage];
 	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
-	[pool release];
+	[pool drain];
 	return noErr;
 }
 
@@ -333,7 +345,7 @@ ECV_VDIG_FUNCTION(GetMaxSrcRect, short inputStd, Rect *maxSrcRect)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVPixelSize const s = [self->device captureSize];
-	[pool release];
+	[pool drain];
 	if(!s.width || !s.height) return badCallOrderErr;
 	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize(s)});
 	return noErr;
@@ -355,7 +367,7 @@ ECV_VDIG_FUNCTION(GetDataRate, long *milliSecPerFrame, Fixed *framesPerSecond, l
 	else *framesPerSecond = 0;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*bytesPerSecond = (1.0f / frameRate) * [[self->device videoStorage] bufferSize];
-	[pool release];
+	[pool drain];
 	return noErr;
 }
 
