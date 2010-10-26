@@ -121,7 +121,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 + (void)initialize
 {
 	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithInteger:ECVWeave], ECVDeinterlacingModeKey,
+		[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
 		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
 		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
 		[NSNumber numberWithDouble:0.5f], ECVHueKey,
