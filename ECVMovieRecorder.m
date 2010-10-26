@@ -33,17 +33,88 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAudioPipe.h"
 #import "ECVDebug.h"
 
+@implementation ECVMovieRecordingOptions
+
+#pragma mark -ECVMovieRecordingOptions
+
+@synthesize URL = _URL;
+@synthesize videoStorage = _videoStorage;
+@synthesize audioDevice = _audioDevice;
+
+#pragma mark -
+
+@synthesize videoCodec = _videoCodec;
+@synthesize videoQuality = _videoQuality;
+@synthesize stretchOutput = _stretchOutput;
+@synthesize outputSize = _outputSize;
+@synthesize cropRect = _cropRect;
+@synthesize upconvertsFromMono = _upconvertsFromMono;
+@synthesize recordsToRAM = _recordsToRAM;
+@synthesize halfFrameRate = _halfFrameRate;
+
+#pragma mark -
+
+- (QTTime)frameRate
+{
+	QTTime const r = [_videoStorage frameRate];
+	return [self halfFrameRate] ? QTMakeTime(r.timeValue * 2, r.timeScale) : r;
+}
+- (NSDictionary *)cleanAperatureDictionary
+{
+	NSRect const c = [self cropRect];
+	ECVPixelSize const s1 = [_videoStorage pixelSize];
+	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
+	return [NSDictionary dictionaryWithObjectsAndKeys:
+		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
+		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,
+		[NSNumber numberWithDouble:round(NSMinX(c) * s1.width - (s1.width - s2.width) / 2.0)], kCVImageBufferCleanApertureHorizontalOffsetKey,
+		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0)], kCVImageBufferCleanApertureVerticalOffsetKey,
+		nil];
+}
+
+#pragma mark -
+
+@synthesize volume = _volume;
+
+#pragma mark -NSObject
+
+- (id)init
+{
+	if((self = [super init])) {
+		_videoCodec = kJPEGCodecType;
+		_videoQuality = 0.5f;
+		_stretchOutput = YES;
+		_outputSize = [_videoStorage originalSize];
+		_cropRect = ECVUncroppedRect;
+
+		_volume = 1.0f;
+	}
+	return self;
+}
+- (void)dealloc
+{
+	[_URL release];
+	[_videoStorage release];
+	[_audioDevice release];
+	[super dealloc];
+}
+
+@end
+
 enum {
 	ECVRecordThreadWait,
 	ECVRecordThreadRun,
 	ECVRecordThreadFinished,
+};
+enum {
+	ECVSkipsFrames = 1 << (sizeof(NSUInteger) * CHAR_BIT - 1),
+	ECVFrameSkipMask = ~ECVSkipsFrames,
 };
 
 #define ECVCSOSetProperty(obj, prop, val) ECVOSStatus({ __typeof__(val) __val = (val); ICMCompressionSessionOptionsSetProperty(obj, kQTPropertyClass_ICMCompressionSessionOptions, (prop), sizeof(__val), &__val); }) // Be sure to cast val to the right type, since no implicit conversion occurs.
 
 #define ECVFramesPerPacket 1
 #define ECVChannelsPerFrame 2
-#define ECVBitsPerByte 8
 static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	48000.0f,
 	kAudioFormatLinearPCM,
@@ -52,7 +123,7 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	ECVFramesPerPacket,
 	sizeof(Float32) * ECVChannelsPerFrame,
 	ECVChannelsPerFrame,
-	sizeof(Float32) * ECVBitsPerByte,
+	sizeof(Float32) * CHAR_BIT,
 	0,
 };
 #define ECVAudioBufferBytesSize (ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000) // Should be more than enough to keep up with the incoming data.
@@ -60,7 +131,6 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 @interface ECVMovieRecorder(Private)
 
 - (void)_threaded_recordToMovie:(QTMovie *)movie;
-- (NSDictionary *)_cleanAperatureDictionary;
 
 - (void)_encodeFrame:(ECVVideoFrame *)frame;
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame;
@@ -79,89 +149,58 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 #pragma mark -ECVMovieRecorder
 
-- (id)initWithURL:(NSURL *)URL videoStorage:(ECVVideoStorage *)videoStorage audioDevice:(ECVAudioDevice *)audioDevice
+- (id)initWithOptions:(ECVMovieRecordingOptions *)options error:(out NSError **)outError
 {
-	if((self = [super init])) {
-		_URL = [URL copy];
-		_videoStorage = [videoStorage retain];
-		_audioDevice = [audioDevice retain];
+	if(!(self = [super init])) return nil;
 
-		_videoCodec = kJPEGCodecType;
-		_videoQuality = 0.5f;
-		_stretchOutput = YES;
-		_outputSize = [_videoStorage originalSize];
-		_cropRect = ECVUncroppedRect;
-
-		_volume = 1.0f;
-
-		_lock = [[NSConditionLock alloc] initWithCondition:ECVRecordThreadWait];
+	QTMovie *const movie = [[options recordsToRAM] ? [[QTMovie alloc] initToWritableData:[NSMutableData data] error:outError] : [[QTMovie alloc] initToWritableFile:[[options URL] path] error:outError] autorelease];
+	if(!movie) {
+		[self release];
+		return nil;
 	}
-	return self;
-}
-@synthesize URL = _URL;
-@synthesize videoStorage = _videoStorage;
-@synthesize audioDevice = _audioDevice;
 
-#pragma mark -
-
-@synthesize videoCodec = _videoCodec;
-@synthesize videoQuality = _videoQuality;
-@synthesize stretchOutput = _stretchOutput;
-@synthesize outputSize = _outputSize;
-@synthesize cropRect = _cropRect;
-@synthesize upconvertsFromMono = _upconvertsFromMono;
-@synthesize recordsToRAM = _recordsToRAM;
-
-#pragma mark -
-
-@synthesize volume = _volume;
-
-#pragma mark -
-
-- (BOOL)startRecordingError:(out NSError **)outError
-{
-	QTMovie *const movie = [[self recordsToRAM] ? [[QTMovie alloc] initToWritableData:[NSMutableData data] error:outError] : [[QTMovie alloc] initToWritableFile:[[self URL] path] error:outError] autorelease];
-	if(!movie) return NO;
-
+	_lock = [[NSConditionLock alloc] initWithCondition:ECVRecordThreadWait];
+	_writeURL = [options recordsToRAM] ? [[options URL] copy] : nil;
+	_videoStorage = [[options videoStorage] retain];
 	_videoFrames = [[NSMutableArray alloc] init];
+	_frameRate = [options frameRate];
+	_frameSkipper = [options halfFrameRate] ? ECVSkipsFrames : kNilOptions;
+	_outputSize = [options stretchOutput] ? [options outputSize] : [_videoStorage pixelSize];
+	_volume = [options volume];
 
-	ICMCompressionSessionOptionsRef options = NULL;
-	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &options));
-	ECVOSStatus(ICMCompressionSessionOptionsSetDurationsNeeded(options, true));
-	NSTimeInterval frameRateInterval = 0.0f;
-	if(QTGetTimeInterval([_videoStorage frameRate], &frameRateInterval)) ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, X2Fix(frameRateInterval));
-	ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, (UInt32)QTMakeTimeScaled([_videoStorage frameRate], ECVMicrosecondsPerSecond).timeValue);
-	ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
-	ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_Quality, (CodecQ)round(_videoQuality * codecMaxQuality));
-	ECVCSOSetProperty(options, kICMCompressionSessionOptionsPropertyID_Depth, [_videoStorage pixelFormatType]);
+	ICMCompressionSessionOptionsRef ICMOpts = NULL;
+	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &ICMOpts));
+	ECVOSStatus(ICMCompressionSessionOptionsSetDurationsNeeded(ICMOpts, true));
+	NSTimeInterval frameRateInterval = 0.0;
+	if(QTGetTimeInterval(_frameRate, &frameRateInterval)) ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
+	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, (UInt32)QTMakeTimeScaled(_frameRate, ECVMicrosecondsPerSecond).timeValue);
+	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
+	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_Quality, (CodecQ)round([options videoQuality] * codecMaxQuality));
+	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_Depth, [_videoStorage pixelFormatType]);
 	ICMEncodedFrameOutputRecord callback = {};
 	callback.frameDataAllocator = kCFAllocatorDefault;
 	callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
 	callback.encodedFrameOutputRefCon = self;
-	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, _outputSize.width, _outputSize.height, _videoCodec, [_videoStorage frameRate].timeScale, options, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, _outputSize.width, _outputSize.height, [options videoCodec], _frameRate.timeScale, ICMOpts, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].width], kCVPixelBufferWidthKey,
 		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].height], kCVPixelBufferHeightKey,
 		[NSNumber numberWithUnsignedInt:[_videoStorage pixelFormatType]], kCVPixelBufferPixelFormatTypeKey,
+		[NSDictionary dictionaryWithObjectsAndKeys:
+			[options cleanAperatureDictionary], kCVImageBufferCleanApertureKey,
+			nil], kCVBufferNonPropagatedAttachmentsKey,
 		nil], &callback, &_compressionSession));
-	ICMCompressionSessionOptionsRelease(options);
+	ICMCompressionSessionOptionsRelease(ICMOpts);
 
-	ECVAudioStream *const inputStream = [[[_audioDevice streams] objectEnumerator] nextObject];
+	ECVAudioStream *const inputStream = [[[[options audioDevice] streams] objectEnumerator] nextObject];
 	if(inputStream) {
-		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription upconvertFromMono:[self upconvertsFromMono]];
+		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription upconvertFromMono:[options upconvertsFromMono]];
 		[_audioPipe setDropsBuffers:NO];
 	}
 
 	[movie detachFromCurrentThread];
 	[NSThread detachNewThreadSelector:@selector(_threaded_recordToMovie:) toTarget:self withObject:movie];
-	return YES;
-}
-- (void)stopRecording
-{
-	[_lock lock];
-	_stop = YES;
-	[_lock unlockWithCondition:ECVRecordThreadRun];
-	[_lock lockWhenCondition:ECVRecordThreadFinished];
-	[_lock unlock];
+
+	return self;
 }
 
 #pragma mark -
@@ -170,6 +209,10 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 {
 	[_lock lock];
 	if(ECVRecordThreadFinished == [_lock condition]) return [_lock unlock];
+	if(ECVSkipsFrames & _frameSkipper) {
+		_frameSkipper = ECVSkipsFrames | ((ECVFrameSkipMask & _frameSkipper) + 1) % 2;
+		if(!(ECVFrameSkipMask & _frameSkipper)) return [_lock unlock];
+	}
 	[_videoFrames insertObject:frame atIndex:0];
 	[_lock unlockWithCondition:ECVRecordThreadRun];
 }
@@ -181,6 +224,17 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[_lock unlockWithCondition:ECVRecordThreadRun];
 }
 
+#pragma mark -
+
+- (void)stopRecording
+{
+	[_lock lock];
+	_stop = YES;
+	[_lock unlockWithCondition:ECVRecordThreadRun];
+	[_lock lockWhenCondition:ECVRecordThreadFinished];
+	[_lock unlock];
+}
+
 #pragma mark -ECVMovieRecorder(Private)
 
 - (void)_threaded_recordToMovie:(QTMovie *)movie
@@ -189,15 +243,14 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[QTMovie enterQTKitOnThread];
 	[movie attachToCurrentThread];
 
-	ECVPixelSize const size = [self stretchOutput] ? [self outputSize] : [_videoStorage pixelSize];
-	Track const videoTrack = NewMovieTrack([movie quickTimeMovie], Long2Fix(size.width), Long2Fix(size.height), kNoVolume);
+	Track const videoTrack = NewMovieTrack([movie quickTimeMovie], Long2Fix(_outputSize.width), Long2Fix(_outputSize.height), kNoVolume);
 	Track const audioTrack = NewMovieTrack([movie quickTimeMovie], 0, 0, (short)round(_volume * kFullVolume));
-	_videoMedia = NewTrackMedia(videoTrack, VideoMediaType, [_videoStorage frameRate].timeScale, NULL, 0);
+	_videoMedia = NewTrackMedia(videoTrack, VideoMediaType, _frameRate.timeScale, NULL, 0);
 	_audioMedia = NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0);
 	ECVOSErr(BeginMediaEdits(_videoMedia));
 	ECVOSErr(BeginMediaEdits(_audioMedia));
+
 	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(_compressionSession), &_pixelBuffer));
-	CVBufferSetAttachment(_pixelBuffer, kCVImageBufferCleanApertureKey, [self _cleanAperatureDictionary], kCVAttachmentMode_ShouldNotPropagate);
 
 	ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_audioDescriptionHandle));
 	_audioBufferBytes = malloc(ECVAudioBufferBytesSize);
@@ -221,19 +274,12 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		[innerPool release];
 	}
 
-	[_lock lock];
-	[_videoFrames release];
-	_videoFrames = nil;
-	[_audioPipe release];
-	_audioPipe = nil;
-	[_lock unlock];
-
 	ECVOSStatus(ICMCompressionSessionCompleteFrames(_compressionSession, true, 0, 0));
 	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_videoMedia), 0, GetMediaDisplayStartTime(_videoMedia), GetMediaDisplayDuration(_videoMedia), fixed1));
 	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_audioMedia), 0, GetMediaDisplayStartTime(_audioMedia), GetMediaDisplayDuration(_audioMedia), fixed1));
 	ECVOSErr(EndMediaEdits(_videoMedia));
 	ECVOSErr(EndMediaEdits(_audioMedia));
-	if([self recordsToRAM]) [movie writeToFile:[[self URL] path] withAttributes:nil];
+	if(_writeURL) [movie writeToFile:[_writeURL path] withAttributes:nil];
 	else [movie updateMovieFile];
 
 	if(_compressionSession) ICMCompressionSessionRelease(_compressionSession);
@@ -261,18 +307,6 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 	[outerPool release];
 }
-- (NSDictionary *)_cleanAperatureDictionary
-{
-	NSRect const c = [self cropRect];
-	ECVPixelSize const s1 = [_videoStorage pixelSize];
-	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
-	return [NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
-		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,
-		[NSNumber numberWithDouble:round(NSMinX(c) * s1.width - (s1.width - s2.width) / 2.0f)], kCVImageBufferCleanApertureHorizontalOffsetKey,
-		[NSNumber numberWithDouble:round(NSMinY(c) * s1.height - (s1.height - s2.height) / 2.0f)], kCVImageBufferCleanApertureVerticalOffsetKey,
-		nil];
-}
 
 #pragma mark -
 
@@ -282,7 +316,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	if(![frame lockIfHasBuffer]) return [self _addEncodedFrame:NULL];
 	[frame copyToPixelBuffer:_pixelBuffer];
 	[frame unlock];
-	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, _pixelBuffer, 0, [_videoStorage frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, _pixelBuffer, 0, _frameRate.timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 }
 - (void)_addEncodedFrame:(ICMEncodedFrameRef)frame
 {
@@ -309,11 +343,11 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 
 - (void)dealloc
 {
-	[_URL release];
-	[_videoStorage release];
-	[_audioDevice release];
-
 	[_lock release];
+	[_writeURL release];
+	[_videoStorage release];
+	[_videoFrames release];
+	[_audioPipe release];
 	[super dealloc];
 }
 

@@ -136,17 +136,22 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
 	if(NSFileHandlingPanelOKButton != returnCode) return;
 
-	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithURL:[savePanel URL] videoStorage:[(ECVCaptureDevice *)[self document] videoStorage] audioDevice:[[self document] audioInput]] autorelease];
-	[recorder setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
-	[recorder setVideoQuality:[videoQualitySlider doubleValue]];
-	[recorder setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
-	[recorder setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
-	[recorder setCropRect:[self cropRect]];
-	[recorder setUpconvertsFromMono:[[self document] upconvertsFromMono]];
-	[recorder setRecordsToRAM:NSOnState == [recordToRAMButton state]];
+	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
+	[options setURL:[savePanel URL]];
+	[options setVideoStorage:[(ECVCaptureDevice *)[self document] videoStorage]];
+	[options setAudioDevice:[[self document] audioInput]];
+
+	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
+	[options setVideoQuality:[videoQualitySlider doubleValue]];
+	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
+	[options setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
+	[options setCropRect:[self cropRect]];
+	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
+	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
 
 	NSError *error = nil;
-	if([recorder startRecordingError:&error]) {
+	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
+	if(recorder) {
 		@synchronized(self) {
 			_movieRecorder = [recorder retain];
 		}

@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVAudioDevice;
 @class ECVAudioPipe;
 
-@interface ECVMovieRecorder : NSObject
+@interface ECVMovieRecordingOptions : NSObject
 {
 	@private
 	NSURL *_URL;
@@ -47,28 +47,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSRect _cropRect;
 	BOOL _upconvertsFromMono;
 	BOOL _recordsToRAM;
+	BOOL _halfFrameRate;
 
 	CGFloat _volume;
-
-	NSConditionLock *_lock;
-	BOOL _stop;
-	CVPixelBufferRef _pixelBuffer;
-	NSMutableArray *_videoFrames;
-
-	Media _videoMedia;
-	ICMCompressionSessionRef _compressionSession;
-	ICMEncodedFrameRef _encodedFrame;
-	Media _audioMedia;
-	ECVAudioPipe *_audioPipe;
-	SoundDescriptionHandle _audioDescriptionHandle;
-	void *_audioBufferBytes;
 }
 
-- (id)initWithURL:(NSURL *)URL videoStorage:(ECVVideoStorage *)videoStorage audioDevice:(ECVAudioDevice *)audioDevice;
-@property(readonly) NSURL *URL;
-@property(readonly) ECVVideoStorage *videoStorage;
-@property(readonly) ECVAudioDevice *audioDevice;
+@property(copy) NSURL *URL;
+@property(retain) ECVVideoStorage *videoStorage;
+@property(retain) ECVAudioDevice *audioDevice;
 
+// Video
 @property(assign) OSType videoCodec;
 @property(assign) CGFloat videoQuality;
 @property(assign) BOOL stretchOutput;
@@ -76,14 +64,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) NSRect cropRect;
 @property(assign) BOOL upconvertsFromMono;
 @property(assign) BOOL recordsToRAM;
+@property(assign) BOOL halfFrameRate;
 
+@property(readonly) QTTime frameRate;
+@property(readonly) NSDictionary *cleanAperatureDictionary;
+
+// Audio
 @property(assign) CGFloat volume;
 
-- (BOOL)startRecordingError:(out NSError **)outError;
-- (void)stopRecording;
+@end
+
+@interface ECVMovieRecorder : NSObject
+{
+	@private
+	NSConditionLock *_lock;
+	BOOL _stop;
+	NSURL *_writeURL;
+
+	ECVVideoStorage *_videoStorage;
+	CVPixelBufferRef _pixelBuffer;
+	NSMutableArray *_videoFrames;
+	Media _videoMedia;
+	ICMCompressionSessionRef _compressionSession;
+	ICMEncodedFrameRef _encodedFrame;
+	QTTime _frameRate;
+	NSUInteger _frameSkipper;
+	ECVPixelSize _outputSize;
+
+	Media _audioMedia;
+	ECVAudioPipe *_audioPipe;
+	SoundDescriptionHandle _audioDescriptionHandle;
+	void *_audioBufferBytes;
+	CGFloat _volume;
+}
+
+- (id)initWithOptions:(ECVMovieRecordingOptions *)options error:(out NSError **)outError;
 
 - (void)addVideoFrame:(ECVVideoFrame *)frame;
 - (void)addAudioBufferList:(AudioBufferList const *)bufferList;
+
+- (void)stopRecording;
 
 @end
 
