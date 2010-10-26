@@ -148,6 +148,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[options setCropRect:[self cropRect]];
 	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
 	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
+	[options setHalfFrameRate:NSOnState == [halfFrameRate state]];
 
 	NSError *error = nil;
 	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
