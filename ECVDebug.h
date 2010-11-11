@@ -29,7 +29,7 @@ enum {
 };
 typedef NSUInteger ECVErrorLevel;
 
-extern void ECVLog(ECVErrorLevel level, NSString *format, ...) __attribute__((format(__NSString__, 2, 3)));
+extern void ECVLog(ECVErrorLevel level, NSString *format, ...) NS_FORMAT_FUNCTION(2, 3);
 extern NSString *ECVOSStatusToString(OSStatus error);
 extern NSString *ECVIOKitErrorToString(IOReturn error);
 extern NSString *ECVCVReturnToString(CVReturn error);
