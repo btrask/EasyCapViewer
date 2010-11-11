@@ -197,14 +197,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return (ECVPixelSize){720, [self is60HzFormat] ? 480 : 576};
 }
-- (NSUInteger)simultaneousTransfers
-{
-	return 2;
-}
-- (NSUInteger)microframesPerTransfer
-{
-	return 128;
-}
 - (UInt8)isochReadingPipe
 {
 	return 2;

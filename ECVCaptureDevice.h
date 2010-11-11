@@ -106,6 +106,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (void)togglePlaying;
 @property(nonatomic, assign) ECVDeinterlacingMode deinterlacingMode;
 @property(readonly) ECVVideoStorage *videoStorage;
+@property(readonly) NSUInteger simultaneousTransfers;
+@property(readonly) NSUInteger microframesPerTransfer;
 
 - (void)startPlaying;
 - (void)threadMain_play;
@@ -132,8 +134,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 @property(readonly) BOOL requiresHighSpeed;
 @property(readonly) ECVPixelSize captureSize;
-@property(readonly) NSUInteger simultaneousTransfers;
-@property(readonly) NSUInteger microframesPerTransfer;
 @property(readonly) UInt8 isochReadingPipe;
 @property(readonly) QTTime frameRate;
 @property(readonly) OSType pixelFormatType;

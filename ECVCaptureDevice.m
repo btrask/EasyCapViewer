@@ -283,6 +283,14 @@ ECVNoDeviceError:
 	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
 }
 @synthesize videoStorage = _videoStorage;
+- (NSUInteger)simultaneousTransfers
+{
+	return 2;
+}
+- (NSUInteger)microframesPerTransfer
+{
+	return 128;
+}
 
 #pragma mark -
 
