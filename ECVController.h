@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)showErrorLog:(id)sender;
 
 @property(readonly) IONotificationPortRef notificationPort;
-@property(assign) BOOL playing;
+@property(nonatomic, assign) BOOL playing;
 
 - (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device;
 - (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device;

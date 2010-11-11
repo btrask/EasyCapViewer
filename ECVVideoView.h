@@ -63,13 +63,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // These methods are thread safe.
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(retain) ECVVideoStorage *videoStorage;
+@property(nonatomic, retain) ECVVideoStorage *videoStorage;
 @property(assign) NSSize aspectRatio;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL vsync;
 @property(assign) GLint magFilter;
 @property(assign) BOOL showDroppedFrames;
-@property(retain) NSCell<ECVVideoViewCell> *cell;
+@property(nonatomic, retain) NSCell<ECVVideoViewCell> *cell;
 - (void)pushFrame:(ECVVideoFrame *)frame;
 
 @end

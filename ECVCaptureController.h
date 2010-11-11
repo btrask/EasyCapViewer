@@ -101,8 +101,8 @@ typedef NSInteger ECVCropBorder;
 
 @property(assign) NSSize aspectRatio;
 @property(readonly) NSRect cropRect;
-@property(assign, getter = isFullScreen) BOOL fullScreen;
-@property(assign) NSSize windowContentSize;
+@property(nonatomic, assign, getter = isFullScreen) BOOL fullScreen;
+@property(nonatomic, assign) NSSize windowContentSize;
 @property(readonly) NSSize outputSize;
 - (NSSize)outputSizeWithScale:(NSInteger)scale;
 - (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;

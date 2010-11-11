@@ -77,12 +77,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)setImage:(NSImage *)image
 {
-	[_context makeCurrentContext];
-	CGLLockContext([_context CGLContextObj]);
+	CGLContextObj const contextObj = ECVLockContext(_context);
 	ECVGLError(glDeleteTextures(1, &_textureName));
 	NSBitmapImageRep *const rep = (NSBitmapImageRep *)[image bestRepresentationForDevice:nil];
 	if(rep) _textureName = [rep ECV_textureName];
-	CGLUnlockContext([_context CGLContextObj]);
+	ECVUnlockContext(contextObj);
 	[super setImage:image];
 }
 

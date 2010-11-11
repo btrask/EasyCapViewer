@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (id)initWithOpenGLContext:(NSOpenGLContext *)context;
 @property(assign) NSObject<ECVCropCellDelegate> *delegate;
-@property(assign) NSRect cropRect;
+@property(nonatomic, assign) NSRect cropRect;
 
 - (NSRect)maskRectWithCropRect:(NSRect)crop frame:(NSRect)frame;
 - (NSRect)frameForHandlePosition:(ECVRectEdgeMask)pos maskRect:(NSRect)mask inFrame:(NSRect)frame;

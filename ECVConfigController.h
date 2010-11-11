@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeUpconvertsFromMono:(id)sender;
 - (IBAction)changeVolume:(id)sender;
 
-@property(assign) ECVCaptureDevice *captureDevice;
+@property(nonatomic, assign) ECVCaptureDevice *captureDevice;
 
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
 - (void)volumeDidChange:(NSNotification *)aNotif;
@@ -69,23 +69,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @optional
 @property(readonly) NSArray *allVideoSourceObjects;
-@property(assign) id videoSourceObject;
+@property(nonatomic, assign) id videoSourceObject;
 - (NSString *)localizedStringForVideoSourceObject:(id)obj;
 - (BOOL)isValidVideoSourceObject:(id)obj;
 - (NSInteger)indentationLevelForVideoSourceObject:(id)obj;
 
 @property(readonly) NSArray *allVideoFormatObjects;
-@property(assign) id videoFormatObject;
+@property(nonatomic, assign) id videoFormatObject;
 - (NSString *)localizedStringForVideoFormatObject:(id)obj;
 - (BOOL)isValidVideoFormatObject:(id)obj;
 - (NSInteger)indentationLevelForVideoFormatObject:(id)obj;
 
-@property(assign) CGFloat brightness;
-@property(assign) CGFloat contrast;
-@property(assign) CGFloat saturation;
-@property(assign) CGFloat hue;
-@property(assign, getter=isMuted) BOOL muted;
-@property(assign) CGFloat volume;
-@property(assign) BOOL upconvertsFromMono;
+@property(nonatomic, assign) CGFloat brightness;
+@property(nonatomic, assign) CGFloat contrast;
+@property(nonatomic, assign) CGFloat saturation;
+@property(nonatomic, assign) CGFloat hue;
+@property(nonatomic, assign, getter=isMuted) BOOL muted;
+@property(nonatomic, assign) CGFloat volume;
+@property(nonatomic, assign) BOOL upconvertsFromMono;
 
 @end

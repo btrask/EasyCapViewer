@@ -34,10 +34,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 
 @property(assign) id<SAA711XDevice> device;
-@property(assign) CGFloat brightness;
-@property(assign) CGFloat contrast;
-@property(assign) CGFloat saturation;
-@property(assign) CGFloat hue;
+@property(nonatomic, assign) CGFloat brightness;
+@property(nonatomic, assign) CGFloat contrast;
+@property(nonatomic, assign) CGFloat saturation;
+@property(nonatomic, assign) CGFloat hue;
 
 - (BOOL)initialize;
 @property(readonly) NSUInteger versionNumber;

@@ -50,7 +50,7 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 @property(readonly) AudioDeviceID deviceID;
 @property(readonly) BOOL isInput;
 
-@property(copy) NSString *name;
+@property(nonatomic, copy) NSString *name;
 @property(readonly) NSArray *streams;
 
 - (BOOL)start;

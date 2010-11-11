@@ -104,7 +104,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 @property(assign, getter = isPlaying) BOOL playing;
 - (void)togglePlaying;
-@property(assign) ECVDeinterlacingMode deinterlacingMode;
+@property(nonatomic, assign) ECVDeinterlacingMode deinterlacingMode;
 @property(readonly) ECVVideoStorage *videoStorage;
 
 - (void)startPlaying;
@@ -120,8 +120,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 #ifdef ECV_ENABLE_AUDIO
 @property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
-@property(retain) ECVAudioDevice *audioInput;
-@property(retain) ECVAudioDevice *audioOutput;
+@property(nonatomic, retain) ECVAudioDevice *audioInput;
+@property(nonatomic, retain) ECVAudioDevice *audioOutput;
 - (BOOL)startAudio;
 - (void)stopAudio;
 #endif

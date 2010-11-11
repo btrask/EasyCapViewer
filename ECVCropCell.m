@@ -71,10 +71,9 @@ static ECVRectEdgeMask const ECVHandlePositions[] = {
 
 		[graphicsContext flushGraphics];
 
-		[context makeCurrentContext];
-		CGLLockContext([context CGLContextObj]);
+		CGLContextObj const contextObj = ECVLockContext(context);
 		_handleTextureName = [_handleRep ECV_textureName];
-		CGLUnlockContext([context CGLContextObj]);
+		ECVUnlockContext(contextObj);
 	}
 	return self;
 }

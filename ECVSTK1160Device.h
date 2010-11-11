@@ -69,7 +69,7 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 	VT1612AChip *_VT1612AChip;
 }
 
-@property(assign) ECVSTK1160VideoSource videoSource;
-@property(assign) ECVSTK1160VideoFormat videoFormat;
+@property(nonatomic, assign) ECVSTK1160VideoSource videoSource;
+@property(nonatomic, assign) ECVSTK1160VideoFormat videoFormat;
 
 @end

@@ -286,99 +286,6 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-#ifdef ECV_ENABLE_AUDIO
-- (ECVAudioDevice *)audioInputOfCaptureHardware
-{
-	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
-	[input setName:_productName];
-	return input;
-}
-- (ECVAudioDevice *)audioInput
-{
-	if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
-	if(!_audioInput) _audioInput = [[ECVAudioDevice defaultInputDevice] retain];
-	return [[_audioInput retain] autorelease];
-}
-- (void)setAudioInput:(ECVAudioDevice *)device
-{
-	NSParameterAssert([device isInput] || !device);
-	if(ECVEqualObjects(device, _audioInput)) return;
-	ECVPauseWhile(self, {
-		[_audioInput release];
-		_audioInput = [device retain];
-		[_audioPreviewingPipe release];
-		_audioPreviewingPipe = nil;
-	});
-}
-- (ECVAudioDevice *)audioOutput
-{
-	if(!_audioOutput) return _audioOutput = [[ECVAudioDevice defaultOutputDevice] retain];
-	return [[_audioOutput retain] autorelease];
-}
-- (void)setAudioOutput:(ECVAudioDevice *)device
-{
-	NSParameterAssert(![device isInput] || !device);
-	if(ECVEqualObjects(device, _audioOutput)) return;
-	ECVPauseWhile(self, {
-		[_audioOutput release];
-		_audioOutput = [device retain];
-		[_audioPreviewingPipe release];
-		_audioPreviewingPipe = nil;
-	});
-}
-- (BOOL)startAudio
-{
-	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
-
-	NSTimeInterval const timeSinceLastStop = [NSDate ECV_timeIntervalSinceReferenceDate] - _audioStopTime;
-	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
-
-	ECVAudioDevice *const input = [self audioInput];
-	ECVAudioDevice *const output = [self audioOutput];
-
-	ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
-	if(!inputStream) {
-		ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
-		return NO;
-	}
-	ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-	if(!outputStream) {
-		ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
-		return NO;
-	}
-
-	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
-	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[input setDelegate:self];
-	[output setDelegate:self];
-
-	if(![input start]) {
-		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
-		return NO;
-	}
-	if(![output start]) {
-		[output stop];
-		ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
-		return NO;
-	}
-	return YES;
-}
-- (void)stopAudio
-{
-	ECVAudioDevice *const input = [self audioInput];
-	ECVAudioDevice *const output = [self audioOutput];
-	[input stop];
-	[output stop];
-	[input setDelegate:nil];
-	[output setDelegate:nil];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
-	_audioStopTime = [NSDate ECV_timeIntervalSinceReferenceDate];
-}
-#endif
-
-#pragma mark -
-
 - (void)startPlaying
 {
 	_firstFrame = YES;
@@ -569,6 +476,99 @@ ECVNoDeviceError:
 {
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:i length:0 data:NULL];
 }
+
+#pragma mark -
+
+#ifdef ECV_ENABLE_AUDIO
+- (ECVAudioDevice *)audioInputOfCaptureHardware
+{
+	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
+	[input setName:_productName];
+	return input;
+}
+- (ECVAudioDevice *)audioInput
+{
+	if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
+	if(!_audioInput) _audioInput = [[ECVAudioDevice defaultInputDevice] retain];
+	return [[_audioInput retain] autorelease];
+}
+- (void)setAudioInput:(ECVAudioDevice *)device
+{
+	NSParameterAssert([device isInput] || !device);
+	if(ECVEqualObjects(device, _audioInput)) return;
+	ECVPauseWhile(self, {
+		[_audioInput release];
+		_audioInput = [device retain];
+		[_audioPreviewingPipe release];
+		_audioPreviewingPipe = nil;
+	});
+}
+- (ECVAudioDevice *)audioOutput
+{
+	if(!_audioOutput) return _audioOutput = [[ECVAudioDevice defaultOutputDevice] retain];
+	return [[_audioOutput retain] autorelease];
+}
+- (void)setAudioOutput:(ECVAudioDevice *)device
+{
+	NSParameterAssert(![device isInput] || !device);
+	if(ECVEqualObjects(device, _audioOutput)) return;
+	ECVPauseWhile(self, {
+		[_audioOutput release];
+		_audioOutput = [device retain];
+		[_audioPreviewingPipe release];
+		_audioPreviewingPipe = nil;
+	});
+}
+- (BOOL)startAudio
+{
+	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
+
+	NSTimeInterval const timeSinceLastStop = [NSDate ECV_timeIntervalSinceReferenceDate] - _audioStopTime;
+	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
+
+	ECVAudioDevice *const input = [self audioInput];
+	ECVAudioDevice *const output = [self audioOutput];
+
+	ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
+	if(!inputStream) {
+		ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
+		return NO;
+	}
+	ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
+	if(!outputStream) {
+		ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
+		return NO;
+	}
+
+	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
+	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
+	[input setDelegate:self];
+	[output setDelegate:self];
+
+	if(![input start]) {
+		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
+		return NO;
+	}
+	if(![output start]) {
+		[output stop];
+		ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
+		return NO;
+	}
+	return YES;
+}
+- (void)stopAudio
+{
+	ECVAudioDevice *const input = [self audioInput];
+	ECVAudioDevice *const output = [self audioOutput];
+	[input stop];
+	[output stop];
+	[input setDelegate:nil];
+	[output setDelegate:nil];
+	[_audioPreviewingPipe release];
+	_audioPreviewingPipe = nil;
+	_audioStopTime = [NSDate ECV_timeIntervalSinceReferenceDate];
+}
+#endif
 
 #pragma mark -ECVCaptureDevice(Private)
 

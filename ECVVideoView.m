@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
 
 // Other Sources
+#import "ECVAppKitAdditions.h"
 #import "ECVDebug.h"
 #import "ECVOpenGLAdditions.h"
 
@@ -102,10 +103,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)setVideoStorage:(ECVVideoStorage *)storage
 {
 	if(storage == _videoStorage) return;
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
 	if(_textureNames) ECVGLError(glDeleteTextures([_videoStorage numberOfBuffers], [_textureNames bytes]));
@@ -133,56 +131,68 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
-@synthesize aspectRatio = _aspectRatio;
+- (NSSize)aspectRatio
+{
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
+	NSSize const r = _aspectRatio;
+	ECVUnlockContext(contextObj);
+	return r;
+}
 - (void)setAspectRatio:(NSSize)ratio
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	_aspectRatio = ratio;
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 	[self reshape];
 }
-@synthesize cropRect = _cropRect;
+- (NSRect)cropRect
+{
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
+	NSRect const r = _cropRect;
+	ECVUnlockContext(contextObj);
+	return r;
+}
 - (void)setCropRect:(NSRect)aRect
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	_cropRect = aRect;
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 	[self setNeedsDisplay:YES];
 }
-@synthesize vsync = _vsync;
+- (BOOL)vsync
+{
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
+	BOOL const r = _vsync;
+	ECVUnlockContext(contextObj);
+	return r;
+}
 - (void)setVsync:(BOOL)flag
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	_vsync = flag;
 	GLint params[] = {!!flag};
 	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, params);
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
-@synthesize magFilter = _magFilter;
+- (GLint)magFilter
+{
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
+	GLint const r = _magFilter;
+	ECVUnlockContext(contextObj);
+	return r;
+}
 - (void)setMagFilter:(GLint)filter
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	_magFilter = filter;
 	NSUInteger i = 0;
 	if(_textureNames) for(; i < [_videoStorage numberOfBuffers]; i++) {
 		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:i]));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, _magFilter));
 	}
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 	[self setNeedsDisplay:YES];
 }
 @synthesize showDroppedFrames = _showDroppedFrames;
@@ -201,11 +211,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (void)pushFrame:(ECVVideoFrame *)frame
 {
 	if(!frame) return;
-	CGLContextObj const contextObj = [[self openGLContext] CGLContextObj];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	if([_videoStorage dropFramesFromArray:_frames]) _frameDropStrength = 1.0f;
 	[_frames insertObject:frame atIndex:0];
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
 
 #pragma mark -ECVVideoView(Private)
@@ -220,10 +229,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)_drawOneFrame
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	ECVVideoFrame *frame = nil;
@@ -247,7 +253,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	glFinish();
 	[frame unlock];
 
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
 - (void)_drawFrame:(ECVVideoFrame *)frame
 {
@@ -315,19 +321,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)update
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	[super update];
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
 - (void)reshape
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 
 	[super reshape];
 
@@ -348,7 +348,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
 
 #pragma mark -NSView
@@ -363,10 +363,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 }
 - (void)drawRect:(NSRect)aRect
 {
-	NSOpenGLContext *const context = [self openGLContext];
-	CGLContextObj const contextObj = [context CGLContextObj];
-	[context makeCurrentContext];
-	CGLLockContext(contextObj);
+	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	ECVVideoFrame *frame = [_videoStorage newestCompletedFrame];
@@ -377,7 +374,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	glFinish();
 	[frame unlock];
 
-	CGLUnlockContext(contextObj);
+	ECVUnlockContext(contextObj);
 }
 - (void)resetCursorRects
 {

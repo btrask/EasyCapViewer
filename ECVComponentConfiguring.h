@@ -26,10 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) long inputCapabilityFlags;
 
 @property(readonly) short numberOfInputs;
-@property(assign) short inputIndex;
+@property(nonatomic, assign) short inputIndex;
 - (short)inputFormatForInputAtIndex:(short)i;
 - (NSString *)localizedStringForInputAtIndex:(long)i;
 
-@property(assign) short inputStandard;
+@property(nonatomic, assign) short inputStandard;
 
 @end
