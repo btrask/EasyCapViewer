@@ -48,7 +48,7 @@ extern NSString *ECVErrnoToString(int error);
 #define ECVIOReturn(x) do {\
 	IOReturn const __e = (x);\
 	if(kIOReturnSuccess == __e) break;\
-	ECVLog(ECVWarning, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
+	ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
 	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
 	goto ECVGenericError;\
 } while(NO)
