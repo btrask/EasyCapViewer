@@ -203,7 +203,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (NSUInteger)microframesPerTransfer
 {
-	return 512;
+	return 128;
 }
 - (UInt8)isochReadingPipe
 {
