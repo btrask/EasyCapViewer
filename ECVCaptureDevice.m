@@ -327,10 +327,20 @@ ECVNoDeviceError:
 	UInt8 const pipeIndex = [self isochReadingPipe];
 	NSUInteger i;
 
+	UInt8 direction = kUSBNone;
+	UInt8 pipeNumberIgnored = 0;
+	UInt8 transferType = kUSBAnyType;
 	UInt16 frameRequestSize = 0;
 	UInt8 millisecondInterval = 0;
-	UInt8 ignored1 = 0, ignored2 = 0, ignored3 = 0;
-	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &ignored1, &ignored2, &ignored3, &frameRequestSize, &millisecondInterval));
+	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &direction, &pipeNumberIgnored, &transferType, &frameRequestSize, &millisecondInterval));
+	if(direction != kUSBIn && direction != kUSBAnyDirn) {
+		ECVLog(ECVError, @"Invalid pipe direction %lu", (unsigned long)direction);
+		goto ECVGenericError;
+	}
+	if(transferType != kUSBIsoc) {
+		ECVLog(ECVError, @"Invalid transfer type %lu", (unsigned long)transferType);
+		goto ECVGenericError;
+	}
 	NSParameterAssert(frameRequestSize);
 
 	NSUInteger const numberOfMicroframes = microframesPerTransfer * simultaneousTransfers;
@@ -342,8 +352,8 @@ ECVNoDeviceError:
 	}
 
 	UInt64 currentFrame = 0;
-	AbsoluteTime ignored;
-	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &ignored));
+	AbsoluteTime atTimeIgnored;
+	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &atTimeIgnored));
 	currentFrame += 10;
 
 #ifdef ECV_ENABLE_AUDIO
