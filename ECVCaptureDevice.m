@@ -43,6 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVFoundationAdditions.h"
 #import "ECVReadWriteLock.h"
 
+#define ECVNanosecondsPerMillisecond 1e6
+
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";
 NSString *const ECVBrightnessKey = @"ECVBrightness";
 NSString *const ECVContrastKey = @"ECVContrast";
@@ -326,8 +328,9 @@ ECVNoDeviceError:
 	NSUInteger i;
 
 	UInt16 frameRequestSize = 0;
-	UInt8 ignored1 = 0, ignored2 = 0, ignored3 = 0 , ignored4 = 0;
-	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &ignored1, &ignored2, &ignored3, &frameRequestSize, &ignored4));
+	UInt8 millisecondInterval = 0;
+	UInt8 ignored1 = 0, ignored2 = 0, ignored3 = 0;
+	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &ignored1, &ignored2, &ignored3, &frameRequestSize, &millisecondInterval));
 	NSParameterAssert(frameRequestSize);
 
 	NSUInteger const numberOfMicroframes = microframesPerTransfer * simultaneousTransfers;
@@ -364,7 +367,7 @@ ECVNoDeviceError:
 			IOUSBLowLatencyIsocFrame *const frameList = fullFrameList + microframeIndex;
 			for(i = 0; i < microframesPerTransfer; i++) {
 				if(kUSBLowLatencyIsochTransferKey == frameList[i].frStatus && i) {
-					Nanoseconds const nextUpdateTime = UInt64ToUnsignedWide(UnsignedWideToUInt64(AbsoluteToNanoseconds(frameList[i - 1].frTimeStamp)) + 1e6); // LowLatencyReadIsochPipeAsync() only updates every millisecond at most.
+					Nanoseconds const nextUpdateTime = UInt64ToUnsignedWide(UnsignedWideToUInt64(AbsoluteToNanoseconds(frameList[i - 1].frTimeStamp)) + millisecondInterval * ECVNanosecondsPerMillisecond);
 					mach_wait_until(UnsignedWideToUInt64(NanosecondsToAbsolute(nextUpdateTime)));
 				}
 				while(kUSBLowLatencyIsochTransferKey == frameList[i].frStatus) usleep(100); // In case we haven't slept long enough already.
