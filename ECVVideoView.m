@@ -80,11 +80,6 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 - (void)startDrawing
 {
-	if(!_displayLink) {
-		ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
-		ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
-		[self windowDidChangeScreenProfile:nil];
-	}
 	ECVCVReturn(CVDisplayLinkStart(_displayLink));
 }
 - (void)stopDrawing
@@ -454,6 +449,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	_cropRect = ECVUncroppedRect;
 	_magFilter = GL_LINEAR;
+	ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
+	ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
+	[self windowDidChangeScreenProfile:nil];
 }
 
 #pragma mark -<NSWindowDelegate>
