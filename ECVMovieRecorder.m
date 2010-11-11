@@ -111,7 +111,7 @@ enum {
 	ECVFrameSkipMask = ~ECVSkipsFrames,
 };
 
-#define ECVCSOSetProperty(obj, prop, val) ECVOSStatus({ __typeof__(val) __val = (val); ICMCompressionSessionOptionsSetProperty(obj, kQTPropertyClass_ICMCompressionSessionOptions, (prop), sizeof(__val), &__val); }) // Be sure to cast val to the right type, since no implicit conversion occurs.
+#define ECVCSOSetProperty(obj, prop, val) ECVOSStatus({ __typeof__(val) const __val = (val); ICMCompressionSessionOptionsSetProperty(obj, kQTPropertyClass_ICMCompressionSessionOptions, (prop), sizeof(__val), &__val); }) // Be sure to cast val to the right type, since no implicit conversion occurs.
 
 #define ECVFramesPerPacket 1
 #define ECVChannelsPerFrame 2

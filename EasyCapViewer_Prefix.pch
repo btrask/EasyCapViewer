@@ -78,4 +78,4 @@ static size_t ECVPixelFormatBytesPerPixel(OSType format)
 
 #define numberof(x) (sizeof(x) / sizeof(x[0]))
 #define CLAMP(min, x, max) MIN(MAX((min), (x)), (max))
-#define SUB_ZERO(minuend, subtrahend) ({ __typeof__(minuend) __m = (minuend); __typeof__(subtrahend) __s = (subtrahend); __m > __s ? __m - __s : 0; })
+#define SUB_ZERO(minuend, subtrahend) ({ __typeof__(minuend) const __m = (minuend); __typeof__(subtrahend) const __s = (subtrahend); __m > __s ? __m - __s : 0; })
