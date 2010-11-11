@@ -72,8 +72,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	NSString *_productName;
 
 	io_object_t _deviceRemovedNotification;
-	IOUSBDeviceInterface182 **_deviceInterface;
-	IOUSBInterfaceInterface197 **_interfaceInterface;
+	IOUSBDeviceInterface320 **_deviceInterface;
+	IOUSBInterfaceInterface300 **_interfaceInterface;
 	UInt32 _frameTime;
 
 	ECVDeinterlacingMode _deinterlacingMode;

@@ -171,7 +171,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	IOCFPlugInInterface **devicePlugInInterface = NULL;
 	ECVIOReturn(IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored));
 
-	ECVIOReturn((*devicePlugInInterface)->QueryInterface(devicePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID), (LPVOID)&_deviceInterface));
+	ECVIOReturn((*devicePlugInInterface)->QueryInterface(devicePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID320), (LPVOID)&_deviceInterface));
 	(*devicePlugInInterface)->Release(devicePlugInInterface);
 	devicePlugInInterface = NULL;
 
