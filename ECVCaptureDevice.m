@@ -58,6 +58,11 @@ NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDevice
 static NSString *const ECVVolumeKey = @"ECVVolume";
 static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 
+typedef struct {
+	IOUSBLowLatencyIsocFrame *list;
+	UInt8 *data;
+} ECVTransfer;
+
 enum {
 	ECVNotPlaying,
 	ECVStartPlaying,
@@ -287,7 +292,7 @@ ECVNoDeviceError:
 @synthesize videoStorage = _videoStorage;
 - (NSUInteger)simultaneousTransfers
 {
-	return 2;
+	return 16;
 }
 - (NSUInteger)microframesPerTransfer
 {
@@ -307,9 +312,7 @@ ECVNoDeviceError:
 - (void)threadMain_play
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-
-	UInt8 *fullFrameData = NULL;
-	IOUSBLowLatencyIsocFrame *fullFrameList = NULL;
+	NSUInteger i;
 
 	[_playLock lock];
 	if([_playLock condition] != ECVStartPlaying) {
@@ -322,11 +325,7 @@ ECVNoDeviceError:
 	if(![self threaded_play]) goto bail;
 	[_playLock unlockWithCondition:ECVPlaying];
 
-	NSUInteger const simultaneousTransfers = [self simultaneousTransfers];
-	NSUInteger const microframesPerTransfer = [self microframesPerTransfer];
 	UInt8 const pipeIndex = [self isochReadingPipe];
-	NSUInteger i;
-
 	UInt8 direction = kUSBNone;
 	UInt8 pipeNumberIgnored = 0;
 	UInt8 transferType = kUSBAnyType;
@@ -343,12 +342,18 @@ ECVNoDeviceError:
 	}
 	NSParameterAssert(frameRequestSize);
 
-	NSUInteger const numberOfMicroframes = microframesPerTransfer * simultaneousTransfers;
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameData, frameRequestSize * numberOfMicroframes, kUSBLowLatencyReadBuffer));
-	ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&fullFrameList, sizeof(IOUSBLowLatencyIsocFrame) * numberOfMicroframes, kUSBLowLatencyFrameListBuffer));
-	for(i = 0; i < numberOfMicroframes; i++) {
-		fullFrameList[i].frStatus = kIOReturnInvalid; // Ignore them to start out.
-		fullFrameList[i].frReqCount = frameRequestSize;
+	NSUInteger const simultaneousTransfers = [self simultaneousTransfers];
+	NSUInteger const microframesPerTransfer = [self microframesPerTransfer];
+	ECVTransfer *const transfers = calloc(simultaneousTransfers, sizeof(ECVTransfer));
+	for(i = 0; i < simultaneousTransfers; ++i) {
+		ECVTransfer *const transfer = transfers + i;
+		ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&transfer->list, sizeof(IOUSBLowLatencyIsocFrame) * microframesPerTransfer, kUSBLowLatencyFrameListBuffer));
+		ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&transfer->data, frameRequestSize * microframesPerTransfer, kUSBLowLatencyReadBuffer));
+		NSUInteger j;
+		for(j = 0; j < microframesPerTransfer; ++j) {
+			transfer->list[j].frStatus = kIOReturnInvalid; // Ignore them to start out.
+			transfer->list[j].frReqCount = frameRequestSize;
+		}
 	}
 
 	UInt64 currentFrame = 0;
@@ -370,21 +375,19 @@ ECVNoDeviceError:
 			[innerPool release];
 			break;
 		}
-		NSUInteger transfer = 0;
-		for(; transfer < simultaneousTransfers; transfer++ ) {
-			NSUInteger const microframeIndex = microframesPerTransfer * transfer;
-			UInt8 *const frameData = fullFrameData + frameRequestSize * microframeIndex;
-			IOUSBLowLatencyIsocFrame *const frameList = fullFrameList + microframeIndex;
-			for(i = 0; i < microframesPerTransfer; i++) {
-				if(kUSBLowLatencyIsochTransferKey == frameList[i].frStatus && i) {
-					Nanoseconds const nextUpdateTime = UInt64ToUnsignedWide(UnsignedWideToUInt64(AbsoluteToNanoseconds(frameList[i - 1].frTimeStamp)) + millisecondInterval * ECVNanosecondsPerMillisecond);
+		for(i = 0; i < simultaneousTransfers; ++i) {
+			ECVTransfer *const transfer = transfers + i;
+			NSUInteger j;
+			for(j = 0; j < microframesPerTransfer; j++) {
+				if(kUSBLowLatencyIsochTransferKey == transfer->list[j].frStatus && j) {
+					Nanoseconds const nextUpdateTime = UInt64ToUnsignedWide(UnsignedWideToUInt64(AbsoluteToNanoseconds(transfer->list[j - 1].frTimeStamp)) + millisecondInterval * ECVNanosecondsPerMillisecond);
 					mach_wait_until(UnsignedWideToUInt64(NanosecondsToAbsolute(nextUpdateTime)));
 				}
-				while(kUSBLowLatencyIsochTransferKey == frameList[i].frStatus) usleep(100); // In case we haven't slept long enough already.
-				[self threaded_readImageBytes:frameData + i * frameRequestSize length:(size_t)frameList[i].frActCount];
-				frameList[i].frStatus = kUSBLowLatencyIsochTransferKey;
+				while(kUSBLowLatencyIsochTransferKey == transfer->list[j].frStatus) usleep(100); // In case we haven't slept long enough already.
+				[self threaded_readImageBytes:transfer->data + j * frameRequestSize length:(size_t)transfer->list[j].frActCount];
+				transfer->list[j].frStatus = kUSBLowLatencyIsochTransferKey;
 			}
-			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipeIndex, frameData, currentFrame, microframesPerTransfer, 1, frameList, ECVDoNothing, NULL));
+			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipeIndex, transfer->data, currentFrame, microframesPerTransfer, CLAMP(1, millisecondInterval, 8), transfer->list, ECVDoNothing, NULL));
 			currentFrame += microframesPerTransfer / (kUSBFullSpeedMicrosecondsInFrame / _frameTime);
 		}
 		[innerPool drain];
@@ -400,8 +403,13 @@ ECVNoDeviceError:
 	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
 #endif
 
-	if(fullFrameData) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameData);
-	if(fullFrameList) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, fullFrameList);
+	if(transfers) {
+		for(i = 0; i < simultaneousTransfers; ++i) {
+			if(transfers[i].list) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, transfers[i].list);
+			if(transfers[i].data) (*_interfaceInterface)->LowLatencyDestroyBuffer(_interfaceInterface, transfers[i].data);
+		}
+		free(transfers);
+	}
 	[_pendingFrame release];
 	_pendingFrame = nil;
 	[_lastCompletedFrame release];
