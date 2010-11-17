@@ -292,11 +292,11 @@ ECVNoDeviceError:
 @synthesize videoStorage = _videoStorage;
 - (NSUInteger)simultaneousTransfers
 {
-	return 16;
+	return 32;
 }
 - (NSUInteger)microframesPerTransfer
 {
-	return 128;
+	return 32;
 }
 
 #pragma mark -
