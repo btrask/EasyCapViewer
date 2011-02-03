@@ -128,10 +128,10 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 		if(!class) continue;
 		io_iterator_t iterator = IO_OBJECT_NULL;
 		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
-ECVGenericError:
-ECVNoDeviceError:
 		[devices addObjectsFromArray:[class devicesWithIterator:iterator]];
-		if(iterator) [_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
+		[_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
+ECVGenericError:
+ECVNoDeviceError: 0;
 	}
 	if([devices count]) return [devices makeObjectsPerformSelector:@selector(ECV_display)];
 	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
