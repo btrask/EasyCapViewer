@@ -105,22 +105,18 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	}
 	return class;
 }
-+ (BOOL)deviceAddedWithIterator:(io_iterator_t)iterator
++ (NSArray *)devicesWithIterator:(io_iterator_t)iterator
 {
+	NSMutableArray *const devices = [NSMutableArray array];
 	io_service_t service = IO_OBJECT_NULL;
-	BOOL created = NO;
 	while((service = IOIteratorNext(iterator))) {
 		NSError *error = nil;
 		ECVCaptureDevice *const device = [[[self alloc] initWithService:service error:&error] autorelease];
-		if(device) {
-			[[NSDocumentController sharedDocumentController] addDocument:device];
-			[device makeWindowControllers];
-			[device showWindows];
-			created = YES;
-		} else if(error) [[NSAlert alertWithError:error] runModal];
+		if(device) [devices addObject:device];
+		else if(error) [devices addObject:error];
 		IOObjectRelease(service);
 	}
-	return created;
+	return devices;
 }
 
 #pragma mark +NSObject
