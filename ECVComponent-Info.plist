@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.BenTrask.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>${ECV_BUNDLE_IDENTIFIER}.Component</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -16,5 +16,7 @@
 	<string>RNST</string>
 	<key>CFBundleVersion</key>
 	<string>${CURRENT_PROJECT_VERSION}</string>
+	<key>ECVMainSuiteName</key>
+	<string>${ECV_BUNDLE_IDENTIFIER}</string>
 </dict>
 </plist>
