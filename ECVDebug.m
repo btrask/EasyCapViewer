@@ -35,15 +35,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 void ECVLog(ECVErrorLevel level, NSString *format, ...)
 {
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	va_list arguments;
 	va_start(arguments, format);
-#if defined(ECV_DEBUG) || defined(ECV_SIMPLE_LOGGING)
+#ifdef ECV_LOG_TO_DESKTOP
+	NSOutputStream *const stream = [NSOutputStream outputStreamToFileAtPath:[@"~/Desktop/ECVComponent.log" stringByExpandingTildeInPath] append:YES];
+	[stream open];
+	NSData *const data = [[[[[NSString alloc] initWithFormat:format arguments:arguments] autorelease] stringByAppendingString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding];
+	[stream write:[data bytes] maxLength:[data length]];
+	[stream close];
+#else
+	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
+#ifdef ECV_DEBUG
 	NSLogv(format, arguments);
 #endif
-#ifndef ECV_SIMPLE_LOGGING
-	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
 #endif
 	va_end(arguments);
+	[pool drain];
 }
 
 #pragma mark -
