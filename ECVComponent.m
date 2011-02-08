@@ -100,6 +100,12 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 		}
 		self = calloc(1, sizeof(ECVCStorage));
 		self->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchDict retain]) error:NULL];
+		if(!self->device) {
+			ECV_DEBUG_LOG();
+			free(self);
+			[pool drain];
+			return internalComponentErr;
+		}
 		[self->device setDeinterlacingMode:ECVLineDoubleLQ];
 		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(instance, (Handle)self);
