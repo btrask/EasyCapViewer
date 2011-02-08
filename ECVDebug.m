@@ -22,7 +22,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	#import <AudioToolbox/AudioToolbox.h>
 #endif
 #import <IOKit/usb/IOUSBLib.h>
@@ -38,7 +38,7 @@ void ECVLog(ECVErrorLevel level, NSString *format, ...)
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	va_list arguments;
 	va_start(arguments, format);
-#ifdef ECV_LOG_TO_DESKTOP
+#if defined(ECV_LOG_TO_DESKTOP)
 	NSOutputStream *const stream = [NSOutputStream outputStreamToFileAtPath:[@"~/Desktop/ECVComponent.log" stringByExpandingTildeInPath] append:YES];
 	[stream open];
 	NSData *const data = [[[[[NSString alloc] initWithFormat:format arguments:arguments] autorelease] stringByAppendingString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding];
@@ -46,7 +46,7 @@ void ECVLog(ECVErrorLevel level, NSString *format, ...)
 	[stream close];
 #else
 	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
-#ifdef ECV_DEBUG
+#if defined(ECV_DEBUG)
 	NSLogv(format, arguments);
 #endif
 #endif
@@ -136,7 +136,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(invalidImageIndexErr)
 		ERROR_CASE(invalidSpriteIDErr)
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 		ERROR_CASE(kAudioConverterErr_FormatNotSupported)
 		ERROR_CASE(kAudioConverterErr_OperationNotSupported)
 		ERROR_CASE(kAudioConverterErr_PropertyNotSupported)

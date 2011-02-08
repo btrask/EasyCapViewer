@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
 
 // Controllers
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 #import "ECVController.h"
 #import "ECVCaptureController.h"
 #endif
@@ -72,7 +72,7 @@ enum {
 
 @interface ECVCaptureDevice(Private)
 
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 - (void)_startPlayingForControllers;
 - (void)_stopPlayingForControllers;
 #endif
@@ -145,19 +145,19 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	}
 	if(!(self = [super init])) return nil;
 
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	_windowControllersLock = [[ECVReadWriteLock alloc] init];
 	_windowControllers2 = [[NSMutableArray alloc] init];
 #endif
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	[self setVolume:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey]];
 	[self setUpconvertsFromMono:[[NSUserDefaults standardUserDefaults] boolForKey:ECVUpconvertsFromMonoKey]];
 #endif
 
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 #endif
 
@@ -357,10 +357,10 @@ ECVNoDeviceError:
 	ECVIOReturn((*_interfaceInterface)->GetBusFrameNumber(_interfaceInterface, &currentFrame, &atTimeIgnored));
 	currentFrame += 10;
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	[self performSelectorOnMainThread:@selector(startAudio) withObject:nil waitUntilDone:YES];
 #endif
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	[self performSelectorOnMainThread:@selector(_startPlayingForControllers) withObject:nil waitUntilDone:YES];
 #endif
 
@@ -392,10 +392,10 @@ ECVNoDeviceError:
 	[self threaded_pause];
 ECVGenericError:
 ECVNoDeviceError:
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	[self performSelectorOnMainThread:@selector(stopAudio) withObject:nil waitUntilDone:NO];
 #endif
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
 #endif
 
@@ -437,7 +437,7 @@ bail:
 		[_lastCompletedFrame blurWithFrame:_pendingFrame];
 		frameToDraw = _lastCompletedFrame;
 	}
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	if(frameToDraw) {
 		[_windowControllersLock readLock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
@@ -504,7 +504,7 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 - (ECVAudioDevice *)audioInputOfCaptureHardware
 {
 	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
@@ -597,7 +597,7 @@ ECVNoDeviceError:
 
 #pragma mark -ECVCaptureDevice(Private)
 
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 - (void)_startPlayingForControllers
 {
 	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
@@ -612,7 +612,7 @@ ECVNoDeviceError:
 
 #pragma mark -NSDocument
 
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 - (void)addWindowController:(NSWindowController *)windowController
 {
 	[super addWindowController:windowController];
@@ -633,7 +633,7 @@ ECVNoDeviceError:
 
 - (void)makeWindowControllers
 {
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	[self addWindowController:[[[ECVCaptureController alloc] init] autorelease]];
 #endif
 }
@@ -652,7 +652,7 @@ ECVNoDeviceError:
 - (void)dealloc
 {
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	ECVConfigController *const config = [ECVConfigController sharedConfigController];
 	if([config captureDevice] == self) [config setCaptureDevice:nil];
 #endif
@@ -661,7 +661,7 @@ ECVNoDeviceError:
 	if(_deviceInterface) (*_deviceInterface)->Release(_deviceInterface);
 	if(_interfaceInterface) (*_interfaceInterface)->Release(_interfaceInterface);
 
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	[_windowControllersLock release];
 	[_windowControllers2 release];
 #endif
@@ -669,7 +669,7 @@ ECVNoDeviceError:
 	[_productName release];
 	IOObjectRelease(_deviceRemovedNotification);
 	[_playLock release];
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	[_audioInput release];
 	[_audioOutput release];
 	[_audioPreviewingPipe release];
@@ -679,7 +679,7 @@ ECVNoDeviceError:
 
 #pragma mark -<ECVAudioDeviceDelegate>
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 - (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioInput) return;
@@ -697,7 +697,7 @@ ECVNoDeviceError:
 
 #pragma mark -<ECVCaptureControllerConfiguring>
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 - (BOOL)isMuted
 {
 	return _muted;

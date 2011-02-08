@@ -523,7 +523,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 			[self togglePlaying:self];
 			return YES;
 	}
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	if(NSCommandKeyMask == modifiers) switch(character) {
 		case NSUpArrowFunctionKey:
 			[[self document] setVolume:[[self document] volume] + 0.05f];

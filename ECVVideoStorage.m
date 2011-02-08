@@ -76,7 +76,7 @@ enum {
 
 		_lock = [[NSRecursiveLock alloc] init];
 		_frames = [[NSMutableArray alloc] initWithCapacity:ECVUndroppableFrameCount];
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 		_numberOfBuffers = ECVUndroppableFrameCount + 15;
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * [self bufferSize]];
 		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
@@ -108,7 +108,7 @@ enum {
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
 	[_lock lock];
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {
 		NSUInteger const count = [_frames count];
@@ -157,7 +157,7 @@ enum {
 
 #pragma mark -
 
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 @synthesize numberOfBuffers = _numberOfBuffers;
 - (void *)allBufferBytes
 {
@@ -199,7 +199,7 @@ enum {
 	if(drop) {
 		[[frame retain] autorelease];
 		[_frames removeObjectAtIndex:i];
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
 #endif
 	}
@@ -213,7 +213,7 @@ enum {
 {
 	[_lock release];
 	[_frames release];
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 	[_allBufferData release];
 	[_unusedBufferIndexes release];
 #endif
@@ -239,7 +239,7 @@ enum {
 
 - (void *)bufferBytes
 {
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 	return [[self videoStorage] bufferBytesAtIndex:_bufferIndex];
 #else
 	return NULL;

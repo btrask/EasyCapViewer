@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSRecursiveLock *_lock;
 	NSMutableArray *_frames;
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 	NSMutableIndexSet *_unusedBufferIndexes;
 
 	NSUInteger _numberOfBuffers;
@@ -63,7 +63,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVVideoFrame *)newestCompletedFrame;
 - (ECVVideoFrame *)oldestFrame;
 
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 @property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) void *allBufferBytes;
 - (void *)bufferBytesAtIndex:(NSUInteger)i;
@@ -74,7 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @end
 
-#ifdef ECV_DEPENDENT_VIDEO_STORAGE
+#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
 @interface ECVVideoFrame(ECVDependentVideoFrame)
 
 @property(readonly) NSUInteger bufferIndex;

@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVConfigController.h"
 
 // Other Sources
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 #import "ECVAudioDevice.h"
 @class ECVAudioPipe;
 #endif
@@ -57,13 +57,13 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 } while(NO)
 
 @interface ECVCaptureDevice : NSDocument <ECVCaptureDeviceConfiguring
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 , ECVAudioDeviceDelegate
 #endif
 >
 {
 	@private
-#ifndef ECV_NO_CONTROLLERS
+#if !defined(ECV_NO_CONTROLLERS)
 	ECVReadWriteLock *_windowControllersLock;
 	NSMutableArray *_windowControllers2;
 #endif
@@ -83,7 +83,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	ECVVideoFrame *_pendingFrame;
 	ECVVideoFrame *_lastCompletedFrame;
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 	ECVAudioDevice *_audioInput;
 	ECVAudioDevice *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
@@ -120,7 +120,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (BOOL)readIndex:(u_int16_t)i value:(out u_int8_t *)outValue;
 - (BOOL)setFeatureAtIndex:(u_int16_t)i;
 
-#ifdef ECV_ENABLE_AUDIO
+#if defined(ECV_ENABLE_AUDIO)
 @property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
 @property(nonatomic, retain) ECVAudioDevice *audioInput;
 @property(nonatomic, retain) ECVAudioDevice *audioOutput;

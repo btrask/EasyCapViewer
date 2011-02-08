@@ -30,12 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @protocol ECVVideoViewCell, ECVVideoViewDelegate;
 
-#ifndef ECV_DEPENDENT_VIDEO_STORAGE
+#if !defined(ECV_DEPENDENT_VIDEO_STORAGE)
 #error "ECVVideoView requires dependent storage."
 #endif
 
 @interface ECVVideoView : NSOpenGLView
-#ifdef MAC_OS_X_VERSION_10_6
+#if defined(MAC_OS_X_VERSION_10_6)
 <NSWindowDelegate>
 #endif
 {
