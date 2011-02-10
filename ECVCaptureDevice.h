@@ -133,7 +133,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 @interface ECVCaptureDevice(ECVAbstract)
 
 @property(readonly) BOOL requiresHighSpeed;
-@property(readonly) ECVPixelSize captureSize;
+@property(readonly) ECVIntegerSize captureSize;
 @property(readonly) UInt8 isochReadingPipe;
 @property(readonly) QTTime frameRate;
 @property(readonly) OSType pixelFormatType;

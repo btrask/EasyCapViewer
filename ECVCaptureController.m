@@ -144,7 +144,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[options setVideoQuality:[videoQualitySlider doubleValue]];
 	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
-	[options setOutputSize:ECVPixelSizeFromNSSize([self outputSize])];
+	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
 	[options setCropRect:[self cropRect]];
 	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
 	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
@@ -327,7 +327,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (NSSize)outputSize
 {
 	NSSize const ratio = [videoView aspectRatio];
-	ECVPixelSize const s = [[self document] captureSize];
+	ECVIntegerSize const s = [[self document] captureSize];
 	return NSMakeSize(s.width, s.width / ratio.width * ratio.height);
 }
 - (NSSize)outputSizeWithScale:(NSInteger)scale
@@ -422,7 +422,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (void)windowDidLoad
 {
 	NSWindow *const w = [self window];
-	ECVPixelSize const s = [[self document] captureSize];
+	ECVIntegerSize const s = [[self document] captureSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 
 	_cropSourceAspectRatio = [[NSUserDefaults standardUserDefaults] integerForKey:ECVCropSourceAspectRatioKey];

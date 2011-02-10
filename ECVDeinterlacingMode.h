@@ -53,7 +53,7 @@ NS_INLINE BOOL ECVDeinterlacingModeUsesDoubledLines(ECVDeinterlacingMode m)
 	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
 	return NO;
 }
-NS_INLINE ECVPixelSize ECVDeinterlacingModePixelSize(ECVDeinterlacingMode m, ECVPixelSize s)
+NS_INLINE ECVIntegerSize ECVDeinterlacingModePixelSize(ECVDeinterlacingMode m, ECVIntegerSize s)
 {
 	switch(m) {
 		case ECVProgressiveScan:
@@ -63,8 +63,8 @@ NS_INLINE ECVPixelSize ECVDeinterlacingModePixelSize(ECVDeinterlacingMode m, ECV
 			return s;
 		case ECVLineDoubleLQ:
 		case ECVBlur:
-			return (ECVPixelSize){s.width, s.height / 2};
+			return (ECVIntegerSize){s.width, s.height / 2};
 	}
 	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
-	return (ECVPixelSize){0, 0};
+	return (ECVIntegerSize){0, 0};
 }

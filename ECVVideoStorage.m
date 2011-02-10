@@ -64,7 +64,7 @@ enum {
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
 		_pixelFormatType = formatType;
@@ -87,7 +87,7 @@ enum {
 @synthesize pixelFormatType = _pixelFormatType;
 @synthesize deinterlacingMode = _deinterlacingMode;
 @synthesize originalSize = _originalSize;
-- (ECVPixelSize)pixelSize
+- (ECVIntegerSize)pixelSize
 {
 	return ECVDeinterlacingModePixelSize(_deinterlacingMode, _originalSize);
 }

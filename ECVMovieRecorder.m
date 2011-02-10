@@ -62,8 +62,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (NSDictionary *)cleanAperatureDictionary
 {
 	NSRect const c = [self cropRect];
-	ECVPixelSize const s1 = [_videoStorage pixelSize];
-	ECVPixelSize const s2 = (ECVPixelSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
+	ECVIntegerSize const s1 = [_videoStorage pixelSize];
+	ECVIntegerSize const s2 = (ECVIntegerSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
 	return [NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
 		[NSNumber numberWithDouble:s2.height], kCVImageBufferCleanApertureHeightKey,

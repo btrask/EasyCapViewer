@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	OSType _videoCodec;
 	CGFloat _videoQuality;
 	BOOL _stretchOutput;
-	ECVPixelSize _outputSize;
+	ECVIntegerSize _outputSize;
 	NSRect _cropRect;
 	BOOL _upconvertsFromMono;
 	BOOL _recordsToRAM;
@@ -60,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) OSType videoCodec;
 @property(assign) CGFloat videoQuality;
 @property(assign) BOOL stretchOutput;
-@property(assign) ECVPixelSize outputSize;
+@property(assign) ECVIntegerSize outputSize;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL upconvertsFromMono;
 @property(assign) BOOL recordsToRAM;
@@ -89,7 +89,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ICMEncodedFrameRef _encodedFrame;
 	QTTime _frameRate;
 	NSUInteger _frameSkipper;
-	ECVPixelSize _outputSize;
+	ECVIntegerSize _outputSize;
 
 	Media _audioMedia;
 	ECVAudioPipe *_audioPipe;

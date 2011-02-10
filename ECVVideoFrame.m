@@ -37,7 +37,7 @@ typedef struct {
 	BOOL doubledLines;
 	size_t bytesPerRow;
 	OSType pixelFormatType;
-	ECVPixelSize pixelSize;
+	ECVIntegerSize pixelSize;
 } ECVBufferInfo;
 static NSRange ECVBufferNextRowInRange(ECVBufferInfo info, NSRange range)
 {

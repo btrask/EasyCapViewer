@@ -85,8 +85,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (BOOL)_initializeResolution
 {
-	ECVPixelSize captureSize = [self captureSize];
-	ECVPixelSize standardSize = captureSize;
+	ECVIntegerSize captureSize = [self captureSize];
+	ECVIntegerSize standardSize = captureSize;
 	switch(captureSize.width) {
 		case 704:
 		case 352:
@@ -193,9 +193,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return YES;
 }
-- (ECVPixelSize)captureSize
+- (ECVIntegerSize)captureSize
 {
-	return (ECVPixelSize){720, [self is60HzFormat] ? 480 : 576};
+	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
 }
 - (UInt8)isochReadingPipe
 {

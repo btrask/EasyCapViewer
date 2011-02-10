@@ -134,7 +134,7 @@ ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVPixelSize const s = [self->device captureSize];
+	ECVIntegerSize const s = [self->device captureSize];
 	[pool drain];
 
 	*info = (DigitizerInfo){};
@@ -318,8 +318,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		[pool drain];
 		return badCallOrderErr;
 	}
-	ECVPixelSize const originalSize = [videoStorage originalSize];
-	ECVPixelSize const pixelSize = [videoStorage pixelSize];
+	ECVIntegerSize const originalSize = [videoStorage originalSize];
+	ECVIntegerSize const pixelSize = [videoStorage pixelSize];
 	[pool drain];
 
 	ImageDescriptionPtr const descPtr = *desc;
@@ -376,10 +376,10 @@ ECV_VDIG_FUNCTION(GetMaxSrcRect, short inputStd, Rect *maxSrcRect)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVPixelSize const s = [self->device captureSize];
+	ECVIntegerSize const s = [self->device captureSize];
 	[pool drain];
 	if(!s.width || !s.height) return badCallOrderErr;
-	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVPixelSizeToNSSize(s)});
+	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVIntegerSizeToNSSize(s)});
 	return noErr;
 }
 ECV_VDIG_FUNCTION(GetActiveSrcRect, short inputStd, Rect *activeSrcRect)

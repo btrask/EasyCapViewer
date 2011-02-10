@@ -48,17 +48,17 @@ typedef NSUInteger ECVFieldType;
 typedef struct {
 	NSUInteger width;
 	NSUInteger height;
-} ECVPixelSize;
+} ECVIntegerSize;
 
-NS_INLINE NSSize ECVPixelSizeToNSSize(ECVPixelSize s)
+NS_INLINE NSSize ECVIntegerSizeToNSSize(ECVIntegerSize s)
 {
 	return NSMakeSize(s.width, s.height);
 }
-NS_INLINE ECVPixelSize ECVPixelSizeFromNSSize(NSSize s)
+NS_INLINE ECVIntegerSize ECVIntegerSizeFromNSSize(NSSize s)
 {
-	return (ECVPixelSize){round(s.width), round(s.height)};
+	return (ECVIntegerSize){round(s.width), round(s.height)};
 }
-NS_INLINE BOOL ECVEqualPixelSizes(ECVPixelSize a, ECVPixelSize b)
+NS_INLINE BOOL ECVEqualPixelSizes(ECVIntegerSize a, ECVIntegerSize b)
 {
 	return a.width == b.width && a.height == b.height;
 }

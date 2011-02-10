@@ -113,7 +113,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glGenTextures([_videoStorage numberOfBuffers], [_textureNames mutableBytes]));
 	_frames = [[NSMutableArray alloc] init];
 
-	ECVPixelSize const s = [_videoStorage pixelSize];
+	ECVIntegerSize const s = [_videoStorage pixelSize];
 	GLenum const format = ECVPixelFormatTypeToGLFormat([_videoStorage pixelFormatType]);
 	GLenum const type = ECVPixelFormatTypeToGLType([_videoStorage pixelFormatType]);
 	NSUInteger i = 0;
@@ -254,12 +254,12 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	if(!frame) return;
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-	ECVPixelSize const s = [_videoStorage pixelSize];
+	ECVIntegerSize const s = [_videoStorage pixelSize];
 	OSType const f = [_videoStorage pixelFormatType];
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
 	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatTypeToGLFormat(f), ECVPixelFormatTypeToGLType(f), [frame bufferBytes]));
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVPixelSizeToNSSize(s)));
+	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVIntegerSizeToNSSize(s)));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 - (void)_drawFrameDropIndicatorWithStrength:(CGFloat)strength

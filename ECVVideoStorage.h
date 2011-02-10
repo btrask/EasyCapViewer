@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	OSType _pixelFormatType;
 	ECVDeinterlacingMode _deinterlacingMode;
-	ECVPixelSize _originalSize;
+	ECVIntegerSize _originalSize;
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
@@ -46,11 +46,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #endif
 }
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVPixelSize)size frameRate:(QTTime)frameRate;
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate;
 @property(readonly) OSType pixelFormatType;
 @property(readonly) ECVDeinterlacingMode deinterlacingMode;
-@property(readonly) ECVPixelSize originalSize;
-@property(readonly) ECVPixelSize pixelSize;
+@property(readonly) ECVIntegerSize originalSize;
+@property(readonly) ECVIntegerSize pixelSize;
 @property(readonly) QTTime frameRate;
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
