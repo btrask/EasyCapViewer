@@ -38,12 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSRecursiveLock *_lock;
 	NSMutableArray *_frames;
-//#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
-//	NSMutableIndexSet *_unusedBufferIndexes;
-//
-//	NSUInteger _numberOfBuffers;
-//	NSMutableData *_allBufferData;
-//#endif
 }
 
 + (Class)preferredVideoStorageClass;
@@ -70,12 +64,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)dropOldestFrameGroup; // Must lock first.
 - (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorage].
 - (void)removingFrame:(ECVVideoFrame *)frame; // For overriding only.
-
-//#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
-//@property(readonly) NSUInteger numberOfBuffers;
-//@property(readonly) void *allBufferBytes;
-//- (void *)bufferBytesAtIndex:(NSUInteger)i;
-//#endif
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
