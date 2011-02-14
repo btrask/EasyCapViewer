@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
-@interface ECVVideoStorage : NSObject
+@interface ECVVideoStorage : NSObject <NSLocking>
 {
 	@private
 	OSType _pixelFormatType;
@@ -38,13 +38,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSRecursiveLock *_lock;
 	NSMutableArray *_frames;
-#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
-	NSMutableIndexSet *_unusedBufferIndexes;
-
-	NSUInteger _numberOfBuffers;
-	NSMutableData *_allBufferData;
-#endif
+//#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
+//	NSMutableIndexSet *_unusedBufferIndexes;
+//
+//	NSUInteger _numberOfBuffers;
+//	NSMutableData *_allBufferData;
+//#endif
 }
+
++ (Class)preferredVideoStorageClass;
 
 - (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate;
 @property(readonly) OSType pixelFormatType;
@@ -63,21 +65,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVVideoFrame *)newestCompletedFrame;
 - (ECVVideoFrame *)oldestFrame;
 
-#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
-@property(readonly) NSUInteger numberOfBuffers;
-@property(readonly) void *allBufferBytes;
-- (void *)bufferBytesAtIndex:(NSUInteger)i;
-#endif
+// Overriding:
+- (void)addVideoFrame:(ECVVideoFrame *)frame; // Must lock first.
+- (BOOL)dropOldestFrameGroup; // Must lock first.
+- (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorage].
+- (void)removingFrame:(ECVVideoFrame *)frame; // For overriding only.
+
+//#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
+//@property(readonly) NSUInteger numberOfBuffers;
+//@property(readonly) void *allBufferBytes;
+//- (void *)bufferBytesAtIndex:(NSUInteger)i;
+//#endif
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
 
 @end
-
-#if defined(ECV_DEPENDENT_VIDEO_STORAGE)
-@interface ECVVideoFrame(ECVDependentVideoFrame)
-
-@property(readonly) NSUInteger bufferIndex;
-
-@end
-#endif

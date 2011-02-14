@@ -68,3 +68,18 @@ NS_INLINE ECVIntegerSize ECVDeinterlacingModePixelSize(ECVDeinterlacingMode m, E
 	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
 	return (ECVIntegerSize){0, 0};
 }
+NS_INLINE NSUInteger ECVDeinterlacingModeFrameGroupSize(ECVDeinterlacingMode m)
+{
+	switch(m) {
+		case ECVProgressiveScan:
+		case ECVDrop:
+			return 1;
+		case ECVWeave:
+		case ECVLineDoubleLQ:
+		case ECVLineDoubleHQ:
+		case ECVAlternate:
+		case ECVBlur:
+			return 2;
+	}
+	return 0;
+}

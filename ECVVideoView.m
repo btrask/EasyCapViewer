@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glu.h>
 
 // Models
-#import "ECVVideoStorage.h"
+#import "ECVDependentVideoStorage.h"
 #import "ECVVideoFrame.h"
 
 // Other Sources
@@ -90,13 +90,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 #pragma mark -
 
-@synthesize delegate;
-- (ECVVideoStorage *)videoStorage
+- (ECVDependentVideoStorage *)videoStorage
 {
 	return [[_videoStorage retain] autorelease];
 }
-- (void)setVideoStorage:(ECVVideoStorage *)storage
+- (void)setVideoStorage:(id)storage
 {
+	NSParameterAssert([storage isKindOfClass:[ECVDependentVideoStorage class]]);
+
 	if(storage == _videoStorage) return;
 	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
@@ -128,6 +129,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVUnlockContext(contextObj);
 }
+@synthesize delegate;
 - (NSSize)aspectRatio
 {
 	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);

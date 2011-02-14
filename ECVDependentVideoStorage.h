@@ -21,42 +21,24 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <CoreVideo/CoreVideo.h>
+#import "ECVVideoStorage.h"
 
-// Models
-@class ECVVideoStorage;
-
-@interface ECVVideoFrame : NSObject
+@interface ECVDependentVideoStorage : ECVVideoStorage
 {
 	@private
-	ECVFieldType _fieldType;
-	ECVVideoStorage *_videoStorage;
-	NSRange _byteRange;
+	NSMutableIndexSet *_unusedBufferIndexes;
+	NSUInteger _numberOfBuffers;
+	NSMutableData *_allBufferData;
 }
 
-- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage;
-
-@property(readonly) ECVFieldType fieldType;
-@property(readonly) id videoStorage;
-
-- (void)clearRange:(NSRange)range resetLength:(BOOL)flag;
-- (void)clear;
-- (void)clearHead;
-- (void)clearTail;
-
-- (void)fillWithFrame:(ECVVideoFrame *)frame;
-- (void)fillHead;
-- (void)blurWithFrame:(ECVVideoFrame *)frame;
-- (void)appendBytes:(void const *)bytes length:(size_t)length;
-- (void)copyToPixelBuffer:(CVPixelBufferRef)pixelBuffer;
+@property(readonly) NSUInteger numberOfBuffers;
+@property(readonly) void *allBufferBytes;
+- (void *)bufferBytesAtIndex:(NSUInteger)i;
 
 @end
 
-@interface ECVVideoFrame(ECVAbstract) <NSLocking>
+@interface ECVVideoFrame(ECVDependentVideoFrame)
 
-@property(readonly) void *bufferBytes;
-@property(readonly) BOOL hasBuffer;
-- (BOOL)lockIfHasBuffer;
-- (void)removeFromStorage;
+@property(readonly) NSUInteger bufferIndex;
 
 @end

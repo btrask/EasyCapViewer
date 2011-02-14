@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QuartzCore/QuartzCore.h>
 
 // Models
-@class ECVVideoStorage;
+@class ECVDependentVideoStorage;
 @class ECVVideoFrame;
 
 @protocol ECVVideoViewCell, ECVVideoViewDelegate;
@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSRect _outputRect;
 
 	IBOutlet NSObject<ECVVideoViewDelegate> *delegate;
-	ECVVideoStorage *_videoStorage;
+	ECVDependentVideoStorage *_videoStorage;
 	NSSize _aspectRatio;
 	NSRect _cropRect;
 	BOOL _vsync;
@@ -62,8 +62,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)stopDrawing;
 
 // These methods are thread safe.
+- (ECVDependentVideoStorage *)videoStorage;
+- (void)setVideoStorage:(id)storage;
 @property(assign) NSObject<ECVVideoViewDelegate> *delegate;
-@property(nonatomic, retain) ECVVideoStorage *videoStorage;
 @property(assign) NSSize aspectRatio;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL vsync;
