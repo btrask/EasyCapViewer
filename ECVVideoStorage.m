@@ -99,22 +99,13 @@ enum {
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
 	[self lock];
+	[self removeOldestFrameGroup];
 	ECVVideoFrame *const frame = [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
 	[self addVideoFrame:frame];
 	[self unlock];
 	return frame;
 }
-
-#pragma mark -
-
-- (NSUInteger)numberOfCompletedFrames
-{
-	[self lock];
-	NSUInteger const count = [_frames count];
-	[self unlock];
-	return SUB_ZERO(count, [self _newestCompletedFrameIndex] + 1);
-}
-- (ECVVideoFrame *)newestCompletedFrame
+- (ECVVideoFrame *)currentFrame
 {
 	NSUInteger const i = [self _newestCompletedFrameIndex];
 	[self lock];
@@ -122,27 +113,19 @@ enum {
 	[self unlock];
 	return frame;
 }
-- (ECVVideoFrame *)oldestFrame
-{
-	[self lock];
-	ECVVideoFrame *const frame = [[[_frames lastObject] retain] autorelease];
-	[self unlock];
-	return frame;
-}
 
 #pragma mark -
 
+- (void)removeOldestFrameGroup
+{
+	NSUInteger const count = [_frames count];
+	NSUInteger const realMax = MIN([self frameGroupSize], SUB_ZERO(count, [self _newestCompletedFrameIndex] + 1));
+	if(realMax) [[_frames subarrayWithRange:NSMakeRange(count - realMax, realMax)] makeObjectsPerformSelector:@selector(removeFromStorageIfPossible)];
+}
 - (void)addVideoFrame:(ECVVideoFrame *)frame
 {
 	NSParameterAssert(frame);
 	[_frames insertObject:frame atIndex:0];
-}
-- (BOOL)dropOldestFrameGroup
-{
-	NSUInteger const count = [_frames count];
-	NSUInteger const drop = MIN(SUB_ZERO(count, (NSUInteger)ECVUndroppableFrameCount), [self frameGroupSize]);
-	[[_frames subarrayWithRange:NSMakeRange(count - drop, drop)] makeObjectsPerformSelector:@selector(removeFromStorage)];
-	return !!drop;
 }
 - (BOOL)removeFrame:(ECVVideoFrame *)frame
 {
@@ -151,7 +134,7 @@ enum {
 	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
 	BOOL drop = NSNotFound != i && i >= ECVUndroppableFrameCount;
 	if(drop) {
-		[self removingFrame:frame];
+		[self removingFrame:[[frame retain] autorelease]];
 		[_frames removeObjectAtIndex:i];
 	}
 	[self unlock];
@@ -229,9 +212,9 @@ enum {
 {
 	return YES;
 }
-- (void)removeFromStorage
+- (void)removeFromStorageIfPossible
 {
-	(void)[[self videoStorage] removeFrame:[[self retain] autorelease]];
+	(void)[[self videoStorage] removeFrame:self];
 }
 
 #pragma mark -NSObject

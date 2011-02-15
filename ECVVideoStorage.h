@@ -54,15 +54,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) NSUInteger frameGroupSize;
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
-
-- (NSUInteger)numberOfCompletedFrames;
-- (ECVVideoFrame *)newestCompletedFrame;
-- (ECVVideoFrame *)oldestFrame;
+- (ECVVideoFrame *)currentFrame;
 
 // Overriding:
-- (void)addVideoFrame:(ECVVideoFrame *)frame; // Must lock first.
-- (BOOL)dropOldestFrameGroup; // Must lock first.
-- (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorage].
+- (void)removeOldestFrameGroup; // Called from -nextFrameWithFieldType:. Must lock first.
+- (void)addVideoFrame:(ECVVideoFrame *)frame; // Called from -nextFrameWithFieldType:. Must lock first.
+- (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorageIfPossible].
 - (void)removingFrame:(ECVVideoFrame *)frame; // For overriding only.
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;

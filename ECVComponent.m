@@ -281,8 +281,8 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVVideoStorage *const vs = [self->device videoStorage];
-	ECVVideoFrame *const frame = [vs oldestFrame];
-	*queuedFrameCount = (UInt8)[vs numberOfCompletedFrames];
+	ECVVideoFrame *const frame = [vs currentFrame];
+	*queuedFrameCount = 1;
 	if(frame) {
 		Ptr const bufferBytes = [frame bufferBytes];
 		CFDictionaryAddValue(self->frameByBuffer, bufferBytes, frame);
@@ -301,9 +301,6 @@ ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVVideoFrame *const frame = (ECVVideoFrame *)CFDictionaryGetValue(self->frameByBuffer, bufferAddr);
-	NSCAssert(frame, @"Invalid buffer address.");
-	[frame removeFromStorage];
 	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
 	[pool drain];
 	return noErr;

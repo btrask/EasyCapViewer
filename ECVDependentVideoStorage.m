@@ -70,7 +70,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self lock];
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {
-		(void)[self dropOldestFrameGroup];
+		[self removeOldestFrameGroup];
 		i = [_unusedBufferIndexes firstIndex];
 		if(NSNotFound == i) {
 			[self unlock];
@@ -133,11 +133,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self unlock];
 	return NO;
 }
-- (void)removeFromStorage
+- (void)removeFromStorageIfPossible
 {
 	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
 	if(![_lock tryWriteLock]) return;
-	if([[self videoStorage] removeFrame:[[self retain] autorelease]]) _bufferIndex = NSNotFound;
+	if([[self videoStorage] removeFrame:self]) _bufferIndex = NSNotFound;
 	[_lock unlock];
 }
 

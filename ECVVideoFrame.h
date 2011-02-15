@@ -57,6 +57,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) void *bufferBytes;
 @property(readonly) BOOL hasBuffer;
 - (BOOL)lockIfHasBuffer;
-- (void)removeFromStorage;
+- (void)removeFromStorageIfPossible;
 
 @end
