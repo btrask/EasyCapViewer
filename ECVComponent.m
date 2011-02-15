@@ -339,8 +339,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_FieldInfo, sizeof(FieldInfoImageDescriptionExtension2), &fieldInfo));
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
-		originalSize.width, 1,
-		originalSize.height, 1,
+		pixelSize.width, 1,
+		pixelSize.height, 1,
 		0, 1,
 		0, 1,
 	};
