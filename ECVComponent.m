@@ -106,7 +106,7 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 			[pool drain];
 			return internalComponentErr;
 		}
-		[self->device setDeinterlacingMode:ECVLineDoubleLQ];
+		[self->device setDeinterlacingMode:ECVDrop];
 		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(instance, (Handle)self);
 		[pool drain];

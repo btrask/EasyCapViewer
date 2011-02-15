@@ -67,6 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
+	if(ECVDrop == [self deinterlacingMode] && type == ECVLowField) return nil;
 	[self lock];
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {

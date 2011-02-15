@@ -29,6 +29,7 @@ NS_INLINE BOOL ECVDeinterlacingModeUsesProgressiveBuffer(ECVDeinterlacingMode m)
 		case ECVProgressiveScan:
 		case ECVLineDoubleLQ:
 		case ECVBlur:
+		case ECVDrop:
 			return YES;
 		case ECVWeave:
 		case ECVLineDoubleHQ:
@@ -46,6 +47,7 @@ NS_INLINE BOOL ECVDeinterlacingModeUsesDoubledLines(ECVDeinterlacingMode m)
 		case ECVLineDoubleLQ:
 		case ECVAlternate:
 		case ECVBlur:
+		case ECVDrop:
 			return NO;
 		case ECVLineDoubleHQ:
 			return YES;
@@ -63,6 +65,7 @@ NS_INLINE ECVIntegerSize ECVDeinterlacingModePixelSize(ECVDeinterlacingMode m, E
 			return s;
 		case ECVLineDoubleLQ:
 		case ECVBlur:
+		case ECVDrop:
 			return (ECVIntegerSize){s.width, s.height / 2};
 	}
 	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
@@ -81,5 +84,6 @@ NS_INLINE NSUInteger ECVDeinterlacingModeFrameGroupSize(ECVDeinterlacingMode m)
 		case ECVBlur:
 			return 2;
 	}
+	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
 	return 0;
 }

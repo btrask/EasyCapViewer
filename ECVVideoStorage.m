@@ -98,6 +98,7 @@ enum {
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
+	if(ECVDrop == [self deinterlacingMode] && type == ECVLowField) return nil;
 	[self lock];
 	[self removeOldestFrameGroup];
 	ECVVideoFrame *const frame = [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
