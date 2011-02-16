@@ -335,7 +335,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		.clutID = -1,
 	};
 
-	FieldInfoImageDescriptionExtension2 const fieldInfo = {kQTFieldsInterlaced, kQTFieldDetailUnknown};
+	FieldInfoImageDescriptionExtension2 const fieldInfo = {kQTFieldsProgressiveScan, kQTFieldDetailUnknown};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_FieldInfo, sizeof(FieldInfoImageDescriptionExtension2), &fieldInfo));
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
