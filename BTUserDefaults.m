@@ -141,10 +141,10 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 - (BOOL)synchronize
 {
 	BOOL success = YES;
-	for(NSString *const suite in _suites) {
-		if(!CFPreferencesSynchronize((CFStringRef)suite, (CFStringRef)_user, (CFStringRef)_host)) success = NO;
-	}
 	if(_syncTimer) {
+		for(NSString *const suite in _suites) {
+			if(!CFPreferencesSynchronize((CFStringRef)suite, (CFStringRef)_user, (CFStringRef)_host)) success = NO;
+		}
 		[[NSProcessInfo processInfo] enableSuddenTermination];
 		[_syncTimer invalidate];
 		[_syncTimer release];
