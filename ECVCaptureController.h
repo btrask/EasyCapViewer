@@ -33,6 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVPlayButtonCell;
 #import "ECVCropCell.h"
 
+// External
+@class BTUserDefaults;
+
 enum {
 	ECVAspectRatioUnknown = -1,
 	ECVAspectRatio1x1 = 3,
@@ -99,6 +102,7 @@ typedef NSInteger ECVCropBorder;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
+@property(readonly) BTUserDefaults *defaults;
 @property(assign) NSSize aspectRatio;
 @property(readonly) NSRect cropRect;
 @property(nonatomic, assign, getter = isFullScreen) BOOL fullScreen;

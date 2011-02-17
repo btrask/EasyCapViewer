@@ -26,6 +26,8 @@
 	<string>NSApplication</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.5.8</string>
+	<key>ECVMainSuiteName</key>
+	<string>${ECV_BUNDLE_IDENTIFIER}</string>
 	<key>ECVVideoCodecs</key>
 	<array>
 		<string>'jpeg'</string>

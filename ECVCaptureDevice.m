@@ -43,6 +43,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVFoundationAdditions.h"
 #import "ECVReadWriteLock.h"
 
+// External
+#import "BTUserDefaults.h"
+
 #define ECVNanosecondsPerMillisecond 1e6
 
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";
@@ -119,21 +122,6 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	return devices;
 }
 
-#pragma mark +NSObject
-
-+ (void)initialize
-{
-	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
-		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
-		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
-		[NSNumber numberWithDouble:0.5f], ECVHueKey,
-		[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
-		[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
-		[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,
-		nil]];
-}
-
 #pragma mark -ECVCaptureDevice
 
 - (id)initWithService:(io_service_t)service error:(out NSError **)outError
@@ -145,6 +133,27 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	}
 	if(!(self = [super init])) return nil;
 
+	_service = service;
+	IOObjectRetain(_service);
+
+	NSMutableDictionary *properties = nil;
+	ECVIOReturn(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
+	[properties autorelease];
+	_productName = [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] copy];
+
+	NSString *const mainSuiteName = [[NSBundle bundleForClass:[self class]] ECV_mainSuiteName];
+	NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04x.%04x", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
+	_defaults = [[BTUserDefaults alloc] initWithSuites:[NSArray arrayWithObjects:deviceSuiteName, mainSuiteName, nil]]; // TODO: Use the Vendor and Product ID.
+	[_defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+		[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
+		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
+		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
+		[NSNumber numberWithDouble:0.5f], ECVHueKey,
+		[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
+		[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
+		[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,
+		nil]];
+
 #if !defined(ECV_NO_CONTROLLERS)
 	_windowControllersLock = [[ECVReadWriteLock alloc] init];
 	_windowControllers2 = [[NSMutableArray alloc] init];
@@ -153,20 +162,13 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 
 #if defined(ECV_ENABLE_AUDIO)
-	[self setVolume:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey]];
-	[self setUpconvertsFromMono:[[NSUserDefaults standardUserDefaults] boolForKey:ECVUpconvertsFromMonoKey]];
+	[self setVolume:[[self defaults] doubleForKey:ECVVolumeKey]];
+	[self setUpconvertsFromMono:[[self defaults] boolForKey:ECVUpconvertsFromMonoKey]];
 #endif
 
 #if !defined(ECV_NO_CONTROLLERS)
 	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 #endif
-
-	_service = service;
-	IOObjectRetain(_service);
-
-	io_name_t productName = "";
-	ECVIOReturn(IORegistryEntryGetName(service, productName));
-	_productName = [[NSString alloc] initWithUTF8String:productName];
 
 	SInt32 ignored = 0;
 	IOCFPlugInInterface **devicePlugInInterface = NULL;
@@ -215,7 +217,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	ECVIOReturn((*_interfaceInterface)->CreateInterfaceAsyncEventSource(_interfaceInterface, NULL));
 	_playLock = [[NSConditionLock alloc] initWithCondition:ECVNotPlaying];
 
-	[self setDeinterlacingMode:[[NSUserDefaults standardUserDefaults] integerForKey:ECVDeinterlacingModeKey]];
+	[self setDeinterlacingMode:[[self defaults] integerForKey:ECVDeinterlacingModeKey]];
 
 	return self;
 
@@ -283,8 +285,12 @@ ECVNoDeviceError:
 {
 	if(mode == _deinterlacingMode) return;
 	ECVPauseWhile(self, { _deinterlacingMode = mode; });
-	[[NSUserDefaults standardUserDefaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
+	[[self defaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
 }
+
+#pragma mark -
+
+@synthesize defaults = _defaults;
 @synthesize videoStorage = _videoStorage;
 - (NSUInteger)simultaneousTransfers
 {
@@ -661,6 +667,7 @@ ECVNoDeviceError:
 	if(_deviceInterface) (*_deviceInterface)->Release(_deviceInterface);
 	if(_interfaceInterface) (*_interfaceInterface)->Release(_interfaceInterface);
 
+	[_defaults release];
 #if !defined(ECV_NO_CONTROLLERS)
 	[_windowControllersLock release];
 	[_windowControllers2 release];
@@ -717,7 +724,7 @@ ECVNoDeviceError:
 {
 	_volume = CLAMP(0.0f, value, 1.0f);
 	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
+	[[self defaults] setDouble:value forKey:ECVVolumeKey];
 	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
 }
 - (BOOL)upconvertsFromMono
@@ -727,7 +734,7 @@ ECVNoDeviceError:
 - (void)setUpconvertsFromMono:(BOOL)flag
 {
 	ECVPauseWhile(self, { _upconvertsFromMono = flag; });
-	[[NSUserDefaults standardUserDefaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
+	[[self defaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
 }
 #endif
 

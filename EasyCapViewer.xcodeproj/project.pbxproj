@@ -102,6 +102,9 @@
 		0EFEE896109205C300312653 /* Cursor-Resize-45.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */; };
 		0EFEE897109205C300312653 /* Cursor-Resize-135.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
+		B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
+		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
 /* End PBXBuildFile section */
 
@@ -235,6 +238,8 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* EasyCapViewer_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EasyCapViewer_Prefix.pch; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* EasyCapViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EasyCapViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5280FE6130C89E100FBE537 /* BTUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTUserDefaults.h; sourceTree = "<group>"; };
+		B5280FE7130C89E100FBE537 /* BTUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUserDefaults.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
@@ -410,6 +415,7 @@
 				0E78CE870FC9FA5F00E9C148 /* Views */,
 				080E96DDFE201D6D7F000001 /* Controllers */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				B5280FFD130CADD400FBE537 /* External */,
 				0E4D76C8110454AA00FE3DDC /* Entry Points */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -481,6 +487,15 @@
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B5280FFD130CADD400FBE537 /* External */ = {
+			isa = PBXGroup;
+			children = (
+				B5280FE6130C89E100FBE537 /* BTUserDefaults.h */,
+				B5280FE7130C89E100FBE537 /* BTUserDefaults.m */,
+			);
+			name = External;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -613,6 +628,8 @@
 				0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
 				0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 				0EAE4FB7112BD420004D93B3 /* VT1612AChip.m in Sources */,
+				B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */,
+				B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -653,6 +670,7 @@
 				0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 				0EAE4FB8112BD420004D93B3 /* VT1612AChip.m in Sources */,
 				B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */,
+				B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

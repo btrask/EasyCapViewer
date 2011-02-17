@@ -38,6 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #endif
 @class ECVReadWriteLock;
 
+// External
+@class BTUserDefaults;
+
 extern NSString *const ECVDeinterlacingModeKey;
 extern NSString *const ECVBrightnessKey;
 extern NSString *const ECVContrastKey;
@@ -63,6 +66,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 >
 {
 	@private
+	BTUserDefaults *_defaults;
 #if !defined(ECV_NO_CONTROLLERS)
 	ECVReadWriteLock *_windowControllersLock;
 	NSMutableArray *_windowControllers2;
@@ -105,6 +109,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 @property(assign, getter = isPlaying) BOOL playing;
 - (void)togglePlaying;
 @property(nonatomic, assign) ECVDeinterlacingMode deinterlacingMode;
+
+@property(readonly) BTUserDefaults *defaults;
 @property(readonly) ECVVideoStorage *videoStorage;
 @property(readonly) NSUInteger simultaneousTransfers;
 @property(readonly) NSUInteger microframesPerTransfer;

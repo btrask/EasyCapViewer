@@ -91,7 +91,6 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 	if(CountComponentInstances((Component)self) > 1) return -1;
 	if(!self) {
 		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-		[[NSUserDefaults standardUserDefaults] addSuiteNamed:[[NSBundle bundleForClass:[ECVCaptureDevice class]] objectForInfoDictionaryKey:@"ECVMainSuiteName"]];
 		NSDictionary *matchDict = nil;
 		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:[[ECVCaptureDevice deviceDictionaries] lastObject]];
 		if(![class conformsToProtocol:@protocol(ECVComponentConfiguring)]) {

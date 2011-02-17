@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+// External
+#import "BTUserDefaults.h"
+
 enum {
 	ECVSTK1160HighFieldFlag = 1 << 6,
 	ECVSTK1160NewImageFlag = 1 << 7,
@@ -45,16 +48,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 @implementation ECVSTK1160Device
 
-#pragma mark +NSObject
-
-+ (void)initialize
-{
-	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input], ECVSTK1160VideoSourceKey,
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat], ECVSTK1160VideoFormatKey,
-		nil]];
-}
-
 #pragma mark -ECVSTK1160Device
 
 @synthesize videoSource = _videoSource;
@@ -62,14 +55,14 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	if(source == _videoSource) return;
 	ECVPauseWhile(self, { _videoSource = source; });
-	[[NSUserDefaults standardUserDefaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
+	[[self defaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
 }
 @synthesize videoFormat = _videoFormat;
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format
 {
 	if(format == _videoFormat) return;
 	ECVPauseWhile(self, { _videoFormat = format; });
-	[[NSUserDefaults standardUserDefaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
+	[[self defaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
 }
 
 #pragma mark -ECVSTK1160Device(Private)
@@ -159,7 +152,11 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (id)initWithService:(io_service_t)service error:(out NSError **)outError
 {
 	if((self = [super initWithService:service error:outError])) {
-		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
+		BTUserDefaults *const d = [self defaults];
+		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+			[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input], ECVSTK1160VideoSourceKey,
+			[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat], ECVSTK1160VideoFormatKey,
+			nil]];
 		[self setVideoSource:[d integerForKey:ECVSTK1160VideoSourceKey]];
 		[self setVideoFormat:[d integerForKey:ECVSTK1160VideoFormatKey]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
@@ -355,7 +352,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setBrightness:(CGFloat)val
 {
 	[_SAA711XChip setBrightness:val];
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
@@ -364,7 +361,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setContrast:(CGFloat)val
 {
 	[_SAA711XChip setContrast:val];
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
 {
@@ -373,7 +370,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setSaturation:(CGFloat)val
 {
 	[_SAA711XChip setSaturation:val];
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
 {
@@ -382,7 +379,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setHue:(CGFloat)val
 {
 	[_SAA711XChip setHue:val];
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 #pragma mark -<ECVComponentConfiguring>

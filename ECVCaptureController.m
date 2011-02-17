@@ -37,6 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVConfigController.h"
 
+// External
+#import "BTUserDefaults.h"
+
 static NSString *const ECVAspectRatio2Key = @"ECVAspectRatio2";
 static NSString *const ECVVsyncKey = @"ECVVsync";
 static NSString *const ECVMagFilterKey = @"ECVMagFilter";
@@ -55,23 +58,6 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 @end
 
 @implementation ECVCaptureController
-
-#pragma mark +NSObject
-
-+ (void)initialize
-{
-	[[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithUnsignedInteger:ECVAspectRatio4x3], ECVAspectRatio2Key,
-		[NSNumber numberWithBool:NO], ECVVsyncKey,
-		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
-		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
-		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
-		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
-		NSStringFromRect(ECVUncroppedRect), ECVCropRectKey,
-		[NSNumber numberWithInteger:ECVAspectRatioUnknown], ECVCropSourceAspectRatioKey,
-		[NSNumber numberWithInteger:ECVCropBorderNone], ECVCropBorderKey,
-		nil]];
-}
 
 #pragma mark -ECVCaptureController
 
@@ -128,12 +114,12 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType(codec)];
 		[[videoCodecPopUp menu] addItem:item];
 	}
-	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[NSUserDefaults standardUserDefaults] objectForKey:ECVVideoCodecKey])];
+	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[self defaults] objectForKey:ECVVideoCodecKey])];
 	[self changeCodec:videoCodecPopUp];
-	[videoQualitySlider setDoubleValue:[[NSUserDefaults standardUserDefaults] doubleForKey:ECVVideoQualityKey]];
+	[videoQualitySlider setDoubleValue:[[self defaults] doubleForKey:ECVVideoQualityKey]];
 
 	NSInteger const returnCode = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)];
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
+	[[self defaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
 	if(NSFileHandlingPanelOKButton != returnCode) return;
 
 	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
@@ -175,7 +161,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (IBAction)changeCodec:(id)sender
 {
 	NSString *const codec = NSFileTypeForHFSTypeCode((OSType)[sender selectedTag]);
-	[[NSUserDefaults standardUserDefaults] setObject:codec forKey:ECVVideoCodecKey];
+	[[self defaults] setObject:codec forKey:ECVVideoCodecKey];
 	NSNumber *const configurableQuality = [[[[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"] objectForKey:codec] objectForKey:@"ECVConfigurableQuality"];
 	[videoQualitySlider setEnabled:configurableQuality && [configurableQuality boolValue]];
 }
@@ -205,7 +191,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (IBAction)changeAspectRatio:(id)sender
 {
 	[self setAspectRatio:[self sizeWithAspectRatio:[sender tag]]];
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithUnsignedInteger:[sender tag]] forKey:ECVAspectRatio2Key];
+	[[self defaults] setObject:[NSNumber numberWithUnsignedInteger:[sender tag]] forKey:ECVAspectRatio2Key];
 }
 
 #pragma mark -
@@ -241,7 +227,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (IBAction)toggleVsync:(id)sender
 {
 	[videoView setVsync:![videoView vsync]];
-	[[NSUserDefaults standardUserDefaults] setBool:[videoView vsync] forKey:ECVVsyncKey];
+	[[self defaults] setBool:[videoView vsync] forKey:ECVVsyncKey];
 }
 - (IBAction)toggleSmoothing:(id)sender
 {
@@ -249,16 +235,20 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		case GL_NEAREST: [videoView setMagFilter:GL_LINEAR]; break;
 		case GL_LINEAR: [videoView setMagFilter:GL_NEAREST]; break;
 	}
-	[[NSUserDefaults standardUserDefaults] setInteger:[videoView magFilter] forKey:ECVMagFilterKey];
+	[[self defaults] setInteger:[videoView magFilter] forKey:ECVMagFilterKey];
 }
 - (IBAction)toggleShowDroppedFrames:(id)sender
 {
 	[videoView setShowDroppedFrames:![videoView showDroppedFrames]];
-	[[NSUserDefaults standardUserDefaults] setBool:[videoView showDroppedFrames] forKey:ECVShowDroppedFramesKey];
+	[[self defaults] setBool:[videoView showDroppedFrames] forKey:ECVShowDroppedFramesKey];
 }
 
 #pragma mark -
 
+- (BTUserDefaults *)defaults
+{
+	return [(ECVCaptureDevice *)[self document] defaults];
+}
 - (NSSize)aspectRatio
 {
 	return [videoView aspectRatio];
@@ -413,28 +403,40 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 			[[self window] invalidateCursorRectsForView:videoView];
 		}
 	}
-	[[NSUserDefaults standardUserDefaults] setInteger:_cropSourceAspectRatio forKey:ECVCropSourceAspectRatioKey];
-	[[NSUserDefaults standardUserDefaults] setInteger:_cropBorder forKey:ECVCropBorderKey];
+	[[self defaults] setInteger:_cropSourceAspectRatio forKey:ECVCropSourceAspectRatioKey];
+	[[self defaults] setInteger:_cropBorder forKey:ECVCropBorderKey];
 }
 
 #pragma mark -NSWindowController
 
 - (void)windowDidLoad
 {
+	[[self defaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+		[NSNumber numberWithUnsignedInteger:ECVAspectRatio4x3], ECVAspectRatio2Key,
+		[NSNumber numberWithBool:NO], ECVVsyncKey,
+		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
+		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
+		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
+		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
+		NSStringFromRect(ECVUncroppedRect), ECVCropRectKey,
+		[NSNumber numberWithInteger:ECVAspectRatioUnknown], ECVCropSourceAspectRatioKey,
+		[NSNumber numberWithInteger:ECVCropBorderNone], ECVCropBorderKey,
+		nil]];
+
 	NSWindow *const w = [self window];
 	ECVIntegerSize const s = [[self document] captureSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 
-	_cropSourceAspectRatio = [[NSUserDefaults standardUserDefaults] integerForKey:ECVCropSourceAspectRatioKey];
-	_cropBorder = [[NSUserDefaults standardUserDefaults] integerForKey:ECVCropBorderKey];
-	[videoView setCropRect:NSRectFromString([[NSUserDefaults standardUserDefaults] objectForKey:ECVCropRectKey])];
+	_cropSourceAspectRatio = [[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
+	_cropBorder = [[self defaults] integerForKey:ECVCropBorderKey];
+	[videoView setCropRect:NSRectFromString([[self defaults] objectForKey:ECVCropRectKey])];
 	[self _updateCropRect];
 
-	[self setAspectRatio:[self sizeWithAspectRatio:[[[NSUserDefaults standardUserDefaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
+	[self setAspectRatio:[self sizeWithAspectRatio:[[[self defaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
 
-	[videoView setVsync:[[NSUserDefaults standardUserDefaults] boolForKey:ECVVsyncKey]];
-	[videoView setShowDroppedFrames:[[NSUserDefaults standardUserDefaults] boolForKey:ECVShowDroppedFramesKey]];
-	[videoView setMagFilter:[[NSUserDefaults standardUserDefaults] integerForKey:ECVMagFilterKey]];
+	[videoView setVsync:[[self defaults] boolForKey:ECVVsyncKey]];
+	[videoView setShowDroppedFrames:[[self defaults] boolForKey:ECVShowDroppedFramesKey]];
+	[videoView setMagFilter:[[self defaults] integerForKey:ECVMagFilterKey]];
 
 	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
 	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];
@@ -504,7 +506,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	[videoView setCropRect:[sender cropRect]];
 	[videoView setCell:_playButtonCell];
-	[[NSUserDefaults standardUserDefaults] setObject:NSStringFromRect([sender cropRect]) forKey:ECVCropRectKey];
+	[[self defaults] setObject:NSStringFromRect([sender cropRect]) forKey:ECVCropRectKey];
 	_cropSourceAspectRatio = ECVAspectRatioUnknown;
 	_cropBorder = ECVCropBorderCustom;
 	[self _updateCropRect];

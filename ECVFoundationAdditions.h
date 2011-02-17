@@ -31,6 +31,12 @@ NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
 	return [a isEqual:b];
 }
 
+@interface NSBundle(ECVFoundationAdditions)
+
+- (NSString *)ECV_mainSuiteName;
+
+@end
+
 @interface NSDate(ECVFoundationAdditions)
 
 + (NSTimeInterval)ECV_timeIntervalSinceReferenceDate;
