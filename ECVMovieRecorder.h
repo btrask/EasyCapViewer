@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 @class ECVVideoStorage;
 @class ECVVideoFrame;
+@class ECVFrameRateConverter;
 
 // Other Sources
 @class ECVAudioDevice;
@@ -47,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSRect _cropRect;
 	BOOL _upconvertsFromMono;
 	BOOL _recordsToRAM;
-	BOOL _halfFrameRate;
+	QTTime _frameRate;
 
 	CGFloat _volume;
 }
@@ -64,9 +65,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) NSRect cropRect;
 @property(assign) BOOL upconvertsFromMono;
 @property(assign) BOOL recordsToRAM;
-@property(assign) BOOL halfFrameRate;
+@property(assign) QTTime frameRate;
 
-@property(readonly) QTTime frameRate;
 @property(readonly) NSDictionary *cleanAperatureDictionary;
 
 // Audio
@@ -87,8 +87,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	Media _videoMedia;
 	ICMCompressionSessionRef _compressionSession;
 	ICMEncodedFrameRef _encodedFrame;
-	QTTime _frameRate;
-	NSUInteger _frameSkipper;
+	ECVFrameRateConverter *_frameRateConverter;
 	ECVIntegerSize _outputSize;
 
 	Media _audioMedia;

@@ -25,8 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVCaptureDevice.h"
+#import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 #import "ECVMovieRecorder.h"
+#import "ECVFrameRateConverter.h"
 
 // Views
 #import "MPLWindow.h"
@@ -134,7 +136,9 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[options setCropRect:[self cropRect]];
 	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
 	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
-	[options setHalfFrameRate:NSOnState == [halfFrameRate state]];
+
+	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
+	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[options videoStorage] frameRate]]];
 
 	NSError *error = nil;
 	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
