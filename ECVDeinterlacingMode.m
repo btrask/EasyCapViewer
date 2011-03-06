@@ -21,6 +21,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDeinterlacingMode.h"
 
+// Models
+#import "ECVVideoFrame.h"
+
 @implementation ECVDeinterlacingMode
 
 #pragma mark +ECVDeinterlacingMode
@@ -45,6 +48,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			c = [ECVDropDeinterlacingMode class]; break;
 	}
 	return [[[c alloc] init] autorelease];
+}
+
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	return frame1;
+}
+- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	[frame1 clearTail];
+	return frame1;
 }
 
 #pragma mark -<NSCopying>
@@ -110,6 +125,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @end
 
 @implementation ECVWeaveDeinterlacingMode
+
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	[frame1 fillWithFrame:frame2];
+	return [super prepareNewFrame:frame1 withPreviousFrame:frame2];
+}
 
 #pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
@@ -195,6 +218,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVLineDoubleHQDeinterlacingMode
 
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	[frame1 clearHead];
+	return frame1;
+}
+- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	[frame1 fillHead];
+	return [super finishOldFrame:frame1 withPreviousFrame:frame2];
+}
+
 #pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (ECVDeinterlacingModeType)deinterlacingModeType
@@ -237,6 +273,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVAlternateDeinterlacingMode
 
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	[frame1 clear];
+	return [super prepareNewFrame:frame1 withPreviousFrame:frame2];
+}
+
+
 #pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (ECVDeinterlacingModeType)deinterlacingModeType
@@ -278,6 +323,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @end
 
 @implementation ECVBlurDeinterlacingMode
+
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+{
+	[frame2 blurWithFrame:frame1];
+	return frame2;
+}
 
 #pragma mark -ECVDeinterlacingMode(ECVAbstract)
 

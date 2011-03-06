@@ -433,33 +433,21 @@ bail:
 		return;
 	}
 
-	switch([_deinterlacingMode deinterlacingModeType]) { // TODO: Make this object oriented.
-		case ECVLineDoubleHQ: [_pendingFrame fillHead]; break;
-		default: [_pendingFrame clearTail]; break;
-	}
-	ECVVideoFrame *frameToDraw = _pendingFrame;
-	if(ECVBlur == [_deinterlacingMode deinterlacingModeType] && _lastCompletedFrame) { // TODO: Make this object oriented.
-		[_lastCompletedFrame blurWithFrame:_pendingFrame];
-		frameToDraw = _lastCompletedFrame;
-	}
-#if !defined(ECV_NO_CONTROLLERS)
+	ECVVideoFrame *frameToDraw = [_deinterlacingMode finishOldFrame:_pendingFrame withPreviousFrame:_lastCompletedFrame];
 	if(frameToDraw) {
+#if !defined(ECV_NO_CONTROLLERS)
 		[_windowControllersLock readLock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 		[_windowControllersLock unlock];
-	}
 #endif
+	}
 
 	if(_pendingFrame) {
 		[_lastCompletedFrame release];
 		_lastCompletedFrame = _pendingFrame;
 	}
 	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
-	switch([_deinterlacingMode deinterlacingModeType]) { // TODO: Make this object oriented.
-		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
-		case ECVLineDoubleHQ: [_pendingFrame clearHead]; break;
-		case ECVAlternate: [_pendingFrame clear]; break;
-	}
+	_pendingFrame = [_deinterlacingMode prepareNewFrame:_pendingFrame withPreviousFrame:_lastCompletedFrame];
 }
 
 #pragma mark -

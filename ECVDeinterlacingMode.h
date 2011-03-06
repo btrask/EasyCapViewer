@@ -21,6 +21,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 
+// Models
+@class ECVVideoFrame;
+
 enum {
 	ECVProgressiveScan = 4,
 	ECVWeave = 0,
@@ -35,6 +38,9 @@ typedef NSInteger ECVDeinterlacingModeType;
 @interface ECVDeinterlacingMode : NSObject <NSCopying>
 
 + (id)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
+
+- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2;
+- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2;
 
 @end
 
