@@ -106,6 +106,8 @@
 		B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
+		B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
+		B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09997131CE0550066FEB5 /* ECVRational.m */; };
@@ -319,6 +321,8 @@
 				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
+				B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */,
+				B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */,
 				B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */,
 				B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */,
 			);
@@ -449,8 +453,6 @@
 				0E3B7CB21108E8F0003A8A39 /* ECVComponentDispatch.h */,
 				0E78CB960FC92D8300E9C148 /* ECVDebug.h */,
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
-				B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */,
-				B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */,
 				0E9F9B2010F6764500935C48 /* ECVFoundationAdditions.h */,
 				0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */,
 				0E9F9B1B10F6753C00935C48 /* ECVLocalizing.h */,
@@ -644,6 +646,7 @@
 				B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */,
 				B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */,
 				B5F09999131CE0550066FEB5 /* ECVRational.m in Sources */,
+				B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -687,6 +690,7 @@
 				B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */,
 				B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */,
 				B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */,
+				B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

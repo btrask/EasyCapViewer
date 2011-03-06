@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 @class ECVVideoStorage;
 @class ECVVideoFrame;
+@class ECVDeinterlacingMode;
 
 // Controllers
 #import "ECVConfigController.h"
@@ -78,7 +79,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	IOUSBInterfaceInterface300 **_interfaceInterface;
 	UInt32 _frameTime;
 
-	ECVDeinterlacingMode _deinterlacingMode;
+	ECVDeinterlacingMode *_deinterlacingMode;
 	ECVVideoStorage *_videoStorage;
 	NSConditionLock *_playLock;
 	BOOL _firstFrame;
@@ -106,7 +107,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 @property(assign, getter = isPlaying) BOOL playing;
 - (void)togglePlaying;
-@property(nonatomic, assign) ECVDeinterlacingMode deinterlacingMode;
+@property(nonatomic, assign) ECVDeinterlacingMode *deinterlacingMode;
 
 @property(readonly) BTUserDefaults *defaults;
 @property(readonly) ECVVideoStorage *videoStorage;

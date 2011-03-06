@@ -23,12 +23,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVVideoFrame.h"
+@class ECVDeinterlacingMode;
 
 @interface ECVVideoStorage : NSObject <NSLocking>
 {
 	@private
 	OSType _pixelFormatType;
-	ECVDeinterlacingMode _deinterlacingMode;
+	ECVDeinterlacingMode *_deinterlacingMode;
 	ECVIntegerSize _originalSize;
 	QTTime _frameRate;
 	size_t _bytesPerRow;
@@ -40,9 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (Class)preferredVideoStorageClass;
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate;
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode *)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate;
 @property(readonly) OSType pixelFormatType;
-@property(readonly) ECVDeinterlacingMode deinterlacingMode;
+@property(readonly) ECVDeinterlacingMode *deinterlacingMode;
 @property(readonly) ECVIntegerSize originalSize;
 @property(readonly) ECVIntegerSize pixelSize;
 @property(readonly) QTTime frameRate;

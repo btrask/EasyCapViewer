@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVCaptureDevice.h"
+#import "ECVDeinterlacingMode.h"
 
 // Other Sources
 #import "ECVAudioDevice.h"
@@ -57,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
-	[_captureDevice setDeinterlacingMode:[sender selectedTag]];
+	[_captureDevice setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[sender selectedTag]]];
 }
 - (IBAction)changeBrightness:(id)sender
 {
@@ -138,7 +139,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[formatPopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoFormatObject)]];
 	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:[_captureDevice videoFormatObject]]];
 
-	[deinterlacePopUp selectItemWithTag:[_captureDevice deinterlacingMode]];
+	[deinterlacePopUp selectItemWithTag:[[_captureDevice deinterlacingMode] deinterlacingModeType]];
 	[deinterlacePopUp setEnabled:!!_captureDevice];
 
 	[brightnessSlider setEnabled:[_captureDevice respondsToSelector:@selector(brightness)]];

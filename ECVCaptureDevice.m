@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
+#import "ECVDeinterlacingMode.h"
 
 // Controllers
 #if !defined(ECV_NO_CONTROLLERS)
@@ -215,7 +216,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	ECVIOReturn((*_interfaceInterface)->CreateInterfaceAsyncEventSource(_interfaceInterface, NULL));
 	_playLock = [[NSConditionLock alloc] initWithCondition:ECVNotPlaying];
 
-	[self setDeinterlacingMode:[[self defaults] integerForKey:ECVDeinterlacingModeKey]];
+	[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[[self defaults] integerForKey:ECVDeinterlacingModeKey]]];
 
 	return self;
 
@@ -279,11 +280,11 @@ ECVNoDeviceError:
 	}
 }
 @synthesize deinterlacingMode = _deinterlacingMode;
-- (void)setDeinterlacingMode:(ECVDeinterlacingMode)mode
+- (void)setDeinterlacingMode:(ECVDeinterlacingMode *)mode
 {
-	if(mode == _deinterlacingMode) return;
-	ECVPauseWhile(self, { _deinterlacingMode = mode; });
-	[[self defaults] setInteger:mode forKey:ECVDeinterlacingModeKey];
+	if(ECVEqualObjects(mode, _deinterlacingMode)) return;
+	ECVPauseWhile(self, { [_deinterlacingMode release]; _deinterlacingMode = [mode copy]; });
+	[[self defaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
 }
 
 #pragma mark -
@@ -432,12 +433,12 @@ bail:
 		return;
 	}
 
-	switch(_deinterlacingMode) {
+	switch([_deinterlacingMode deinterlacingModeType]) { // TODO: Make this object oriented.
 		case ECVLineDoubleHQ: [_pendingFrame fillHead]; break;
 		default: [_pendingFrame clearTail]; break;
 	}
 	ECVVideoFrame *frameToDraw = _pendingFrame;
-	if(ECVBlur == _deinterlacingMode && _lastCompletedFrame) {
+	if(ECVBlur == [_deinterlacingMode deinterlacingModeType] && _lastCompletedFrame) { // TODO: Make this object oriented.
 		[_lastCompletedFrame blurWithFrame:_pendingFrame];
 		frameToDraw = _lastCompletedFrame;
 	}
@@ -454,7 +455,7 @@ bail:
 		_lastCompletedFrame = _pendingFrame;
 	}
 	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
-	switch(_deinterlacingMode) {
+	switch([_deinterlacingMode deinterlacingModeType]) { // TODO: Make this object oriented.
 		case ECVWeave: [_pendingFrame fillWithFrame:_lastCompletedFrame]; break;
 		case ECVLineDoubleHQ: [_pendingFrame clearHead]; break;
 		case ECVAlternate: [_pendingFrame clear]; break;
@@ -673,6 +674,7 @@ ECVNoDeviceError:
 	IOObjectRelease(_service);
 	[_productName release];
 	IOObjectRelease(_deviceRemovedNotification);
+	[_deinterlacingMode release];
 	[_playLock release];
 #if defined(ECV_ENABLE_AUDIO)
 	[_audioInput release];

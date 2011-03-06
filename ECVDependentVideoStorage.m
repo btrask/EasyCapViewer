@@ -21,6 +21,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDependentVideoStorage.h"
 
+// Models
+#import "ECVDeinterlacingMode.h"
+
 // Other Sources
 #import "ECVReadWriteLock.h"
 
@@ -51,7 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode *)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super initWithPixelFormatType:formatType deinterlacingMode:mode originalSize:size frameRate:frameRate])) {
 		_numberOfBuffers = 16;
@@ -65,7 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
-	if(ECVDrop == [self deinterlacingMode] && type == ECVLowField) return nil;
+	if([[self deinterlacingMode] shouldDropFieldWithType:type]) return nil;
 	[self lock];
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {

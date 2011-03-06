@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
+#import "ECVDeinterlacingMode.h"
 
 // Video Devices
 #import "ECVCaptureDevice.h"
@@ -103,7 +104,7 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 			[pool drain];
 			return internalComponentErr;
 		}
-		[self->device setDeinterlacingMode:ECVDrop];
+		[self->device setDeinterlacingMode:[[[ECVDropDeinterlacingMode alloc] init] autorelease]];
 		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(instance, (Handle)self);
 		[pool drain];

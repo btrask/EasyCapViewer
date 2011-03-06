@@ -27,17 +27,6 @@ static NSUInteger const ECVMicrosecondsPerMillisecond = 1000;
 static NSUInteger const ECVMicrosecondsPerSecond = 1000 * 1000;
 
 enum {
-	ECVProgressiveScan = 4,
-	ECVWeave = 0,
-	ECVLineDoubleLQ = 1,
-	ECVLineDoubleHQ = 5,
-	ECVAlternate = 2,
-	ECVBlur = 3,
-	ECVDrop = 6,
-};
-typedef NSInteger ECVDeinterlacingMode;
-
-enum {
 	ECVFullFrame = 0,
 	ECVHighField = 1,
 	ECVLowField = 2,

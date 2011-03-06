@@ -21,67 +21,54 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 
-NS_INLINE BOOL ECVDeinterlacingModeUsesProgressiveBuffer(ECVDeinterlacingMode m)
-{
-	switch(m) {
-		case ECVProgressiveScan:
-		case ECVLineDoubleLQ:
-		case ECVBlur:
-		case ECVDrop:
-			return YES;
-		case ECVWeave:
-		case ECVLineDoubleHQ:
-		case ECVAlternate:
-			return NO;
-	}
-	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
-	return NO;
-}
-NS_INLINE BOOL ECVDeinterlacingModeUsesDoubledLines(ECVDeinterlacingMode m)
-{
-	switch(m) {
-		case ECVProgressiveScan:
-		case ECVWeave:
-		case ECVLineDoubleLQ:
-		case ECVAlternate:
-		case ECVBlur:
-		case ECVDrop:
-			return NO;
-		case ECVLineDoubleHQ:
-			return YES;
-	}
-	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
-	return NO;
-}
-NS_INLINE ECVIntegerSize ECVDeinterlacingModePixelSize(ECVDeinterlacingMode m, ECVIntegerSize s)
-{
-	switch(m) {
-		case ECVProgressiveScan:
-		case ECVWeave:
-		case ECVLineDoubleHQ:
-		case ECVAlternate:
-			return s;
-		case ECVLineDoubleLQ:
-		case ECVBlur:
-		case ECVDrop:
-			return (ECVIntegerSize){s.width, s.height / 2};
-	}
-	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
-	return (ECVIntegerSize){0, 0};
-}
-NS_INLINE NSUInteger ECVDeinterlacingModeFrameGroupSize(ECVDeinterlacingMode m)
-{
-	switch(m) {
-		case ECVProgressiveScan:
-		case ECVDrop:
-			return 1;
-		case ECVWeave:
-		case ECVLineDoubleLQ:
-		case ECVLineDoubleHQ:
-		case ECVAlternate:
-		case ECVBlur:
-			return 2;
-	}
-	ECVCAssertNotReached(@"Unknown deinterlacing mode.");
-	return 0;
-}
+enum {
+	ECVProgressiveScan = 4,
+	ECVWeave = 0,
+	ECVLineDoubleLQ = 1,
+	ECVLineDoubleHQ = 5,
+	ECVAlternate = 2,
+	ECVBlur = 3,
+	ECVDrop = 6,
+};
+typedef NSInteger ECVDeinterlacingModeType;
+
+@interface ECVDeinterlacingMode : NSObject <NSCopying>
+
++ (id)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
+
+@end
+
+@interface ECVDeinterlacingMode(ECVAbstract)
+
+- (ECVDeinterlacingModeType)deinterlacingModeType;
+
+- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType;
+- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType;
+- (BOOL)hasOffsetFields;
+- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize;
+- (BOOL)drawsDoubledLines;
+- (NSUInteger)newestCompletedFrameIndex;
+- (NSUInteger)frameGroupSize;
+
+@end
+
+@interface ECVProgressiveScanMode : ECVDeinterlacingMode
+@end
+
+@interface ECVWeaveDeinterlacingMode : ECVDeinterlacingMode
+@end
+
+@interface ECVLineDoubleLQDeinterlacingMode : ECVDeinterlacingMode
+@end
+
+@interface ECVLineDoubleHQDeinterlacingMode : ECVDeinterlacingMode
+@end
+
+@interface ECVAlternateDeinterlacingMode : ECVDeinterlacingMode
+@end
+
+@interface ECVBlurDeinterlacingMode : ECVDeinterlacingMode
+@end
+
+@interface ECVDropDeinterlacingMode : ECVDeinterlacingMode
+@end

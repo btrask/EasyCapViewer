@@ -21,15 +21,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoStorage.h"
 
-// Other Sources
+// Models
 #import "ECVDeinterlacingMode.h"
-
-enum {
-	ECVPendingFrameIndex,
-	ECVPotentiallyCompletedFrameIndex, // May not be fully processed, depending on the deinterlacing mode.
-	ECVGuaranteedCompletedFrame2Index,
-	ECVUndroppableFrameCount,
-};
 
 @interface ECVIndependentVideoFrame : ECVVideoFrame
 {
@@ -58,18 +51,18 @@ enum {
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
+- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode *)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
 {
 	if((self = [super init])) {
 		_pixelFormatType = formatType;
-		_deinterlacingMode = mode;
+		_deinterlacingMode = [mode copy];
 		_originalSize = size;
 		_frameRate = frameRate;
 		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
 		_bufferSize = [self pixelSize].height * [self bytesPerRow];
 
 		_lock = [[NSRecursiveLock alloc] init];
-		_frames = [[NSMutableArray alloc] initWithCapacity:ECVUndroppableFrameCount];
+		_frames = [[NSMutableArray alloc] initWithCapacity:[mode newestCompletedFrameIndex] + 1];
 	}
 	return self;
 }
@@ -78,7 +71,7 @@ enum {
 @synthesize originalSize = _originalSize;
 - (ECVIntegerSize)pixelSize
 {
-	return ECVDeinterlacingModePixelSize(_deinterlacingMode, _originalSize);
+	return [_deinterlacingMode outputSizeForCaptureSize:_originalSize];
 }
 @synthesize frameRate = _frameRate;
 - (size_t)bytesPerPixel
@@ -89,14 +82,14 @@ enum {
 @synthesize bufferSize = _bufferSize;
 - (NSUInteger)frameGroupSize
 {
-	return ECVDeinterlacingModeFrameGroupSize(_deinterlacingMode);
+	return [_deinterlacingMode frameGroupSize];
 }
 
 #pragma mark -
 
 - (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
 {
-	if(ECVDrop == [self deinterlacingMode] && type == ECVLowField) return nil;
+	if([[self deinterlacingMode] shouldDropFieldWithType:type]) return nil;
 	[self lock];
 	[self removeOldestFrameGroup];
 	ECVVideoFrame *const frame = [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
@@ -131,7 +124,7 @@ enum {
 	if(!frame) return NO;
 	[self lock];
 	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
-	BOOL drop = NSNotFound != i && i >= ECVUndroppableFrameCount;
+	BOOL drop = NSNotFound != i && i > [[self deinterlacingMode] newestCompletedFrameIndex];
 	if(drop) {
 		[self removingFrame:[[frame retain] autorelease]];
 		[_frames removeObjectAtIndex:i];
@@ -160,13 +153,14 @@ enum {
 
 - (NSUInteger)_newestCompletedFrameIndex
 {
-	return ECVBlur == [self deinterlacingMode] ? ECVGuaranteedCompletedFrame2Index : ECVPotentiallyCompletedFrameIndex;
+	return [[self deinterlacingMode] newestCompletedFrameIndex];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
+	[_deinterlacingMode release];
 	[_lock release];
 	[_frames release];
 	[super dealloc];

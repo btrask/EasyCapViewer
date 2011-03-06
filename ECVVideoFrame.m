@@ -23,10 +23,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVVideoStorage.h"
+#import "ECVDeinterlacingMode.h"
 
 // Other Sources
 #import "ECVDebug.h"
-#import "ECVDeinterlacingMode.h"
+#import "ECVFoundationAdditions.h"
 
 typedef struct {
 	void *bytes;
@@ -96,11 +97,11 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 - (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage
 {
 	NSAssert(![self isMemberOfClass:[ECVVideoFrame class]], @"ECVVideoFrame is an abstract class and should never be instantiated directly.");
-	NSAssert((ECVFullFrame == type) == (ECVProgressiveScan == [storage deinterlacingMode]), @"Field type and deinterlacing mode must match.");
+	NSAssert([[storage deinterlacingMode] isAcceptableFieldType:type], @"Field type not allowed in current deinterlacing mode.");
 	if((self = [super init])) {
 		_videoStorage = storage;
 		_fieldType = type;
-		if(!ECVDeinterlacingModeUsesProgressiveBuffer([_videoStorage deinterlacingMode]) && ECVLowField == _fieldType) _byteRange.location = [_videoStorage bytesPerRow];
+		if([[_videoStorage deinterlacingMode] hasOffsetFields] && ECVLowField == _fieldType) _byteRange.location = [_videoStorage bytesPerRow];
 	}
 	return self;
 }
@@ -196,12 +197,12 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 
 - (ECVBufferInfo)_bufferInfo
 {
-	ECVDeinterlacingMode const d = [_videoStorage deinterlacingMode];
+	ECVDeinterlacingMode *const d = [_videoStorage deinterlacingMode];
 	return (ECVBufferInfo){
 		[self bufferBytes],
 		[_videoStorage bufferSize],
-		ECVDeinterlacingModeUsesProgressiveBuffer(d) ? ECVFullFrame : _fieldType,
-		ECVDeinterlacingModeUsesDoubledLines(d),
+		[d hasOffsetFields] ? _fieldType : ECVFullFrame,
+		[d drawsDoubledLines],
 		[_videoStorage bytesPerRow],
 		[_videoStorage pixelFormatType],
 		[_videoStorage pixelSize],
