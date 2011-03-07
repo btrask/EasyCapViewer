@@ -23,8 +23,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVVideoStorage.h"
-#import "ECVVideoFrame.h"
 #import "ECVDeinterlacingMode.h"
+#import "ECVVideoFrame.h"
 
 // Video Devices
 #import "ECVCaptureDevice.h"
@@ -104,7 +104,7 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 			[pool drain];
 			return internalComponentErr;
 		}
-		[self->device setDeinterlacingMode:[[[ECVDropDeinterlacingMode alloc] init] autorelease]];
+		[self->device setDeinterlacingMode:[ECVDropDeinterlacingMode class]];
 		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(instance, (Handle)self);
 		[pool drain];
@@ -313,7 +313,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		[pool drain];
 		return badCallOrderErr;
 	}
-	ECVIntegerSize const originalSize = [videoStorage originalSize];
+	ECVIntegerSize const captureSize = [videoStorage captureSize];
 	ECVIntegerSize const pixelSize = [videoStorage pixelSize];
 	[pool drain];
 
@@ -324,8 +324,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		.cType = [self->device pixelFormatType],
 		.version = 2,
 		.spatialQuality = codecLosslessQuality,
-		.width = originalSize.width,
-		.height = originalSize.height,
+		.width = captureSize.width,
+		.height = captureSize.height,
 		.hRes = Long2Fix(72),
 		.vRes = Long2Fix(72),
 		.frameCount = 1,
@@ -344,7 +344,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_CleanAperture, sizeof(CleanApertureImageDescriptionExtension), &cleanAperture));
 
-	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {originalSize.height, 540};
+	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {captureSize.height, 540};
 	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_PixelAspectRatio, sizeof(PixelAspectRatioImageDescriptionExtension), &pixelAspectRatio));
 
 	NCLCColorInfoImageDescriptionExtension const colorInfo = {

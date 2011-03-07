@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVVideoStorage.h"
-#import "ECVVideoFrame.h"
 #import "ECVDeinterlacingMode.h"
+#import "ECVVideoFrame.h"
 
 // Controllers
 #if !defined(ECV_NO_CONTROLLERS)
@@ -280,9 +280,9 @@ ECVNoDeviceError:
 	}
 }
 @synthesize deinterlacingMode = _deinterlacingMode;
-- (void)setDeinterlacingMode:(ECVDeinterlacingMode *)mode
+- (void)setDeinterlacingMode:(Class)mode
 {
-	if(ECVEqualObjects(mode, _deinterlacingMode)) return;
+	if(mode == _deinterlacingMode) return;
 	ECVPauseWhile(self, { [_deinterlacingMode release]; _deinterlacingMode = [mode copy]; });
 	[[self defaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
 }
@@ -304,9 +304,8 @@ ECVNoDeviceError:
 
 - (void)startPlaying
 {
-	_firstFrame = YES;
 	[_videoStorage release];
-	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithPixelFormatType:[self pixelFormatType] deinterlacingMode:_deinterlacingMode originalSize:[self captureSize] frameRate:[self frameRate]];
+	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithDeinterlacingMode:[self deinterlacingMode] captureSize:[self captureSize] pixelFormat:[self pixelFormatType] frameRate:[self frameRate]];
 	[_playLock unlockWithCondition:ECVStartPlaying];
 	[NSThread detachNewThreadSelector:@selector(threadMain_play) toTarget:self withObject:nil];
 }
@@ -325,6 +324,7 @@ ECVNoDeviceError:
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
 	[_playLock unlockWithCondition:ECVPlaying];
+	_frameBuilder = [[ECVVideoFrameBuilder alloc] initWithVideoStorage:_videoStorage];
 
 	UInt8 const pipeIndex = [self isochReadingPipe];
 	UInt8 direction = kUSBNone;
@@ -411,10 +411,8 @@ ECVNoDeviceError:
 		}
 		free(transfers);
 	}
-	[_pendingFrame release];
-	_pendingFrame = nil;
-	[_lastCompletedFrame release];
-	_lastCompletedFrame = nil;
+	[_frameBuilder release];
+	_frameBuilder = nil;
 	[_playLock lock];
 bail:
 	ECVLog(ECVNotice, @"Stopping playback.");
@@ -424,16 +422,11 @@ bail:
 }
 - (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
 {
-	[_pendingFrame appendBytes:bytes length:length];
+	[_frameBuilder appendBytes:bytes length:length];
 }
 - (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType
 {
-	if(_firstFrame) {
-		_firstFrame = NO;
-		return;
-	}
-
-	ECVVideoFrame *frameToDraw = [_deinterlacingMode finishOldFrame:_pendingFrame withPreviousFrame:_lastCompletedFrame];
+	ECVVideoFrame *frameToDraw = [_frameBuilder completedFrame];
 	if(frameToDraw) {
 #if !defined(ECV_NO_CONTROLLERS)
 		[_windowControllersLock readLock];
@@ -441,13 +434,7 @@ bail:
 		[_windowControllersLock unlock];
 #endif
 	}
-
-	if(_pendingFrame) {
-		[_lastCompletedFrame release];
-		_lastCompletedFrame = _pendingFrame;
-	}
-	_pendingFrame = [[_videoStorage nextFrameWithFieldType:fieldType] retain];
-	_pendingFrame = [_deinterlacingMode prepareNewFrame:_pendingFrame withPreviousFrame:_lastCompletedFrame];
+	[_frameBuilder startNewFrameWithFieldType:fieldType];
 }
 
 #pragma mark -

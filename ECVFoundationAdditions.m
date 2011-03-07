@@ -24,6 +24,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static NSString *const ECVMainSuiteNameKey = @"ECVMainSuiteName";
 
+@implementation NSArray(ECVFoundationAdditions)
+
+- (id)ECV_objectAtIndex:(NSUInteger)index
+{
+	return index < [self count] ? [self objectAtIndex:index] : nil;
+}
+
+@end
+
 @implementation NSBundle(ECVFoundationAdditions)
 
 - (NSString *)ECV_mainSuiteName

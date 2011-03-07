@@ -78,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_videoCodec = kJPEGCodecType;
 		_videoQuality = 0.5f;
 		_stretchOutput = YES;
-		_outputSize = [_videoStorage originalSize];
+		_outputSize = [_videoStorage captureSize];
 		_cropRect = ECVUncroppedRect;
 
 		_volume = 1.0f;

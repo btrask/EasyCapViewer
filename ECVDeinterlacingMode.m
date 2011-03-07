@@ -24,11 +24,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVVideoFrame.h"
 
+// Other Sources
+#import "ECVFoundationAdditions.h"
+
 @implementation ECVDeinterlacingMode
 
 #pragma mark +ECVDeinterlacingMode
 
-+ (id)deinterlacingModeWithType:(ECVDeinterlacingModeType)type
++ (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type
 {
 	Class c = Nil;
 	switch(type) {
@@ -47,19 +50,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		case ECVDrop:
 			c = [ECVDropDeinterlacingMode class]; break;
 	}
-	return [[[c alloc] init] autorelease];
+	return c;
 }
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+- (void)prepareNewFrameInArray:(NSArray *)frames {}
+- (void)finishNewFrameInArray:(NSArray *)frames
 {
-	return frame1;
-}
-- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
-{
-	[frame1 clearTail];
-	return frame1;
+	[[frames ECV_objectAtIndex:0] clearTail];
 }
 
 #pragma mark -<NSCopying>
@@ -84,14 +83,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVProgressiveScanMode
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVProgressiveScan;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {
@@ -128,20 +127,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+- (void)prepareNewFrameInArray:(NSArray *)frames
 {
-	[frame1 fillWithFrame:frame2];
-	return [super prepareNewFrame:frame1 withPreviousFrame:frame2];
+	[[frames ECV_objectAtIndex:0] fillWithFrame:[frames ECV_objectAtIndex:1]];
+	[super prepareNewFrameInArray:frames];
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVWeave;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {
@@ -176,14 +175,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVLineDoubleLQDeinterlacingMode
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVLineDoubleLQ;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {
@@ -220,25 +219,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+- (void)prepareNewFrameInArray:(NSArray *)frames
 {
-	[frame1 clearHead];
-	return frame1;
+	[[frames ECV_objectAtIndex:0] clearHead];
+	[super prepareNewFrameInArray:frames];
 }
-- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+- (void)finishNewFrameInArray:(NSArray *)frames
 {
-	[frame1 fillHead];
-	return [super finishOldFrame:frame1 withPreviousFrame:frame2];
+	[[frames ECV_objectAtIndex:0] fillHead];
+	[super finishNewFrameInArray:frames];
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVLineDoubleHQ;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {
@@ -275,21 +274,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+- (void)prepareNewFrameInArray:(NSArray *)frames
 {
-	[frame1 clear];
-	return [super prepareNewFrame:frame1 withPreviousFrame:frame2];
+	[[frames ECV_objectAtIndex:0] clear];
+	[super prepareNewFrameInArray:frames];
 }
 
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
-
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVAlternate;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {
@@ -326,20 +324,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2
+- (void)finishNewFrameInArray:(NSArray *)frames
 {
-	[frame2 blurWithFrame:frame1];
-	return frame2;
+	[[frames ECV_objectAtIndex:1] blurWithFrame:[frames ECV_objectAtIndex:0]];
+	[super finishNewFrameInArray:frames];
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVBlur;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {
@@ -374,14 +372,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVDropDeinterlacingMode
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
 	return ECVDrop;
 }
 
-#pragma mark -
+#pragma mark -ECVDeinterlacingMode(ECVAbstract)
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
 {

@@ -21,9 +21,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDependentVideoStorage.h"
 
-// Models
-#import "ECVDeinterlacingMode.h"
-
 // Other Sources
 #import "ECVReadWriteLock.h"
 
@@ -54,9 +51,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode *)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
+- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate
 {
-	if((self = [super initWithPixelFormatType:formatType deinterlacingMode:mode originalSize:size frameRate:frameRate])) {
+	if((self = [super initWithDeinterlacingMode:mode captureSize:captureSize pixelFormat:pixelFormatType frameRate:frameRate])) {
 		_numberOfBuffers = 16;
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * [self bufferSize]];
 		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
@@ -66,28 +63,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-- (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
+- (ECVVideoFrame *)generateFrameWithFrieldType:(ECVFieldType)type
 {
-	if([[self deinterlacingMode] shouldDropFieldWithType:type]) return nil;
-	[self lock];
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {
 		[self removeOldestFrameGroup];
 		i = [_unusedBufferIndexes firstIndex];
-		if(NSNotFound == i) {
-			[self unlock];
-			return nil;
-		}
+		if(NSNotFound == i) return nil;
 	}
 	[_unusedBufferIndexes removeIndex:i];
-	ECVVideoFrame *const frame = [[[ECVDependentVideoFrame alloc] initWithFieldType:type storage:self bufferIndex:i] autorelease];
-	[self addVideoFrame:frame];
-	[self unlock];
-	return frame;
+	return [[[ECVDependentVideoFrame alloc] initWithFieldType:type storage:self bufferIndex:i] autorelease];
 }
-
-#pragma mark -
-
 - (void)removingFrame:(ECVVideoFrame *)frame
 {	
 	[_unusedBufferIndexes addIndex:[frame bufferIndex]];

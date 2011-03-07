@@ -34,8 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVVideoStorage(Private)
 
-- (NSUInteger)_newestCompletedFrameIndex;
-- (BOOL)_removeFrame:(ECVVideoFrame *)frame;
+- (ECVVideoFrame *)_finishCurrentFrame;
+- (ECVVideoFrame *)_nextFrameWithFieldType:(ECVFieldType)type;
 
 @end
 
@@ -51,28 +51,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode *)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate
+- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate
 {
+	NSAssert([mode isSubclassOfClass:[ECVDeinterlacingMode class]], @"Deinterlacing mode must be a subclass of ECVDeinterlacingMode.");
 	if((self = [super init])) {
-		_pixelFormatType = formatType;
-		_deinterlacingMode = [mode copy];
-		_originalSize = size;
+		_deinterlacingMode = [[mode alloc] init];
+		_captureSize = captureSize;
+		_pixelFormatType = pixelFormatType;
 		_frameRate = frameRate;
 		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
 		_bufferSize = [self pixelSize].height * [self bytesPerRow];
 
 		_lock = [[NSRecursiveLock alloc] init];
-		_frames = [[NSMutableArray alloc] initWithCapacity:[mode newestCompletedFrameIndex] + 1];
+		_frames = [[NSMutableArray alloc] initWithCapacity:[_deinterlacingMode newestCompletedFrameIndex] + 1];
 	}
 	return self;
 }
-@synthesize pixelFormatType = _pixelFormatType;
 @synthesize deinterlacingMode = _deinterlacingMode;
-@synthesize originalSize = _originalSize;
+@synthesize captureSize = _captureSize;
 - (ECVIntegerSize)pixelSize
 {
-	return [_deinterlacingMode outputSizeForCaptureSize:_originalSize];
+	return [_deinterlacingMode outputSizeForCaptureSize:_captureSize];
 }
+@synthesize pixelFormatType = _pixelFormatType;
 @synthesize frameRate = _frameRate;
 - (size_t)bytesPerPixel
 {
@@ -80,26 +81,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 @synthesize bytesPerRow = _bytesPerRow;
 @synthesize bufferSize = _bufferSize;
-- (NSUInteger)frameGroupSize
-{
-	return [_deinterlacingMode frameGroupSize];
-}
 
 #pragma mark -
 
-- (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type
-{
-	if([[self deinterlacingMode] shouldDropFieldWithType:type]) return nil;
-	[self lock];
-	[self removeOldestFrameGroup];
-	ECVVideoFrame *const frame = [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
-	[self addVideoFrame:frame];
-	[self unlock];
-	return frame;
-}
 - (ECVVideoFrame *)currentFrame
 {
-	NSUInteger const i = [self _newestCompletedFrameIndex];
+	NSUInteger const i = [_deinterlacingMode newestCompletedFrameIndex];
 	[self lock];
 	ECVVideoFrame *const frame = i < [_frames count] ? [[[_frames objectAtIndex:i] retain] autorelease] : nil;
 	[self unlock];
@@ -108,37 +95,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-- (void)removeOldestFrameGroup
-{
-	NSUInteger const count = [_frames count];
-	NSUInteger const realMax = MIN([self frameGroupSize], SUB_ZERO(count, [self _newestCompletedFrameIndex] + 1));
-	if(realMax) [[_frames subarrayWithRange:NSMakeRange(count - realMax, realMax)] makeObjectsPerformSelector:@selector(removeFromStorageIfPossible)];
-}
-- (void)addVideoFrame:(ECVVideoFrame *)frame
-{
-	NSParameterAssert(frame);
-	[_frames insertObject:frame atIndex:0];
-}
-- (BOOL)removeFrame:(ECVVideoFrame *)frame
-{
-	if(!frame) return NO;
-	[self lock];
-	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
-	BOOL drop = NSNotFound != i && i > [[self deinterlacingMode] newestCompletedFrameIndex];
-	if(drop) {
-		[self removingFrame:[[frame retain] autorelease]];
-		[_frames removeObjectAtIndex:i];
-	}
-	[self unlock];
-	return drop;
-}
-- (void)removingFrame:(ECVVideoFrame *)frame {}
-
-#pragma mark -
-
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c
 {
-	NSUInteger const g = [self frameGroupSize];
+	NSUInteger const g = [_deinterlacingMode frameGroupSize];
 	return c < g ? 0 : c - c % g;
 }
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames
@@ -149,11 +108,55 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return drop;
 }
 
+#pragma mark -
+
+- (ECVVideoFrame *)generateFrameWithFrieldType:(ECVFieldType)type
+{
+	[self removeOldestFrameGroup];
+	return [[[ECVIndependentVideoFrame alloc] initWithFieldType:type storage:self] autorelease];
+}
+- (void)removeOldestFrameGroup
+{
+	NSUInteger const count = [_frames count];
+	NSUInteger const realMax = MIN([_deinterlacingMode frameGroupSize], SUB_ZERO(count, [_deinterlacingMode newestCompletedFrameIndex] + 1));
+	if(realMax) [[_frames subarrayWithRange:NSMakeRange(count - realMax, realMax)] makeObjectsPerformSelector:@selector(removeFromStorageIfPossible)];
+}
+- (void)addVideoFrame:(ECVVideoFrame *)frame
+{
+	NSParameterAssert(frame);
+	[_frames insertObject:frame atIndex:0];
+	[_deinterlacingMode prepareNewFrameInArray:_frames];
+}
+- (BOOL)removeFrame:(ECVVideoFrame *)frame
+{
+	if(!frame) return NO;
+	[self lock];
+	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
+	BOOL drop = NSNotFound != i && i > [_deinterlacingMode newestCompletedFrameIndex];
+	if(drop) {
+		[self removingFrame:[[frame retain] autorelease]];
+		[_frames removeObjectAtIndex:i];
+	}
+	[self unlock];
+	return drop;
+}
+- (void)removingFrame:(ECVVideoFrame *)frame {}
+
 #pragma mark -ECVVideoStorage(Private)
 
-- (NSUInteger)_newestCompletedFrameIndex
+- (ECVVideoFrame *)_finishCurrentFrame
 {
-	return [[self deinterlacingMode] newestCompletedFrameIndex];
+	[_deinterlacingMode finishNewFrameInArray:_frames];
+	return [self currentFrame];
+}
+- (ECVVideoFrame *)_nextFrameWithFieldType:(ECVFieldType)type
+{
+	if([_deinterlacingMode shouldDropFieldWithType:type]) return nil;
+	[self lock];
+	ECVVideoFrame *const frame = [self generateFrameWithFrieldType:type];
+	if(frame) [self addVideoFrame:frame];
+	[self unlock];
+	return frame;
 }
 
 #pragma mark -NSObject
@@ -222,5 +225,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)lock {}
 - (void)unlock {}
+
+@end
+
+@implementation ECVVideoFrameBuilder
+
+#pragma mark -ECVVideoFrameBuilder
+
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+{
+	if((self = [super init])) {
+		_thread = [[NSThread currentThread] retain];
+		_videoStorage = [storage retain];
+		_firstFrame = YES;
+	}
+	return self;
+}
+@synthesize videoStorage = _videoStorage;
+
+- (ECVVideoFrame *)completedFrame
+{
+	NSAssert([NSThread currentThread] == _thread, @"Frame builders must be used from the thread where they are created.");
+	[_pendingFrame release];
+	_pendingFrame = nil;
+	return [_videoStorage _finishCurrentFrame];
+}
+- (void)startNewFrameWithFieldType:(ECVFieldType)type
+{
+	NSAssert([NSThread currentThread] == _thread, @"Frame builders must be used from the thread where they are created.");
+	if(_firstFrame) {
+		_firstFrame = NO;
+		return;
+	}
+	_pendingFrame = [[_videoStorage _nextFrameWithFieldType:type] retain];
+}
+- (void)appendBytes:(void const *)bytes length:(size_t)length
+{
+	NSAssert([NSThread currentThread] == _thread, @"Frame builders must be used from the thread where they are created.");
+	[_pendingFrame appendBytes:bytes length:length];
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_thread release];
+	[_videoStorage release];
+	[_pendingFrame release];
+	[super dealloc];
+}
 
 @end

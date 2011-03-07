@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVVideoStorage : NSObject <NSLocking>
 {
 	@private
-	OSType _pixelFormatType;
 	ECVDeinterlacingMode *_deinterlacingMode;
-	ECVIntegerSize _originalSize;
+	ECVIntegerSize _captureSize;
+	OSType _pixelFormatType;
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
@@ -41,27 +41,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (Class)preferredVideoStorageClass;
 
-- (id)initWithPixelFormatType:(OSType)formatType deinterlacingMode:(ECVDeinterlacingMode *)mode originalSize:(ECVIntegerSize)size frameRate:(QTTime)frameRate;
-@property(readonly) OSType pixelFormatType;
-@property(readonly) ECVDeinterlacingMode *deinterlacingMode;
-@property(readonly) ECVIntegerSize originalSize;
+- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate;
+@property(readonly) ECVDeinterlacingMode *deinterlacingMode; // TODO: Ideally this should not be exposed.
+@property(readonly) ECVIntegerSize captureSize;
 @property(readonly) ECVIntegerSize pixelSize;
+@property(readonly) OSType pixelFormatType;
 @property(readonly) QTTime frameRate;
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
-@property(readonly) NSUInteger frameGroupSize;
 
-- (ECVVideoFrame *)nextFrameWithFieldType:(ECVFieldType)type;
 - (ECVVideoFrame *)currentFrame;
-
-// Overriding:
-- (void)removeOldestFrameGroup; // Called from -nextFrameWithFieldType:. Must lock first.
-- (void)addVideoFrame:(ECVVideoFrame *)frame; // Called from -nextFrameWithFieldType:. Must lock first.
-- (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorageIfPossible].
-- (void)removingFrame:(ECVVideoFrame *)frame; // For overriding only.
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
+
+// Overriding (do not call these directly):
+- (ECVVideoFrame *)generateFrameWithFrieldType:(ECVFieldType)type;
+- (void)removeOldestFrameGroup; // Called from -nextFrameWithFieldType:. Must lock first.
+- (void)addVideoFrame:(ECVVideoFrame *)frame; // Called from -nextFrameWithFieldType:. Must lock first.
+- (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorageIfPossible].
+- (void)removingFrame:(ECVVideoFrame *)frame;
+
+@end
+
+@interface ECVVideoFrameBuilder : NSObject
+{
+	@private
+	NSThread *_thread;
+	ECVVideoStorage *_videoStorage;
+	BOOL _firstFrame;
+	ECVVideoFrame *_pendingFrame;
+}
+
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage;
+@property(readonly) ECVVideoStorage *videoStorage;
+
+- (ECVVideoFrame *)completedFrame;
+- (void)startNewFrameWithFieldType:(ECVFieldType)type;
+- (void)appendBytes:(void const *)bytes length:(size_t)length;
 
 @end

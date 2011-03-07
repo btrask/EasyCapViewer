@@ -37,16 +37,16 @@ typedef NSInteger ECVDeinterlacingModeType;
 
 @interface ECVDeinterlacingMode : NSObject <NSCopying>
 
-+ (id)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
++ (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
 
-- (ECVVideoFrame *)prepareNewFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2;
-- (ECVVideoFrame *)finishOldFrame:(ECVVideoFrame *)frame1 withPreviousFrame:(ECVVideoFrame *)frame2;
+- (void)prepareNewFrameInArray:(NSArray *)frames;
+- (void)finishNewFrameInArray:(NSArray *)frames;
 
 @end
 
 @interface ECVDeinterlacingMode(ECVAbstract)
 
-- (ECVDeinterlacingModeType)deinterlacingModeType;
++ (ECVDeinterlacingModeType)deinterlacingModeType;
 
 - (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType;
 - (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType;
