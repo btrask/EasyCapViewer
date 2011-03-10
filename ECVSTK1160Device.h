@@ -65,6 +65,7 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 	ECVSTK1160VideoFormat _videoFormat;
 	SAA711XChip *_SAA711XChip;
 	VT1612AChip *_VT1612AChip;
+	NSUInteger _offset;
 }
 
 @property(nonatomic, assign) ECVSTK1160VideoSource videoSource;

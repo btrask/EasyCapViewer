@@ -1,4 +1,4 @@
-/* Copyright (c) 2009-2010, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,27 +19,12 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <CoreVideo/CoreVideo.h>
+#import "ECVVideoStorage.h"
 
-// Models
-@class ECVVideoStorage;
-#import "ECVPixelBuffer.h"
-
-@interface ECVVideoFrame : ECVPixelBuffer
+@interface ECVIndependentVideoStorage : ECVVideoStorage
 {
 	@private
-	ECVVideoStorage *_videoStorage;
+	ECVVideoFrame *_currentFrame;
 }
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage;
-@property(readonly) id videoStorage;
-
-@end
-
-@interface ECVVideoFrame(ECVAbstract) <NSLocking>
-
-- (void const *)bytes;
-- (BOOL)hasBytes;
-- (BOOL)lockIfHasBytes;
 
 @end

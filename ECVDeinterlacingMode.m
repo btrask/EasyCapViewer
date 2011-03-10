@@ -22,10 +22,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDeinterlacingMode.h"
 
 // Models
+#import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 
 // Other Sources
 #import "ECVFoundationAdditions.h"
+
+static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fieldType)
+{
+	switch(fieldType) {
+		case ECVHighField: return ECVDrawToHighField;
+		case ECVLowField: return ECVDrawToLowField;
+		case ECVFullFrame: return kNilOptions;
+	}
+	ECVCAssertNotReached(@"Invalid field type.");
+	return kNilOptions;
+}
 
 @implementation ECVDeinterlacingMode
 
@@ -55,28 +67,68 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVDeinterlacingMode
 
-- (void)prepareNewFrameInArray:(NSArray *)frames {}
-- (void)finishNewFrameInArray:(NSArray *)frames
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage
 {
-	[[frames ECV_objectAtIndex:0] clearTail];
+	if((self = [super init])) {
+		_videoStorage = storage;
+	}
+	return self;
+}
+- (ECVVideoStorage *)videoStorage
+{
+	return _videoStorage;
+}
+- (ECVIntegerSize)pixelSize
+{
+	return [_videoStorage captureSize];
+}
+- (NSUInteger)frameGroupSize
+{
+	return 2;
+}
+- (ECVMutablePixelBuffer *)pendingBuffer
+{
+	return _pendingBuffer;
 }
 
-#pragma mark -<NSCopying>
+#pragma mark -
 
-- (id)copyWithZone:(NSZone *)zone
+- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType)fieldType
 {
-	return [self retain];
+	[_videoStorage lock];
+	ECVMutablePixelBuffer *const buffer = [_videoStorage nextBuffer];
+	[_videoStorage unlock];
+	return buffer;
+}
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
+{
+	ECVMutablePixelBuffer *const finishedBuffer = [_pendingBuffer autorelease];
+	_pendingBuffer = [[self nextBufferWithFieldType:fieldType] retain];
+	return finishedBuffer;
+}
+- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
+{
+	[_pendingBuffer lock];
+	[_pendingBuffer drawPixelBuffer:buffer options:[self drawingOptions] atPoint:point];
+	[_pendingBuffer unlock];
+}
+- (ECVPixelBufferDrawingOptions)drawingOptions
+{
+	return kNilOptions;
+}
+- (void)clearPendingBuffer
+{
+	[_pendingBuffer lock];
+	[_pendingBuffer clear];
+	[_pendingBuffer unlock];
 }
 
-#pragma mark -<NSObject>
+#pragma mark -NSObject
 
-- (NSUInteger)hash
+- (void)dealloc
 {
-	return [[self class] hash];
-}
-- (BOOL)isEqual:(id)obj
-{
-	return [obj isMemberOfClass:[self class]];
+	[_pendingBuffer release];
+	[super dealloc];
 }
 
 @end
@@ -90,145 +142,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return ECVProgressiveScan;
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
-
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
-{
-	return ECVFullFrame == fieldType;
-}
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
-{
-	return NO;
-}
-- (BOOL)hasOffsetFields
-{
-	return NO;
-}
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
-{
-	return captureSize;
-}
-- (BOOL)drawsDoubledLines
-{
-	return NO;
-}
-- (NSUInteger)newestCompletedFrameIndex
-{
-	return 1;
-}
-- (NSUInteger)frameGroupSize
-{
-	return 1;
-}
-
-@end
-
-@implementation ECVWeaveDeinterlacingMode
-
 #pragma mark -ECVDeinterlacingMode
 
-- (void)prepareNewFrameInArray:(NSArray *)frames
-{
-	[[frames ECV_objectAtIndex:0] fillWithFrame:[frames ECV_objectAtIndex:1]];
-	[super prepareNewFrameInArray:frames];
-}
-
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
-
-+ (ECVDeinterlacingModeType)deinterlacingModeType
-{
-	return ECVWeave;
-}
-
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
-
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
-{
-	return ECVFullFrame != fieldType;
-}
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
-{
-	return NO;
-}
-- (BOOL)hasOffsetFields
-{
-	return YES;
-}
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
-{
-	return captureSize;
-}
-- (BOOL)drawsDoubledLines
-{
-	return NO;
-}
-- (NSUInteger)newestCompletedFrameIndex
-{
-	return 1;
-}
 - (NSUInteger)frameGroupSize
 {
-	return 2;
-}
-
-@end
-
-@implementation ECVLineDoubleLQDeinterlacingMode
-
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
-
-+ (ECVDeinterlacingModeType)deinterlacingModeType
-{
-	return ECVLineDoubleLQ;
-}
-
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
-
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
-{
-	return ECVFullFrame != fieldType;
-}
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
-{
-	return NO;
-}
-- (BOOL)hasOffsetFields
-{
-	return NO;
-}
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
-{
-	return (ECVIntegerSize){captureSize.width, captureSize.height / 2};
-}
-- (BOOL)drawsDoubledLines
-{
-	return NO;
-}
-- (NSUInteger)newestCompletedFrameIndex
-{
 	return 1;
-}
-- (NSUInteger)frameGroupSize
-{
-	return 2;
 }
 
 @end
 
 @implementation ECVLineDoubleHQDeinterlacingMode
-
-#pragma mark -ECVDeinterlacingMode
-
-- (void)prepareNewFrameInArray:(NSArray *)frames
-{
-	[[frames ECV_objectAtIndex:0] clearHead];
-	[super prepareNewFrameInArray:frames];
-}
-- (void)finishNewFrameInArray:(NSArray *)frames
-{
-	[[frames ECV_objectAtIndex:0] fillHead];
-	[super finishNewFrameInArray:frames];
-}
 
 #pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
@@ -237,48 +160,68 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return ECVLineDoubleHQ;
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark -ECVDeinterlacingMode
 
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
-	return ECVFullFrame != fieldType;
+	ECVMutablePixelBuffer *const finishedBuffer = [super finishedBufferWithNextFieldType:fieldType];
+	switch(fieldType) {
+		case ECVHighField: {
+			_rowOffset = 0;
+			break;
+		}
+		case ECVLowField: {
+			ECVMutablePixelBuffer *const pendingBuffer = [self pendingBuffer];
+			[pendingBuffer lock];
+			[pendingBuffer clearRange:NSMakeRange(0, [pendingBuffer bytesPerRow])];
+			[pendingBuffer unlock];
+			_rowOffset = 1;
+			break;
+		}
+	}
+	return finishedBuffer;
 }
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
+- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
 {
-	return NO;
+	[super drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){point.x, point.y + _rowOffset}];
 }
-- (BOOL)hasOffsetFields
+- (ECVPixelBufferDrawingOptions)drawingOptions
 {
-	return YES;
+	return ECVDrawToHighField | ECVDrawToLowField;
 }
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
+
+@end
+
+@implementation ECVWeaveDeinterlacingMode
+
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+
++ (ECVDeinterlacingModeType)deinterlacingModeType
 {
-	return captureSize;
+	return ECVWeave;
 }
-- (BOOL)drawsDoubledLines
+
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
-	return YES;
+	_drawingOptions = ECVFieldTypeDrawingOptions(fieldType);
+	ECVMutablePixelBuffer *const finishedBuffer = [super finishedBufferWithNextFieldType:fieldType];
+	ECVMutablePixelBuffer *const pendingBuffer = [self pendingBuffer];
+	[pendingBuffer lock];
+	if(finishedBuffer) [pendingBuffer drawPixelBuffer:finishedBuffer options:kNilOptions atPoint:(ECVIntegerPoint){0, 0}];
+	else [pendingBuffer clear];
+	[pendingBuffer unlock];
+	return finishedBuffer;
 }
-- (NSUInteger)newestCompletedFrameIndex
+- (ECVPixelBufferDrawingOptions)drawingOptions
 {
-	return 1;
-}
-- (NSUInteger)frameGroupSize
-{
-	return 2;
+	return _drawingOptions;
 }
 
 @end
 
 @implementation ECVAlternateDeinterlacingMode
-
-#pragma mark -ECVDeinterlacingMode
-
-- (void)prepareNewFrameInArray:(NSArray *)frames
-{
-	[[frames ECV_objectAtIndex:0] clear];
-	[super prepareNewFrameInArray:frames];
-}
 
 #pragma mark +ECVDeinterlacingMode(ECVAbstract)
 
@@ -287,85 +230,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return ECVAlternate;
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark -ECVDeinterlacingMode
 
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
-	return ECVFullFrame != fieldType;
+	ECVMutablePixelBuffer *const finishedBuffer = [super finishedBufferWithNextFieldType:fieldType];
+	[self clearPendingBuffer];
+	_drawingOptions = ECVFieldTypeDrawingOptions(fieldType);
+	return finishedBuffer;
 }
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
+- (ECVPixelBufferDrawingOptions)drawingOptions
 {
-	return NO;
-}
-- (BOOL)hasOffsetFields
-{
-	return YES;
-}
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
-{
-	return captureSize;
-}
-- (BOOL)drawsDoubledLines
-{
-	return NO;
-}
-- (NSUInteger)newestCompletedFrameIndex
-{
-	return 1;
-}
-- (NSUInteger)frameGroupSize
-{
-	return 2;
+	return _drawingOptions;
 }
 
 @end
 
-@implementation ECVBlurDeinterlacingMode
+@implementation ECVHalfHeightDeinterlacingMode
 
 #pragma mark -ECVDeinterlacingMode
 
-- (void)finishNewFrameInArray:(NSArray *)frames
+- (ECVIntegerSize)pixelSize
 {
-	[[frames ECV_objectAtIndex:1] blurWithFrame:[frames ECV_objectAtIndex:0]];
-	[super finishNewFrameInArray:frames];
-}
-
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
-
-+ (ECVDeinterlacingModeType)deinterlacingModeType
-{
-	return ECVBlur;
-}
-
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
-
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
-{
-	return ECVFullFrame != fieldType;
-}
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
-{
-	return NO;
-}
-- (BOOL)hasOffsetFields
-{
-	return NO;
-}
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
-{
-	return (ECVIntegerSize){captureSize.width, captureSize.height / 2};
-}
-- (BOOL)drawsDoubledLines
-{
-	return NO;
-}
-- (NSUInteger)newestCompletedFrameIndex
-{
-	return 2;
-}
-- (NSUInteger)frameGroupSize
-{
-	return 2;
+	ECVIntegerSize const s = [super pixelSize];
+	return (ECVIntegerSize){s.width, s.height / 2};
 }
 
 @end
@@ -379,35 +267,61 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return ECVDrop;
 }
 
-#pragma mark -ECVDeinterlacingMode(ECVAbstract)
+#pragma mark -ECVDeinterlacingMode
 
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType
-{
-	return ECVFullFrame != fieldType;
-}
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType
-{
-	return ECVLowField == fieldType;
-}
-- (BOOL)hasOffsetFields
-{
-	return NO;
-}
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize
-{
-	return (ECVIntegerSize){captureSize.width, captureSize.height / 2};
-}
-- (BOOL)drawsDoubledLines
-{
-	return NO;
-}
-- (NSUInteger)newestCompletedFrameIndex
-{
-	return 1;
-}
 - (NSUInteger)frameGroupSize
 {
 	return 1;
+}
+
+#pragma mark -
+
+- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType)fieldType
+{
+	return ECVLowField == fieldType ? nil : [super nextBufferWithFieldType:fieldType];
+}
+
+@end
+
+@implementation ECVLineDoubleLQDeinterlacingMode
+
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+
++ (ECVDeinterlacingModeType)deinterlacingModeType
+{
+	return ECVLineDoubleLQ;
+}
+
+@end
+
+@implementation ECVBlurDeinterlacingMode
+
+#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+
++ (ECVDeinterlacingModeType)deinterlacingModeType
+{
+	return ECVBlur;
+}
+
+#pragma mark -ECVDeinterlacingMode
+
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
+{
+	[_blurBuffer lock];
+	[_blurBuffer drawPixelBuffer:[self pendingBuffer] options:ECVDrawBlended];
+	[_blurBuffer unlock];
+	ECVMutablePixelBuffer *const finishedBuffer = [_blurBuffer autorelease];
+	_blurBuffer = [[super finishedBufferWithNextFieldType:fieldType] retain];
+	[self clearPendingBuffer];
+	return finishedBuffer;
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_blurBuffer release];
+	[super dealloc];
 }
 
 @end

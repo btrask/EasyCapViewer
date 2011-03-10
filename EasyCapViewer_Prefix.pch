@@ -34,9 +34,19 @@ enum {
 typedef NSUInteger ECVFieldType;
 
 typedef struct {
+	NSInteger x;
+	NSInteger y;
+} ECVIntegerPoint;
+
+typedef struct {
 	NSUInteger width;
 	NSUInteger height;
 } ECVIntegerSize;
+
+typedef struct {
+	ECVIntegerPoint origin;
+	ECVIntegerSize size;
+} ECVIntegerRect;
 
 NS_INLINE NSSize ECVIntegerSizeToNSSize(ECVIntegerSize s)
 {

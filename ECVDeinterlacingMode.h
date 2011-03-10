@@ -22,6 +22,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 
 // Models
+@class ECVVideoStorage;
+#import "ECVPixelBuffer.h"
 @class ECVVideoFrame;
 
 enum {
@@ -35,12 +37,26 @@ enum {
 };
 typedef NSInteger ECVDeinterlacingModeType;
 
-@interface ECVDeinterlacingMode : NSObject <NSCopying>
+@interface ECVDeinterlacingMode : NSObject
+{
+	@private
+	ECVVideoStorage *_videoStorage;
+	ECVMutablePixelBuffer *_pendingBuffer;
+}
 
 + (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
 
-- (void)prepareNewFrameInArray:(NSArray *)frames;
-- (void)finishNewFrameInArray:(NSArray *)frames;
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage;
+@property(readonly) ECVVideoStorage *videoStorage;
+@property(readonly) ECVIntegerSize pixelSize;
+@property(readonly) NSUInteger frameGroupSize;
+@property(readonly) ECVMutablePixelBuffer *pendingBuffer;
+
+- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType)fieldType;
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType;
+- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
+- (ECVPixelBufferDrawingOptions)drawingOptions;
+- (void)clearPendingBuffer;
 
 @end
 
@@ -48,33 +64,44 @@ typedef NSInteger ECVDeinterlacingModeType;
 
 + (ECVDeinterlacingModeType)deinterlacingModeType;
 
-- (BOOL)isAcceptableFieldType:(ECVFieldType)fieldType;
-- (BOOL)shouldDropFieldWithType:(ECVFieldType)fieldType;
-- (BOOL)hasOffsetFields;
-- (ECVIntegerSize)outputSizeForCaptureSize:(ECVIntegerSize)captureSize;
-- (BOOL)drawsDoubledLines;
-- (NSUInteger)newestCompletedFrameIndex;
-- (NSUInteger)frameGroupSize;
-
 @end
 
 @interface ECVProgressiveScanMode : ECVDeinterlacingMode
 @end
 
-@interface ECVWeaveDeinterlacingMode : ECVDeinterlacingMode
-@end
-
-@interface ECVLineDoubleLQDeinterlacingMode : ECVDeinterlacingMode
-@end
-
 @interface ECVLineDoubleHQDeinterlacingMode : ECVDeinterlacingMode
+{
+	@private
+	NSUInteger _rowOffset;
+}
+@end
+
+@interface ECVWeaveDeinterlacingMode : ECVDeinterlacingMode
+{
+	@private
+	ECVPixelBufferDrawingOptions _drawingOptions;
+}
 @end
 
 @interface ECVAlternateDeinterlacingMode : ECVDeinterlacingMode
+{
+	@private
+	ECVPixelBufferDrawingOptions _drawingOptions;
+}
 @end
 
-@interface ECVBlurDeinterlacingMode : ECVDeinterlacingMode
+@interface ECVHalfHeightDeinterlacingMode : ECVDeinterlacingMode
 @end
 
-@interface ECVDropDeinterlacingMode : ECVDeinterlacingMode
+@interface ECVDropDeinterlacingMode : ECVHalfHeightDeinterlacingMode
+@end
+
+@interface ECVLineDoubleLQDeinterlacingMode : ECVHalfHeightDeinterlacingMode
+@end
+
+@interface ECVBlurDeinterlacingMode : ECVHalfHeightDeinterlacingMode
+{
+	@private
+	ECVMutablePixelBuffer *_blurBuffer;
+}
 @end

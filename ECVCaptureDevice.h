@@ -24,9 +24,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 @class ECVVideoStorage;
-@class ECVVideoFrameBuilder;
+@class ECVPixelBuffer;
 @class ECVVideoFrame;
-@class ECVDeinterlacingMode;
 
 // Controllers
 #import "ECVConfigController.h"
@@ -83,7 +82,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	Class _deinterlacingMode;
 	ECVVideoStorage *_videoStorage;
 	NSConditionLock *_playLock;
-	ECVVideoFrameBuilder *_frameBuilder;
 
 #if defined(ECV_ENABLE_AUDIO)
 	ECVAudioDevice *_audioInput;
@@ -115,8 +113,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 - (void)startPlaying;
 - (void)threadMain_play;
-- (void)threaded_readImageBytes:(u_int8_t const *)bytes length:(size_t)length;
-- (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType;
+- (void)threaded_nextFieldType:(ECVFieldType)fieldType;
+- (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
 
 - (BOOL)setAlternateInterface:(u_int8_t)alternateSetting;
 - (BOOL)controlRequestWithType:(u_int8_t)type request:(u_int8_t)request value:(u_int16_t)v index:(u_int16_t)i length:(u_int16_t)length data:(void *)data;
@@ -145,5 +143,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (BOOL)threaded_play;
 - (BOOL)threaded_pause;
 - (BOOL)threaded_watchdog;
+- (void)threaded_readBytes:(UInt8 const *)bytes length:(size_t)length;
 
 @end

@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVDependentVideoStorage : ECVVideoStorage
 {
 	@private
+	NSMutableArray *_frames;
 	NSMutableIndexSet *_unusedBufferIndexes;
 	NSUInteger _numberOfBuffers;
 	NSMutableData *_allBufferData;
@@ -31,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @property(readonly) NSUInteger numberOfBuffers;
 @property(readonly) void *allBufferBytes;
-- (void *)bufferBytesAtIndex:(NSUInteger)i;
+- (void *)bytesAtIndex:(NSUInteger)i;
 
 @end
 

@@ -21,6 +21,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVSTK1160Device.h"
 
+// Video
+#import "ECVPixelBuffer.h"
+
 // Other Sources
 #import "ECVDebug.h"
 
@@ -169,19 +172,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	return self;
 }
 
-#pragma mark -
-
-- (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
-{
-	if(!length) return;
-	size_t skip = 4;
-	if(ECVSTK1160NewImageFlag & bytes[0]) {
-		[self threaded_startNewImageWithFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
-		skip = 8;
-	}
-	if(length > skip) [super threaded_readImageBytes:bytes + skip length:length - skip];
-}
-
 #pragma mark -ECVCaptureController(ECVAbstract)
 
 - (BOOL)requiresHighSpeed
@@ -209,6 +199,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 - (BOOL)threaded_play
 {
+	_offset = 0;
 	dev_stk0408_initialize_device(self);
 	if(![_SAA711XChip initialize]) return NO;
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
@@ -234,6 +225,26 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		return NO;
 	}
 	return YES;
+}
+- (void)threaded_readBytes:(UInt8 const *)bytes length:(size_t)length
+{
+	if(!length) return;
+	size_t skip = 4;
+	if(ECVSTK1160NewImageFlag & bytes[0]) {
+		[self threaded_nextFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
+		skip = 8;
+		_offset = 0;
+	}
+	if(length <= skip) return;
+	NSUInteger const realLength = length - skip;
+	ECVIntegerSize const captureSize = [self captureSize];
+	ECVIntegerSize const pixelSize = (ECVIntegerSize){captureSize.width, captureSize.height / 2};
+	OSType const pixelFormatType = [self pixelFormatType];
+	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormatType) * pixelSize.width;
+	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormatType bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
+	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){0, 0}];
+	[buffer release];
+	_offset += realLength;
 }
 
 #pragma mark -NSObject

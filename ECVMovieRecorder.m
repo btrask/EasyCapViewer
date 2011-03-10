@@ -301,8 +301,11 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 - (void)_encodeFrame:(ECVVideoFrame *)frame
 {
 	if(!frame) return;
-	if(![frame lockIfHasBuffer]) return [self _addEncodedFrame:NULL];
-	[frame copyToPixelBuffer:_pixelBuffer];
+	if(![frame lockIfHasBytes]) return [self _addEncodedFrame:NULL];
+	ECVCVPixelBuffer *const buffer = [[[ECVCVPixelBuffer alloc] initWithPixelBuffer:_pixelBuffer] autorelease];
+	[buffer lock];
+	[buffer drawPixelBuffer:frame];
+	[buffer unlock];
 	[frame unlock];
 	ECVOSStatus(ICMCompressionSessionEncodeFrame(_compressionSession, _pixelBuffer, 0, [_frameRateConverter targetFrameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 }

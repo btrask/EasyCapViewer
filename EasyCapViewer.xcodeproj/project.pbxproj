@@ -102,6 +102,9 @@
 		0EFEE896109205C300312653 /* Cursor-Resize-45.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */; };
 		0EFEE897109205C300312653 /* Cursor-Resize-135.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */; };
+		B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
+		B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
 		B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
@@ -244,6 +247,10 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* EasyCapViewer_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EasyCapViewer_Prefix.pch; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* EasyCapViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EasyCapViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50600641327948000B2F202 /* ECVIndependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVIndependentVideoStorage.h; sourceTree = "<group>"; };
+		B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVIndependentVideoStorage.m; sourceTree = "<group>"; };
+		B506006F132794E400B2F202 /* ECVPixelBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelBuffer.h; sourceTree = "<group>"; };
+		B5060070132794E400B2F202 /* ECVPixelBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBuffer.m; sourceTree = "<group>"; };
 		B5280FE6130C89E100FBE537 /* BTUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTUserDefaults.h; sourceTree = "<group>"; };
 		B5280FE7130C89E100FBE537 /* BTUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUserDefaults.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
@@ -313,18 +320,9 @@
 				0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */,
 				0E78CD500FC9F8E500E9C148 /* STK1160 */,
 				0EB0723410B0D89D00B9575B /* Chipsets */,
-				0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */,
-				0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */,
-				B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */,
-				B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */,
-				B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */,
-				B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */,
-				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
-				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
+				B50600D31327BC2F00B2F202 /* Video */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
-				B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */,
-				B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -503,6 +501,27 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		B50600D31327BC2F00B2F202 /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */,
+				0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */,
+				B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */,
+				B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */,
+				B50600641327948000B2F202 /* ECVIndependentVideoStorage.h */,
+				B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */,
+				B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */,
+				B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */,
+				B506006F132794E400B2F202 /* ECVPixelBuffer.h */,
+				B5060070132794E400B2F202 /* ECVPixelBuffer.m */,
+				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
+				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
+				B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */,
+				B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */,
+			);
+			name = Video;
+			sourceTree = "<group>";
+		};
 		B5280FFD130CADD400FBE537 /* External */ = {
 			isa = PBXGroup;
 			children = (
@@ -647,6 +666,8 @@
 				B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */,
 				B5F09999131CE0550066FEB5 /* ECVRational.m in Sources */,
 				B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */,
+				B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */,
+				B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -691,6 +712,7 @@
 				B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */,
 				B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */,
 				B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */,
+				B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -880,7 +902,6 @@
 				GCC_WARN_SIGN_COMPARE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
@@ -907,7 +928,6 @@
 				GCC_WARN_SIGN_COMPARE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";
 				PREBINDING = NO;

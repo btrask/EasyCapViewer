@@ -24,6 +24,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVReadWriteLock.h"
 
+#define ECVDependentBufferCount 16
+
+@interface ECVDependentPixelBuffer : ECVMutablePixelBuffer
+{
+	@private
+	ECVDependentVideoStorage *_videoStorage;
+	NSUInteger _bufferIndex;
+}
+
+- (id)initWithVideoStorage:(ECVDependentVideoStorage *)storage bufferIndex:(NSUInteger)i;
+- (NSUInteger)bufferIndex;
+
+@end
+
 @interface ECVDependentVideoFrame : ECVVideoFrame
 {
 	@private
@@ -31,7 +45,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSUInteger _bufferIndex;
 }
 
-- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i;
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i;
+- (void)removeFromStorageIfPossible;
+
+@end
+
+@interface ECVDependentVideoFrame(Private)
+
+- (BOOL)_removeFrame:(ECVVideoFrame *)frame;
 
 @end
 
@@ -44,9 +65,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [_allBufferData mutableBytes];
 }
-- (void *)bufferBytesAtIndex:(NSUInteger)i
+- (void *)bytesAtIndex:(NSUInteger)i
 {
 	return [_allBufferData mutableBytes] + [self bufferSize] * i;
+}
+
+#pragma mark -ECVDependentVideoFrame(Private)
+
+- (BOOL)_removeFrame:(ECVVideoFrame *)frame
+{
+	if(!frame) return NO;
+	[self lock];
+	NSUInteger const i = [_frames indexOfObjectIdenticalTo:frame];
+	BOOL drop = NSNotFound != i;
+	if(drop) {
+		[[frame retain] autorelease];
+		[_unusedBufferIndexes addIndex:[frame bufferIndex]];
+		[_frames removeObjectAtIndex:i];
+	}
+	[self unlock];
+	return drop;
 }
 
 #pragma mark -ECVVideoStorage
@@ -54,36 +92,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate
 {
 	if((self = [super initWithDeinterlacingMode:mode captureSize:captureSize pixelFormat:pixelFormatType frameRate:frameRate])) {
-		_numberOfBuffers = 16;
+		_frames = [[NSMutableArray alloc] initWithCapacity:ECVDependentBufferCount];
+		_numberOfBuffers = ECVDependentBufferCount;
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * [self bufferSize]];
 		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
 	}
 	return self;
 }
 
+#pragma mark -ECVVideoStorage(ECVAbstract)
+
+- (ECVVideoFrame *)currentFrame
+{
+	[self lock];
+	ECVVideoFrame *const frame = [[[_frames lastObject] retain] autorelease];
+	[self unlock];
+	return frame;
+}
+
 #pragma mark -
 
-- (ECVVideoFrame *)generateFrameWithFrieldType:(ECVFieldType)type
+- (ECVMutablePixelBuffer *)nextBuffer
 {
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {
-		[self removeOldestFrameGroup];
+		NSUInteger const frameCount = [_frames count];
+		NSUInteger const framesToKeep = ((frameCount - 1) % [self frameGroupSize]) + 1;
+		[[_frames subarrayWithRange:NSMakeRange(0, frameCount - framesToKeep)] makeObjectsPerformSelector:@selector(removeFromStorageIfPossible)];
 		i = [_unusedBufferIndexes firstIndex];
 		if(NSNotFound == i) return nil;
 	}
 	[_unusedBufferIndexes removeIndex:i];
-	return [[[ECVDependentVideoFrame alloc] initWithFieldType:type storage:self bufferIndex:i] autorelease];
+	return [[[ECVDependentPixelBuffer alloc] initWithVideoStorage:self bufferIndex:i] autorelease];
 }
-- (void)removingFrame:(ECVVideoFrame *)frame
-{	
-	[_unusedBufferIndexes addIndex:[frame bufferIndex]];
-	[super removingFrame:frame];
+- (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer
+{
+	ECVVideoFrame *const frame = [[[ECVDependentVideoFrame alloc] initWithVideoStorage:self bufferIndex:[buffer bufferIndex]] autorelease];
+	[_frames addObject:frame];
+	return frame;
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
+	[_frames release];
 	[_allBufferData release];
 	[_unusedBufferIndexes release];
 	[super dealloc];
@@ -91,41 +144,112 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @end
 
+@implementation ECVDependentPixelBuffer
+
+#pragma mark -ECVDependentPixelBuffer
+
+- (id)initWithVideoStorage:(ECVDependentVideoStorage *)storage bufferIndex:(NSUInteger)i
+{
+	if((self = [super init])) {
+		_videoStorage = storage;
+		_bufferIndex = i;
+	}
+	return self;
+}
+- (NSUInteger)bufferIndex
+{
+	return _bufferIndex;
+}
+
+#pragma mark -ECVMutablePixelBuffer(ECVAbstract)
+
+- (void *)mutableBytes
+{
+	return [_videoStorage bytesAtIndex:_bufferIndex];
+}
+
+#pragma mark -ECVPixelBuffer(ECVAbstract)
+
+- (ECVIntegerSize)pixelSize
+{
+	return [_videoStorage pixelSize];
+}
+- (size_t)bytesPerRow
+{
+	return [_videoStorage bytesPerRow];
+}
+- (OSType)pixelFormatType
+{
+	return [_videoStorage pixelFormatType];
+}
+
+#pragma mark -
+
+- (void const *)bytes
+{
+	return [_videoStorage bytesAtIndex:_bufferIndex];
+}
+- (NSRange)validRange
+{
+	return NSMakeRange(0, [_videoStorage bufferSize]);
+}
+
+#pragma mark -ECVPixelBuffer(ECVAbstract) <NSLocking>
+
+- (void)lock{}
+- (void)unlock{}
+
+@end
+
 @implementation ECVDependentVideoFrame
 
-#pragma mark -ECVVideoFrame
+#pragma mark -ECVDependentVideoFrame
 
-- (id)initWithFieldType:(ECVFieldType)type storage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i
 {
-	if((self = [super initWithFieldType:type storage:storage])) {
+	if((self = [super initWithVideoStorage:storage])) {
 		_lock = [[ECVReadWriteLock alloc] init];
 		_bufferIndex = i;
 	}
 	return self;
 }
+- (void)removeFromStorageIfPossible
+{
+	NSAssert([self hasBytes], @"Frame not in storage to begin with.");
+	if(![_lock tryWriteLock]) return;
+	if([[self videoStorage] _removeFrame:self]) _bufferIndex = NSNotFound;
+	[_lock unlock];
+}
 
 #pragma mark -ECVVideoFrame(ECVAbstract)
 
-- (void *)bufferBytes
+- (void const *)bytes
 {
-	return [[self videoStorage] bufferBytesAtIndex:_bufferIndex];
+	return [[self videoStorage] bytesAtIndex:_bufferIndex];
 }
-- (BOOL)hasBuffer
+
+#pragma mark -
+
+- (BOOL)hasBytes
 {
 	return NSNotFound != _bufferIndex;
 }
-- (BOOL)lockIfHasBuffer
+- (BOOL)lockIfHasBytes
 {
 	[self lock];
-	if([self hasBuffer]) return YES;
+	if([self hasBytes]) return YES;
 	[self unlock];
 	return NO;
 }
-- (void)removeFromStorageIfPossible
+
+#pragma mark -ECVVideoFrame(ECVAbstract) <NSLocking>
+
+- (void)lock
 {
-	NSAssert([self hasBuffer], @"Frame not in storage to begin with.");
-	if(![_lock tryWriteLock]) return;
-	if([[self videoStorage] removeFrame:self]) _bufferIndex = NSNotFound;
+	[_lock readLock];
+}
+- (void)unlock
+{
 	[_lock unlock];
 }
 
@@ -142,17 +266,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[_lock release];
 	[super dealloc];
-}
-
-#pragma mark -<NSLocking>
-
-- (void)lock
-{
-	[_lock readLock];
-}
-- (void)unlock
-{
-	[_lock unlock];
 }
 
 @end

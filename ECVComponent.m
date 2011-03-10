@@ -282,9 +282,9 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 	ECVVideoFrame *const frame = [vs currentFrame];
 	*queuedFrameCount = 1;
 	if(frame) {
-		Ptr const bufferBytes = [frame bufferBytes];
-		CFDictionaryAddValue(self->frameByBuffer, bufferBytes, frame);
-		*theData = bufferBytes;
+		void const *const bytes = [frame bytes];
+		CFDictionaryAddValue(self->frameByBuffer, bytes, frame);
+		*theData = (Ptr)bytes;
 		*dataSize = [[frame videoStorage] bufferSize];
 		GetTimeBaseTime(self->timeBase, [self->device frameRate].timeScale, t);
 	} else {

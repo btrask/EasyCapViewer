@@ -324,7 +324,6 @@ ECVNoDeviceError:
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
 	[_playLock unlockWithCondition:ECVPlaying];
-	_frameBuilder = [[ECVVideoFrameBuilder alloc] initWithVideoStorage:_videoStorage];
 
 	UInt8 const pipeIndex = [self isochReadingPipe];
 	UInt8 direction = kUSBNone;
@@ -385,7 +384,7 @@ ECVNoDeviceError:
 					mach_wait_until(UnsignedWideToUInt64(NanosecondsToAbsolute(nextUpdateTime)));
 				}
 				while(kUSBLowLatencyIsochTransferKey == transfer->list[j].frStatus) usleep(100); // In case we haven't slept long enough already.
-				[self threaded_readImageBytes:transfer->data + j * frameRequestSize length:(size_t)transfer->list[j].frActCount];
+				[self threaded_readBytes:transfer->data + j * frameRequestSize length:(size_t)transfer->list[j].frActCount];
 				transfer->list[j].frStatus = kUSBLowLatencyIsochTransferKey;
 			}
 			ECVIOReturn((*_interfaceInterface)->LowLatencyReadIsochPipeAsync(_interfaceInterface, pipeIndex, transfer->data, currentFrame, microframesPerTransfer, CLAMP(1, millisecondInterval, 8), transfer->list, ECVDoNothing, NULL));
@@ -411,8 +410,6 @@ ECVNoDeviceError:
 		}
 		free(transfers);
 	}
-	[_frameBuilder release];
-	_frameBuilder = nil;
 	[_playLock lock];
 bail:
 	ECVLog(ECVNotice, @"Stopping playback.");
@@ -420,21 +417,20 @@ bail:
 	[_playLock unlockWithCondition:ECVNotPlaying];
 	[pool drain];
 }
-- (void)threaded_readImageBytes:(UInt8 const *)bytes length:(size_t)length
+- (void)threaded_nextFieldType:(ECVFieldType)fieldType
 {
-	[_frameBuilder appendBytes:bytes length:length];
-}
-- (void)threaded_startNewImageWithFieldType:(ECVFieldType)fieldType
-{
-	ECVVideoFrame *frameToDraw = [_frameBuilder completedFrame];
-	if(frameToDraw) {
+	ECVVideoFrame *frameToDraw = [_videoStorage finishedFrameWithNextFieldType:fieldType];
 #if !defined(ECV_NO_CONTROLLERS)
+	if(frameToDraw) {
 		[_windowControllersLock readLock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 		[_windowControllersLock unlock];
-#endif
 	}
-	[_frameBuilder startNewFrameWithFieldType:fieldType];
+#endif
+}
+- (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
+{
+	[_videoStorage drawPixelBuffer:buffer atPoint:point];
 }
 
 #pragma mark -

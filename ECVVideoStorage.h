@@ -34,15 +34,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
-
 	NSRecursiveLock *_lock;
-	NSMutableArray *_frames;
 }
 
 + (Class)preferredVideoStorageClass;
 
 - (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate;
-@property(readonly) ECVDeinterlacingMode *deinterlacingMode; // TODO: Ideally this should not be exposed.
 @property(readonly) ECVIntegerSize captureSize;
 @property(readonly) ECVIntegerSize pixelSize;
 @property(readonly) OSType pixelFormatType;
@@ -50,35 +47,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
-
-- (ECVVideoFrame *)currentFrame;
+@property(readonly) NSUInteger frameGroupSize;
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
 
-// Overriding (do not call these directly):
-- (ECVVideoFrame *)generateFrameWithFrieldType:(ECVFieldType)type;
-- (void)removeOldestFrameGroup; // Called from -nextFrameWithFieldType:. Must lock first.
-- (void)addVideoFrame:(ECVVideoFrame *)frame; // Called from -nextFrameWithFieldType:. Must lock first.
-- (BOOL)removeFrame:(ECVVideoFrame *)frame; // Called from -[ECVVideoFrame(ECVAbstract) removeFromStorageIfPossible].
-- (void)removingFrame:(ECVVideoFrame *)frame;
+- (ECVVideoFrame *)finishedFrameWithNextFieldType:(ECVFieldType)fieldType;
+- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
 
 @end
 
-@interface ECVVideoFrameBuilder : NSObject
-{
-	@private
-	NSThread *_thread;
-	ECVVideoStorage *_videoStorage;
-	BOOL _firstFrame;
-	ECVVideoFrame *_pendingFrame;
-}
+@interface ECVVideoStorage(ECVAbstract)
 
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage;
-@property(readonly) ECVVideoStorage *videoStorage;
+- (ECVVideoFrame *)currentFrame;
 
-- (ECVVideoFrame *)completedFrame;
-- (void)startNewFrameWithFieldType:(ECVFieldType)type;
-- (void)appendBytes:(void const *)bytes length:(size_t)length;
+- (ECVMutablePixelBuffer *)nextBuffer;
+- (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer;
 
 @end

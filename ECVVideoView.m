@@ -121,7 +121,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVGLError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, [self magFilter]));
-		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, s.width, s.height, 0, format, type, [_videoStorage bufferBytesAtIndex:i]));
+		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, s.width, s.height, 0, format, type, [_videoStorage bytesAtIndex:i]));
 	}
 
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
@@ -231,12 +231,12 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	while([_frames count]) {
 		frame = [[[_frames lastObject] retain] autorelease];
 		[_frames removeLastObject];
-		if([frame lockIfHasBuffer]) break;
+		if([frame lockIfHasBytes]) break;
 		frame = nil;
 	}
 	if(!frame) {
 		frame = [_videoStorage currentFrame];
-		if(![frame lockIfHasBuffer]) frame = nil;
+		if(![frame lockIfHasBytes]) frame = nil;
 	}
 
 	[self _drawFrame:frame];
@@ -257,7 +257,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVIntegerSize const s = [_videoStorage pixelSize];
 	OSType const f = [_videoStorage pixelFormatType];
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
-	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatTypeToGLFormat(f), ECVPixelFormatTypeToGLType(f), [frame bufferBytes]));
+	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatTypeToGLFormat(f), ECVPixelFormatTypeToGLType(f), [frame bytes]));
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVIntegerSizeToNSSize(s)));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
@@ -362,7 +362,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	ECVVideoFrame *frame = [_videoStorage currentFrame];
-	if(![frame lockIfHasBuffer]) frame = nil;
+	if(![frame lockIfHasBytes]) frame = nil;
 	[self _drawFrame:frame];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
 	[self _drawResizeHandle];
