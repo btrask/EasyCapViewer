@@ -39,6 +39,7 @@ enum {
 	ECVSTK1160Composite2Input = 2,
 	ECVSTK1160Composite3Input = 3,
 	ECVSTK1160Composite4Input = 4,
+	ECVSTK1160Composite1234Input = 5,
 };
 typedef NSUInteger ECVSTK1160VideoSource;
 enum {
@@ -66,6 +67,7 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 	SAA711XChip *_SAA711XChip;
 	VT1612AChip *_VT1612AChip;
 	NSUInteger _offset;
+	NSUInteger _sourceIndex;
 }
 
 @property(nonatomic, assign) ECVSTK1160VideoSource videoSource;

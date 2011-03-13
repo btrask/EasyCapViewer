@@ -40,8 +40,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 @interface ECVSTK1160Device(Private)
 
+- (ECVIntegerSize)_inputSize;
 - (BOOL)_initializeAudio;
 - (BOOL)_initializeResolution;
+- (BOOL)_setVideoSource:(ECVSTK1160VideoSource)source;
 - (BOOL)_setStreaming:(BOOL)flag;
 - (BOOL)_SAA711XExpect:(u_int8_t)val;
 
@@ -68,6 +70,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 #pragma mark -ECVSTK1160Device(Private)
 
+- (ECVIntegerSize)_inputSize
+{
+	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
+}
 - (BOOL)_initializeAudio
 {
 	if(![self writeVT1612ARegister:0x94 value:0x00]) return NO;
@@ -79,33 +85,33 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (BOOL)_initializeResolution
 {
-	ECVIntegerSize captureSize = [self captureSize];
-	ECVIntegerSize standardSize = captureSize;
-	switch(captureSize.width) {
+	ECVIntegerSize inputSize = [self _inputSize];
+	ECVIntegerSize standardSize = inputSize;
+	switch(inputSize.width) {
 		case 704:
 		case 352:
 		case 176:
-			captureSize.width = 704;
+			inputSize.width = 704;
 			standardSize.width = 706;
 			break;
 		case 640:
 		case 320:
 		case 160:
-			captureSize.width = 640;
+			inputSize.width = 640;
 			standardSize.width = 644;
 			break;
 	}
-	switch(captureSize.height) {
+	switch(inputSize.height) {
 		case 576:
 		case 288:
 		case 144:
-			captureSize.height = 576;
+			inputSize.height = 576;
 			standardSize.height = 578;
 			break;
 		case 480:
 		case 240:
 		case 120:
-			captureSize.height = 480;
+			inputSize.height = 480;
 			standardSize.height = 486;
 			break;
 	}
@@ -114,9 +120,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		u_int16_t reg;
 		u_int16_t val;
 	} settings[] = {
-		{0x110, (standardSize.width - captureSize.width) * bpp},
+		{0x110, (standardSize.width - inputSize.width) * bpp},
 		{0x111, 0},
-		{0x112, (standardSize.height - captureSize.height) / 2},
+		{0x112, (standardSize.height - inputSize.height) / 2},
 		{0x113, 0},
 		{0x114, standardSize.width * bpp},
 		{0x115, 5},
@@ -125,6 +131,20 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	};
 	NSUInteger i = 0;
 	for(; i < numberof(settings); i++) if(![self writeIndex:settings[i].reg value:settings[i].val]) return NO;
+	return YES;
+}
+- (BOOL)_setVideoSource:(ECVSTK1160VideoSource)source
+{
+	if(ECVSTK1160SVideoInput == source) return YES;
+	UInt8 val = 0;
+	switch(source) {
+		case ECVSTK1160Composite1Input: val = 3; break;
+		case ECVSTK1160Composite2Input: val = 2; break;
+		case ECVSTK1160Composite3Input: val = 1; break;
+		case ECVSTK1160Composite4Input: val = 0; break;
+		case ECVSTK1160Composite1234Input: val = 3; break;
+	}
+	if(dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | val << 3)) return NO;
 	return YES;
 }
 - (BOOL)_setStreaming:(BOOL)flag
@@ -180,7 +200,12 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (ECVIntegerSize)captureSize
 {
-	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
+	ECVIntegerSize s = [self _inputSize];
+	if([self videoSource] == ECVSTK1160Composite1234Input) {
+		s.width *= 2;
+		s.height *= 2;
+	}
+	return s;
 }
 - (UInt8)isochReadingPipe
 {
@@ -188,7 +213,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (QTTime)frameRate
 {
-	return [self is60HzFormat] ? QTMakeTime(1, 60) : QTMakeTime(1, 50); // FIXME: Normally, NTSC should be 1001 : 60000, but the video is slightly too fast after a long period of recording. Perhaps this will work better.
+	QTTime rate = [self is60HzFormat] ? QTMakeTime(1, 60) : QTMakeTime(1, 50); // FIXME: Normally, NTSC should be 1001 : 60000, but the video is slightly too fast after a long period of recording. Perhaps this will work better.
+	if(ECVSTK1160Composite1234Input == [self videoSource]) rate = QTMakeTime(rate.timeValue * 1, rate.timeValue * 4);
+	return rate;
 }
 - (OSType)pixelFormatType
 {
@@ -204,7 +231,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(![_SAA711XChip initialize]) return NO;
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
 	if(![self _initializeAudio]) return NO;
-	if([self videoSource] != ECVSTK1160SVideoInput) dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | (4 - [self videoSource]) << 3);
+	if(![self _setVideoSource:[self videoSource]]) return NO;
 	if(![self _initializeResolution]) return NO;
 	if(![self setAlternateInterface:5]) return NO;
 	if(![self _setStreaming:YES]) return NO;
@@ -230,19 +257,30 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	if(!length) return;
 	size_t skip = 4;
+	BOOL const multipleInputs = ECVSTK1160Composite1234Input == [self videoSource];
 	if(ECVSTK1160NewImageFlag & bytes[0]) {
-		[self threaded_nextFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
+		if(multipleInputs) [self _setVideoSource:_sourceIndex = (_sourceIndex % 4) + 1];
+		if(!multipleInputs || _sourceIndex == 1) [self threaded_nextFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
 		skip = 8;
 		_offset = 0;
 	}
 	if(length <= skip) return;
 	NSUInteger const realLength = length - skip;
-	ECVIntegerSize const captureSize = [self captureSize];
-	ECVIntegerSize const pixelSize = (ECVIntegerSize){captureSize.width, captureSize.height / 2};
+	ECVIntegerSize const inputSize = [self _inputSize];
+	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
 	OSType const pixelFormatType = [self pixelFormatType];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormatType) * pixelSize.width;
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormatType bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
-	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){0, 0}];
+
+	ECVIntegerPoint p = {0, 0};
+	if(multipleInputs) switch(_sourceIndex) {
+		case ECVSTK1160Composite1Input: p = (ECVIntegerPoint){0, 0}; break;
+		case ECVSTK1160Composite2Input: p = (ECVIntegerPoint){720, 0}; break;
+		case ECVSTK1160Composite3Input: p = (ECVIntegerPoint){0, 480}; break;
+		case ECVSTK1160Composite4Input: p = (ECVIntegerPoint){720, 480}; break;
+	}
+	[self threaded_drawPixelBuffer:buffer atPoint:p];
+
 	[buffer release];
 	_offset += realLength;
 }
@@ -266,6 +304,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite2Input],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite3Input],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite4Input],
+		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1234Input],
 		nil];
 }
 - (id)videoSourceObject
@@ -284,6 +323,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		case ECVSTK1160Composite2Input: return NSLocalizedString(@"Composite 2", nil);
 		case ECVSTK1160Composite3Input: return NSLocalizedString(@"Composite 3", nil);
 		case ECVSTK1160Composite4Input: return NSLocalizedString(@"Composite 4", nil);
+		case ECVSTK1160Composite1234Input: return NSLocalizedString(@"Composite 1-4", nil);
 	}
 	return nil;
 }
@@ -421,6 +461,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		case ECVSTK1160Composite2Input:
 		case ECVSTK1160Composite3Input:
 		case ECVSTK1160Composite4Input:
+		case ECVSTK1160Composite1234Input:
 			return compositeIn;
 		default:
 			ECVAssertNotReached(@"Invalid input %hi.", i);
