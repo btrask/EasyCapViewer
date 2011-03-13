@@ -57,8 +57,11 @@ NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 con
 	NSRange const dstDesiredRange = NSMakeRange(dstPoint.y * dstInfo->bytesPerRow + dstPoint.x * dstInfo->bytesPerPixel, length * dstInfo->bytesPerPixel);
 	NSRange const srcDesiredRange = NSMakeRange(srcPoint.y * srcInfo->bytesPerRow + srcPoint.x * srcInfo->bytesPerPixel, length * srcInfo->bytesPerPixel);
 
-	NSRange const dstValidRange = NSIntersectionRange(dstDesiredRange, dstInfo->validRange);
-	NSRange const srcValidRange = NSIntersectionRange(srcDesiredRange, srcInfo->validRange);
+	NSRange const dstRowRange = NSMakeRange(dstPoint.y * dstInfo->bytesPerRow, dstInfo->bytesPerRow);
+	NSRange const srcRowRange = NSMakeRange(srcPoint.y * srcInfo->bytesPerRow, srcInfo->bytesPerRow);
+
+	NSRange const dstValidRange = NSIntersectionRange(NSIntersectionRange(dstDesiredRange, dstRowRange), dstInfo->validRange);
+	NSRange const srcValidRange = NSIntersectionRange(NSIntersectionRange(srcDesiredRange, srcRowRange), srcInfo->validRange);
 
 	NSUInteger const dstMinOffset = dstValidRange.location - dstDesiredRange.location;
 	NSUInteger const srcMinOffset = srcValidRange.location - srcDesiredRange.location;
