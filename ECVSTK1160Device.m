@@ -135,14 +135,15 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (BOOL)_setVideoSource:(ECVSTK1160VideoSource)source
 {
-	if(ECVSTK1160SVideoInput == source) return YES;
 	UInt8 val = 0;
 	switch(source) {
+		case ECVSTK1160SVideoInput:
+		case ECVSTK1160Composite1234Input:
+			return YES;
 		case ECVSTK1160Composite1Input: val = 3; break;
 		case ECVSTK1160Composite2Input: val = 2; break;
 		case ECVSTK1160Composite3Input: val = 1; break;
 		case ECVSTK1160Composite4Input: val = 0; break;
-		case ECVSTK1160Composite1234Input: val = 3; break;
 	}
 	if(dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | val << 3)) return NO;
 	return YES;
