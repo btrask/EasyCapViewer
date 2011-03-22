@@ -147,6 +147,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		case ECVSTK1160Composite2Input: val = 2; break;
 		case ECVSTK1160Composite3Input: val = 1; break;
 		case ECVSTK1160Composite4Input: val = 0; break;
+		default:
+			return NO;
 	}
 	if(dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | val << 3)) return NO;
 	return YES;
