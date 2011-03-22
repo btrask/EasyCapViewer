@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVSTK1160Device.h"
 
 // Video
+#import "ECVDeinterlacingMode.h"
 #import "ECVPixelBuffer.h"
 
 // Other Sources
@@ -29,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // External
 #import "BTUserDefaults.h"
+
+#define ECVRotationFrameSkip 2 // This affects the framerate and video quality. '1' doesn't skip frames, but looks bad. '3' looks almost perfect but results in a low framerate. '2' is a balance between the two.
 
 enum {
 	ECVSTK1160HighFieldFlag = 1 << 6,
@@ -192,6 +195,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	}
 	return self;
 }
+- (Class)deinterlacingMode
+{
+	return ECVSTK1160Composite1234Input == [self videoSource] ? [ECVLineDoubleLQDeinterlacingMode class] : [super deinterlacingMode];
+}
 
 #pragma mark -ECVCaptureController(ECVAbstract)
 
@@ -215,7 +222,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (QTTime)frameRate
 {
 	QTTime rate = [self is60HzFormat] ? QTMakeTime(1, 60) : QTMakeTime(1, 50); // FIXME: Normally, NTSC should be 1001 : 60000, but the video is slightly too fast after a long period of recording. Perhaps this will work better.
-	if(ECVSTK1160Composite1234Input == [self videoSource]) rate = QTMakeTime(rate.timeValue * 1, rate.timeValue * 4);
+	if(ECVSTK1160Composite1234Input == [self videoSource]) rate = QTMakeTime(rate.timeValue * 1, rate.timeValue * 4 * ECVRotationFrameSkip);
 	return rate;
 }
 - (OSType)pixelFormatType
@@ -228,11 +235,13 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (BOOL)threaded_play
 {
 	_offset = 0;
+	_internalSource = [self videoSource];
+	_fieldSkipCount = 0;
 	dev_stk0408_initialize_device(self);
 	if(![_SAA711XChip initialize]) return NO;
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
 	if(![self _initializeAudio]) return NO;
-	if(![self _setVideoSource:[self videoSource]]) return NO;
+	if(![self _setVideoSource:_internalSource]) return NO;
 	if(![self _initializeResolution]) return NO;
 	if(![self setAlternateInterface:5]) return NO;
 	if(![self _setStreaming:YES]) return NO;
@@ -254,18 +263,35 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	}
 	return YES;
 }
+- (void)threaded_nextFieldType:(ECVFieldType)fieldType
+{
+	BOOL const multipleInputs = ECVSTK1160Composite1234Input == [self videoSource];
+	--_fieldSkipCount;
+	if(_fieldSkipCount < 0) {
+		if(multipleInputs) {
+			_internalSource = (_internalSource % 4) + 1;
+			[self _setVideoSource:_internalSource];
+		}
+		_fieldSkipCount = ECVRotationFrameSkip;
+	}
+	if(_fieldSkipCount) return;
+	if(multipleInputs && ECVHighField != fieldType) {
+		_fieldSkipCount++;
+		return;
+	}
+	if(ECVSTK1160Composite1Input == _internalSource || !multipleInputs) [super threaded_nextFieldType:fieldType];
+	_offset = 0;
+}
 - (void)threaded_readBytes:(UInt8 const *)bytes length:(size_t)length
 {
 	if(!length) return;
 	size_t skip = 4;
 	BOOL const multipleInputs = ECVSTK1160Composite1234Input == [self videoSource];
 	if(ECVSTK1160NewImageFlag & bytes[0]) {
-		if(multipleInputs) [self _setVideoSource:_sourceIndex = (_sourceIndex % 4) + 1];
-		if(!multipleInputs || _sourceIndex == 1) [self threaded_nextFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
+		[self threaded_nextFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
 		skip = 8;
-		_offset = 0;
 	}
-	if(length <= skip) return;
+	if(length <= skip || _fieldSkipCount) return;
 	NSUInteger const realLength = length - skip;
 	ECVIntegerSize const inputSize = [self _inputSize];
 	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
@@ -274,11 +300,15 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormatType bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
 
 	ECVIntegerPoint p = {0, 0};
-	if(multipleInputs) switch(_sourceIndex) {
-		case ECVSTK1160Composite1Input: p = (ECVIntegerPoint){0, 0}; break;
-		case ECVSTK1160Composite2Input: p = (ECVIntegerPoint){720, 0}; break;
-		case ECVSTK1160Composite3Input: p = (ECVIntegerPoint){0, 480}; break;
-		case ECVSTK1160Composite4Input: p = (ECVIntegerPoint){720, 480}; break;
+	if(multipleInputs) {
+		switch(_internalSource) {
+			case ECVSTK1160Composite1Input: p = (ECVIntegerPoint){0, 0}; break;
+			case ECVSTK1160Composite2Input: p = (ECVIntegerPoint){1, 0}; break;
+			case ECVSTK1160Composite3Input: p = (ECVIntegerPoint){0, 1}; break;
+			case ECVSTK1160Composite4Input: p = (ECVIntegerPoint){1, 1}; break;
+		}
+		p.x *= inputSize.width;
+		p.y *= inputSize.height;
 	}
 	[self threaded_drawPixelBuffer:buffer atPoint:p];
 

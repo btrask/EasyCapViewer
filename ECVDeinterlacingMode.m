@@ -82,6 +82,10 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 {
 	return [_videoStorage captureSize];
 }
+- (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint)point
+{
+	return point;
+}
 - (NSUInteger)frameGroupSize
 {
 	return 2;
@@ -109,7 +113,7 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 - (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
 {
 	[_pendingBuffer lock];
-	[_pendingBuffer drawPixelBuffer:buffer options:[self drawingOptions] atPoint:point];
+	[_pendingBuffer drawPixelBuffer:buffer options:[self drawingOptions] atPoint:[self pixelPointForPoint:point]];
 	[_pendingBuffer unlock];
 }
 - (ECVPixelBufferDrawingOptions)drawingOptions
@@ -254,6 +258,10 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 {
 	ECVIntegerSize const s = [super pixelSize];
 	return (ECVIntegerSize){s.width, s.height / 2};
+}
+- (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint)point
+{
+	return (ECVIntegerPoint){point.x, point.y / 2};
 }
 
 @end
