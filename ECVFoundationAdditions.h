@@ -28,12 +28,6 @@ NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
 	return [a isEqual:b];
 }
 
-@interface NSArray(ECVFoundationAdditions)
-
-- (id)ECV_objectAtIndex:(NSUInteger)index;
-
-@end
-
 @interface NSBundle(ECVFoundationAdditions)
 
 - (NSString *)ECV_mainSuiteName;
