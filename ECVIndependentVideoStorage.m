@@ -53,7 +53,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer
 {
-	return [[[ECVIndependentVideoFrame alloc] initWithVideoStorage:self data:[buffer mutableData]] autorelease];
+	[self lock];
+	[_currentFrame release];
+	_currentFrame = [[ECVIndependentVideoFrame alloc] initWithVideoStorage:self data:[buffer mutableData]];
+	ECVVideoFrame *const frame = [[_currentFrame retain] autorelease];
+	[self unlock];
+	return frame;
 }
 
 @end
