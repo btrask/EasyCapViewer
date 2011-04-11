@@ -268,12 +268,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)threaded_nextFieldType:(ECVFieldType)fieldType
 {
 	BOOL const multipleInputs = ECVSTK1160Composite1234Input == [self videoSource];
-	--_fieldSkipCount;
-	if(_fieldSkipCount < 0) {
-		if(multipleInputs) {
-			_internalSource = (_internalSource % 4) + 1;
-			[self _setVideoSource:_internalSource];
-		}
+	if(multipleInputs && --_fieldSkipCount < 0) {
+		_internalSource = (_internalSource % 4) + 1;
+		[self _setVideoSource:_internalSource];
 		_fieldSkipCount = ECVRotationFrameSkip;
 	}
 	if(_fieldSkipCount) return;
