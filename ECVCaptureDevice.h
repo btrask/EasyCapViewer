@@ -94,8 +94,12 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 #endif
 }
 
-+ (NSArray *)deviceDictionaries;
-+ (Class)getMatchingDictionary:(out NSDictionary **)outDict forDeviceDictionary:(NSDictionary *)deviceDict;
++ (NSArray *)deviceClasses;
++ (void)registerDeviceClass:(Class)cls; // Add the device to ECVDevices.plist instead, if possible.
++ (void)unregisterDeviceClass:(Class)cls;
+
++ (NSDictionary *)deviceDictionary;
++ (NSDictionary *)matchingDictionary;
 + (NSArray *)devicesWithIterator:(io_iterator_t)iterator;
 
 - (id)initWithService:(io_service_t)service error:(out NSError **)outError;

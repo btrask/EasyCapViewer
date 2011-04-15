@@ -81,6 +81,9 @@ enum {
 
 @end
 
+static NSMutableArray *ECVDeviceClasses = nil;
+static NSDictionary *ECVDevicesDictionary = nil;
+
 static void ECVDeviceRemoved(ECVCaptureDevice *device, io_service_t service, uint32_t messageType, void *messageArgument)
 {
 	if(kIOMessageServiceIsTerminated == messageType) [device performSelector:@selector(noteDeviceRemoved) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]]; // Make sure we don't do anything during a special run loop mode (eg. NSModalPanelRunLoopMode).
@@ -91,21 +94,36 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 #pragma mark +ECVCaptureDevice
 
-+ (NSArray *)deviceDictionaries
++ (NSArray *)deviceClasses
 {
-	return [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:self] pathForResource:@"ECVDevices" ofType:@"plist"]];
+	return [[ECVDeviceClasses copy] autorelease];
 }
-+ (Class)getMatchingDictionary:(out NSDictionary **)outDict forDeviceDictionary:(NSDictionary *)deviceDict
++ (void)registerDeviceClass:(Class)cls
 {
-	Class const class = NSClassFromString([deviceDict objectForKey:@"ECVCaptureClass"]);
-	if(!class) return Nil;
-	if(outDict) {
-		NSMutableDictionary *const d = [(NSMutableDictionary *)IOServiceMatching(kIOUSBDeviceClassName) autorelease];
-		[d setObject:[deviceDict objectForKey:@"ECVVendorID"] forKey:[NSString stringWithUTF8String:kUSBVendorID]];
-		[d setObject:[deviceDict objectForKey:@"ECVProductID"] forKey:[NSString stringWithUTF8String:kUSBProductID]];
-		*outDict = d;
-	}
-	return class;
+	if(!cls) return;
+	if([ECVDeviceClasses indexOfObjectIdenticalTo:cls] != NSNotFound) return;
+	[ECVDeviceClasses addObject:cls];
+}
++ (void)unregisterDeviceClass:(Class)cls
+{
+	if(!cls) return;
+	[ECVDeviceClasses removeObjectIdenticalTo:cls];
+}
+
+#pragma mark -
+
++ (NSDictionary *)deviceDictionary
+{
+	return [ECVDevicesDictionary objectForKey:NSStringFromClass(self)];
+}
++ (NSDictionary *)matchingDictionary
+{
+	NSDictionary *const deviceDict = [self deviceDictionary];
+	if(!deviceDict) return nil;
+	NSMutableDictionary *const matchingDict = [(NSMutableDictionary *)IOServiceMatching(kIOUSBDeviceClassName) autorelease];
+	[matchingDict setObject:[deviceDict objectForKey:@"ECVVendorID"] forKey:[NSString stringWithUTF8String:kUSBVendorID]];
+	[matchingDict setObject:[deviceDict objectForKey:@"ECVProductID"] forKey:[NSString stringWithUTF8String:kUSBProductID]];
+	return matchingDict;
 }
 + (NSArray *)devicesWithIterator:(io_iterator_t)iterator
 {
@@ -119,6 +137,17 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		IOObjectRelease(service);
 	}
 	return devices;
+}
+
+#pragma mark +NSObject
+
++ (void)initialize
+{
+	if(!ECVDeviceClasses) ECVDeviceClasses = [[NSMutableArray alloc] init];
+	if(!ECVDevicesDictionary) {
+		ECVDevicesDictionary = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle bundleForClass:self] pathForResource:@"ECVDevices" ofType:@"plist"]];
+		for(NSString *const name in ECVDevicesDictionary) [self registerDeviceClass:NSClassFromString(name)];
+	}
 }
 
 #pragma mark -ECVCaptureDevice

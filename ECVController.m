@@ -120,12 +120,10 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 	[_notifications removeAllObjects];
 
 	NSMutableArray *const devices = [NSMutableArray array];
-	for(NSDictionary *const deviceDict in [ECVCaptureDevice deviceDictionaries]) {
-		NSDictionary *matchDict = nil;
-		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:deviceDict];
-		if(!class) continue;
+	for(Class const class in [ECVCaptureDevice deviceClasses]) {
+		NSDictionary *const matchingDict = [class matchingDictionary];
 		io_iterator_t iterator = IO_OBJECT_NULL;
-		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
+		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchingDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
 		[devices addObjectsFromArray:[class devicesWithIterator:iterator]];
 		[_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
 ECVGenericError:

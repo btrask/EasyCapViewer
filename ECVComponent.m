@@ -90,14 +90,14 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 	if(CountComponentInstances((Component)self) > 1) return -1;
 	if(!self) {
 		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-		NSDictionary *matchDict = nil;
-		Class const class = [ECVCaptureDevice getMatchingDictionary:&matchDict forDeviceDictionary:[[ECVCaptureDevice deviceDictionaries] lastObject]];
+		Class const class = [[ECVCaptureDevice deviceClasses] lastObject];
+		NSDictionary *const matchingDict = [class matchingDictionary];
 		if(![class conformsToProtocol:@protocol(ECVComponentConfiguring)]) {
 			[pool drain];
 			return -1;
 		}
 		self = calloc(1, sizeof(ECVCStorage));
-		self->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchDict retain]) error:NULL];
+		self->device = [[class alloc] initWithService:IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[matchingDict retain]) error:NULL];
 		if(!self->device) {
 			ECV_DEBUG_LOG();
 			free(self);
