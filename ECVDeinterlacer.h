@@ -35,16 +35,16 @@ enum {
 	ECVBlur = 3,
 	ECVDrop = 6,
 };
-typedef NSInteger ECVDeinterlacingModeType;
+typedef NSInteger ECVDeinterlacerType;
 
-@interface ECVDeinterlacingMode : NSObject
+@interface ECVDeinterlacer : NSObject
 {
 	@private
 	ECVVideoStorage *_videoStorage;
 	ECVMutablePixelBuffer *_pendingBuffer;
 }
 
-+ (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
++ (Class)deinterlacerWithType:(ECVDeinterlacerType)type;
 
 - (id)initWithVideoStorage:(ECVVideoStorage *)storage;
 @property(readonly) ECVVideoStorage *videoStorage;
@@ -60,46 +60,46 @@ typedef NSInteger ECVDeinterlacingModeType;
 
 @end
 
-@interface ECVDeinterlacingMode(ECVAbstract)
+@interface ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType;
++ (ECVDeinterlacerType)DeinterlacerType;
 
 @end
 
-@interface ECVProgressiveScanMode : ECVDeinterlacingMode
+@interface ECVProgressiveScanMode : ECVDeinterlacer
 @end
 
-@interface ECVLineDoubleHQDeinterlacingMode : ECVDeinterlacingMode
+@interface ECVLineDoubleHQDeinterlacer : ECVDeinterlacer
 {
 	@private
 	NSUInteger _rowOffset;
 }
 @end
 
-@interface ECVWeaveDeinterlacingMode : ECVDeinterlacingMode
+@interface ECVWeaveDeinterlacer : ECVDeinterlacer
 {
 	@private
 	ECVPixelBufferDrawingOptions _drawingOptions;
 }
 @end
 
-@interface ECVAlternateDeinterlacingMode : ECVDeinterlacingMode
+@interface ECVAlternateDeinterlacer : ECVDeinterlacer
 {
 	@private
 	ECVPixelBufferDrawingOptions _drawingOptions;
 }
 @end
 
-@interface ECVHalfHeightDeinterlacingMode : ECVDeinterlacingMode
+@interface ECVHalfHeightDeinterlacer : ECVDeinterlacer
 @end
 
-@interface ECVDropDeinterlacingMode : ECVHalfHeightDeinterlacingMode
+@interface ECVDropDeinterlacer : ECVHalfHeightDeinterlacer
 @end
 
-@interface ECVLineDoubleLQDeinterlacingMode : ECVHalfHeightDeinterlacingMode
+@interface ECVLineDoubleLQDeinterlacer : ECVHalfHeightDeinterlacer
 @end
 
-@interface ECVBlurDeinterlacingMode : ECVHalfHeightDeinterlacingMode
+@interface ECVBlurDeinterlacer : ECVHalfHeightDeinterlacer
 {
 	@private
 	ECVMutablePixelBuffer *_blurBuffer;

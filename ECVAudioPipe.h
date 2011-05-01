@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,34 +19,50 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#if defined(ECV_ENABLE_AUDIO)
-#import <AudioToolbox/AudioToolbox.h>
-#import <CoreAudio/CoreAudio.h>
+#import "ECVPipe.h"
 
-@interface ECVAudioPipe : NSObject
+// Models/Pipes/Audio
+@class ECVAudioConverter;
+
+@interface ECVAudioPipe : ECVPipe
 {
 	@private
-	AudioStreamBasicDescription _inputStreamDescription;
-	AudioStreamBasicDescription _outputStreamDescription;
-	AudioConverterRef _converter;
-	CGFloat _volume;
-	BOOL _upconvertsFromMono;
-	BOOL _dropsBuffers;
-	NSLock *_lock;
-	NSMutableArray *_unusedBuffers;
-	NSMutableArray *_usedBuffers;
+	ECVAudioConverter *_converter;
 }
 
-- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc upconvertFromMono:(BOOL)flag;
-@property(readonly) AudioStreamBasicDescription inputStreamDescription;
-@property(readonly) AudioStreamBasicDescription outputStreamDescription;
-@property(readonly) BOOL upconvertsFromMono;
-@property(assign) CGFloat volume;
-@property(assign) BOOL dropsBuffers;
+- (id)initWithAudioSource:(ECVAudioSource *)source;
+@property(readonly) id audioSource;
+@property(readonly) ECVAudioStorage *audioStorage;
 
-@property(readonly) BOOL hasReadyBuffers;
-- (void)receiveInputBufferList:(AudioBufferList const *)inputBufferList;
-- (void)requestOutputBufferList:(inout AudioBufferList *)outputBufferList;
+// Input
+@property(readonly) AudioStreamBasicDescription inputBasicDescription;
+
+// Output
+@property(readonly) AudioStreamBasicDescription outputBasicDescription;
+
+// Options
+@property(assign) CGFloat volume;
+//@property(assign) BOOL upconvertsFromMono;
+// TODO: An audio pipe should represent a SINGLE stream. So when the pipe is created, we should have options for choosing an input stream, and once it exists, we should be able to change which output stream it uses.
 
 @end
-#endif
+
+@interface ECVAudioPipe(ECVFromSource)
+
+@property(assign) AudioStreamBasicDescription inputBasicDescription;
+
+@end
+
+@interface ECVAudioPipe(ECVFromSource_Thread)
+
+- (void)nextAudioPacket:(id)packet; // TODO: Some sort of input.
+
+@end
+
+@interface ECVAudioPipe(ECVFromStorage)
+
+@property(assign) ECVAudioStorage *audioStorage;
+
+@property(assign) AudioStreamBasicDescription outputBasicDescription;
+
+@end

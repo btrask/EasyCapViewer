@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVMutablePixelBuffer *)nextBuffer
 {
 	NSMutableData *const data = [NSMutableData dataWithLength:[self bufferSize]];
-	ECVMutablePixelBuffer *const buffer = [[[ECVDataPixelBuffer alloc] initWithPixelSize:[self pixelSize] bytesPerRow:[self bytesPerRow] pixelFormat:[self pixelFormatType] data:data offset:0] autorelease];
+	ECVMutablePixelBuffer *const buffer = [[[ECVDataPixelBuffer alloc] initWithPixelSize:[self pixelSize] bytesPerRow:[self bytesPerRow] pixelFormat:[self pixelFormat] data:data offset:0] autorelease];
 	return buffer;
 }
 - (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer

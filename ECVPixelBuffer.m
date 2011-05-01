@@ -82,12 +82,12 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	ECVFastPixelBufferInfo dstInfo = {
 		.bytesPerRow = [dst bytesPerRow],
-		.bytesPerPixel = ECVPixelFormatBytesPerPixel([dst pixelFormatType]),
+		.bytesPerPixel = ECVPixelFormatBytesPerPixel([dst pixelFormat]),
 		.validRange = [dst validRange],
 	};
 	ECVFastPixelBufferInfo srcInfo = {
 		.bytesPerRow = [src bytesPerRow],
-		.bytesPerPixel = ECVPixelFormatBytesPerPixel([src pixelFormatType]),
+		.bytesPerPixel = ECVPixelFormatBytesPerPixel([src pixelFormat]),
 		.validRange = [src validRange],
 	};
 	UInt8 *const dstBytes = [dst mutableBytes];
@@ -124,12 +124,12 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 
 #pragma mark -ECVPointerPixelBuffer
 
-- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormatType bytes:(void const *)bytes validRange:(NSRange)validRange
+- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat bytes:(void const *)bytes validRange:(NSRange)validRange
 {
 	if((self = [super init])) {
 		_pixelSize = pixelSize;
 		_bytesPerRow = bytesPerRow;
-		_pixelFormatType = pixelFormatType;
+		_pixelFormat = pixelFormat;
 
 		_bytes = bytes;
 		_validRange = validRange;
@@ -147,9 +147,9 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	return _bytesPerRow;
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
-	return _pixelFormatType;
+	return _pixelFormat;
 }
 
 #pragma mark -
@@ -195,14 +195,14 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	NSRange const r = ECVRebaseRange(range, [self validRange]);
 	if(!r.length) return;
-	uint64_t const val = ECVPixelFormatBlackPattern([self pixelFormatType]);
+	uint64_t const val = ECVPixelFormatBlackPattern([self pixelFormat]);
 	memset_pattern8([self mutableBytes] + r.location, &val, r.length);
 }
 - (void)clear
 {
 	NSUInteger const length = [self validRange].length;
 	if(!length) return;
-	uint64_t const val = ECVPixelFormatBlackPattern([self pixelFormatType]);
+	uint64_t const val = ECVPixelFormatBlackPattern([self pixelFormat]);
 	memset_pattern8([self mutableBytes], &val, length);
 }
 
@@ -237,7 +237,7 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	return CVPixelBufferGetBytesPerRow(_pixelBuffer);
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
 	return CVPixelBufferGetPixelFormatType(_pixelBuffer);
 }
@@ -278,12 +278,12 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 
 #pragma mark -ECVDataPixelBuffer
 
-- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormatType data:(NSMutableData *)data offset:(NSUInteger)offset
+- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat data:(NSMutableData *)data offset:(NSUInteger)offset
 {
 	if((self = [super init])) {
 		_pixelSize = pixelSize;
 		_bytesPerRow = bytesPerRow;
-		_pixelFormatType = pixelFormatType;
+		_pixelFormat = pixelFormat;
 
 		_data = [data retain];
 		_offset = offset;
@@ -312,9 +312,9 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	return _bytesPerRow;
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
-	return _pixelFormatType;
+	return _pixelFormat;
 }
 
 #pragma mark -

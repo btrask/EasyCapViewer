@@ -2,12 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ECVSTK1160Device</key>
+	<key>ECV05e1_0408Source</key>
 	<dict>
-		<key>ECVVendorID</key>
-		<integer>1505</integer>
-		<key>ECVProductID</key>
-		<integer>1032</integer>
+		<key>ECVMatchingDictionary</key>
+		<dict>
+			<key>idVendor</key>
+			<integer>1505</integer>
+			<key>idProduct</key>
+			<integer>1032</integer>
+		</dict>
 	</dict>
 </dict>
 </plist>

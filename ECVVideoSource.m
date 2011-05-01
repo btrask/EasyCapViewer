@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,48 +19,44 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+#import "ECVVideoSource.h"
 
-// Models
-#import "ECVVideoStorage.h"
+static CFMutableArrayRef ECVVideoSources = NULL;
 
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
+@implementation ECVVideoSource
 
-@implementation ECVVideoFrame
+#pragma mark +ECVSource
 
-#pragma mark -ECVVideoFrame
++ (NSArray *)sources
+{
+	return [NSArray arrayWithArray:(NSArray *)ECVVideoSources];
+}
 
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+#pragma mark +NSObject
+
++ (void)initialize
+{
+	if([ECVVideoSource class] != self) return;
+	ECVVideoSources = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+}
+
+#pragma mark -NSObject
+
+- (id)init
 {
 	if((self = [super init])) {
-		_videoStorage = storage;
+		CFArrayAppendValue(ECVVideoSources, self);
 	}
 	return self;
 }
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
+- (void)dealloc
 {
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
-}
-
-#pragma mark -
-
-- (NSRange)validRange
-{
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
+	CFIndex const i = CFArrayGetFirstIndexOfValue(ECVVideoSources, CFRangeMake(0, CFArrayGetCount(ECVVideoSources)), self);
+	if(kCFNotFound != i) {
+		CFArrayRemoveValueAtIndex(ECVVideoSources, i);
+		[[NSNotificationCenter defaultCenter] postNotificationName:ECVSourcesDidChangeNotification object:[ECVVideoSource class]];
+	}
+	[super dealloc];
 }
 
 @end

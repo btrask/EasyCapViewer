@@ -24,7 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVReadWriteLock.h"
 
-#define ECVDependentBufferCount 16
+#define ECVDependentBufferCount 8
 
 @interface ECVDependentPixelBuffer : ECVMutablePixelBuffer
 {
@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (id)initWithVideoStorage:(ECVVideoStorage *)storage bufferIndex:(NSUInteger)i;
 - (void)removeFromStorageIfPossible;
+- (void)forceRemoveFromStorage;
 
 @end
 
@@ -89,15 +90,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate
+- (void)setPixelSize:(ECVIntegerSize)size
 {
-	if((self = [super initWithDeinterlacingMode:mode captureSize:captureSize pixelFormat:pixelFormatType frameRate:frameRate])) {
-		_frames = [[NSMutableArray alloc] initWithCapacity:ECVDependentBufferCount];
-		_numberOfBuffers = ECVDependentBufferCount;
-		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * [self bufferSize]];
-		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
-	}
-	return self;
+	[super setPixelSize:size];
+	[[[_frames copy] autorelease] makeObjectsPerformSelector:@selector(forceRemoveFromStorage)];
+	[_allBufferData setLength:MAX(1, _numberOfBuffers * [self bufferSize])];
+}
+- (void)setPixelFormat:(OSType)format
+{
+	[super setPixelFormat:format];
+	[[[_frames copy] autorelease] makeObjectsPerformSelector:@selector(forceRemoveFromStorage)];
+	[_allBufferData setLength:MAX(1, _numberOfBuffers * [self bufferSize])];
 }
 
 #pragma mark -ECVVideoStorage(ECVAbstract)
@@ -117,7 +120,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {
 		NSUInteger const frameCount = [_frames count];
-		NSUInteger const framesToKeep = ((frameCount - 1) % [self frameGroupSize]) + 1;
+		NSUInteger const framesToKeep = ((frameCount - 1) % 2) + 1; // TODO: Frame group size.
 		[[_frames subarrayWithRange:NSMakeRange(0, frameCount - framesToKeep)] makeObjectsPerformSelector:@selector(removeFromStorageIfPossible)];
 		i = [_unusedBufferIndexes firstIndex];
 		if(NSNotFound == i) return nil;
@@ -134,11 +137,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -NSObject
 
+- (id)init
+{
+	if((self = [super init])) {
+		_frames = [[NSMutableArray alloc] initWithCapacity:ECVDependentBufferCount];
+		_numberOfBuffers = ECVDependentBufferCount;
+		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
+		_allBufferData = [[NSMutableData alloc] initWithLength:MAX(1, _numberOfBuffers * [self bufferSize])];
+	}
+	return self;
+}
 - (void)dealloc
 {
 	[_frames release];
-	[_allBufferData release];
 	[_unusedBufferIndexes release];
+	[_allBufferData release];
 	[super dealloc];
 }
 
@@ -178,9 +191,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [_videoStorage bytesPerRow];
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
-	return [_videoStorage pixelFormatType];
+	return [_videoStorage pixelFormat];
 }
 
 #pragma mark -
@@ -215,9 +228,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (void)removeFromStorageIfPossible
 {
-	NSAssert([self hasBytes], @"Frame not in storage to begin with.");
 	if(![_lock tryWriteLock]) return;
+	NSAssert([self hasBytes], @"Frame not in storage to begin with.");
 	if([[self videoStorage] _removeFrame:self]) _bufferIndex = NSNotFound;
+	[_lock unlock];
+}
+- (void)forceRemoveFromStorage
+{
+	[_lock writeLock];
+	NSAssert([self hasBytes], @"Frame not in storage to begin with.");
+	[[self videoStorage] _removeFrame:self];
+	_bufferIndex = NSNotFound;
 	[_lock unlock];
 }
 

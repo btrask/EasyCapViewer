@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,48 +19,63 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+#import "ECVStorage.h"
 
-// Models
-#import "ECVVideoStorage.h"
+// Models/Pipes
+#import "ECVPipe.h"
 
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
+@implementation ECVStorage
 
-@implementation ECVVideoFrame
+#pragma mark -ECVStorage
 
-#pragma mark -ECVVideoFrame
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+- (BOOL)isPlaying
 {
-	if((self = [super init])) {
-		_videoStorage = storage;
-	}
-	return self;
+	return _playing;
 }
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
+- (void)setPlaying:(BOOL)flag
 {
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
+	if(_playing == flag) return;
+	_playing = flag;
+	if(flag) [self play];
+	for(ECVPipe *const pipe in [self pipes]) [pipe setPlaying:flag];
+	if(!flag) [self stop];
 }
 
 #pragma mark -
 
-- (NSRange)validRange
+- (NSArray *)pipes
 {
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
+	return [[_pipes copy] autorelease];
+}
+- (void)addPipe:(id)pipe
+{
+	[_pipes addObject:pipe];
+	[pipe setStorage:self];
+}
+- (void)removePipe:(id)pipe
+{
+	[pipe setStorage:nil];
+	[_pipes removeObjectIdenticalTo:pipe];
+}
+
+#pragma mark -
+
+- (void)play {}
+- (void)stop {}
+
+#pragma mark -NSObject
+
+- (id)init
+{
+	if((self = [super init])) {
+		_pipes = [[NSMutableArray alloc] init];
+	}
+	return self;
+}
+- (void)dealloc
+{
+	[_pipes release];
+	[super dealloc];
 }
 
 @end

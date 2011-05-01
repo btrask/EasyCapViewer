@@ -19,48 +19,32 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+#import <AudioToolbox/AudioToolbox.h>
+#import <CoreAudio/CoreAudio.h>
 
-// Models
-#import "ECVVideoStorage.h"
-
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
-
-@implementation ECVVideoFrame
-
-#pragma mark -ECVVideoFrame
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+@interface ECVAudioConverter : NSObject // TODO: Only deal with one buffer at a time with immediate output.
 {
-	if((self = [super init])) {
-		_videoStorage = storage;
-	}
-	return self;
-}
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
-{
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
+	@private
+	AudioStreamBasicDescription _inputStreamDescription;
+	AudioStreamBasicDescription _outputStreamDescription;
+	AudioConverterRef _converter;
+	CGFloat _volume;
+	BOOL _upconvertsFromMono;
+	BOOL _dropsBuffers;
+	NSLock *_lock;
+	NSMutableArray *_unusedBuffers;
+	NSMutableArray *_usedBuffers;
 }
 
-#pragma mark -
+- (id)initWithInputDescription:(AudioStreamBasicDescription)inputDesc outputDescription:(AudioStreamBasicDescription)outputDesc upconvertFromMono:(BOOL)flag;
+@property(readonly) AudioStreamBasicDescription inputStreamDescription;
+@property(readonly) AudioStreamBasicDescription outputStreamDescription;
+@property(readonly) BOOL upconvertsFromMono;
+@property(assign) CGFloat volume;
+@property(assign) BOOL dropsBuffers;
 
-- (NSRange)validRange
-{
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
-}
+@property(readonly) BOOL hasReadyBuffers;
+- (void)receiveInputBufferList:(AudioBufferList const *)inputBufferList;
+- (void)requestOutputBufferList:(inout AudioBufferList *)outputBufferList;
 
 @end

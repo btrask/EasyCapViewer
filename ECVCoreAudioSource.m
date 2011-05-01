@@ -19,23 +19,23 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVAudioDevice.h"
+#import "ECVCoreAudioSource.h"
 #import <IOKit/audio/IOAudioDefines.h>
 
 // Other Sources
 #import "ECVDebug.h"
 #import "ECVFoundationAdditions.h"
 
-NSString *const ECVAudioHardwareDevicesDidChangeNotification = @"ECVAudioHardwareDevicesDidChange";
+NSString *const ECVCoreAudioHardwareDevicesDidChangeNotification = @"ECVCoreAudioHardwareDevicesDidChange";
 
-static OSStatus ECVAudioHardwarePropertyListenerProc(AudioHardwarePropertyID propertyID, id obj)
+static OSStatus ECVCoreAudioHardwarePropertyListenerProc(AudioHardwarePropertyID propertyID, id obj)
 {
 	switch(propertyID) {
-		case kAudioHardwarePropertyDevices: [[NSNotificationCenter defaultCenter] postNotificationName:ECVAudioHardwareDevicesDidChangeNotification object:obj]; break;
+		case kAudioHardwarePropertyDevices: [[NSNotificationCenter defaultCenter] postNotificationName:ECVCoreAudioHardwareDevicesDidChangeNotification object:obj]; break;
 	}
 	return noErr;
 }
-static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, ECVAudioDevice *device)
+static OSStatus ECVCoreAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, ECVCoreAudioDevice *device)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	if(device.isInput) [device.delegate audioDevice:device didReceiveInput:inInputData atTime:inInputTime];
@@ -44,17 +44,17 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 	return noErr;
 }
 
-@implementation ECVAudioDevice
+@implementation ECVCoreAudioDevice
 
 #pragma mark +NSObject
 
 + (void)initialize
 {
-	if([ECVAudioDevice class] != self) return;
-	ECVOSStatus(AudioHardwareAddPropertyListener(kAudioHardwarePropertyDevices, (AudioHardwarePropertyListenerProc)ECVAudioHardwarePropertyListenerProc, self));
+	if([ECVCoreAudioDevice class] != self) return;
+	ECVOSStatus(AudioHardwareAddPropertyListener(kAudioHardwarePropertyDevices, (AudioHardwarePropertyListenerProc)ECVCoreAudioHardwarePropertyListenerProc, self));
 }
 
-#pragma mark +ECVAudioDevice
+#pragma mark +ECVCoreAudioDevice
 
 + (NSArray *)allDevicesInput:(BOOL)flag
 {
@@ -67,7 +67,7 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &size, deviceIDs));
 	NSUInteger i = 0;
 	for(; i < size / sizeof(AudioDeviceID); i++) {
-		ECVAudioDevice *const device = [[[self alloc] initWithDeviceID:deviceIDs[i] input:flag] autorelease];
+		ECVCoreAudioDevice *const device = [[[self alloc] initWithDeviceID:deviceIDs[i] input:flag] autorelease];
 		if([[device streams] count]) [devices addObject:device];
 	}
 	free(deviceIDs);
@@ -115,7 +115,7 @@ ECVNoDeviceError:
 	return nil;
 }
 
-#pragma mark -ECVAudioDevice
+#pragma mark -ECVCoreAudioDevice
 
 - (id)initWithDeviceID:(AudioDeviceID)deviceID input:(BOOL)flag
 {
@@ -173,23 +173,21 @@ ECVNoDeviceError:
 	NSUInteger i = 0;
 	NSMutableArray *const streams = [NSMutableArray array];
 	for(; i < streamIDsSize / sizeof(AudioStreamID); i++) {
-		ECVAudioStream *const stream = [[[ECVAudioStream alloc] initWithStreamID:streamIDs[i]] autorelease];
+		ECVCoreAudioStream *const stream = [[[ECVCoreAudioStream alloc] initWithStreamID:streamIDs[i]] autorelease];
 		[streams addObject:stream];
 	}
 	free(streamIDs);
 	return streams;
 }
 
-#pragma mark -
+#pragma mark -ECVSource
 
-- (BOOL)start
+- (void)play
 {
-	if(_procID) return YES;
-	if(noErr == AudioDeviceCreateIOProcID([self deviceID], (AudioDeviceIOProc)ECVAudioDeviceIOProc, self, &_procID)) {
-		if(noErr == AudioDeviceStart([self deviceID], _procID)) return YES;
-		[self stop];
+	if(_procID) return;
+	if(noErr == AudioDeviceCreateIOProcID([self deviceID], (AudioDeviceIOProc)ECVCoreAudioDeviceIOProc, self, &_procID)) {
+		if(noErr != AudioDeviceStart([self deviceID], _procID)) [self stop];
 	}
-	return NO;
 }
 - (void)stop
 {
@@ -216,7 +214,7 @@ ECVNoDeviceError:
 }
 - (BOOL)isEqual:(id)obj
 {
-	return [obj isKindOfClass:[ECVAudioDevice class]] && [obj deviceID] == [self deviceID] && [obj isInput] == [self isInput];
+	return [obj isKindOfClass:[ECVCoreAudioDevice class]] && [obj deviceID] == [self deviceID] && [obj isInput] == [self isInput];
 }
 
 #pragma mark -
@@ -228,16 +226,16 @@ ECVNoDeviceError:
 
 @end
 
-@implementation NSObject(ECVAudioDeviceDelegate)
+@implementation NSObject(ECVCoreAudioDeviceDelegate)
 
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t {}
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t {}
+- (void)audioDevice:(ECVCoreAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t {}
+- (void)audioDevice:(ECVCoreAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t {}
 
 @end
 
-@implementation ECVAudioStream
+@implementation ECVCoreAudioStream
 
-#pragma mark -ECVAudioStream
+#pragma mark -ECVCoreAudioStream
 
 - (id)initWithStreamID:(AudioStreamID)streamID
 {

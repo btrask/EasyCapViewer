@@ -22,10 +22,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
 
 // Models
-#import "ECVCaptureDevice.h"
+#import "ECVCaptureDocument.h"
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
-#import "ECVMovieRecorder.h"
+//#import "ECVMovieRecorder.h"
 #import "ECVFrameRateConverter.h"
 
 // Views
@@ -66,7 +66,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVCaptureController *const controller = [[[[self class] alloc] init] autorelease];
 	[[self document] addWindowController:controller];
 	[controller showWindow:sender];
-	if([[self document] isPlaying]) [controller startPlaying];
+	if([[self document] isPlaying]) [controller play];
 }
 
 #pragma mark -
@@ -81,84 +81,84 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 }
 - (IBAction)togglePlaying:(id)sender
 {
-	[[self document] togglePlaying];
+	[[self document] setPlaying:![[self document] isPlaying]];
 }
 
 #pragma mark -
 
 - (IBAction)startRecording:(id)sender
 {
-#if __LP64__
-	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
-	[alert setMessageText:NSLocalizedString(@"Recording is not supported in 64-bit mode.", nil)];
-	[alert setInformativeText:NSLocalizedString(@"Relaunch EasyCapViewer in 32-bit mode to record.", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
-	[alert runModal];
-#else
-	if(_movieRecorder) return;
-
-	NSSavePanel *const savePanel = [NSSavePanel savePanel];
-	[savePanel setAllowedFileTypes:[NSArray arrayWithObject:@"mov"]];
-	[savePanel setCanCreateDirectories:YES];
-	[savePanel setCanSelectHiddenExtension:YES];
-	[savePanel setPrompt:NSLocalizedString(@"Record", nil)];
-	[savePanel setAccessoryView:exportAccessoryView];
-
-	[videoCodecPopUp removeAllItems];
-	NSArray *const videoCodecs = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVVideoCodecs"];
-	NSDictionary *const infoByVideoCodec = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"];
-	for(NSString *const codec in videoCodecs) {
-		NSDictionary *const codecInfo = [infoByVideoCodec objectForKey:codec];
-		if(!codecInfo) continue;
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[codecInfo objectForKey:@"ECVCodecLabel"] action:NULL keyEquivalent:@""] autorelease];
-		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType(codec)];
-		[[videoCodecPopUp menu] addItem:item];
-	}
-	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[self defaults] objectForKey:ECVVideoCodecKey])];
-	[self changeCodec:videoCodecPopUp];
-	[videoQualitySlider setDoubleValue:[[self defaults] doubleForKey:ECVVideoQualityKey]];
-
-	NSInteger const returnCode = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)];
-	[[self defaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
-	if(NSFileHandlingPanelOKButton != returnCode) return;
-
-	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
-	[options setURL:[savePanel URL]];
-	[options setVideoStorage:[(ECVCaptureDevice *)[self document] videoStorage]];
-	[options setAudioDevice:[[self document] audioInput]];
-
-	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
-	[options setVideoQuality:[videoQualitySlider doubleValue]];
-	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
-	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
-	[options setCropRect:[self cropRect]];
-	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
-	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
-
-	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
-	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[options videoStorage] frameRate]]];
-
-	NSError *error = nil;
-	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
-	if(recorder) {
-		@synchronized(self) {
-			_movieRecorder = [recorder retain];
-		}
-		[[self window] setDocumentEdited:YES];
-	} else [[NSAlert alertWithError:error] runModal];
-#endif
+//#if __LP64__
+//	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
+//	[alert setMessageText:NSLocalizedString(@"Recording is not supported in 64-bit mode.", nil)];
+//	[alert setInformativeText:NSLocalizedString(@"Relaunch EasyCapViewer in 32-bit mode to record.", nil)];
+//	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+//	[alert runModal];
+//#else
+//	if(_movieRecorder) return;
+//
+//	NSSavePanel *const savePanel = [NSSavePanel savePanel];
+//	[savePanel setAllowedFileTypes:[NSArray arrayWithObject:@"mov"]];
+//	[savePanel setCanCreateDirectories:YES];
+//	[savePanel setCanSelectHiddenExtension:YES];
+//	[savePanel setPrompt:NSLocalizedString(@"Record", nil)];
+//	[savePanel setAccessoryView:exportAccessoryView];
+//
+//	[videoCodecPopUp removeAllItems];
+//	NSArray *const videoCodecs = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVVideoCodecs"];
+//	NSDictionary *const infoByVideoCodec = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ECVInfoByVideoCodec"];
+//	for(NSString *const codec in videoCodecs) {
+//		NSDictionary *const codecInfo = [infoByVideoCodec objectForKey:codec];
+//		if(!codecInfo) continue;
+//		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[codecInfo objectForKey:@"ECVCodecLabel"] action:NULL keyEquivalent:@""] autorelease];
+//		[item setTag:(NSInteger)NSHFSTypeCodeFromFileType(codec)];
+//		[[videoCodecPopUp menu] addItem:item];
+//	}
+//	(void)[videoCodecPopUp selectItemWithTag:NSHFSTypeCodeFromFileType([[self defaults] objectForKey:ECVVideoCodecKey])];
+//	[self changeCodec:videoCodecPopUp];
+//	[videoQualitySlider setDoubleValue:[[self defaults] doubleForKey:ECVVideoQualityKey]];
+//
+//	NSInteger const returnCode = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"untitled", nil)];
+//	[[self defaults] setObject:[NSNumber numberWithDouble:[videoQualitySlider doubleValue]] forKey:ECVVideoQualityKey];
+//	if(NSFileHandlingPanelOKButton != returnCode) return;
+//
+//	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
+//	[options setURL:[savePanel URL]];
+//	[options setVideoStorage:[(ECVCaptureDocument *)[self document] videoStorage]];
+////	[options setAudioDevice:[[self document] audioInput]];
+//
+//	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
+//	[options setVideoQuality:[videoQualitySlider doubleValue]];
+//	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
+//	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
+//	[options setCropRect:[self cropRect]];
+//	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
+//	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
+//
+//	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
+//	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[options videoStorage] frameRate]]];
+//
+//	NSError *error = nil;
+//	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
+//	if(recorder) {
+//		@synchronized(self) {
+//			_movieRecorder = [recorder retain];
+//		}
+//		[[self window] setDocumentEdited:YES];
+//	} else [[NSAlert alertWithError:error] runModal];
+//#endif
 }
 - (IBAction)stopRecording:(id)sender
 {
-#if !__LP64__
-	if(!_movieRecorder) return;
-	[_movieRecorder stopRecording];
-	@synchronized(self) {
-		[_movieRecorder release];
-		_movieRecorder = nil;
-	}
-	[[self window] setDocumentEdited:NO];
-#endif
+//#if !__LP64__
+//	if(!_movieRecorder) return;
+//	[_movieRecorder stopRecording];
+//	@synchronized(self) {
+//		[_movieRecorder release];
+//		_movieRecorder = nil;
+//	}
+//	[[self window] setDocumentEdited:NO];
+//#endif
 }
 - (IBAction)changeCodec:(id)sender
 {
@@ -249,7 +249,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 - (BTUserDefaults *)defaults
 {
-	return [(ECVCaptureDevice *)[self document] defaults];
+	return nil;//[(ECVCaptureDocument *)[self document] defaults];
 }
 - (NSSize)aspectRatio
 {
@@ -319,7 +319,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (NSSize)outputSize
 {
 	NSSize const ratio = [videoView aspectRatio];
-	ECVIntegerSize const s = [[self document] captureSize];
+	ECVIntegerSize const s = [[[self document] videoStorage] pixelSize];
 	return NSMakeSize(s.width, s.width / ratio.width * ratio.height);
 }
 - (NSSize)outputSizeWithScale:(NSInteger)scale
@@ -359,30 +359,36 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	return NSMakeRect(NSMinX(r) + NSWidth(r) * b, NSMinY(r) + NSHeight(r) * b, NSWidth(r) * b2, NSHeight(r) * b2);
 }
 
-#pragma mark -
+#pragma mark -ECVCaptureController(ECVFromDocument)
 
-- (void)startPlaying
+- (void)play
 {
 	[videoView setVideoStorage:[[self document] videoStorage]];
 	[videoView startDrawing];
 }
-- (void)stopPlaying
+- (void)stop
 {
 	[videoView stopDrawing];
 	[self stopRecording:self];
 }
-- (void)threaded_pushFrame:(ECVVideoFrame *)frame
-{
-	[videoView pushFrame:frame];
-	if(_movieRecorder) @synchronized(self) {
-		[_movieRecorder addVideoFrame:frame];
-	}
-}
+
+#pragma mark -ECVCaptureController(ECVFromDocument) <ECVAVReceiving> <ECVAudioStorageDelegate>
+
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue
 {
-	if(_movieRecorder) @synchronized(self) {
-		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
-	}
+//	if(_movieRecorder) @synchronized(self) {
+//		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
+//	}
+}
+
+#pragma mark -ECVCaptureController(ECVFromDocument) <ECVAVReceiving> <ECVVideoStorageDelegate>
+
+- (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame
+{
+	[videoView pushFrame:frame];
+//	if(_movieRecorder) @synchronized(self) {
+//		[_movieRecorder addVideoFrame:frame];
+//	}
 }
 
 #pragma mark -ECVCaptureController(Private)
@@ -426,7 +432,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		nil]];
 
 	NSWindow *const w = [self window];
-	ECVIntegerSize const s = [[self document] captureSize];
+	ECVIntegerSize const s = [[[self document] videoStorage] pixelSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 
 	_cropSourceAspectRatio = [[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
@@ -438,7 +444,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	[videoView setVsync:[[self defaults] boolForKey:ECVVsyncKey]];
 	[videoView setShowDroppedFrames:[[self defaults] boolForKey:ECVShowDroppedFramesKey]];
-	[videoView setMagFilter:[[self defaults] integerForKey:ECVMagFilterKey]];
+	[videoView setMagFilter:/*[[self defaults] integerForKey:ECVMagFilterKey]*/GL_LINEAR];
 
 	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
 	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];
@@ -460,7 +466,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (void)dealloc
 {
 	[_playButtonCell release];
-	[_movieRecorder release];
+//	[_movieRecorder release];
 	[super dealloc];
 }
 
@@ -491,11 +497,11 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	if([self isFullScreen]) {
 		if(@selector(changeScale:) == action) return NO;
 	}
-	if(_movieRecorder) {
-		if(@selector(startRecording:) == action) return NO;
-	} else {
-		if(@selector(stopRecording:) == action) return NO;
-	}
+//	if(_movieRecorder) {
+//		if(@selector(startRecording:) == action) return NO;
+//	} else {
+//		if(@selector(stopRecording:) == action) return NO;
+//	}
 	if(![[self document] isPlaying]) {
 		if(@selector(startRecording:) == action) return NO;
 	}
@@ -551,7 +557,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (void)windowDidBecomeMain:(NSNotification *)aNotif
 {
 	if([self isFullScreen]) [self performSelector:@selector(_hideMenuBar) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]];
-	[[ECVConfigController sharedConfigController] setCaptureDevice:[self document]];
+	[[ECVConfigController sharedConfigController] setCaptureDocument:[self document]];
 }
 - (void)windowDidResignMain:(NSNotification *)aNotif
 {

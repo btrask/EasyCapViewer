@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	NSMutableArray *_frames;
-	NSMutableIndexSet *_unusedBufferIndexes;
 	NSUInteger _numberOfBuffers;
+	NSMutableIndexSet *_unusedBufferIndexes;
 	NSMutableData *_allBufferData;
 }
 

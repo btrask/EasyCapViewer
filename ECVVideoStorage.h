@@ -19,41 +19,45 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#import "ECVStorage.h"
 #import <QTKit/QTKit.h>
 
-// Models
-#import "ECVVideoFrame.h"
-@class ECVDeinterlacingMode;
+// Models/Pipes/Video
+@class ECVVideoPipe;
 
-@interface ECVVideoStorage : NSObject <NSLocking>
+// Models/Video
+#import "ECVVideoFrame.h"
+
+@protocol ECVVideoStorageDelegate;
+
+@interface ECVVideoStorage : ECVStorage <NSLocking>
 {
 	@private
-	ECVDeinterlacingMode *_deinterlacingMode;
-	ECVIntegerSize _captureSize;
-	OSType _pixelFormatType;
-	QTTime _frameRate;
-	size_t _bytesPerRow;
-	size_t _bufferSize;
 	NSRecursiveLock *_lock;
+	NSObject<ECVVideoStorageDelegate> *_delegate;
+	ECVIntegerSize _pixelSize;
+	OSType _pixelFormat;
+	QTTime _frameRate;
+	ECVIntegerSize _pixelAspectRatio;
+	NSMutableArray *_pendingPipes;
+	ECVMutablePixelBuffer *_pendingBuffer;
 }
 
-+ (Class)preferredVideoStorageClass;
+@property(assign) NSObject<ECVVideoStorageDelegate> *delegate;
+@property(assign) ECVIntegerSize pixelSize;
+@property(assign) OSType pixelFormat;
+@property(assign) QTTime frameRate;
+@property(assign) ECVIntegerSize pixelAspectRatio;
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate;
-@property(readonly) ECVIntegerSize captureSize;
-@property(readonly) ECVIntegerSize pixelSize;
-@property(readonly) OSType pixelFormatType;
-@property(readonly) QTTime frameRate;
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
 @property(readonly) size_t bufferSize;
-@property(readonly) NSUInteger frameGroupSize;
 
-- (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
-- (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;
+- (void)addVideoPipe:(ECVVideoPipe *)pipe;
+- (void)removeVideoPipe:(ECVVideoPipe *)pipe;
 
-- (ECVVideoFrame *)finishedFrameWithNextFieldType:(ECVFieldType)fieldType;
-- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
+- (void)videoPipeDidFinishFrame:(ECVVideoPipe *)pipe;
+- (void)videoPipe:(ECVVideoPipe *)pipe drawPixelBuffer:(ECVPixelBuffer *)buffer;
 
 @end
 
@@ -63,5 +67,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVMutablePixelBuffer *)nextBuffer;
 - (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer;
+
+@end
+
+@protocol ECVVideoStorageDelegate
+
+- (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame;
 
 @end

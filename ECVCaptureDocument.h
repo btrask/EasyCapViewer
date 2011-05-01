@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,48 +19,34 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+// Storages/Audio
+//#import "ECVAudioStorage.h"
 
-// Models
+// Models/Sources/Video
+#import "ECVVideoSource.h"
+
+// Models/Pipes/Video
+#import "ECVVideoPipe.h"
+
+// Models/Storages/Video
 #import "ECVVideoStorage.h"
 
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
+@protocol ECVAVReceiving</*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
+@end
 
-@implementation ECVVideoFrame
-
-#pragma mark -ECVVideoFrame
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+@interface ECVCaptureDocument : NSDocument <ECVAVReceiving>
 {
-	if((self = [super init])) {
-		_videoStorage = storage;
-	}
-	return self;
-}
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
-{
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
+	@private
+//	ECVAudioStorage *_audioStorage;
+	ECVVideoStorage *_videoStorage;
 }
 
-#pragma mark -
+@property(assign, getter=isPlaying) BOOL playing;
 
-- (NSRange)validRange
-{
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
-}
+//@property(readonly) ECVAudioStorage *audioStorage;
+@property(readonly) ECVVideoStorage *videoStorage;
+
+- (void)play; // Do not call directly.
+- (void)stop;
 
 @end

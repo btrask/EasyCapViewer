@@ -21,90 +21,126 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoStorage.h"
 
-// Models
-#import "ECVDeinterlacingMode.h"
+// Models/Pipes/Video
+#import "ECVVideoPipe.h"
+
+// Other Sources
+#import "ECVDebug.h"
 
 @implementation ECVVideoStorage
 
-#pragma mark +ECVVideoStorage
+#pragma mark +NSObject
 
-+ (Class)preferredVideoStorageClass
++ (id)allocWithZone:(NSZone *)zone
 {
+	if([ECVVideoStorage class] != self) return [super allocWithZone:zone];
 	Class const dependentVideoStorage = NSClassFromString(@"ECVDependentVideoStorage");
-	if(dependentVideoStorage) return dependentVideoStorage;
+	if(dependentVideoStorage) return [dependentVideoStorage allocWithZone:zone];
 	Class const independentVideoStorage = NSClassFromString(@"ECVIndependentVideoStorage");
-	if(independentVideoStorage) return independentVideoStorage;
+	if(independentVideoStorage) return [independentVideoStorage allocWithZone:zone];
 	ECVAssertNotReached(@"No video storage class found.");
 	return nil;
 }
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate
-{
-	NSAssert([mode isSubclassOfClass:[ECVDeinterlacingMode class]], @"Deinterlacing mode must be a subclass of ECVDeinterlacingMode.");
-	if((self = [super init])) {
-		_deinterlacingMode = [[mode alloc] initWithVideoStorage:self];
-		_captureSize = captureSize;
-		_pixelFormatType = pixelFormatType;
-		_frameRate = frameRate;
-		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
-		_bufferSize = [self pixelSize].height * [self bytesPerRow];
-		_lock = [[NSRecursiveLock alloc] init];
-	}
-	return self;
-}
-@synthesize captureSize = _captureSize;
+@synthesize delegate = _delegate;
 - (ECVIntegerSize)pixelSize
 {
-	return [_deinterlacingMode pixelSize];
+	return _pixelSize;
 }
-@synthesize pixelFormatType = _pixelFormatType;
-@synthesize frameRate = _frameRate;
+- (void)setPixelSize:(ECVIntegerSize)size
+{
+	_pixelSize = size;
+	[_pendingBuffer release];
+	_pendingBuffer = nil;
+}
+- (OSType)pixelFormat
+{
+	return _pixelFormat;
+}
+- (void)setPixelFormat:(OSType)format
+{
+	_pixelFormat = format;
+	[_pendingBuffer release];
+	_pendingBuffer = nil;
+}
+- (QTTime)frameRate
+{
+	return _frameRate;
+}
+- (void)setFrameRate:(QTTime)rate
+{
+	_frameRate = rate;
+}
+- (ECVIntegerSize)pixelAspectRatio
+{
+	return _pixelAspectRatio;
+}
+- (void)setPixelAspectRatio:(ECVIntegerSize)ratio
+{
+	_pixelAspectRatio = ratio;
+}
+
+#pragma mark -
+
 - (size_t)bytesPerPixel
 {
-	return ECVPixelFormatBytesPerPixel(_pixelFormatType);
+	return ECVPixelFormatBytesPerPixel(_pixelFormat);
 }
-@synthesize bytesPerRow = _bytesPerRow;
-@synthesize bufferSize = _bufferSize;
-- (NSUInteger)frameGroupSize
+- (size_t)bytesPerRow
 {
-	return [_deinterlacingMode frameGroupSize];
+	return [self pixelSize].width * [self bytesPerPixel];
 }
-
-#pragma mark -
-
-- (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c
+- (size_t)bufferSize
 {
-	NSUInteger const g = [_deinterlacingMode frameGroupSize];
-	return c < g ? 0 : c - c % g;
-}
-- (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames
-{
-	NSUInteger const count = [frames count];
-	NSUInteger const drop = [self numberOfFramesToDropWithCount:count];
-	[frames removeObjectsInRange:NSMakeRange(count - drop, drop)];
-	return drop;
+	return [self pixelSize].height * [self bytesPerRow];
 }
 
 #pragma mark -
 
-- (ECVVideoFrame *)finishedFrameWithNextFieldType:(ECVFieldType)fieldType
+- (void)addVideoPipe:(ECVVideoPipe *)pipe
 {
-	ECVMutablePixelBuffer *const buffer = [_deinterlacingMode finishedBufferWithNextFieldType:fieldType];
-	return buffer ? [self finishedFrameWithFinishedBuffer:buffer] : nil;
+	[self addPipe:pipe];
+	[_pendingPipes addObject:pipe];
 }
-- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
+- (void)removeVideoPipe:(ECVVideoPipe *)pipe
 {
-	[_deinterlacingMode drawPixelBuffer:buffer atPoint:point];
+	[_pendingPipes removeObjectIdenticalTo:pipe];
+	[self removePipe:pipe];
+}
+
+#pragma mark -
+
+- (void)videoPipeDidFinishFrame:(ECVVideoPipe *)pipe
+{
+	[_pendingPipes removeObjectIdenticalTo:pipe];
+	if([_pendingPipes count]) return;
+	[_pendingPipes addObjectsFromArray:[self pipes]];
+	for(ECVVideoPipe *const p in _pendingPipes) [p nextOutputFrame];
+	if(_pendingBuffer) [[self delegate] videoStorage:self didFinishFrame:[self finishedFrameWithFinishedBuffer:[_pendingBuffer autorelease]]];
+	_pendingBuffer = [[self nextBuffer] retain];
+}
+- (void)videoPipe:(ECVVideoPipe *)pipe drawPixelBuffer:(ECVPixelBuffer *)buffer
+{
+	[_pendingBuffer drawPixelBuffer:buffer options:kNilOptions atPoint:[pipe position]];
 }
 
 #pragma mark -NSObject
 
+- (id)init
+{
+	if((self = [super init])) {
+		_lock = [[NSRecursiveLock alloc] init];
+		_pendingPipes = [[NSMutableArray alloc] init];
+	}
+	return self;
+}
 - (void)dealloc
 {
-	[_deinterlacingMode release];
 	[_lock release];
+	[_pendingPipes release];
+	[_pendingBuffer release];
 	[super dealloc];
 }
 

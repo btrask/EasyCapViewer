@@ -49,7 +49,13 @@ extern NSString *ECVErrnoToString(int error);
 	ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
 	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
 	goto ECVGenericError;\
-} while(NO)
+} while(NO) // Deprecated.
+
+#define ECVIOReturn2(x) ({\
+	IOReturn const __e = (x);\
+	if(kIOReturnSuccess != __e) ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
+	__e;\
+})
 
 #define ECVCVReturn(x) do {\
 	CVReturn const __e = (x);\

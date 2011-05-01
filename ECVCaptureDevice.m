@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #endif
 
 // Other Sources
-#import "ECVAudioDevice.h"
+#import "ECVAudioSource.h"
 #import "ECVAudioPipe.h"
 #import "ECVDebug.h"
 #import "ECVFoundationAdditions.h"
@@ -81,10 +81,10 @@ enum {
 
 @end
 
-static NSMutableArray *ECVDeviceClasses = nil;
-static NSDictionary *ECVDevicesDictionary = nil;
+static NSMutableArray *ECVSourceClasses = nil;
+static NSDictionary *ECVSourcesDictionary = nil;
 
-static void ECVDeviceRemoved(ECVCaptureDevice *device, io_service_t service, uint32_t messageType, void *messageArgument)
+static void ECVSourceRemoved(ECVCaptureDevice *device, io_service_t service, uint32_t messageType, void *messageArgument)
 {
 	if(kIOMessageServiceIsTerminated == messageType) [device performSelector:@selector(noteDeviceRemoved) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]]; // Make sure we don't do anything during a special run loop mode (eg. NSModalPanelRunLoopMode).
 }
@@ -96,25 +96,25 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 + (NSArray *)deviceClasses
 {
-	return [[ECVDeviceClasses copy] autorelease];
+	return [[ECVSourceClasses copy] autorelease];
 }
 + (void)registerDeviceClass:(Class)cls
 {
 	if(!cls) return;
-	if([ECVDeviceClasses indexOfObjectIdenticalTo:cls] != NSNotFound) return;
-	[ECVDeviceClasses addObject:cls];
+	if([ECVSourceClasses indexOfObjectIdenticalTo:cls] != NSNotFound) return;
+	[ECVSourceClasses addObject:cls];
 }
 + (void)unregisterDeviceClass:(Class)cls
 {
 	if(!cls) return;
-	[ECVDeviceClasses removeObjectIdenticalTo:cls];
+	[ECVSourceClasses removeObjectIdenticalTo:cls];
 }
 
 #pragma mark -
 
 + (NSDictionary *)deviceDictionary
 {
-	return [ECVDevicesDictionary objectForKey:NSStringFromClass(self)];
+	return [ECVSourcesDictionary objectForKey:NSStringFromClass(self)];
 }
 + (NSDictionary *)matchingDictionary
 {
@@ -143,10 +143,10 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 + (void)initialize
 {
-	if(!ECVDeviceClasses) ECVDeviceClasses = [[NSMutableArray alloc] init];
-	if(!ECVDevicesDictionary) {
-		ECVDevicesDictionary = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle bundleForClass:self] pathForResource:@"ECVDevices" ofType:@"plist"]];
-		for(NSString *const name in ECVDevicesDictionary) [self registerDeviceClass:NSClassFromString(name)];
+	if(!ECVSourceClasses) ECVSourceClasses = [[NSMutableArray alloc] init];
+	if(!ECVSourcesDictionary) {
+		ECVSourcesDictionary = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle bundleForClass:self] pathForResource:@"ECVSources" ofType:@"plist"]];
+		for(NSString *const name in ECVSourcesDictionary) [self registerDeviceClass:NSClassFromString(name)];
 	}
 }
 
@@ -195,7 +195,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 #endif
 
 #if !defined(ECV_NO_CONTROLLERS)
-	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
+	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVSourceRemoved, self, &_deviceRemovedNotification));
 #endif
 
 	SInt32 ignored = 0;
@@ -334,7 +334,7 @@ ECVNoDeviceError:
 - (void)startPlaying
 {
 	[_videoStorage release];
-	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithDeinterlacingMode:[self deinterlacingMode] captureSize:[self captureSize] pixelFormat:[self pixelFormatType] frameRate:[self frameRate]];
+	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithDeinterlacingMode:[self deinterlacingMode] captureSize:[self captureSize] pixelFormat:[self pixelFormat] frameRate:[self frameRate]];
 	[_playLock unlockWithCondition:ECVStartPlaying];
 	[NSThread detachNewThreadSelector:@selector(threadMain_play) toTarget:self withObject:nil];
 }
@@ -510,19 +510,19 @@ ECVNoDeviceError:
 #pragma mark -
 
 #if defined(ECV_ENABLE_AUDIO)
-- (ECVAudioDevice *)audioInputOfCaptureHardware
+- (ECVAudioSource *)audioInputOfCaptureHardware
 {
-	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
+	ECVAudioSource *const input = [ECVAudioSource deviceWithIODevice:_service input:YES];
 	[input setName:_productName];
 	return input;
 }
-- (ECVAudioDevice *)audioInput
+- (ECVAudioSource *)audioInput
 {
 	if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
-	if(!_audioInput) _audioInput = [[ECVAudioDevice defaultInputDevice] retain];
+	if(!_audioInput) _audioInput = [[ECVAudioSource defaultInputDevice] retain];
 	return [[_audioInput retain] autorelease];
 }
-- (void)setAudioInput:(ECVAudioDevice *)device
+- (void)setAudioInput:(ECVAudioSource *)device
 {
 	NSParameterAssert([device isInput] || !device);
 	if(ECVEqualObjects(device, _audioInput)) return;
@@ -533,12 +533,12 @@ ECVNoDeviceError:
 		_audioPreviewingPipe = nil;
 	});
 }
-- (ECVAudioDevice *)audioOutput
+- (ECVAudioSource *)audioOutput
 {
-	if(!_audioOutput) return _audioOutput = [[ECVAudioDevice defaultOutputDevice] retain];
+	if(!_audioOutput) return _audioOutput = [[ECVAudioSource defaultOutputDevice] retain];
 	return [[_audioOutput retain] autorelease];
 }
-- (void)setAudioOutput:(ECVAudioDevice *)device
+- (void)setAudioOutput:(ECVAudioSource *)device
 {
 	NSParameterAssert(![device isInput] || !device);
 	if(ECVEqualObjects(device, _audioOutput)) return;
@@ -556,8 +556,8 @@ ECVNoDeviceError:
 	NSTimeInterval const timeSinceLastStop = [NSDate ECV_timeIntervalSinceReferenceDate] - _audioStopTime;
 	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
 
-	ECVAudioDevice *const input = [self audioInput];
-	ECVAudioDevice *const output = [self audioOutput];
+	ECVAudioSource *const input = [self audioInput];
+	ECVAudioSource *const output = [self audioOutput];
 
 	ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
 	if(!inputStream) {
@@ -588,8 +588,8 @@ ECVNoDeviceError:
 }
 - (void)stopAudio
 {
-	ECVAudioDevice *const input = [self audioInput];
-	ECVAudioDevice *const output = [self audioOutput];
+	ECVAudioSource *const input = [self audioInput];
+	ECVAudioSource *const output = [self audioOutput];
 	[input stop];
 	[output stop];
 	[input setDelegate:nil];
@@ -684,10 +684,10 @@ ECVNoDeviceError:
 	[super dealloc];
 }
 
-#pragma mark -<ECVAudioDeviceDelegate>
+#pragma mark -<ECVAudioSourceDelegate>
 
 #if defined(ECV_ENABLE_AUDIO)
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
+- (void)audioDevice:(ECVAudioSource *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioInput) return;
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
@@ -695,7 +695,7 @@ ECVNoDeviceError:
 	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
 	[_windowControllersLock unlock];
 }
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
+- (void)audioDevice:(ECVAudioSource *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioOutput) return;
 	[_audioPreviewingPipe requestOutputBufferList:bufferList];

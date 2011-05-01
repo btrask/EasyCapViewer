@@ -37,6 +37,8 @@ enum {
 	STK0408StatusStreaming = 1 << 7,
 };
 
+typedef ECV05e1_0408Source ECVSTK1160Device;
+
 int dev_stk0408_initialize_device(ECVSTK1160Device *dev);
 int dev_stk0408_write0(ECVSTK1160Device *dev, u_int16_t mask, u_int16_t val);
 

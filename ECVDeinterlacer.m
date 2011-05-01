@@ -19,7 +19,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVDeinterlacingMode.h"
+#import "ECVDeinterlacer.h"
 
 // Models
 #import "ECVVideoStorage.h"
@@ -39,33 +39,33 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 	return kNilOptions;
 }
 
-@implementation ECVDeinterlacingMode
+@implementation ECVDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode
+#pragma mark +ECVDeinterlacer
 
-+ (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type
++ (Class)deinterlacerWithType:(ECVDeinterlacerType)type
 {
 	Class c = Nil;
 	switch(type) {
 		case ECVProgressiveScan:
 			c = [ECVProgressiveScanMode class]; break;
 		case ECVWeave:
-			c = [ECVWeaveDeinterlacingMode class]; break;
+			c = [ECVWeaveDeinterlacer class]; break;
 		case ECVLineDoubleLQ:
-			c = [ECVLineDoubleLQDeinterlacingMode class]; break;
+			c = [ECVLineDoubleLQDeinterlacer class]; break;
 		case ECVLineDoubleHQ:
-			c = [ECVLineDoubleHQDeinterlacingMode class]; break;
+			c = [ECVLineDoubleHQDeinterlacer class]; break;
 		case ECVAlternate:
-			c = [ECVAlternateDeinterlacingMode class]; break;
+			c = [ECVAlternateDeinterlacer class]; break;
 		case ECVBlur:
-			c = [ECVBlurDeinterlacingMode class]; break;
+			c = [ECVBlurDeinterlacer class]; break;
 		case ECVDrop:
-			c = [ECVDropDeinterlacingMode class]; break;
+			c = [ECVDropDeinterlacer class]; break;
 	}
 	return c;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (id)initWithVideoStorage:(ECVVideoStorage *)storage
 {
@@ -139,14 +139,14 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @implementation ECVProgressiveScanMode
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVProgressiveScan;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (NSUInteger)frameGroupSize
 {
@@ -155,16 +155,16 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @end
 
-@implementation ECVLineDoubleHQDeinterlacingMode
+@implementation ECVLineDoubleHQDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVLineDoubleHQ;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
@@ -196,16 +196,16 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @end
 
-@implementation ECVWeaveDeinterlacingMode
+@implementation ECVWeaveDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVWeave;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
@@ -225,16 +225,16 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @end
 
-@implementation ECVAlternateDeinterlacingMode
+@implementation ECVAlternateDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVAlternate;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
@@ -250,9 +250,9 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @end
 
-@implementation ECVHalfHeightDeinterlacingMode
+@implementation ECVHalfHeightDeinterlacer
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (ECVIntegerSize)pixelSize
 {
@@ -266,16 +266,16 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @end
 
-@implementation ECVDropDeinterlacingMode
+@implementation ECVDropDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVDrop;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (NSUInteger)frameGroupSize
 {
@@ -291,27 +291,27 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 @end
 
-@implementation ECVLineDoubleLQDeinterlacingMode
+@implementation ECVLineDoubleLQDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVLineDoubleLQ;
 }
 
 @end
 
-@implementation ECVBlurDeinterlacingMode
+@implementation ECVBlurDeinterlacer
 
-#pragma mark +ECVDeinterlacingMode(ECVAbstract)
+#pragma mark +ECVDeinterlacer(ECVAbstract)
 
-+ (ECVDeinterlacingModeType)deinterlacingModeType
++ (ECVDeinterlacerType)deinterlacerType
 {
 	return ECVBlur;
 }
 
-#pragma mark -ECVDeinterlacingMode
+#pragma mark -ECVDeinterlacer
 
 - (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {

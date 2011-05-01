@@ -118,7 +118,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 			standardSize.height = 486;
 			break;
 	}
-	size_t const bpp = ECVPixelFormatBytesPerPixel([self pixelFormatType]);
+	size_t const bpp = ECVPixelFormatBytesPerPixel([self pixelFormat]);
 	struct {
 		u_int16_t reg;
 		u_int16_t val;
@@ -296,7 +296,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	NSUInteger const realLength = length - skip;
 	ECVIntegerSize const inputSize = [self _inputSize];
 	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
-	OSType const pixelFormatType = [self pixelFormatType];
+	OSType const pixelFormatType = [self pixelFormat];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormatType) * pixelSize.width;
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormatType bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
 

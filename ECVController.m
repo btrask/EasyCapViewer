@@ -20,10 +20,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVController.h"
-#import <IOKit/usb/IOUSBLib.h>
+//#import <IOKit/usb/IOUSBLib.h>
 
 // Models
-#import "ECVCaptureDevice.h"
+#import "ECVCaptureDocument.h"
 
 // Controllers
 #import "ECVConfigController.h"
@@ -35,11 +35,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static ECVController *ECVSharedController;
 
-@interface ECVCaptureDevice(ECVDisplaying)
-
-- (void)ECV_display;
-
-@end
+//@interface ECVCaptureDevice(ECVDisplaying)
+//
+//- (void)ECV_display;
+//
+//@end
 
 @interface NSError(ECVDisplaying)
 
@@ -53,9 +53,9 @@ static ECVController *ECVSharedController;
 
 @end
 
-static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
+static void ECVSourceAdded(Class deviceClass, io_iterator_t iterator)
 {
-	[[deviceClass devicesWithIterator:iterator] makeObjectsPerformSelector:@selector(ECV_display)];
+//	[[deviceClass devicesWithIterator:iterator] makeObjectsPerformSelector:@selector(ECV_display)];
 	// Don't release the iterator because we want to continue receiving notifications.
 }
 
@@ -81,7 +81,7 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 
 #pragma mark -
 
-@synthesize notificationPort = _notificationPort;
+//@synthesize notificationPort = _notificationPort;
 - (BOOL)playing
 {
 	return !!_playCount;
@@ -103,38 +103,38 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 
 #pragma mark -
 
-- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device
-{
-	[self setPlaying:YES];
-}
-- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device
-{
-	[self setPlaying:NO];
-}
+//- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device
+//{
+//	[self setPlaying:YES];
+//}
+//- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device
+//{
+//	[self setPlaying:NO];
+//}
 
 #pragma mark -
 
 - (void)workspaceDidWake:(NSNotification *)aNotif
 {
-	for(NSNumber *const notif in _notifications) IOObjectRelease([notif unsignedIntValue]);
-	[_notifications removeAllObjects];
-
-	NSMutableArray *const devices = [NSMutableArray array];
-	for(Class const class in [ECVCaptureDevice deviceClasses]) {
-		NSDictionary *const matchingDict = [class matchingDictionary];
-		io_iterator_t iterator = IO_OBJECT_NULL;
-		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchingDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
-		[devices addObjectsFromArray:[class devicesWithIterator:iterator]];
-		[_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
-ECVGenericError:
-ECVNoDeviceError: 0;
-	}
-	if([devices count]) return [devices makeObjectsPerformSelector:@selector(ECV_display)];
-	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
-	[alert setMessageText:NSLocalizedString(@"No supported capture hardware was found.", nil)];
-	[alert setInformativeText:NSLocalizedString(@"Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported.", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
-	[alert runModal];
+//	for(NSNumber *const notif in _notifications) IOObjectRelease([notif unsignedIntValue]);
+//	[_notifications removeAllObjects];
+//
+//	NSMutableArray *const devices = [NSMutableArray array];
+//	for(Class const class in [ECVCaptureDevice deviceClasses]) {
+//		NSDictionary *const matchingDict = [class matchingDictionary];
+//		io_iterator_t iterator = IO_OBJECT_NULL;
+//		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchingDict retain], (IOServiceMatchingCallback)ECVSourceAdded, class, &iterator));
+//		[devices addObjectsFromArray:[class devicesWithIterator:iterator]];
+//		[_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
+//ECVGenericError:
+//ECVNoDeviceError: 0;
+//	}
+//	if([devices count]) return [devices makeObjectsPerformSelector:@selector(ECV_display)];
+//	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
+//	[alert setMessageText:NSLocalizedString(@"No supported capture hardware was found.", nil)];
+//	[alert setInformativeText:NSLocalizedString(@"Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported.", nil)];
+//	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+//	[alert runModal];
 }
 
 #pragma mark -ECVController(Private)
@@ -150,19 +150,19 @@ ECVNoDeviceError: 0;
 {
 	if((self = [super init])) {
 		if(!ECVSharedController) ECVSharedController = [self retain];
-		_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
-		_notifications = [[NSMutableArray alloc] init];
-		CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopDefaultMode);
+//		_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
+//		_notifications = [[NSMutableArray alloc] init];
+//		CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopDefaultMode);
 	}
 	return self;
 }
 - (void)dealloc
 {
-	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
-	for(NSNumber *const notif in _notifications) IOObjectRelease([notif unsignedIntValue]);
-
-	[_notifications release];
-	IONotificationPortDestroy(_notificationPort);
+//	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(_notificationPort), kCFRunLoopCommonModes);
+//	for(NSNumber *const notif in _notifications) IOObjectRelease([notif unsignedIntValue]);
+//
+//	[_notifications release];
+//	IONotificationPortDestroy(_notificationPort);
 	[_userActivityTimer invalidate];
 	[super dealloc];
 }
@@ -173,26 +173,54 @@ ECVNoDeviceError: 0;
 {
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceDidWake:) name:NSWorkspaceDidWakeNotification object:[NSWorkspace sharedWorkspace]];
 	[self workspaceDidWake:nil];
+
+
+
+// FIXME: Currently for testing only...
+
+
+
+
+
+ECVVideoSource *const source = [[ECVSource sources] objectAtIndex:0];
+ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
+[self addDocument:doc];
+ECVVideoPipe *const p1 = [source videoPipeWithInput:[[source inputs] objectAtIndex:0]];
+ECVVideoPipe *const p2 = [source videoPipeWithInput:[[source inputs] objectAtIndex:0]];
+[p1 setPosition:(ECVIntegerPoint){0, 0}];
+[p2 setPosition:(ECVIntegerPoint){720, 0}];
+[[doc videoStorage] addVideoPipe:p1];
+[[doc videoStorage] addVideoPipe:p2];
+[doc makeWindowControllers];
+[doc showWindows];
+
+
+
+
+
+
+
+
 }
 
 @end
 
-@implementation ECVCaptureDevice(ECVDisplaying)
+//@implementation ECVCaptureDevice(ECVDisplaying)
+//
+//- (void)ECV_display
+//{
+//	[[NSDocumentController sharedDocumentController] addDocument:self];
+//	[self makeWindowControllers];
+//	[self showWindows];
+//}
+//
+//@end
 
-- (void)ECV_display
-{
-	[[NSDocumentController sharedDocumentController] addDocument:self];
-	[self makeWindowControllers];
-	[self showWindows];
-}
-
-@end
-
-@implementation NSError(ECVDisplaying)
-
-- (void)ECV_display
-{
-	[[NSAlert alertWithError:self] runModal];
-}
-
-@end
+//@implementation NSError(ECVDisplaying)
+//
+//- (void)ECV_display
+//{
+//	[[NSAlert alertWithError:self] runModal];
+//}
+//
+//@end

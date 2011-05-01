@@ -20,7 +20,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
-@class ECVCaptureDevice;
+@class ECVCaptureDocument;
 
 @protocol ECVCaptureControllerConfiguring;
 
@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSButtonCell *upconvertsFromMonoSwitch;
 	IBOutlet NSSlider *volumeSlider;
 
-	ECVCaptureDevice *_captureDevice;
+	ECVCaptureDocument *_captureDocument;
 }
 
 + (id)sharedConfigController;
@@ -56,14 +56,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeUpconvertsFromMono:(id)sender;
 - (IBAction)changeVolume:(id)sender;
 
-@property(nonatomic, assign) ECVCaptureDevice *captureDevice;
+@property(nonatomic, assign) ECVCaptureDocument *captureDocument;
 
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
 - (void)volumeDidChange:(NSNotification *)aNotif;
 
 @end
 
-@protocol ECVCaptureDeviceConfiguring<NSObject>
+@protocol ECVCaptureDocumentConfiguring<NSObject>
 
 @optional
 @property(readonly) NSArray *allVideoSourceObjects;

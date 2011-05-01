@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,48 +19,21 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+#import "ECVUSBVideoSource.h"
 
-// Models
-#import "ECVVideoStorage.h"
+// Models/Sources/Video/Chipsets
+#import "SAA711XChip.h"
+#import "VT1612AChip.h" // TODO: Technically, this is an audio chipset...
 
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
-
-@implementation ECVVideoFrame
-
-#pragma mark -ECVVideoFrame
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+@interface ECV05e1_0408Source : ECVUSBVideoSource <SAA711XDevice, VT1612ADevice>
 {
-	if((self = [super init])) {
-		_videoStorage = storage;
-	}
-	return self;
-}
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
-{
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
-}
-
-#pragma mark -
-
-- (NSRange)validRange
-{
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
+	@private
+	SAA711XChip *_SAA711XChip;
+	VT1612AChip *_VT1612AChip;
+	CFMutableArrayRef _pipesForInput[5];
+	NSUInteger _currentInput;
+	NSUInteger _offset;
+	NSUInteger _frameSkipCount;
 }
 
 @end

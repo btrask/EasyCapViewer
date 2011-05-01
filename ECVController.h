@@ -19,14 +19,9 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Models
-@class ECVCaptureDevice;
-
 @interface ECVController : NSDocumentController
 {
 	@private
-	IONotificationPortRef _notificationPort;
-	NSMutableArray *_notifications;
 	NSUInteger _playCount;
 	NSTimer *_userActivityTimer;
 }
@@ -36,11 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)configureDevice:(id)sender;
 - (IBAction)showErrorLog:(id)sender;
 
-@property(readonly) IONotificationPortRef notificationPort;
 @property(nonatomic, assign) BOOL playing;
 
-- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device;
-- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device;
+//- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device;
+//- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device;
 
 - (void)workspaceDidWake:(NSNotification *)aNotif;
 

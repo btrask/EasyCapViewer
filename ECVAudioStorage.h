@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,48 +19,35 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+#import "ECVStorage.h"
 
-// Models
-#import "ECVVideoStorage.h"
+@protocol ECVAudioStorageDelegate;
 
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
-
-@implementation ECVVideoFrame
-
-#pragma mark -ECVVideoFrame
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+@interface ECVAudioStorage : ECVStorage
 {
-	if((self = [super init])) {
-		_videoStorage = storage;
-	}
-	return self;
-}
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
-{
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
+	@private
+	NSObject<ECVAudioStorageDelegate> *_delegate;
+	AudioStreamBasicDescription _outputDescription;
 }
 
-#pragma mark -
+@property(assign) AudioStreamBasicDescription outputDescription;
+@property(assign) NSUInteger numberOfStreams; // TODO: At the very least, we should support any number of streams. We might also want to support stream combining, if it isn't too difficult to figure out.
 
-- (NSRange)validRange
-{
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
-}
+@property(assign) NSObject<ECVAudioStorageDelegate> *delegate;
+
+- (void)addAudioPipe:(ECVAudioPipe *)pipe;
+- (void)removeAudioPipe:(ECVAudioPipe *)pipe;
+
+@end
+
+@interface ECVAudioStorage(ECVFromPipe_Threaded)
+
+- (void)writeAudioBufferList:(AudioBufferList const *)list fromPipe:(ECVAudioPipe *)pipe; // TODO: Deal with individual audio packets.
+
+@end
+
+@protocol ECVAudioStorageDelegate
+
+- (void)audioStorage:(ECVAudioStorage *)storage didFinishAudioBufferList:(AudioBufferList const *)list;
 
 @end

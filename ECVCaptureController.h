@@ -19,6 +19,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#import "ECVCaptureDocument.h"
 #import <QuartzCore/QuartzCore.h>
 #import <QTKit/QTKit.h>
 
@@ -111,9 +112,11 @@ typedef NSInteger ECVCropBorder;
 - (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)type;
 - (NSRect)cropRect:(NSRect)rect withBorder:(ECVCropBorder)border;
 
-- (void)startPlaying;
-- (void)stopPlaying;
-- (void)threaded_pushFrame:(ECVVideoFrame *)frame;
-- (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue;
+@end
+
+@interface ECVCaptureController(ECVFromDocument) <ECVAVReceiving>
+
+- (void)play;
+- (void)stop;
 
 @end

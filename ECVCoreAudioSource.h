@@ -19,24 +19,24 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#if defined(ECV_ENABLE_AUDIO)
+#import "ECVAudioSource.h"
 #import <CoreAudio/CoreAudio.h>
 
 extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
-@protocol ECVAudioDeviceDelegate;
+@protocol ECVAudioSourceDelegate;
 
-@interface ECVAudioDevice : NSObject
+@interface ECVCoreAudioDevice : ECVAudioSource
 {
 	@private
-	IBOutlet NSObject<ECVAudioDeviceDelegate> *delegate;
+	IBOutlet NSObject<ECVAudioSourceDelegate> *delegate;
 	AudioDeviceID _deviceID;
 	BOOL _isInput;
 	NSString *_name;
 	AudioDeviceIOProcID _procID;
 }
 
-+ (NSArray *)allDevicesInput:(BOOL)flag;
++ (NSArray *)allDevicesInput:(BOOL)flag; // TODO: Output must be a separate class (not an ECVSource).
 + (id)defaultInputDevice;
 + (id)defaultOutputDevice;
 + (id)deviceWithUID:(NSString *)UID input:(BOOL)flag;
@@ -44,27 +44,24 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
 - (id)initWithDeviceID:(AudioDeviceID)deviceID input:(BOOL)flag;
 
-@property(assign) NSObject<ECVAudioDeviceDelegate> *delegate;
+@property(assign) NSObject<ECVAudioSourceDelegate> *delegate;
 @property(readonly) AudioDeviceID deviceID;
-@property(readonly) BOOL isInput;
+@property(readonly) BOOL isInput; // TODO: Output must be a separate class (not an ECVSource).
 
 @property(nonatomic, copy) NSString *name;
 @property(readonly) NSArray *streams;
 
-- (BOOL)start;
-- (void)stop;
-
 @end
 
-@protocol ECVAudioDeviceDelegate <NSObject>
+@protocol ECVAudioSourceDelegate <NSObject>
 
 @optional
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t;
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t;
+- (void)audioDevice:(ECVAudioSource *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t;
+- (void)audioDevice:(ECVAudioSource *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t;
 
 @end
 
-@interface ECVAudioStream : NSObject
+@interface ECVCoreAudioStream : NSObject
 {
 	@private
 	AudioStreamID _streamID;
@@ -77,4 +74,3 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 - (AudioStreamBasicDescription)basicDescription;
 
 @end
-#endif

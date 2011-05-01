@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Ben Trask
+/* Copyright (c) 2011, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,48 +19,62 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoFrame.h"
+#import "ECVPipe.h"
 
-// Models
-#import "ECVVideoStorage.h"
+@implementation ECVPipe
 
-// Other Sources
-#import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
+#pragma mark -ECVPipe
 
-@implementation ECVVideoFrame
-
-#pragma mark -ECVVideoFrame
-
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+- (ECVSource *)source
 {
-	if((self = [super init])) {
-		_videoStorage = storage;
-	}
-	return self;
+	return [[_source retain] autorelease];
 }
-@synthesize videoStorage = _videoStorage;
-
-#pragma mark -ECVPixelBuffer(ECVAbstract)
-
-- (ECVIntegerSize)pixelSize
+- (ECVStorage *)storage
 {
-	return [_videoStorage pixelSize];
-}
-- (size_t)bytesPerRow
-{
-	return [_videoStorage bytesPerRow];
-}
-- (OSType)pixelFormat
-{
-	return [_videoStorage pixelFormat];
+	return _storage;
 }
 
 #pragma mark -
 
-- (NSRange)validRange
+- (void)play {}
+- (void)stop {}
+
+#pragma mark -ECVPipe(ECVFromSource)
+
+- (id)initWithSource:(id)source
 {
-	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
+	if((self = [super init])) {
+		_source = [source retain];
+	}
+	return self;
+}
+
+#pragma mark -ECVPipe(ECVFromStorage)
+
+- (void)setStorage:(ECVStorage *)storage
+{
+	_storage = storage;
+	[self setPlaying:[_storage isPlaying]];
+}
+- (BOOL)isPlaying
+{
+	return _playing;
+}
+- (void)setPlaying:(BOOL)flag
+{
+	if(_playing == flag) return;
+	_playing = flag;
+	if(flag) [self play];
+	[[self source] setPlaying:flag];
+	if(!flag) [self stop];
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_source release];
+	[super dealloc];
 }
 
 @end
