@@ -32,8 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define ECVNanosecondsPerMillisecond 1e6
 
-#define OR(a, b) ({__typeof__(a) __a = (a); (__a ? __a : (b));})
-
 typedef struct {
 	UInt8 direction;
 	UInt8 pipeNumber;
@@ -288,21 +286,21 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		ECVLog(ECVNotice, @"Starting.");
 
 		IOReturn err = kIOReturnSuccess;
-		err = OR(err, (_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
+		err = err ?: ((_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
 
-		err = OR(err, ECVIOReturn2((*_USBDevice)->USBDeviceOpen(_USBDevice)));
-		err = OR(err, ECVIOReturn2((*_USBDevice)->ResetDevice(_USBDevice)));
+		err = err ?: ECVIOReturn2((*_USBDevice)->USBDeviceOpen(_USBDevice));
+		err = err ?: ECVIOReturn2((*_USBDevice)->ResetDevice(_USBDevice));
 
 		IOUSBConfigurationDescriptorPtr configurationDescription = NULL;
-		err = OR(err, ECVIOReturn2((*_USBDevice)->GetConfigurationDescriptorPtr(_USBDevice, 0, &configurationDescription)));
-		err = OR(err, ECVIOReturn2((*_USBDevice)->SetConfiguration(_USBDevice, configurationDescription->bConfigurationValue)));
+		err = err ?: ECVIOReturn2((*_USBDevice)->GetConfigurationDescriptorPtr(_USBDevice, 0, &configurationDescription));
+		err = err ?: ECVIOReturn2((*_USBDevice)->SetConfiguration(_USBDevice, configurationDescription->bConfigurationValue));
 
-		err = OR(err, (_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
+		err = err ?: ((_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
 
-		err = OR(err, ECVIOReturn2((*_USBInterface)->USBInterfaceOpenSeize(_USBInterface)));
+		err = err ?: ECVIOReturn2((*_USBInterface)->USBInterfaceOpenSeize(_USBInterface));
 
 		CFRunLoopSourceRef eventSource = NULL;
-		err = OR(err, ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &eventSource)));
+		err = err ?: ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &eventSource));
 
 		if(err) {
 			// Do nothing.
