@@ -19,38 +19,21 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Storages/Audio
-//#import "ECVAudioStorage.h"
-
-// Models/Sources/Video
-#import "ECVVideoSource.h"
-
-// Models/Pipes/Video
-#import "ECVVideoPipe.h"
-
-// Models/Storages/Video
-#import "ECVVideoStorage.h"
+#import "ECVCaptureDocument.h"
+#import "ECVHTTPServer.h"
 
 // Models
-@class ECVStreamingServer;
+@class ECVEncoder;
 
-@protocol ECVAVReceiving</*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
-@end
-
-@interface ECVCaptureDocument : NSDocument <ECVAVReceiving>
+@interface ECVStreamingServer : NSObject <ECVAVReceiving, ECVHTTPServerDelegate>
 {
 	@private
-//	ECVAudioStorage *_audioStorage;
-	ECVVideoStorage *_videoStorage;
-	ECVStreamingServer *_server;
+	ECVHTTPServer *_server; // Can theoretically support any kind of server.
+	ECVEncoder *_encoder;
+	NSMutableArray *_fileHandles;
 }
 
-@property(assign, getter=isPlaying) BOOL playing;
-
-//@property(readonly) ECVAudioStorage *audioStorage;
-@property(readonly) ECVVideoStorage *videoStorage;
-
-- (void)play; // Do not call directly.
-- (void)stop;
+@property(retain) ECVHTTPServer *server;
+@property(retain) ECVEncoder *encoder;
 
 @end

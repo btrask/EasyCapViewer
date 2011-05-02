@@ -27,6 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVCaptureController.h"
 
+// Models
+#import "ECVEncoder.h"
+#import "ECVStreamingServer.h"
+
 @implementation ECVCaptureDocument
 
 #pragma mark -ECVCaptureDocument
@@ -87,10 +91,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //		[_audioStorage setDelegate:self];
 		_videoStorage = [[ECVVideoStorage alloc] init];
 		[_videoStorage setDelegate:self];
-		[_videoStorage setPixelSize:(ECVIntegerSize){1440, 240}];
+		[_videoStorage setPixelSize:(ECVIntegerSize){720, 240}];
 		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
 		[_videoStorage setFrameRate:QTMakeTime(1001, 60000)];
 		[_videoStorage setPixelAspectRatio:(ECVIntegerSize){4, 3}];
+
+		ECVEncoder *const encoder = [[[ECVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
+		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:1234] autorelease];
+		_server = [[ECVStreamingServer alloc] init];
+		[_server setEncoder:encoder];
+		[_server setServer:HTTPServer];
 	}
 	return self;
 }
@@ -113,6 +123,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame
 {
 	for(ECVCaptureController *const controller in [self windowControllers]) [controller videoStorage:storage didFinishFrame:frame];
+	[_server videoStorage:storage didFinishFrame:frame];
 }
 
 @end

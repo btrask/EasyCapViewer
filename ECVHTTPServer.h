@@ -19,38 +19,27 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Storages/Audio
-//#import "ECVAudioStorage.h"
+#import <netinet/in.h>
 
-// Models/Sources/Video
-#import "ECVVideoSource.h"
+@protocol ECVHTTPServerDelegate;
 
-// Models/Pipes/Video
-#import "ECVVideoPipe.h"
-
-// Models/Storages/Video
-#import "ECVVideoStorage.h"
-
-// Models
-@class ECVStreamingServer;
-
-@protocol ECVAVReceiving</*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
-@end
-
-@interface ECVCaptureDocument : NSDocument <ECVAVReceiving>
+@interface ECVHTTPServer : NSObject
 {
 	@private
-//	ECVAudioStorage *_audioStorage;
-	ECVVideoStorage *_videoStorage;
-	ECVStreamingServer *_server;
+	NSObject<ECVHTTPServerDelegate> *_delegate;
+	CFSocketRef _socket;
+	CFRunLoopSourceRef _source;
 }
 
-@property(assign, getter=isPlaying) BOOL playing;
+- (id)initWithPort:(UInt16)port;
 
-//@property(readonly) ECVAudioStorage *audioStorage;
-@property(readonly) ECVVideoStorage *videoStorage;
+@property(assign) NSObject<ECVHTTPServerDelegate> *delegate;
+@property(readonly) struct sockaddr_in address;
 
-- (void)play; // Do not call directly.
-- (void)stop;
+@end
+
+@protocol ECVHTTPServerDelegate
+
+- (void)HTTPServer:(ECVHTTPServer *)server accept:(NSSocketNativeHandle)socket;
 
 @end

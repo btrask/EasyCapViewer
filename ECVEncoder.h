@@ -19,38 +19,33 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Storages/Audio
-//#import "ECVAudioStorage.h"
+#import <libavformat/avformat.h>
 
-// Models/Sources/Video
-#import "ECVVideoSource.h"
+// Models/Video
+@class ECVVideoFrame;
 
-// Models/Pipes/Video
-#import "ECVVideoPipe.h"
-
-// Models/Storages/Video
-#import "ECVVideoStorage.h"
-
-// Models
-@class ECVStreamingServer;
-
-@protocol ECVAVReceiving</*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
-@end
-
-@interface ECVCaptureDocument : NSDocument <ECVAVReceiving>
+@interface ECVEncoder : NSObject
 {
 	@private
-//	ECVAudioStorage *_audioStorage;
-	ECVVideoStorage *_videoStorage;
-	ECVStreamingServer *_server;
+//	id _delegate;
+	NSLock *_lock;
+	AVFormatContext *_formatCtx;
+	CFMutableDictionaryRef _streamByStorage;
+	NSData *_header;
+	uint64_t _frameIndex;
 }
 
-@property(assign, getter=isPlaying) BOOL playing;
+- (id)initWithStorages:(NSArray *)storages;
 
-//@property(readonly) ECVAudioStorage *audioStorage;
-@property(readonly) ECVVideoStorage *videoStorage;
+//@property(assign) id delegate;
 
-- (void)play; // Do not call directly.
-- (void)stop;
+- (NSData *)header;
+- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame; // TODO: Async.
+
+@end
+
+@protocol ECVEncoderDelegate
+
+//- (void)encoder:(ECVEncoder *)encoder didEncodeVideoData:(NSData *)data;
 
 @end

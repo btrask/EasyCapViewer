@@ -180,19 +180,21 @@ static void ECVSourceAdded(Class deviceClass, io_iterator_t iterator)
 
 
 
-
-
-ECVVideoSource *const source = [[ECVSource sources] objectAtIndex:0];
-ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
-[self addDocument:doc];
-ECVVideoPipe *const p1 = [source videoPipeWithInput:[[source inputs] objectAtIndex:0]];
-ECVVideoPipe *const p2 = [source videoPipeWithInput:[[source inputs] objectAtIndex:0]];
-[p1 setPosition:(ECVIntegerPoint){0, 0}];
-[p2 setPosition:(ECVIntegerPoint){720, 0}];
-[[doc videoStorage] addVideoPipe:p1];
-[[doc videoStorage] addVideoPipe:p2];
-[doc makeWindowControllers];
-[doc showWindows];
+NSArray *const sources = [ECVSource sources];
+NSLog(@"Recognized sources: %@", sources);
+if([sources count]) {
+	ECVVideoSource *const source = [[ECVSource sources] objectAtIndex:0];
+	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
+	[self addDocument:doc];
+	ECVVideoPipe *const p1 = [source videoPipeWithInput:[[source inputs] objectAtIndex:0]];
+	ECVVideoPipe *const p2 = [source videoPipeWithInput:[[source inputs] objectAtIndex:0]];
+	[p1 setPosition:(ECVIntegerPoint){0, 0}];
+	[p2 setPosition:(ECVIntegerPoint){720, 0}];
+	[[doc videoStorage] addVideoPipe:p1];
+	[[doc videoStorage] addVideoPipe:p2];
+	[doc makeWindowControllers];
+	[doc showWindows];
+}
 
 
 
