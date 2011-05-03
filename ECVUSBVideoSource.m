@@ -324,9 +324,18 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 }
 - (BOOL)_readTransfer:(inout ECVUSBTransfer *)transfer numberOfMicroframes:(NSUInteger)numberOfMicroframes pipeRef:(UInt8)pipe frameNumber:(inout UInt64 *)frameNumber microsecondsInFrame:(UInt64)microsecondsInFrame millisecondInterval:(UInt8)millisecondInterval
 {
-	if(kIOReturnSuccess != ECVIOReturn2((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) return NO;
-	*frameNumber += numberOfMicroframes / (kUSBFullSpeedMicrosecondsInFrame / microsecondsInFrame);
-	return YES;
+	if(!*frameNumber) *frameNumber = [self _currentFrameNumber] + 10;
+	switch(ECVIOReturn2((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) {
+		case kIOReturnSuccess:
+			*frameNumber += numberOfMicroframes / (kUSBFullSpeedMicrosecondsInFrame / microsecondsInFrame);
+			return YES;
+		case kIOReturnIsoTooOld:
+			*frameNumber = 0;
+			NSUInteger i;
+			for(i = 0; i < numberOfMicroframes; ++i) transfer->frames[i].frStatus = kIOReturnInvalid;
+			return YES;
+	}
+	return NO;
 }
 - (BOOL)_parseTransfer:(inout ECVUSBTransfer *)transfer numberOfMicroframes:(NSUInteger)numberOfMicroframes frameRequestSize:(NSUInteger)frameRequestSize millisecondInterval:(UInt8)millisecondInterval
 {
@@ -365,7 +374,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	NSUInteger const microframesPerTransfer = [transferList microframesPerTransfer];
 	ECVUSBTransfer *const transfers = [transferList transfers];
 
-	UInt64 currentFrameNumber = [self _currentFrameNumber] + 10;
+	UInt64 currentFrameNumber = 0;
 	BOOL read = YES;
 	while(read) {
 		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
