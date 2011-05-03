@@ -73,11 +73,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	_frameRate = rate;
 }
-- (ECVIntegerSize)pixelAspectRatio
+- (ECVRational)pixelAspectRatio
 {
 	return _pixelAspectRatio;
 }
-- (void)setPixelAspectRatio:(ECVIntegerSize)ratio
+- (void)setPixelAspectRatio:(ECVRational)ratio
 {
 	_pixelAspectRatio = ratio;
 }

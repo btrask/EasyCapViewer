@@ -94,7 +94,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[_videoStorage setPixelSize:(ECVIntegerSize){720, 240}];
 		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
 		[_videoStorage setFrameRate:QTMakeTime(1001, 60000)];
-		[_videoStorage setPixelAspectRatio:(ECVIntegerSize){4, 3}];
+		[_videoStorage setPixelAspectRatio:ECVMakeRational(4, 3)];
 
 		ECVEncoder *const encoder = [[[ECVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
 		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:1234] autorelease];

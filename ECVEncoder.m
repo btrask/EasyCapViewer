@@ -190,10 +190,23 @@ bail:
 	codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
 	codecCtx->codec_id = CODEC_ID_RAWVIDEO;
 	codecCtx->bit_rate = 400000; // TODO: Adjustable?
-	codecCtx->width = [self pixelSize].width;
-	codecCtx->height = [self pixelSize].height;
-	codecCtx->time_base.num = [self frameRate].timeValue;
-	codecCtx->time_base.den = [self frameRate].timeScale;
+
+	ECVIntegerSize const size = [self pixelSize];
+	codecCtx->width = size.width;
+	codecCtx->height = size.height;
+
+	QTTime const rate = [self frameRate];
+	codecCtx->time_base = (AVRational){
+		.num = rate.timeValue,
+		.den = rate.timeScale,
+	};
+
+	ECVRational const ratio = [self pixelAspectRatio];
+	stream->sample_aspect_ratio = codecCtx->sample_aspect_ratio = (AVRational){
+		.num = ratio.numer,
+		.den = ratio.denom,
+	};
+
 	codecCtx->gop_size = 12;
 	codecCtx->pix_fmt = ECVCodecIDFromPixelFormat([self pixelFormat]);
 }

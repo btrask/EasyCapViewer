@@ -28,6 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models/Video
 #import "ECVVideoFrame.h"
 
+// Other Sources
+#import "ECVRational.h"
+
 @protocol ECVVideoStorageDelegate;
 
 @interface ECVVideoStorage : ECVStorage <NSLocking>
@@ -38,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVIntegerSize _pixelSize;
 	OSType _pixelFormat;
 	QTTime _frameRate;
-	ECVIntegerSize _pixelAspectRatio;
+	ECVRational _pixelAspectRatio;
 	NSMutableArray *_pendingPipes;
 	ECVMutablePixelBuffer *_pendingBuffer;
 }
@@ -47,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) ECVIntegerSize pixelSize;
 @property(assign) OSType pixelFormat;
 @property(assign) QTTime frameRate;
-@property(assign) ECVIntegerSize pixelAspectRatio;
+@property(assign) ECVRational pixelAspectRatio;
 
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
