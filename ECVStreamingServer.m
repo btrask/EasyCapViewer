@@ -145,12 +145,13 @@ enum {
 
 - (void)HTTPServer:(ECVHTTPServer *)server accept:(NSSocketNativeHandle)socket
 {
-	NSString *const HTTPHeader =
+	NSString *const HTTPHeader = [NSString stringWithFormat:
 		@"HTTP/1.0 200 OK\r\n"
 		@"Pragma: no-cache\r\n"
 		@"Cache-Control: no-cache\r\n"
-		@"Content-Type: application/x-octet-stream\r\n" // TODO: Get the MIME type from the encoder.
-		@"\r\n";
+		@"Content-Type: %@\r\n"
+		@"\r\n", [_encoder MIMEType]];
+	NSLog(@"%@", HTTPHeader);
 	int flag = YES;
 	if(setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &flag, sizeof(flag)) != 0) {
 		(void)close(socket);

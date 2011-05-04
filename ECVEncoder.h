@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 //@property(assign) id delegate;
 
+- (NSString *)MIMEType;
 - (NSData *)header;
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame; // TODO: Async.
 

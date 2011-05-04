@@ -99,6 +99,11 @@ bail:
 
 #pragma mark -
 
+- (NSString *)MIMEType
+{
+	char const *const type = _formatCtx->oformat->mime_type;
+	return type ? [NSString stringWithUTF8String:type] : @"application/x-octet-stream";
+}
 - (NSData *)header
 {
 	return [[_header retain] autorelease];
