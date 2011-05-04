@@ -24,6 +24,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVEncoder.h"
 
+enum {
+	ECVRunCondition,
+	ECVWaitCondition,
+};
+
+@interface ECVStreamingServer(Private)
+
+- (void)_receive;
+- (void)_sendVideoFrame:(ECVVideoFrame *)frame toFileHandles:(NSArray *)fileHandles;
+
+@end
+
 @implementation ECVStreamingServer
 
 #pragma mark -ECVStreamingServer
@@ -42,11 +54,55 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 @synthesize encoder = _encoder;
 
+#pragma mark -ECVStreamingServer(Private)
+
+- (void)_receive
+{
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	[_receiveThreadLock lock];
+
+	BOOL receive = YES;
+	while(receive) {
+		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
+
+		[_receiveLock lockWhenCondition:ECVRunCondition];
+		NSArray *const videoFrames = [_videoFrames autorelease];
+		_videoFrames = [[NSMutableArray alloc] init];
+		NSArray *const fileHandles = [[_fileHandles copy] autorelease];
+		if(!_receive) receive = NO;
+		[_receiveLock unlockWithCondition:ECVWaitCondition];
+
+		for(ECVVideoFrame *const frame in videoFrames) [self _sendVideoFrame:frame toFileHandles:fileHandles];
+
+		[innerPool drain];
+	}
+
+	[_receiveThreadLock unlock];
+	[pool drain];
+}
+- (void)_sendVideoFrame:(ECVVideoFrame *)frame toFileHandles:(NSArray *)fileHandles
+{
+	NSData *const data = [_encoder encodedDataWithVideoFrame:frame];
+	for(NSFileHandle *const handle in fileHandles) {
+		@try {
+			[handle writeData:data];
+		}
+		@catch(id error) {
+			[_receiveLock lock];
+			[_fileHandles removeObjectIdenticalTo:handle];
+			[_receiveLock unlock];
+		}
+	}
+}
+
 #pragma mark -NSObject
 
 - (id)init
 {
 	if((self = [super init])) {
+		_receiveThreadLock = [[NSLock alloc] init];
+		_receiveLock = [[NSConditionLock alloc] init];
+		_videoFrames = [[NSMutableArray alloc] init];
 		_fileHandles = [[NSMutableArray alloc] init];
 	}
 	return self;
@@ -55,6 +111,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[_server release];
 	[_encoder release];
+	[_receiveThreadLock release];
+	[_receiveLock release];
+	[_videoFrames release];
 	[_fileHandles release];
 	[super dealloc];
 }
@@ -63,23 +122,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)play
 {
+	[_receiveLock lock];
+	_receive = YES;
+	[_receiveLock unlock];
+	[NSThread detachNewThreadSelector:@selector(_receive) toTarget:self withObject:nil];
 }
 - (void)stop
 {
+	[_receiveLock lock];
+	[_videoFrames removeAllObjects];
+	_receive = NO;
+	[_receiveLock unlockWithCondition:ECVRunCondition];
 }
 - (void)receiveVideoFrame:(ECVVideoFrame *)frame
 {
-	NSData *const data = [_encoder encodedDataWithVideoFrame:frame];
-	@synchronized(self) {
-		for(NSFileHandle *const handle in [[_fileHandles copy] autorelease]) {
-			@try {
-				[handle writeData:data];
-			}
-			@catch(id error) {
-				[_fileHandles removeObjectIdenticalTo:handle];
-			}
-		}
-	}
+	[_receiveLock lock];
+	if(_receive) [_videoFrames addObject:frame];
+	[_receiveLock unlockWithCondition:ECVRunCondition];
 }
 
 #pragma mark -<ECVHTTPServerDelegate>
@@ -90,14 +149,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		@"HTTP/1.0 200 OK\r\n"
 		@"Pragma: no-cache\r\n"
 		@"Cache-Control: no-cache\r\n"
-		@"Content-Type: application/x-octet-stream\r\n"
+		@"Content-Type: application/x-octet-stream\r\n" // TODO: Get the MIME type from the encoder.
 		@"\r\n";
 	NSFileHandle *const handle = [[NSFileHandle alloc] initWithFileDescriptor:socket closeOnDealloc:YES];
 	[handle writeData:[HTTPHeader dataUsingEncoding:NSUTF8StringEncoding]];
 	[handle writeData:[_encoder header]];
-	@synchronized(self) {
-		[_fileHandles addObject:handle];
-	}
+	[_receiveLock lock];
+	[_fileHandles addObject:handle];
+	[_receiveLock unlock];
 }
 
 @end

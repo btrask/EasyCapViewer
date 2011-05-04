@@ -30,6 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	ECVHTTPServer *_server; // Can theoretically support any kind of server.
 	ECVEncoder *_encoder;
+	NSLock *_receiveThreadLock;
+	NSConditionLock *_receiveLock;
+	BOOL _receive;
+	NSMutableArray *_videoFrames;
 	NSMutableArray *_fileHandles;
 }
 
