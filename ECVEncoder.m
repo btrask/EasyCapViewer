@@ -72,7 +72,6 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 - (id)initWithStorages:(NSArray *)storages
 {
 	if((self = [super init])) {
-		_lock = [[NSLock alloc] init];
 		if(!(_formatCtx = avformat_alloc_context())) goto bail;
 		if(!(_formatCtx->oformat = av_guess_format("asf", NULL, NULL))) goto bail;
 		_streamByStorage = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, NULL);
@@ -141,14 +140,12 @@ bail:
 
 - (BOOL)_lockFormatContext
 {
-	[_lock lock];
 	return url_open_dyn_buf(&_formatCtx->pb) == 0;
 }
 - (NSData *)_unlockFormatContext
 {
 	uint8_t *bytes = NULL;
 	int const length = url_close_dyn_buf(_formatCtx->pb, &bytes);
-	[_lock unlock];
 	CFAllocatorContext allocator = {
 		.version = 0,
 		.allocate = (CFAllocatorAllocateCallBack)av_malloc, // Unused but necessary anyway.

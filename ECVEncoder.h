@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 //	id _delegate;
-	NSLock *_lock;
 	AVFormatContext *_formatCtx;
 	CFMutableDictionaryRef _streamByStorage;
 	NSData *_header;
