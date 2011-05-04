@@ -59,13 +59,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[super dealloc];
 }
 
-#pragma mark -<ECVAVReceiving> <ECVAudioStorageDelegate>
+#pragma mark -<ECVAVReceiving>
 
-// TODO: Some sort of delegate method.
-
-#pragma mark -<ECVAVReceiving> <ECVVideoStorageDelegate>
-
-- (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame
+- (void)play
+{
+}
+- (void)stop
+{
+}
+- (void)receiveVideoFrame:(ECVVideoFrame *)frame
 {
 	NSData *const data = [_encoder encodedDataWithVideoFrame:frame];
 	@synchronized(self) {

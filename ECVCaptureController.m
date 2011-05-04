@@ -359,7 +359,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	return NSMakeRect(NSMinX(r) + NSWidth(r) * b, NSMinY(r) + NSHeight(r) * b, NSWidth(r) * b2, NSHeight(r) * b2);
 }
 
-#pragma mark -ECVCaptureController(ECVFromDocument)
+#pragma mark -ECVCaptureController(ECVFromDocument) <ECVAVReceiving>
 
 - (void)play
 {
@@ -371,19 +371,13 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[videoView stopDrawing];
 	[self stopRecording:self];
 }
-
-#pragma mark -ECVCaptureController(ECVFromDocument) <ECVAVReceiving> <ECVAudioStorageDelegate>
-
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue
 {
 //	if(_movieRecorder) @synchronized(self) {
 //		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
 //	}
 }
-
-#pragma mark -ECVCaptureController(ECVFromDocument) <ECVAVReceiving> <ECVVideoStorageDelegate>
-
-- (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame
+- (void)receiveVideoFrame:(ECVVideoFrame *)frame
 {
 	[videoView pushFrame:frame];
 //	if(_movieRecorder) @synchronized(self) {

@@ -116,7 +116,4 @@ typedef NSInteger ECVCropBorder;
 
 @interface ECVCaptureController(ECVFromDocument) <ECVAVReceiving>
 
-- (void)play;
-- (void)stop;
-
 @end

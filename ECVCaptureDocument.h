@@ -31,18 +31,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models/Storages/Video
 #import "ECVVideoStorage.h"
 
-// Models
-@class ECVStreamingServer;
+// Other Sources
+@class ECVReadWriteLock;
 
-@protocol ECVAVReceiving</*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
-@end
-
-@interface ECVCaptureDocument : NSDocument <ECVAVReceiving>
+@interface ECVCaptureDocument : NSDocument </*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
 {
 	@private
 //	ECVAudioStorage *_audioStorage;
 	ECVVideoStorage *_videoStorage;
-	ECVStreamingServer *_server;
+	ECVReadWriteLock *_lock;
+	NSMutableArray *_receivers;
 }
 
 @property(assign, getter=isPlaying) BOOL playing;
@@ -52,5 +50,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)play; // Do not call directly.
 - (void)stop;
+
+@end
+
+@protocol ECVAVReceiving
+
+- (void)play;
+- (void)stop;
+// TODO: Audio.
+- (void)receiveVideoFrame:(ECVVideoFrame *)frame;
 
 @end

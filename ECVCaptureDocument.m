@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVEncoder.h"
 #import "ECVStreamingServer.h"
 
+// Other Sources
+#import "ECVReadWriteLock.h"
+
 @implementation ECVCaptureDocument
 
 #pragma mark -ECVCaptureDocument
@@ -59,18 +62,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)play
 {
-	[[self windowControllers] makeObjectsPerformSelector:@selector(play)];
+	[_receivers makeObjectsPerformSelector:@selector(play)];
 }
 - (void)stop
 {
-	[[self windowControllers] makeObjectsPerformSelector:@selector(stop)];
+	[_receivers makeObjectsPerformSelector:@selector(stop)];
 }
 
 #pragma mark -NSDocument
 
 - (void)makeWindowControllers
 {
-	[self addWindowController:[[[ECVCaptureController alloc] init] autorelease]];
+	ECVCaptureController *const controller = [[[ECVCaptureController alloc] init] autorelease];
+	[self addWindowController:controller];
+	[_lock writeLock];
+	[_receivers addObject:controller];
+	[_lock unlock];
 }
 - (NSString *)displayName
 {
@@ -95,12 +102,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
 		[_videoStorage setFrameRate:QTMakeTime(1001, 60000)];
 		[_videoStorage setPixelAspectRatio:ECVMakeRational(4, 3)];
+		_lock = [[ECVReadWriteLock alloc] init];
+		_receivers = [[NSMutableArray alloc] init];
 
 		ECVEncoder *const encoder = [[[ECVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
 		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:1234] autorelease];
-		_server = [[ECVStreamingServer alloc] init];
-		[_server setEncoder:encoder];
-		[_server setServer:HTTPServer];
+		ECVStreamingServer *const server = [[ECVStreamingServer alloc] init];
+		[server setEncoder:encoder];
+		[server setServer:HTTPServer];
+		[_receivers addObject:server];
 	}
 	return self;
 }
@@ -111,19 +121,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[_videoStorage setDelegate:nil];
 //	[_audioStorage release];
 	[_videoStorage release];
+	[_lock release];
+	[_receivers release];
 	[super dealloc];
 }
 
-#pragma mark -<ECVAVReceiving> <ECVAudioStorageDelegate>
+#pragma mark -<ECVAudioStorageDelegate>
 
 // TODO: Some sort of delegate method.
 
-#pragma mark -<ECVAVReceiving> <ECVVideoStorageDelegate>
+#pragma mark -<ECVVideoStorageDelegate>
 
 - (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame
 {
-	for(ECVCaptureController *const controller in [self windowControllers]) [controller videoStorage:storage didFinishFrame:frame];
-	[_server videoStorage:storage didFinishFrame:frame];
+	[_lock readLock];
+	[_receivers makeObjectsPerformSelector:@selector(receiveVideoFrame:) withObject:frame];
+	[_lock unlock];
 }
 
 @end
