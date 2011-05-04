@@ -101,28 +101,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)addVideoPipe:(ECVVideoPipe *)pipe
 {
+	[self lock];
 	[self addPipe:pipe];
-	[_pendingPipes addObject:pipe];
+	CFSetAddValue(_pendingPipes, pipe);
+	[self unlock];
 }
 - (void)removeVideoPipe:(ECVVideoPipe *)pipe
 {
-	[_pendingPipes removeObjectIdenticalTo:pipe];
+	[self lock];
+	CFSetRemoveValue(_pendingPipes, pipe);
 	[self removePipe:pipe];
+	[self unlock];
 }
 
-#pragma mark -
+#pragma mark -ECVVideoStorage(ECVFromPipe_Thread)
 
 - (void)videoPipeDidFinishFrame:(ECVVideoPipe *)pipe
 {
-	[_pendingPipes removeObjectIdenticalTo:pipe];
-	if([_pendingPipes count]) return;
-	[_pendingPipes addObjectsFromArray:[self pipes]];
-	for(ECVVideoPipe *const p in _pendingPipes) [p nextOutputFrame];
-	if(_pendingBuffer) [[self delegate] videoStorage:self didFinishFrame:[self finishedFrameWithFinishedBuffer:[_pendingBuffer autorelease]]];
-	_pendingBuffer = [[self nextBuffer] retain];
+	BOOL finishedFrame = NO;
+	ECVVideoFrame *frame = nil;
+	[self lock];
+	CFSetRemoveValue(_pendingPipes, pipe);
+	if(!CFSetGetCount(_pendingPipes)) {
+		[(NSMutableSet *)_pendingPipes addObjectsFromArray:[self pipes]];
+		finishedFrame = YES;
+		if(_pendingBuffer) {
+			frame = [self finishedFrameWithFinishedBuffer:_pendingBuffer];
+			[_pendingBuffer release];
+		}
+		_pendingBuffer = [[self nextBuffer] retain];
+	}
+	[self unlock];
+	if(finishedFrame) for(ECVVideoPipe *const p in (NSSet *)_pendingPipes) [p nextOutputFrame];
+	if(frame) [[self delegate] videoStorage:self didFinishFrame:frame];
 }
 - (void)videoPipe:(ECVVideoPipe *)pipe drawPixelBuffer:(ECVPixelBuffer *)buffer
 {
+	// We don't need to lock because _pendingBuffer only changes once every frame is done drawing to it.
+	// We don't need to expose the drawing options because by this point, the buffer should already be deinterlaced.
 	[_pendingBuffer drawPixelBuffer:buffer options:kNilOptions atPoint:[pipe position]];
 }
 
@@ -132,14 +148,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if((self = [super init])) {
 		_lock = [[NSRecursiveLock alloc] init];
-		_pendingPipes = [[NSMutableArray alloc] init];
+		_pendingPipes = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 	}
 	return self;
 }
 - (void)dealloc
 {
 	[_lock release];
-	[_pendingPipes release];
+	if(_pendingPipes) CFRelease(_pendingPipes);
 	[_pendingBuffer release];
 	[super dealloc];
 }

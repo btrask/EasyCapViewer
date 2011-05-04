@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	OSType _pixelFormat;
 	QTTime _frameRate;
 	ECVRational _pixelAspectRatio;
-	NSMutableArray *_pendingPipes;
+	CFMutableSetRef _pendingPipes;
 	ECVMutablePixelBuffer *_pendingBuffer;
 }
 
@@ -59,9 +59,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)addVideoPipe:(ECVVideoPipe *)pipe;
 - (void)removeVideoPipe:(ECVVideoPipe *)pipe;
 
-- (void)videoPipeDidFinishFrame:(ECVVideoPipe *)pipe;
-- (void)videoPipe:(ECVVideoPipe *)pipe drawPixelBuffer:(ECVPixelBuffer *)buffer;
-
 @end
 
 @interface ECVVideoStorage(ECVAbstract)
@@ -70,6 +67,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVMutablePixelBuffer *)nextBuffer;
 - (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer;
+
+@end
+
+@interface ECVVideoStorage(ECVFromPipe_Thread)
+
+- (void)videoPipeDidFinishFrame:(ECVVideoPipe *)pipe;
+- (void)videoPipe:(ECVVideoPipe *)pipe drawPixelBuffer:(ECVPixelBuffer *)buffer;
 
 @end
 

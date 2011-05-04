@@ -91,7 +91,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //		[_audioStorage setDelegate:self];
 		_videoStorage = [[ECVVideoStorage alloc] init];
 		[_videoStorage setDelegate:self];
-		[_videoStorage setPixelSize:(ECVIntegerSize){720, 240}];
+		[_videoStorage setPixelSize:(ECVIntegerSize){720, 240}]; // TODO: Once we have deinterlacing, we will have to require line doubled output.
 		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
 		[_videoStorage setFrameRate:QTMakeTime(1001, 60000)];
 		[_videoStorage setPixelAspectRatio:ECVMakeRational(4, 3)];
