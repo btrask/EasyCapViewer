@@ -151,6 +151,11 @@ enum {
 		@"Cache-Control: no-cache\r\n"
 		@"Content-Type: application/x-octet-stream\r\n" // TODO: Get the MIME type from the encoder.
 		@"\r\n";
+	int flag = YES;
+	if(setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &flag, sizeof(flag)) != 0) {
+		(void)close(socket);
+		return;
+	}
 	NSFileHandle *const handle = [[NSFileHandle alloc] initWithFileDescriptor:socket closeOnDealloc:YES];
 	[handle writeData:[HTTPHeader dataUsingEncoding:NSUTF8StringEncoding]];
 	[handle writeData:[_encoder header]];
