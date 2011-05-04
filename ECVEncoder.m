@@ -142,12 +142,12 @@ bail:
 - (BOOL)_lockFormatContext
 {
 	[_lock lock];
-	return avio_open_dyn_buf(&_formatCtx->pb) == 0;
+	return url_open_dyn_buf(&_formatCtx->pb) == 0;
 }
 - (NSData *)_unlockFormatContext
 {
 	uint8_t *bytes = NULL;
-	int const length = avio_close_dyn_buf(_formatCtx->pb, &bytes);
+	int const length = url_close_dyn_buf(_formatCtx->pb, &bytes);
 	[_lock unlock];
 	CFAllocatorContext allocator = {
 		.version = 0,
