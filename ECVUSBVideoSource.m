@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVFoundationAdditions.h"
 
 #define ECVNanosecondsPerMillisecond 1e6
 
@@ -178,6 +179,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		(void)ECVIOReturn2(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&_properties, kCFAllocatorDefault, kNilOptions));
 		_readThreadLock = [[NSLock alloc] init];
 		_readLock = [[NSLock alloc] init];
+		[NSApp ECV_addObserver:self selector:@selector(applicationWillTerminate:) name:NSApplicationWillTerminateNotification];
 		// TODO: Watch for the source being disconnected.
 	}
 	return self;
@@ -239,6 +241,15 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 - (BOOL)setFeatureAtIndex:(u_int16_t)i
 {
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:i length:0 data:NULL];
+}
+
+#pragma mark -
+
+- (void)applicationWillTerminate:(NSNotification *)aNotif
+{
+	[self stop];
+	[_readThreadLock lock]; // Wait for the read thread to finish.
+	[_readThreadLock unlock];
 }
 
 #pragma mark -ECVUSBVideoSource(Private)
@@ -420,6 +431,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 - (void)dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	IOObjectRelease(_service);
 	[_properties release];
 	[_readThreadLock release];

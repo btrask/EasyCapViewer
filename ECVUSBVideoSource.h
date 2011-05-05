@@ -57,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)readIndex:(u_int16_t)i value:(out u_int8_t *)outValue;
 - (BOOL)setFeatureAtIndex:(u_int16_t)i;
 
+- (void)applicationWillTerminate:(NSNotification *)aNotif;
 //- (void)deviceDidDisconnect:(NSNotification *)aNotif;
 //- (void)workspaceWillSleep:(NSNotification *)aNotif;
 
