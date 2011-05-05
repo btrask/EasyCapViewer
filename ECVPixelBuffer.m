@@ -21,6 +21,24 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVPixelBuffer.h"
 
+typedef struct {
+	NSInteger location;
+	NSUInteger length;
+} ECVRange;
+
+NS_INLINE ECVRange ECVIntersectionRange(ECVRange a, ECVRange b)
+{
+	NSInteger const location = MAX(a.location, b.location);
+	NSInteger const maximum = MIN(a.location + a.length, b.location + b.length);
+	return (ECVRange){location, SUB_ZERO(maximum, location)};
+}
+NS_INLINE NSRange ECVIntersectionRange2(ECVRange a, NSRange b)
+{
+	NSInteger const location = MAX(MAX(a.location, (NSInteger)b.location), 0);
+	NSInteger const maximum = MIN(a.location + a.length, b.location + b.length);
+	return NSMakeRange(location, SUB_ZERO(maximum, location));
+}
+
 NS_INLINE NSRange ECVRebaseRange(NSRange range, NSRange base)
 {
 	NSRange r = NSIntersectionRange(range, base);
@@ -54,14 +72,14 @@ NS_INLINE void ECVDraw(UInt8 *dst, UInt8 const *src, size_t length, BOOL blended
 }
 NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 const *src, ECVFastPixelBufferInfo *srcInfo, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, size_t length, BOOL blended)
 {
-	NSRange const dstDesiredRange = NSMakeRange(dstPoint.y * dstInfo->bytesPerRow + dstPoint.x * dstInfo->bytesPerPixel, length * dstInfo->bytesPerPixel);
-	NSRange const srcDesiredRange = NSMakeRange(srcPoint.y * srcInfo->bytesPerRow + srcPoint.x * srcInfo->bytesPerPixel, length * srcInfo->bytesPerPixel);
+	ECVRange const dstDesiredRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow + dstPoint.x * dstInfo->bytesPerPixel, length * dstInfo->bytesPerPixel};
+	ECVRange const srcDesiredRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow + srcPoint.x * srcInfo->bytesPerPixel, length * srcInfo->bytesPerPixel};
 
-	NSRange const dstRowRange = NSMakeRange(dstPoint.y * dstInfo->bytesPerRow, dstInfo->bytesPerRow);
-	NSRange const srcRowRange = NSMakeRange(srcPoint.y * srcInfo->bytesPerRow, srcInfo->bytesPerRow);
+	ECVRange const dstRowRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow, dstInfo->bytesPerRow};
+	ECVRange const srcRowRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow, srcInfo->bytesPerRow};
 
-	NSRange const dstValidRange = NSIntersectionRange(NSIntersectionRange(dstDesiredRange, dstRowRange), dstInfo->validRange);
-	NSRange const srcValidRange = NSIntersectionRange(NSIntersectionRange(srcDesiredRange, srcRowRange), srcInfo->validRange);
+	NSRange const dstValidRange = ECVIntersectionRange2(ECVIntersectionRange(dstDesiredRange, dstRowRange), dstInfo->validRange);
+	NSRange const srcValidRange = ECVIntersectionRange2(ECVIntersectionRange(srcDesiredRange, srcRowRange), srcInfo->validRange);
 
 	NSUInteger const dstMinOffset = dstValidRange.location - dstDesiredRange.location;
 	NSUInteger const srcMinOffset = srcValidRange.location - srcDesiredRange.location;
@@ -96,8 +114,8 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 	NSUInteger const dstRowSpacing = useFields ? 2 : 1;
 	BOOL const blended = !!(ECVDrawBlended & options);
 
-	NSRange const dstRows = NSIntersectionRange(NSMakeRange(dstPoint.y, size.height), ECVValidRows(&dstInfo));
-	NSRange const srcRows = NSIntersectionRange(NSMakeRange(srcPoint.y, size.height), ECVValidRows(&srcInfo));
+	NSRange const dstRows = ECVIntersectionRange2((ECVRange){dstPoint.y, size.height}, ECVValidRows(&dstInfo));
+	NSRange const srcRows = ECVIntersectionRange2((ECVRange){srcPoint.y, size.height}, ECVValidRows(&srcInfo));
 	NSUInteger i;
 	for(i = srcRows.location; i < NSMaxRange(srcRows); ++i) {
 		if(ECVDrawToHighField & options || !useFields) {
