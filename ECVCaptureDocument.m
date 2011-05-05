@@ -101,7 +101,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		[_videoStorage setPixelSize:(ECVIntegerSize){720, 240}]; // TODO: Once we have deinterlacing, we will have to require line doubled output.
 		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
 		[_videoStorage setFrameRate:QTMakeTime(1001, 30000)];
-		[_videoStorage setPixelAspectRatio:ECVMakeRational(4, 3)];
+		[_videoStorage setPixelAspectRatio:ECVMakeRational(4320, 4739 * 2)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>. Half height because no deinterlacing yet.
 		_lock = [[ECVReadWriteLock alloc] init];
 		_receivers = [[NSMutableArray alloc] init];
 

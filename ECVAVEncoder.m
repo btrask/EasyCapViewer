@@ -293,9 +293,10 @@ bail:
 		codecCtx->gop_size = 12;
 		codecCtx->pix_fmt = targetPixelFormat;
 
-		ECVIntegerSize const size = [vs pixelSize];
-		codecCtx->width = size.width;
-		codecCtx->height = size.height;
+		ECVIntegerSize const inputSize = [vs pixelSize];
+		ECVRational const ratio = [vs pixelAspectRatio];
+		codecCtx->width = inputSize.width;
+		codecCtx->height = round((double)inputSize.height * ratio.denom / ratio.numer);
 
 		QTTime const rate = [vs frameRate];
 		codecCtx->time_base = (AVRational){
@@ -303,17 +304,11 @@ bail:
 			.den = rate.timeScale,
 		};
 
-		ECVRational const ratio = [vs pixelAspectRatio];
-		stream->sample_aspect_ratio = codecCtx->sample_aspect_ratio = (AVRational){
-			.num = ratio.numer,
-			.den = ratio.denom,
-		};
-
-		if(!(_converter = sws_getContext(size.width, size.height, ECVCodecIDFromPixelFormat([vs pixelFormat]), size.width, size.height, targetPixelFormat, SWS_FAST_BILINEAR, NULL, NULL, NULL))) goto bail;
+		if(!(_converter = sws_getContext(inputSize.width, inputSize.height, ECVCodecIDFromPixelFormat([vs pixelFormat]), codecCtx->width, codecCtx->height, targetPixelFormat, SWS_FAST_BILINEAR, NULL, NULL, NULL))) goto bail;
 		if(!(_scaledFrame = avcodec_alloc_frame())) goto bail;
-		uint8_t *buffer = av_malloc(avpicture_get_size(targetPixelFormat, size.width, size.height));
+		uint8_t *buffer = av_malloc(avpicture_get_size(targetPixelFormat, codecCtx->width, codecCtx->height));
 		if(!buffer) goto bail;
-		(void)avpicture_fill((AVPicture *)_scaledFrame, buffer, targetPixelFormat, size.width, size.height);
+		(void)avpicture_fill((AVPicture *)_scaledFrame, buffer, targetPixelFormat, codecCtx->width, codecCtx->height);
 		if(!(_convertedBuffer = av_malloc(ECV_VIDEO_BUFFER_SIZE))) goto bail;
 	}
 	return self;
