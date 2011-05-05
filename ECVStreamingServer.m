@@ -22,7 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVStreamingServer.h"
 
 // Models
-#import "ECVEncoder.h"
+#import "ECVAVEncoder.h"
 
 enum {
 	ECVRunCondition,

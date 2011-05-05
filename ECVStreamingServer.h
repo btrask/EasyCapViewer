@@ -23,13 +23,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVHTTPServer.h"
 
 // Models
-@class ECVEncoder;
+@class ECVAVEncoder;
 
 @interface ECVStreamingServer : NSObject <ECVAVReceiving, ECVHTTPServerDelegate>
 {
 	@private
 	ECVHTTPServer *_server; // Can theoretically support any kind of server.
-	ECVEncoder *_encoder;
+	ECVAVEncoder *_encoder;
 	NSLock *_receiveThreadLock;
 	NSConditionLock *_receiveLock;
 	BOOL _receive;
@@ -38,6 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 
 @property(retain) ECVHTTPServer *server;
-@property(retain) ECVEncoder *encoder;
+@property(retain) ECVAVEncoder *encoder;
 
 @end

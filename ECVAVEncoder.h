@@ -24,7 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models/Video
 @class ECVVideoFrame;
 
-@interface ECVEncoder : NSObject
+@interface ECVAVEncoder : NSObject
 {
 	@private
 //	id _delegate;
@@ -44,8 +44,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @end
 
-@protocol ECVEncoderDelegate
+@protocol ECVAVEncoderDelegate
 
-//- (void)encoder:(ECVEncoder *)encoder didEncodeVideoData:(NSData *)data;
+//- (void)encoder:(ECVAVEncoder *)encoder didEncodeVideoData:(NSData *)data;
 
 @end

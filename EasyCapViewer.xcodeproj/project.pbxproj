@@ -103,8 +103,8 @@
 		B575544313715CD00041FAAF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B575544213715CD00041FAAF /* libbz2.dylib */; };
 		B575544513715CD10041FAAF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B575544413715CD10041FAAF /* libz.dylib */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
-		B5A05BD6136EDD1E0009C702 /* ECVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVEncoder.m */; };
-		B5A05BD7136EDD1E0009C702 /* ECVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVEncoder.m */; };
+		B5A05BD6136EDD1E0009C702 /* ECVAVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */; };
+		B5A05BD7136EDD1E0009C702 /* ECVAVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */; };
 		B5A05CA3136F10730009C702 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A05CA2136F10730009C702 /* libavcodec.a */; };
 		B5A05CA5136F10730009C702 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A05CA4136F10730009C702 /* libavformat.a */; };
 		B5A05CA7136F10730009C702 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A05CA6136F10730009C702 /* libavutil.a */; };
@@ -280,8 +280,8 @@
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacer.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacer.m; sourceTree = "<group>"; };
-		B5A05BD4136EDD1E0009C702 /* ECVEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVEncoder.h; sourceTree = "<group>"; };
-		B5A05BD5136EDD1E0009C702 /* ECVEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVEncoder.m; sourceTree = "<group>"; };
+		B5A05BD4136EDD1E0009C702 /* ECVAVEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAVEncoder.h; sourceTree = "<group>"; };
+		B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVAVEncoder.m; sourceTree = "<group>"; };
 		B5A05CA2136F10730009C702 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = /usr/local/lib/libavcodec.a; sourceTree = "<absolute>"; };
 		B5A05CA4136F10730009C702 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = /usr/local/lib/libavformat.a; sourceTree = "<absolute>"; };
 		B5A05CA6136F10730009C702 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = /usr/local/lib/libavutil.a; sourceTree = "<absolute>"; };
@@ -385,8 +385,8 @@
 				B50600D31327BC2F00B2F202 /* Video */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
-				B5A05BD4136EDD1E0009C702 /* ECVEncoder.h */,
-				B5A05BD5136EDD1E0009C702 /* ECVEncoder.m */,
+				B5A05BD4136EDD1E0009C702 /* ECVAVEncoder.h */,
+				B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */,
 				B5A05CDF136F148B0009C702 /* ECVHTTPServer.h */,
 				B5A05CE0136F148B0009C702 /* ECVHTTPServer.m */,
 				B5A05CE3136F22D50009C702 /* ECVStreamingServer.h */,
@@ -849,7 +849,7 @@
 				B5BCBB181367C0A200769D61 /* ECVUSBTransferList.m in Sources */,
 				B5BCBB531367F39300769D61 /* ECV05e1_0408Source.m in Sources */,
 				B5F250D8136AB051003EB5AC /* stk11xx-dev-0408.m in Sources */,
-				B5A05BD6136EDD1E0009C702 /* ECVEncoder.m in Sources */,
+				B5A05BD6136EDD1E0009C702 /* ECVAVEncoder.m in Sources */,
 				B5A05CE2136F148B0009C702 /* ECVHTTPServer.m in Sources */,
 				B5A05CE6136F22D50009C702 /* ECVStreamingServer.m in Sources */,
 			);
@@ -902,7 +902,7 @@
 				B5BCBB171367C0A200769D61 /* ECVUSBTransferList.m in Sources */,
 				B5BCBB541367F39300769D61 /* ECV05e1_0408Source.m in Sources */,
 				B5F250D7136AB050003EB5AC /* stk11xx-dev-0408.m in Sources */,
-				B5A05BD7136EDD1E0009C702 /* ECVEncoder.m in Sources */,
+				B5A05BD7136EDD1E0009C702 /* ECVAVEncoder.m in Sources */,
 				B5A05CE1136F148B0009C702 /* ECVHTTPServer.m in Sources */,
 				B5A05CE5136F22D50009C702 /* ECVStreamingServer.m in Sources */,
 			);

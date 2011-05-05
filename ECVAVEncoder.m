@@ -19,7 +19,7 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVEncoder.h"
+#import "ECVAVEncoder.h"
 
 // Models/Storages
 #import "ECVStorage.h"
@@ -44,11 +44,11 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 
 @interface ECVStorage(ECVEncoding)
 
-- (void)_addToEncoder:(ECVEncoder *)encoder;
+- (void)_addToEncoder:(ECVAVEncoder *)encoder;
 
 @end
 
-@interface ECVEncoder(Private)
+@interface ECVAVEncoder(Private)
 
 - (AVStream *)_addStreamForStorage:(ECVStorage *)storage;
 
@@ -57,17 +57,17 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 
 @end
 
-@implementation ECVEncoder
+@implementation ECVAVEncoder
 
-#pragma mark +ECVEncoder
+#pragma mark +ECVAVEncoder
 
 + (void)initialize
 {
-	if([ECVEncoder class] != self) return;
+	if([ECVAVEncoder class] != self) return;
 	av_register_all();
 }
 
-#pragma mark -ECVEncoder
+#pragma mark -ECVAVEncoder
 
 - (id)initWithStorages:(NSArray *)storages
 {
@@ -130,7 +130,7 @@ bail:
 	return written ? data : nil;
 }
 
-#pragma mark -ECVEncoder(Private)
+#pragma mark -ECVAVEncoder(Private)
 
 - (AVStream *)_addStreamForStorage:(ECVStorage *)storage
 {
@@ -185,7 +185,7 @@ bail:
 
 @implementation ECVVideoStorage(ECVEncoding)
 
-- (void)_addToEncoder:(ECVEncoder *)encoder
+- (void)_addToEncoder:(ECVAVEncoder *)encoder
 {
 	AVStream *const stream = [encoder _addStreamForStorage:self];
 	AVCodecContext *const codecCtx = stream->codec;

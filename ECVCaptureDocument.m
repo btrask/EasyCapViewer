@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
 
 // Models
-#import "ECVEncoder.h"
+#import "ECVAVEncoder.h"
 #import "ECVStreamingServer.h"
 
 // Other Sources
@@ -105,7 +105,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_lock = [[ECVReadWriteLock alloc] init];
 		_receivers = [[NSMutableArray alloc] init];
 
-		ECVEncoder *const encoder = [[[ECVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
+		ECVAVEncoder *const encoder = [[[ECVAVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
 		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:1234] autorelease];
 		ECVStreamingServer *const server = [[ECVStreamingServer alloc] init];
 		[server setEncoder:encoder];
