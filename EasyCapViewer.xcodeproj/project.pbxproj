@@ -102,6 +102,7 @@
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
 		B575544313715CD00041FAAF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B575544213715CD00041FAAF /* libbz2.dylib */; };
 		B575544513715CD10041FAAF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B575544413715CD10041FAAF /* libz.dylib */; };
+		B5891AFA13718C6C009AE0A2 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5891AF913718C6C009AE0A2 /* libswscale.a */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
 		B5A05BD6136EDD1E0009C702 /* ECVAVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */; };
 		B5A05BD7136EDD1E0009C702 /* ECVAVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */; };
@@ -276,6 +277,7 @@
 		B5280FE7130C89E100FBE537 /* BTUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUserDefaults.m; sourceTree = "<group>"; };
 		B575544213715CD00041FAAF /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = /usr/lib/libbz2.dylib; sourceTree = "<absolute>"; };
 		B575544413715CD10041FAAF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
+		B5891AF913718C6C009AE0A2 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = /opt/local/lib/libswscale.a; sourceTree = "<absolute>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacer.h; sourceTree = "<group>"; };
@@ -353,6 +355,7 @@
 				B5A05CA7136F10730009C702 /* libavutil.a in Frameworks */,
 				B575544313715CD00041FAAF /* libbz2.dylib in Frameworks */,
 				B575544513715CD10041FAAF /* libz.dylib in Frameworks */,
+				B5891AFA13718C6C009AE0A2 /* libswscale.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -472,6 +475,7 @@
 				B5A05CA2136F10730009C702 /* libavcodec.a */,
 				B5A05CA4136F10730009C702 /* libavformat.a */,
 				B5A05CA6136F10730009C702 /* libavutil.a */,
+				B5891AF913718C6C009AE0A2 /* libswscale.a */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";

@@ -20,6 +20,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <libavformat/avformat.h>
+#import <libswscale/swscale.h>
+
+// Models/Storages
+#import "ECVStorage.h"
 
 // Models/Video
 @class ECVVideoFrame;
@@ -29,9 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 //	id _delegate;
 	AVFormatContext *_formatCtx;
-	CFMutableDictionaryRef _streamByStorage;
+	CFMutableDictionaryRef _encoderByStorage;
 	NSData *_header;
-	uint64_t _frameIndex;
 }
 
 - (id)initWithStorages:(NSArray *)storages;
@@ -40,12 +43,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (NSString *)MIMEType;
 - (NSData *)header;
-- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame; // TODO: Async.
+- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame;
 
 @end
 
-@protocol ECVAVEncoderDelegate
+@interface ECVStreamEncoder : NSObject
+{
+	@private
+	ECVAVEncoder *_encoder;
+	ECVStorage *_storage;
+	AVFormatContext *_formatCtx;
+	AVStream *_stream;
+}
 
-//- (void)encoder:(ECVAVEncoder *)encoder didEncodeVideoData:(NSData *)data;
+- (id)initWithEncoder:(ECVAVEncoder *)encoder storage:(id)storage;
+
+@property(readonly) ECVAVEncoder *encoder;
+@property(readonly) id storage;
+
+@property(readonly) AVFormatContext *formatContext;
+@property(readonly) AVStream *stream;
+@property(readonly) AVCodecContext *codecContext;
+@property(readonly) AVCodec *codec;
+
+- (void)lockFormatContext;
+- (NSData *)unlockFormatContext;
+
+@end
+
+@interface ECVVideoStreamEncoder : ECVStreamEncoder
+{
+	@private
+	struct SwsContext *_converter;
+	AVFrame *_scaledFrame;
+	uint8_t *_convertedBuffer;
+	uint64_t _frameIndex;
+}
+
+- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame;
+
+@end
+
+@interface ECVStorage(ECVEncoding)
+
+- (ECVStreamEncoder *)streamEncoderForEncoder:(ECVAVEncoder *)encoder;
 
 @end

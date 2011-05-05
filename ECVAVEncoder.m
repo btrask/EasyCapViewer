@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+#define ECV_VIDEO_BUFFER_SIZE 200000 // Arbitrary, but recommended by libavformat.
+
 static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 {
 	switch(pixelFormat) {
@@ -42,17 +44,12 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 	return PIX_FMT_NONE;
 }
 
-@interface ECVStorage(ECVEncoding)
-
-- (void)_addToEncoder:(ECVAVEncoder *)encoder;
-
-@end
-
 @interface ECVAVEncoder(Private)
 
-- (AVStream *)_addStreamForStorage:(ECVStorage *)storage;
+- (AVStream *)_addStreamForStreamEncoder:(ECVStreamEncoder *)encoder;
 
-- (BOOL)_lockFormatContext;
+- (AVFormatContext *)_formatContext;
+- (void)_lockFormatContext;
 - (NSData *)_unlockFormatContext;
 
 @end
@@ -74,8 +71,8 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 	if((self = [super init])) {
 		if(!(_formatCtx = avformat_alloc_context())) goto bail;
 		if(!(_formatCtx->oformat = av_guess_format("asf", NULL, NULL))) goto bail;
-		_streamByStorage = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, NULL);
-		[storages makeObjectsPerformSelector:@selector(_addToEncoder:) withObject:self];
+		_encoderByStorage = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+		[storages makeObjectsPerformSelector:@selector(streamEncoderForEncoder:) withObject:self];
 
 		(void)av_set_parameters(_formatCtx, NULL);
 		unsigned int i;
@@ -84,7 +81,7 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 			AVCodec *const codec = avcodec_find_encoder(codecCtx->codec_id);
 			if(!codec || avcodec_open(codecCtx, codec) < 0) goto bail;
 		}
-		if(![self _lockFormatContext]) goto bail;
+		[self _lockFormatContext];
 		if(av_write_header(_formatCtx) != 0) {
 			(void)[self _unlockFormatContext];
 			goto bail;
@@ -110,42 +107,29 @@ bail:
 }
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame
 {
-	if(![self _lockFormatContext]) return nil;
-	BOOL written = NO;
-	if([frame lockIfHasBytes]) {
-		AVStream *const stream = (AVStream *)CFDictionaryGetValue(_streamByStorage, [frame videoStorage]);
-		AVPacket pkt;
-		av_init_packet(&pkt);
-		pkt.dts = _frameIndex;
-		pkt.pts = AV_NOPTS_VALUE;
-		pkt.flags |= AV_PKT_FLAG_KEY;
-		pkt.stream_index = stream->index;
-		pkt.data = (uint8_t *)[frame bytes];
-		pkt.size = (int)[frame validRange].length;
-		written = av_interleaved_write_frame(_formatCtx, &pkt) == 0;
-		[frame unlock];
-	}
-	_frameIndex++;
-	NSData *const data = [self _unlockFormatContext];
-	return written ? data : nil;
+	return [(ECVVideoStreamEncoder *)CFDictionaryGetValue(_encoderByStorage, [frame videoStorage]) encodedDataWithVideoFrame:frame];
 }
 
 #pragma mark -ECVAVEncoder(Private)
 
-- (AVStream *)_addStreamForStorage:(ECVStorage *)storage
+- (AVStream *)_addStreamForStreamEncoder:(ECVStreamEncoder *)encoder
 {
 	AVStream *const stream = av_new_stream(_formatCtx, 0);
 	AVCodecContext *const codecCtx = stream->codec;
 	if(_formatCtx->oformat->flags & AVFMT_GLOBALHEADER) codecCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
-	CFDictionarySetValue(_streamByStorage, storage, stream);
+	CFDictionarySetValue(_encoderByStorage, [encoder storage], encoder);
 	return stream;
 }
 
 #pragma mark -
 
-- (BOOL)_lockFormatContext
+- (AVFormatContext *)_formatContext
 {
-	return url_open_dyn_buf(&_formatCtx->pb) == 0;
+	return _formatCtx;
+}
+- (void)_lockFormatContext
+{
+	if(url_open_dyn_buf(&_formatCtx->pb) != 0) ECVAssertNotReached(@"Lock format context failed.");
 }
 - (NSData *)_unlockFormatContext
 {
@@ -176,8 +160,178 @@ bail:
 		}
 		av_free(_formatCtx);
 	}
-	if(_streamByStorage) CFRelease(_streamByStorage);
+	if(_encoderByStorage) CFRelease(_encoderByStorage);
 	[_header release];
+	[super dealloc];
+}
+
+@end
+
+@implementation ECVStreamEncoder
+
+#pragma mark -ECVStreamEncoder
+
+- (id)initWithEncoder:(ECVAVEncoder *)encoder storage:(id)storage
+{
+	if((self = [super init])) {
+		_encoder = encoder;
+		_storage = [storage retain];
+		_formatCtx = [_encoder _formatContext];
+		_stream = [_encoder _addStreamForStreamEncoder:self];
+	}
+	return self;
+}
+
+#pragma mark -
+
+- (ECVAVEncoder *)encoder
+{
+	return _encoder;
+}
+- (id)storage
+{
+	return _storage;
+}
+
+#pragma mark -
+
+- (AVFormatContext *)formatContext
+{
+	return _formatCtx;
+}
+- (AVStream *)stream
+{
+	return _stream;
+}
+- (AVCodecContext *)codecContext
+{
+	return _stream->codec;
+}
+- (AVCodec *)codec
+{
+	return _stream->codec->codec;
+}
+
+#pragma mark -
+
+- (void)lockFormatContext
+{
+	[_encoder _lockFormatContext];
+}
+- (NSData *)unlockFormatContext
+{
+	return [_encoder _unlockFormatContext];
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	// TODO: Remove the stream from the format context. (Important in case an initializer fails.)
+	[_storage release];
+	[super dealloc];
+}
+
+@end
+
+@implementation ECVVideoStreamEncoder
+
+#pragma mark -ECVVideoStreamEncoder
+
+- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame
+{
+	_frameIndex++;
+
+	if(![frame lockIfHasBytes]) return nil;
+	int const lineSize[4] = { [frame bytesPerRow], 0, 0, 0 };
+	uint8_t const *const bytes = [frame bytes];
+	sws_scale(_converter, &bytes, lineSize, 0, [frame pixelSize].height, _scaledFrame->data, _scaledFrame->linesize);
+	[frame unlock];
+
+	BOOL success = NO;
+	[self lockFormatContext];
+
+	AVPacket pkt;
+	av_init_packet(&pkt);
+	pkt.stream_index = [self stream]->index;
+	if(AVFMT_RAWPICTURE & [self formatContext]->oformat->flags) {
+		pkt.pts = _frameIndex - 1;
+		pkt.data = (uint8_t *)_scaledFrame;
+		pkt.size = sizeof(AVPicture);
+		pkt.flags |= AV_PKT_FLAG_KEY;
+		success = av_interleaved_write_frame([self formatContext], &pkt) == 0;
+	} else {
+		_scaledFrame->quality = 1;
+		int size = avcodec_encode_video([self codecContext], _convertedBuffer, ECV_VIDEO_BUFFER_SIZE, _scaledFrame);
+		if(size > 0) {
+			AVFrame *const codedFrame = [self codecContext]->coded_frame;
+			if((uint64_t)codedFrame->pts != AV_NOPTS_VALUE) pkt.pts= av_rescale_q(codedFrame->pts, [self codecContext]->time_base, [self stream]->time_base);
+			if(codedFrame->key_frame) pkt.flags |= AV_PKT_FLAG_KEY;
+			pkt.data = _convertedBuffer;
+			pkt.size = size;
+			success = av_interleaved_write_frame([self formatContext], &pkt) == 0;
+		}
+	}
+
+	NSData *const data = [self unlockFormatContext];
+	return success ? data : nil;
+}
+
+#pragma mark -ECVStreamEncoder
+
+- (id)initWithEncoder:(ECVAVEncoder *)encoder storage:(id)storage
+{
+	if((self = [super initWithEncoder:encoder storage:storage])) {
+		ECVVideoStorage *const vs = storage;
+		AVStream *const stream = [self stream];
+		AVCodecContext *const codecCtx = [self codecContext];
+		enum PixelFormat const targetPixelFormat = PIX_FMT_YUV420P;
+
+		codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+		codecCtx->codec_id = CODEC_ID_MPEG4;
+		codecCtx->bit_rate = 400000; // TODO: Adjustable?
+		codecCtx->gop_size = 12;
+		codecCtx->pix_fmt = targetPixelFormat;
+
+		ECVIntegerSize const size = [vs pixelSize];
+		codecCtx->width = size.width;
+		codecCtx->height = size.height;
+
+		QTTime const rate = [vs frameRate];
+		codecCtx->time_base = (AVRational){
+			.num = rate.timeValue,
+			.den = rate.timeScale,
+		};
+
+		ECVRational const ratio = [vs pixelAspectRatio];
+		stream->sample_aspect_ratio = codecCtx->sample_aspect_ratio = (AVRational){
+			.num = ratio.numer,
+			.den = ratio.denom,
+		};
+
+		if(!(_converter = sws_getContext(size.width, size.height, ECVCodecIDFromPixelFormat([vs pixelFormat]), size.width, size.height, targetPixelFormat, SWS_FAST_BILINEAR, NULL, NULL, NULL))) goto bail;
+		if(!(_scaledFrame = avcodec_alloc_frame())) goto bail;
+		uint8_t *buffer = av_malloc(avpicture_get_size(targetPixelFormat, size.width, size.height));
+		if(!buffer) goto bail;
+		(void)avpicture_fill((AVPicture *)_scaledFrame, buffer, targetPixelFormat, size.width, size.height);
+		if(!(_convertedBuffer = av_malloc(ECV_VIDEO_BUFFER_SIZE))) goto bail;
+	}
+	return self;
+bail:
+	[self release];
+	return nil;
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	if(_converter) sws_freeContext(_converter);
+	if(_scaledFrame) {
+		if(_scaledFrame->data[0]) av_free(_scaledFrame->data[0]);
+		av_free(_scaledFrame);
+	}
+	if(_convertedBuffer) av_free(_convertedBuffer);
 	[super dealloc];
 }
 
@@ -185,32 +339,9 @@ bail:
 
 @implementation ECVVideoStorage(ECVEncoding)
 
-- (void)_addToEncoder:(ECVAVEncoder *)encoder
+- (ECVStreamEncoder *)streamEncoderForEncoder:(ECVAVEncoder *)encoder
 {
-	AVStream *const stream = [encoder _addStreamForStorage:self];
-	AVCodecContext *const codecCtx = stream->codec;
-	codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-	codecCtx->codec_id = CODEC_ID_RAWVIDEO;
-	codecCtx->bit_rate = 400000; // TODO: Adjustable?
-
-	ECVIntegerSize const size = [self pixelSize];
-	codecCtx->width = size.width;
-	codecCtx->height = size.height;
-
-	QTTime const rate = [self frameRate];
-	codecCtx->time_base = (AVRational){
-		.num = rate.timeValue,
-		.den = rate.timeScale,
-	};
-
-	ECVRational const ratio = [self pixelAspectRatio];
-	stream->sample_aspect_ratio = codecCtx->sample_aspect_ratio = (AVRational){
-		.num = ratio.numer,
-		.den = ratio.denom,
-	};
-
-	codecCtx->gop_size = 12;
-	codecCtx->pix_fmt = ECVCodecIDFromPixelFormat([self pixelFormat]);
+	return [[[ECVVideoStreamEncoder alloc] initWithEncoder:encoder storage:self] autorelease];
 }
 
 @end
