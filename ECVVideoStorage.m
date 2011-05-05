@@ -139,7 +139,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	// We don't need to lock because _pendingBuffer only changes once every frame is done drawing to it.
 	// We don't need to expose the drawing options because by this point, the buffer should already be deinterlaced.
-	[_pendingBuffer drawPixelBuffer:buffer options:kNilOptions atPoint:[pipe position]];
+	[_pendingBuffer drawPixelBuffer:buffer options:ECVDrawToHighField | ECVDrawToLowField atPoint:[pipe position]]; // TODO: We should use kNilOptions once we have deinterlacing.
 }
 
 #pragma mark -NSObject
