@@ -34,8 +34,8 @@ NS_INLINE ECVRange ECVIntersectionRange(ECVRange a, ECVRange b)
 }
 NS_INLINE NSRange ECVIntersectionRange2(ECVRange a, NSRange b)
 {
-	NSInteger const location = MAX(MAX(a.location, (NSInteger)b.location), 0);
-	NSInteger const maximum = MIN(a.location + a.length, b.location + b.length);
+	NSUInteger const location = MAX((NSUInteger)MAX(a.location, 0), b.location);
+	NSUInteger const maximum = MAX(MIN(a.location + a.length, b.location + b.length), 0);
 	return NSMakeRange(location, SUB_ZERO(maximum, location));
 }
 
