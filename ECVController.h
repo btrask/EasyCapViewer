@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (id)sharedController;
 
-- (IBAction)configureDevice:(id)sender;
+//- (IBAction)configureDevice:(id)sender;
 - (IBAction)showErrorLog:(id)sender;
 
 @property(nonatomic, assign) BOOL playing;

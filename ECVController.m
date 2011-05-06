@@ -70,10 +70,10 @@ static void ECVSourceAdded(Class deviceClass, io_iterator_t iterator)
 
 #pragma mark -ECVController
 
-- (IBAction)configureDevice:(id)sender
-{
-	[[ECVConfigController sharedConfigController] ECV_toggleWindow:sender];
-}
+//- (IBAction)configureDevice:(id)sender
+//{
+//	[[ECVConfigController sharedConfigController] ECV_toggleWindow:sender];
+//}
 - (IBAction)showErrorLog:(id)sender
 {
 	[[ECVErrorLogController sharedErrorLogController] ECV_toggleWindow:sender];
