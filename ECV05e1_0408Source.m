@@ -123,9 +123,9 @@ enum {
 {
 	BOOL const multipleInputs = [self _compositeInputCount] > 1;
 	if(multipleInputs) {
-		if(!_frameSkipCount--) {
+		if(ECVHighField == fieldType && !_frameSkipCount--) {
 			[self _setVideoSource:[self _nextInput]];
-			_frameSkipCount = 2;
+			_frameSkipCount = 0; // TODO: Figure out WHY we don't seem to need to skip frames anymore. Is it because we're skipping low fields (although we were before, too)? Is it because we're only using 2 inputs? Is it because all of the inputs are active? Note: if one of the 2 is unplugged, the other one becomes distored.
 		}
 		if(_frameSkipCount) return;
 	}
