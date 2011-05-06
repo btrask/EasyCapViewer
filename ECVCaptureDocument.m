@@ -98,9 +98,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //		[_audioStorage setDelegate:self];
 		_videoStorage = [[ECVVideoStorage alloc] init];
 		[_videoStorage setDelegate:self];
-		[_videoStorage setPixelSize:(ECVIntegerSize){720, 480}];
+		[_videoStorage setPixelSize:(ECVIntegerSize){1440, 480}];
 		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
-		[_videoStorage setFrameRate:QTMakeTime(1001, 30000)];
+		[_videoStorage setFrameRate:QTMakeTime(1001, 30000 / 8)];
 		[_videoStorage setPixelAspectRatio:ECVMakeRational(4320, 4739)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>.
 		_lock = [[ECVReadWriteLock alloc] init];
 		_receivers = [[NSMutableArray alloc] init];

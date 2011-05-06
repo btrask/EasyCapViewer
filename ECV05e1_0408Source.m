@@ -73,6 +73,7 @@ enum {
 @interface ECV05e1_0408Source(Private)
 
 - (NSUInteger)_compositeInputCount;
+- (NSUInteger)_firstInput;
 - (NSUInteger)_nextInput;
 - (void)_nextFieldType:(ECVFieldType)fieldType;
 - (void)_removePipe:(ECV05e1_0408Pipe *)pipe;
@@ -98,6 +99,15 @@ enum {
 	if(CFArrayGetCount(_pipesForInput[ECVComposite3Input])) count++;
 	if(CFArrayGetCount(_pipesForInput[ECVComposite4Input])) count++;
 	return count;
+}
+- (NSUInteger)_firstInput
+{
+	if(CFArrayGetCount(_pipesForInput[ECVComposite1Input])) return ECVComposite1Input;
+	if(CFArrayGetCount(_pipesForInput[ECVComposite2Input])) return ECVComposite2Input;
+	if(CFArrayGetCount(_pipesForInput[ECVComposite3Input])) return ECVComposite3Input;
+	if(CFArrayGetCount(_pipesForInput[ECVComposite4Input])) return ECVComposite4Input;
+	if(CFArrayGetCount(_pipesForInput[ECVSVideoInput])) return ECVSVideoInput;
+	return ECVComposite1Input;
 }
 - (NSUInteger)_nextInput
 {
@@ -207,6 +217,7 @@ enum {
 	UInt8 val = 0;
 	switch(source) {
 		case ECVSVideoInput:
+			_currentInput = source;
 			return YES;
 		case ECVComposite1Input: val = 3; break;
 		case ECVComposite2Input: val = 2; break;
@@ -216,6 +227,7 @@ enum {
 			return NO;
 	}
 	if(dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | val << 3)) return NO;
+	_currentInput = source;
 	return YES;
 }
 - (BOOL)_setStreaming:(BOOL)flag
@@ -266,7 +278,7 @@ enum {
 
 - (void)read
 {
-	_currentInput = ECVSVideoInput; // TODO: Get the first input with a pipe.
+	_currentInput = [self _firstInput];
 	_offset = 0;
 	_frameSkipCount = 0;
 	dev_stk0408_initialize_device(self);
