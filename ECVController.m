@@ -180,7 +180,6 @@ static void ECVSourceAdded(Class deviceClass, io_iterator_t iterator)
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
-	ECVLog(ECVNotice, @"Recognized sources: %@", [ECVSource sources]);
 	[(ECVOpenController *)[[[ECVOpenController alloc] init] autorelease] runModal];
 }
 

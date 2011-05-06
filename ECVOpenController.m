@@ -48,6 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if(![NSApp runModalForWindow:[self window]]) return [NSApp terminate:nil];
 	NSArray *const sources = [ECVVideoSource sources];
+	ECVLog(ECVNotice, @"Recognized sources: %@", sources);
 	if(![sources count]) {
 		NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
 		[alert setMessageText:NSLocalizedString(@"No supported capture hardware was found.", nil)];
