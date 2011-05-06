@@ -106,7 +106,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_receivers = [[NSMutableArray alloc] init];
 
 		ECVAVEncoder *const encoder = [[[ECVAVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
-		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:1234] autorelease];
+		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:3453] autorelease];
 		ECVStreamingServer *const server = [[ECVStreamingServer alloc] init];
 		[server setEncoder:encoder];
 		[server setServer:HTTPServer];
