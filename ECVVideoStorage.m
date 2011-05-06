@@ -172,3 +172,40 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 
 @end
+
+@implementation ECVVideoFrame
+
+#pragma mark -ECVVideoFrame
+
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+{
+	if((self = [super init])) {
+		_videoStorage = storage;
+	}
+	return self;
+}
+@synthesize videoStorage = _videoStorage;
+
+#pragma mark -ECVPixelBuffer(ECVAbstract)
+
+- (ECVIntegerSize)pixelSize
+{
+	return [_videoStorage pixelSize];
+}
+- (size_t)bytesPerRow
+{
+	return [_videoStorage bytesPerRow];
+}
+- (OSType)pixelFormat
+{
+	return [_videoStorage pixelFormat];
+}
+
+#pragma mark -
+
+- (NSRange)validRange
+{
+	return NSMakeRange(0, [self hasBytes] ? [[self videoStorage] bufferSize] : 0);
+}
+
+@end

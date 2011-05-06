@@ -20,18 +20,17 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVStorage.h"
+#import "ECVPixelBuffer.h"
 #import <QTKit/QTKit.h>
 
 // Models/Pipes/Video
 @class ECVVideoPipe;
 
-// Models/Video
-#import "ECVVideoFrame.h"
-
 // Other Sources
 #import "ECVRational.h"
 
 @protocol ECVVideoStorageDelegate;
+@class ECVVideoFrame;
 
 @interface ECVVideoStorage : ECVStorage <NSLocking>
 {
@@ -80,5 +79,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @protocol ECVVideoStorageDelegate
 
 - (void)videoStorage:(ECVVideoStorage *)storage didFinishFrame:(ECVVideoFrame *)frame;
+
+@end
+
+@interface ECVVideoFrame : ECVPixelBuffer
+{
+	@private
+	ECVVideoStorage *_videoStorage;
+}
+
+- (id)initWithVideoStorage:(ECVVideoStorage *)storage;
+@property(readonly) id videoStorage;
+
+@end
+
+@interface ECVVideoFrame(ECVAbstract) <NSLocking>
+
+- (void const *)bytes;
+- (BOOL)hasBytes;
+- (BOOL)lockIfHasBytes;
 
 @end

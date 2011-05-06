@@ -26,7 +26,6 @@
 		0E0AC92410203FB300C12D88 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0AC92310203FB300C12D88 /* QTKit.framework */; };
 		0E16F6AE10AE92C600730A18 /* SAA711XChip.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E16F6AD10AE92C600730A18 /* SAA711XChip.m */; };
 		0E26A999100314E6002FF95A /* ECVConfigController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E26A998100314E6002FF95A /* ECVConfigController.m */; };
-		0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
 		0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
 		0E3B7BF21108CC2C003A8A39 /* ECVComponent.r in Rez */ = {isa = PBXBuildFile; fileRef = 0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */; };
 		0E3B7F8B11091253003A8A39 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B3310F679A400935C48 /* InfoPlist.strings */; };
@@ -72,7 +71,6 @@
 		0E9FAA861107A5A7005C55CE /* ECVSources.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0E9FAA851107A5A7005C55CE /* ECVSources.plist */; };
 		0E9FAA871107A662005C55CE /* ECVSources.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0E9FAA851107A5A7005C55CE /* ECVSources.plist */; };
 		0E9FAABE1107B135005C55CE /* ECVVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */; };
-		0E9FAABF1107B138005C55CE /* ECVVideoFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */; };
 		0E9FAAC81107B202005C55CE /* ECVReadWriteLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E89833E10C2D740006BA9C6 /* ECVReadWriteLock.m */; };
 		0E9FAAC91107B207005C55CE /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0AC92310203FB300C12D88 /* QTKit.framework */; };
 		0E9FAAE81107B210005C55CE /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EE547931070F34C00F003AF /* CoreVideo.framework */; };
@@ -178,8 +176,6 @@
 		0E16F6AD10AE92C600730A18 /* SAA711XChip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SAA711XChip.m; sourceTree = "<group>"; };
 		0E26A997100314E6002FF95A /* ECVConfigController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVConfigController.h; sourceTree = "<group>"; };
 		0E26A998100314E6002FF95A /* ECVConfigController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVConfigController.m; sourceTree = "<group>"; };
-		0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoFrame.h; sourceTree = "<group>"; };
-		0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoFrame.m; sourceTree = "<group>"; };
 		0E2C232610AF96A6001B40EF /* ECVVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoStorage.h; sourceTree = "<group>"; };
 		0E2C232710AF96A6001B40EF /* ECVVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoStorage.m; sourceTree = "<group>"; };
 		0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; path = ECVComponent.r; sourceTree = "<group>"; };
@@ -385,7 +381,6 @@
 				B5BCBAE71366800A00769D61 /* Devices */,
 				B5BCBAF913668ED600769D61 /* Pipes */,
 				B5BCBAFA13668EE400769D61 /* Storages */,
-				B50600D31327BC2F00B2F202 /* Video */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
 				B5A05BD4136EDD1E0009C702 /* ECVAVEncoder.h */,
@@ -576,17 +571,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		B50600D31327BC2F00B2F202 /* Video */ = {
-			isa = PBXGroup;
-			children = (
-				B506006F132794E400B2F202 /* ECVPixelBuffer.h */,
-				B5060070132794E400B2F202 /* ECVPixelBuffer.m */,
-				0E2C230910AF91C6001B40EF /* ECVVideoFrame.h */,
-				0E2C230A10AF91C6001B40EF /* ECVVideoFrame.m */,
-			);
-			name = Video;
-			sourceTree = "<group>";
-		};
 		B5280FFD130CADD400FBE537 /* External */ = {
 			isa = PBXGroup;
 			children = (
@@ -660,6 +644,8 @@
 				B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */,
 				B50600641327948000B2F202 /* ECVIndependentVideoStorage.h */,
 				B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */,
+				B506006F132794E400B2F202 /* ECVPixelBuffer.h */,
+				B5060070132794E400B2F202 /* ECVPixelBuffer.m */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -832,7 +818,6 @@
 				0E4D76CC110454E100FE3DDC /* ECVComponent.m in Sources */,
 				0E4D780111062C6900FE3DDC /* SAA711XChip.m in Sources */,
 				0E9FAABE1107B135005C55CE /* ECVVideoStorage.m in Sources */,
-				0E9FAABF1107B138005C55CE /* ECVVideoFrame.m in Sources */,
 				0E9FAAC81107B202005C55CE /* ECVReadWriteLock.m in Sources */,
 				0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */,
 				0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
@@ -881,7 +866,6 @@
 				0E984D6B108C65D100CB469C /* ECVErrorLogController.m in Sources */,
 				0EC8BF901090A3F400ED9BB0 /* ECVRectEdgeMask.m in Sources */,
 				0E16F6AE10AE92C600730A18 /* SAA711XChip.m in Sources */,
-				0E2C230B10AF91C6001B40EF /* ECVVideoFrame.m in Sources */,
 				0E2C232810AF96A6001B40EF /* ECVVideoStorage.m in Sources */,
 				0E89833F10C2D740006BA9C6 /* ECVReadWriteLock.m in Sources */,
 				0E9F9B1D10F6753C00935C48 /* ECVLocalizing.m in Sources */,

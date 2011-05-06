@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVDependentVideoStorage.h"
-#import "ECVVideoFrame.h"
 
 // Other Sources
 #import "ECVAppKitAdditions.h"

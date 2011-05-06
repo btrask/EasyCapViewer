@@ -24,9 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVCaptureDocument.h"
 #import "ECVVideoStorage.h"
-#import "ECVVideoFrame.h"
 //#import "ECVMovieRecorder.h"
-#import "ECVFrameRateConverter.h"
 
 // Views
 #import "MPLWindow.h"
