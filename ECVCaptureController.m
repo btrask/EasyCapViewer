@@ -427,12 +427,13 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVIntegerSize const s = [[[self document] videoStorage] pixelSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 
-	_cropSourceAspectRatio = [[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
+	_cropSourceAspectRatio = ECVAspectRatioUnknown;//[[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
 	_cropBorder = [[self defaults] integerForKey:ECVCropBorderKey];
 	[videoView setCropRect:NSRectFromString([[self defaults] objectForKey:ECVCropRectKey])];
 	[self _updateCropRect];
 
-	[self setAspectRatio:[self sizeWithAspectRatio:[[[self defaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
+	[self setAspectRatio:NSMakeSize(8, 3)]; // FIXME: Hardcoded.
+	// [self sizeWithAspectRatio:[[[self defaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]
 
 	[videoView setVsync:[[self defaults] boolForKey:ECVVsyncKey]];
 	[videoView setShowDroppedFrames:[[self defaults] boolForKey:ECVShowDroppedFramesKey]];
@@ -471,15 +472,28 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	if(@selector(togglePlaying:) == action) [anItem setTitle:[[self document] isPlaying] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([self windowContentSize], [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(changeAspectRatio:) == action) {
+		return NO; // TODO: Temporarily disabled.
 		NSSize const s1 = [self sizeWithAspectRatio:[anItem tag]];
 		NSSize const s2 = [videoView aspectRatio];
 		[anItem setState:s1.width / s1.height == s2.width / s2.height];
 	}
 
-	if(@selector(uncrop:) == action) [anItem setState:ECVAspectRatioUnknown == _cropSourceAspectRatio && ECVCropBorderNone == _cropBorder];
-	if(@selector(changeCropBorder:) == action) [anItem setState:[anItem tag] == _cropBorder];
-	if(@selector(changeCropSourceAspectRatio:) == action) [anItem setState:[anItem tag] == _cropSourceAspectRatio && ECVCropBorderCustom != _cropBorder];
-	if(@selector(enterCustomCropMode:) == action) [anItem setState:ECVCropBorderCustom == _cropBorder];
+	if(@selector(uncrop:) == action){
+		return NO; // TODO: Temporarily disabled.
+		[anItem setState:ECVAspectRatioUnknown == _cropSourceAspectRatio && ECVCropBorderNone == _cropBorder];
+	}
+	if(@selector(changeCropBorder:) == action) {
+		return NO; // TODO: Temporarily disabled.
+		[anItem setState:[anItem tag] == _cropBorder];
+	}
+	if(@selector(changeCropSourceAspectRatio:) == action) {
+		return NO; // TODO: Temporarily disabled.
+		[anItem setState:[anItem tag] == _cropSourceAspectRatio && ECVCropBorderCustom != _cropBorder];
+	}
+	if(@selector(enterCustomCropMode:) == action) {
+		return NO; // TODO: Temporarily disabled.
+		[anItem setState:ECVCropBorderCustom == _cropBorder];
+	}
 
 	if(@selector(toggleFloatOnTop:) == action) [anItem setTitle:[[self window] level] == NSFloatingWindowLevel ? NSLocalizedString(@"Turn Floating Off", nil) : NSLocalizedString(@"Turn Floating On", nil)];
 	if(@selector(toggleVsync:) == action) [anItem setTitle:[videoView vsync] ? NSLocalizedString(@"Turn V-Sync Off", nil) : NSLocalizedString(@"Turn V-Sync On", nil)];
@@ -494,6 +508,8 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 //	} else {
 //		if(@selector(stopRecording:) == action) return NO;
 //	}
+	if(@selector(startRecording:) == action) return NO; // TODO: Temporarily disabled.
+	if(@selector(stopRecording:) == action) return NO; // TODO: Temporarily disabled.
 	if(![[self document] isPlaying]) {
 		if(@selector(startRecording:) == action) return NO;
 	}
