@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureDocument.h"
 
 // Controllers
+#import "ECVOpenController.h"
 #import "ECVConfigController.h"
 #import "ECVErrorLogController.h"
 
@@ -173,36 +174,14 @@ static void ECVSourceAdded(Class deviceClass, io_iterator_t iterator)
 {
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceDidWake:) name:NSWorkspaceDidWakeNotification object:[NSWorkspace sharedWorkspace]];
 	[self workspaceDidWake:nil];
-
-
-
-// FIXME: Currently for testing only...
-
-
-
-NSArray *const sources = [ECVSource sources];
-ECVLog(ECVNotice, @"Recognized sources: %@", sources);
-if([sources count]) {
-	ECVVideoSource *const source = [[ECVSource sources] objectAtIndex:0];
-	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
-	[self addDocument:doc];
-	ECVVideoPipe *const p1 = [source videoPipeWithInput:[[source inputs] objectAtIndex:1]];
-	ECVVideoPipe *const p2 = [source videoPipeWithInput:[[source inputs] objectAtIndex:2]];
-	[p1 setPosition:(ECVIntegerPoint){0, 0}];
-	[p2 setPosition:(ECVIntegerPoint){720, 0}];
-	[[doc videoStorage] addVideoPipe:p1];
-	[[doc videoStorage] addVideoPipe:p2];
-	[doc makeWindowControllers];
-	[doc showWindows];
 }
 
+#pragma mark -<NSApplicationDelegate>
 
-
-
-
-
-
-
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+	ECVLog(ECVNotice, @"Recognized sources: %@", [ECVSource sources]);
+	[(ECVOpenController *)[[[ECVOpenController alloc] init] autorelease] runModal];
 }
 
 @end

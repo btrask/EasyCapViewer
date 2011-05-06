@@ -432,7 +432,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[videoView setCropRect:NSRectFromString([[self defaults] objectForKey:ECVCropRectKey])];
 	[self _updateCropRect];
 
-	[self setAspectRatio:NSMakeSize(8, 3)]; // FIXME: Hardcoded.
+	[self setAspectRatio:NSMakeSize(4 * [[[[self document] videoStorage] pipes] count], 3)]; // FIXME: Hardcoded.
 	// [self sizeWithAspectRatio:[[[self defaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]
 
 	[videoView setVsync:[[self defaults] boolForKey:ECVVsyncKey]];

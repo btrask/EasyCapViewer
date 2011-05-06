@@ -27,10 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVCaptureController.h"
 
-// Models
-#import "ECVAVEncoder.h"
-#import "ECVStreamingServer.h"
-
 // Other Sources
 #import "ECVReadWriteLock.h"
 
@@ -60,6 +56,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
+- (NSArray *)receivers
+{
+	return [[_receivers copy] autorelease];
+}
+- (void)addReceiver:(id<ECVAVReceiving>)receiver
+{
+	[_lock writeLock];
+	[_receivers addObject:receiver];
+	[_lock unlock];
+}
+- (void)removeReceiver:(id<ECVAVReceiving>)receiver
+{
+	[_lock writeLock];
+	[_receivers removeObjectIdenticalTo:receiver];
+	[_lock unlock];
+}
+
+#pragma mark -
+
 - (void)play
 {
 	[_receivers makeObjectsPerformSelector:@selector(play)];
@@ -75,9 +90,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	ECVCaptureController *const controller = [[[ECVCaptureController alloc] init] autorelease];
 	[self addWindowController:controller];
-	[_lock writeLock];
-	[_receivers addObject:controller];
-	[_lock unlock];
+	[self addReceiver:controller];
 }
 - (NSString *)displayName
 {
@@ -98,19 +111,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //		[_audioStorage setDelegate:self];
 		_videoStorage = [[ECVVideoStorage alloc] init];
 		[_videoStorage setDelegate:self];
-		[_videoStorage setPixelSize:(ECVIntegerSize){1440, 480}];
-		[_videoStorage setPixelFormat:kCVPixelFormatType_422YpCbCr8];
-		[_videoStorage setFrameRate:QTMakeTime(1001 * 2, 30000)]; // * 2 for use with 2 inputs from EasyCap 002.
-		[_videoStorage setPixelAspectRatio:ECVMakeRational(4320, 4739)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>.
 		_lock = [[ECVReadWriteLock alloc] init];
 		_receivers = [[NSMutableArray alloc] init];
-
-		ECVAVEncoder *const encoder = [[[ECVAVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:_videoStorage, nil]] autorelease];
-		ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:3453] autorelease];
-		ECVStreamingServer *const server = [[ECVStreamingServer alloc] init];
-		[server setEncoder:encoder];
-		[server setServer:HTTPServer];
-		[_receivers addObject:server];
 	}
 	return self;
 }

@@ -19,51 +19,16 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-// Storages/Audio
-//#import "ECVAudioStorage.h"
-
-// Models/Sources/Video
-#import "ECVVideoSource.h"
-
-// Models/Pipes/Video
-#import "ECVVideoPipe.h"
-
-// Models/Storages/Video
-#import "ECVVideoStorage.h"
-
-// Other Sources
-@class ECVReadWriteLock;
-
-@protocol ECVAVReceiving;
-
-@interface ECVCaptureDocument : NSDocument </*ECVAudioStorageDelegate, */ECVVideoStorageDelegate>
+@interface ECVOpenController : NSWindowController
 {
 	@private
-//	ECVAudioStorage *_audioStorage;
-	ECVVideoStorage *_videoStorage;
-	ECVReadWriteLock *_lock;
-	NSMutableArray *_receivers;
+	IBOutlet NSTextView *textView;
+	IBOutlet NSPopUpButton *inputPopUp;
 }
 
-@property(assign, getter=isPlaying) BOOL playing;
+- (IBAction)open:(id)sender;
+- (IBAction)quit:(id)sender;
 
-//@property(readonly) ECVAudioStorage *audioStorage;
-@property(readonly) ECVVideoStorage *videoStorage;
-
-@property(readonly) NSArray *receivers;
-- (void)addReceiver:(id<ECVAVReceiving>)receiver;
-- (void)removeReceiver:(id<ECVAVReceiving>)receiver;
-
-- (void)play; // Do not call directly.
-- (void)stop;
-
-@end
-
-@protocol ECVAVReceiving
-
-- (void)play;
-- (void)stop;
-// TODO: Audio.
-- (void)receiveVideoFrame:(ECVVideoFrame *)frame;
+- (void)runModal;
 
 @end

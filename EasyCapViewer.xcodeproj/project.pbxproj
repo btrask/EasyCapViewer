@@ -102,6 +102,9 @@
 		B575544513715CD10041FAAF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B575544413715CD10041FAAF /* libz.dylib */; };
 		B5891AFA13718C6C009AE0A2 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5891AF913718C6C009AE0A2 /* libswscale.a */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
+		B58AE0541374725A00E64F37 /* ECVOpenController.m in Sources */ = {isa = PBXBuildFile; fileRef = B58AE0531374725A00E64F37 /* ECVOpenController.m */; };
+		B58AE1151374815E00E64F37 /* ECVOpen.xib in Resources */ = {isa = PBXBuildFile; fileRef = B58AE1141374815E00E64F37 /* ECVOpen.xib */; };
+		B58AE1491374838E00E64F37 /* Release Notes.rtf in Resources */ = {isa = PBXBuildFile; fileRef = B58AE1481374838E00E64F37 /* Release Notes.rtf */; };
 		B5A05BD6136EDD1E0009C702 /* ECVAVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */; };
 		B5A05BD7136EDD1E0009C702 /* ECVAVEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */; };
 		B5A05CA3136F10730009C702 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A05CA2136F10730009C702 /* libavcodec.a */; };
@@ -276,6 +279,10 @@
 		B5891AF913718C6C009AE0A2 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = /opt/local/lib/libswscale.a; sourceTree = "<absolute>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
+		B58AE0521374725A00E64F37 /* ECVOpenController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVOpenController.h; sourceTree = "<group>"; };
+		B58AE0531374725A00E64F37 /* ECVOpenController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVOpenController.m; sourceTree = "<group>"; };
+		B58AE1141374815E00E64F37 /* ECVOpen.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVOpen.xib; sourceTree = "<group>"; };
+		B58AE1481374838E00E64F37 /* Release Notes.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = "Release Notes.rtf"; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacer.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacer.m; sourceTree = "<group>"; };
 		B5A05BD4136EDD1E0009C702 /* ECVAVEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAVEncoder.h; sourceTree = "<group>"; };
@@ -363,6 +370,8 @@
 			children = (
 				0E78CA4D0FC9128000E9C148 /* ECVController.h */,
 				0E78CA4E0FC9128000E9C148 /* ECVController.m */,
+				B58AE0521374725A00E64F37 /* ECVOpenController.h */,
+				B58AE0531374725A00E64F37 /* ECVOpenController.m */,
 				0E78C93C0FC8F98100E9C148 /* ECVCaptureController.h */,
 				0E78C93D0FC8F98100E9C148 /* ECVCaptureController.m */,
 				0E26A997100314E6002FF95A /* ECVConfigController.h */,
@@ -544,6 +553,7 @@
 				0E4D75C111044A5900FE3DDC /* ECVComponent-Info.plist */,
 				0E9FAA851107A5A7005C55CE /* ECVSources.plist */,
 				0E9F9B4110F679B800935C48 /* ECVMenu.xib */,
+				B58AE1141374815E00E64F37 /* ECVOpen.xib */,
 				0E9F9B3E10F679B800935C48 /* ECVCapture.xib */,
 				0E9F9B3F10F679B800935C48 /* ECVConfig.xib */,
 				0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */,
@@ -554,6 +564,7 @@
 				0E9F9B2D10F679A400935C48 /* ECVConfig.strings */,
 				0E9F9B2F10F679A400935C48 /* ECVErrorLog.strings */,
 				0E9F9B3510F679A400935C48 /* Localizable.strings */,
+				B58AE1481374838E00E64F37 /* Release Notes.rtf */,
 				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
@@ -794,6 +805,8 @@
 				0E9F9B4410F679B800935C48 /* ECVErrorLog.xib in Resources */,
 				0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */,
 				0E9FAA861107A5A7005C55CE /* ECVSources.plist in Resources */,
+				B58AE1151374815E00E64F37 /* ECVOpen.xib in Resources */,
+				B58AE1491374838E00E64F37 /* Release Notes.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -893,6 +906,7 @@
 				B5A05BD7136EDD1E0009C702 /* ECVAVEncoder.m in Sources */,
 				B5A05CE1136F148B0009C702 /* ECVHTTPServer.m in Sources */,
 				B5A05CE5136F22D50009C702 /* ECVStreamingServer.m in Sources */,
+				B58AE0541374725A00E64F37 /* ECVOpenController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
