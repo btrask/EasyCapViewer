@@ -354,6 +354,7 @@ enum {
 	NSUInteger const i = [input unsignedIntegerValue];
 	ECV05e1_0408Pipe *const pipe = [[[ECV05e1_0408Pipe alloc] initWithVideoSource:self] autorelease];
 	[pipe setInput:i];
+	[pipe setName:[self localizedStringForInput:input]];
 	// TODO: Set up other pipe attrs.
 	CFArrayAppendValue(_pipesForInput[i], pipe); // TODO: Locking will eventually be necessary.
 	return pipe;

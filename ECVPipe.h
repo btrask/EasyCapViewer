@@ -30,11 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	ECVSource *_source; // Retained.
 	ECVStorage *_storage; // Non-retained.
+	NSString *_name;
 	BOOL _playing;
 }
 
 @property(readonly) ECVSource *source;
 @property(readonly) ECVStorage *storage;
+@property(copy) NSString *name;
 
 - (void)play; // Do not call directly.
 - (void)stop;

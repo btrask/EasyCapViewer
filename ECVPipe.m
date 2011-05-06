@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return _storage;
 }
+@synthesize name = _name;
 
 #pragma mark -
 
@@ -74,7 +75,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)dealloc
 {
 	[_source release];
+	[_name release];
 	[super dealloc];
+}
+
+#pragma mark -<NSObject>
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@: %p '%@'>", [self class], self, [self name]];
 }
 
 @end
