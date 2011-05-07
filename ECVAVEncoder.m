@@ -285,7 +285,7 @@ bail:
 		enum PixelFormat const targetPixelFormat = PIX_FMT_YUV420P;
 
 		codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-		codecCtx->codec_id = CODEC_ID_MPEG4;
+		codecCtx->codec_id = CODEC_ID_MPEG1VIDEO;
 		codecCtx->bit_rate = 400000; // TODO: Adjustable?
 		codecCtx->gop_size = 12;
 		codecCtx->pix_fmt = targetPixelFormat;
