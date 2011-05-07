@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //	NSUInteger _frameRepeatCount;
 
 	// TODO: More powerful frame conversion (right now we just drop low fields).
-	BOOL _waitingForNextOutputFrame;
+	BOOL _waitingForNextInputField;
 	BOOL _waitingForHighField;
 
 

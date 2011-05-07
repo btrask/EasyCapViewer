@@ -141,7 +141,7 @@ enum {
 		{0x05, 0x90},
 		{0x06, 0xeb},
 		{0x07, 0xe0},
-		{0x08, SAA711XVNOIVerticalNoiseReductionFast | SAA711XHTCHorizontalTimeConstantFastLocking | SAA711XFOETForcedOddEventToggle | ([device is60HzFormat] ? SAA711XFSELManualFieldSelection60Hz : SAA711XFSELManualFieldSelection50Hz)},
+		{0x08, SAA711XVNOIVerticalNoiseReductionNormal | SAA711XHTCHorizontalTimeConstantFastLocking | SAA711XFOETForcedOddEventToggle | ([device is60HzFormat] ? SAA711XFSELManualFieldSelection60Hz : SAA711XFSELManualFieldSelection50Hz)},
 		{0x09, [device SVideo] ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb},
 		{0x0e, SAA711XCCOMBAdaptiveChrominanceComb | SAA711XFCTCFastColorTimeConstant | [device SAA711XCSTDFormat]},
 		{0x0f, SAA711XCGAINChromaGainValueNominal | SAA711XACGCAutomaticChromaGainControlEnabled},

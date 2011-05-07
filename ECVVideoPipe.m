@@ -33,7 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (id)initWithVideoSource:(ECVVideoSource *)source
 {
-	return [super initWithSource:source];
+	if((self = [super initWithSource:source])) {
+		_waitingForNextInputField = YES;
+	}
+	return self;
 }
 - (id)videoSource
 {
@@ -59,15 +62,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)nextInputFieldType:(ECVFieldType)fieldType
 {
-	if(!_waitingForHighField && !_waitingForNextOutputFrame) {
-		_waitingForNextOutputFrame = YES;
+	if(!_waitingForHighField) {
 		[[self videoStorage] videoPipeDidFinishFrame:self]; // TODO: Right now we're just dropping low fields. Do full deinterlacing later.
+		_waitingForNextInputField = NO;
 	}
 	_waitingForHighField = (ECVHighField != fieldType);
 }
 - (void)drawInputPixelBuffer:(ECVPixelBuffer *)buffer
 {
-	if(!_waitingForHighField && !_waitingForNextOutputFrame) {
+	if(!_waitingForHighField && !_waitingForNextInputField) {
 		[[self videoStorage] videoPipe:self drawPixelBuffer:buffer];
 	}
 }
@@ -83,7 +86,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)nextOutputFrame
 {
-	_waitingForNextOutputFrame = NO; // FIXME: It isn't this simple. We probably need to buffer the drawing instead of just ignoring it.
+	_waitingForNextInputField = YES; // FIXME: It isn't this simple. We probably need to buffer the drawing instead of just ignoring it.
 }
 
 @end
