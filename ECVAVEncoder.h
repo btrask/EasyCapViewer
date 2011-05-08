@@ -77,7 +77,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	struct SwsContext *_converter;
 	AVFrame *_scaledFrame;
 	uint8_t *_convertedBuffer;
-	uint64_t _frameIndex;
+	NSUInteger _frameRepeatCount;
 }
 
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame;

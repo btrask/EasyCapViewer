@@ -51,6 +51,12 @@ static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
 
 @end
 
+@interface ECVVideoStreamEncoder(Private)
+
+- (NSData *)_encodedData;
+
+@end
+
 @implementation ECVAVEncoder
 
 #pragma mark +ECVAVEncoder
@@ -237,26 +243,33 @@ bail:
 
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame
 {
-	_frameIndex++;
-
 	if(![frame lockIfHasBytes]) return nil;
 	int const lineSize[4] = { [frame bytesPerRow], 0, 0, 0 };
 	uint8_t const *const bytes = [frame bytes];
 	sws_scale(_converter, &bytes, lineSize, 0, [frame pixelSize].height, _scaledFrame->data, _scaledFrame->linesize);
 	[frame unlock];
 
-	BOOL success = NO;
-	[self lockFormatContext];
+	if(1 == _frameRepeatCount) return [self _encodedData];
 
+	NSMutableData *const data = [NSMutableData data];
+	NSUInteger i = _frameRepeatCount;
+	while(i--) [data appendData:[self _encodedData]];
+	return data;
+}
+
+#pragma mark -ECVVideoStreamEncoder(Private)
+
+- (NSData *)_encodedData
+{
+	[self lockFormatContext];
 	AVPacket pkt;
 	av_init_packet(&pkt);
 	pkt.stream_index = [self stream]->index;
 	if(AVFMT_RAWPICTURE & [self formatContext]->oformat->flags) {
-		pkt.pts = _frameIndex - 1;
 		pkt.data = (uint8_t *)_scaledFrame;
 		pkt.size = sizeof(AVPicture);
 		pkt.flags |= AV_PKT_FLAG_KEY;
-		success = av_interleaved_write_frame([self formatContext], &pkt) == 0;
+		if(av_interleaved_write_frame([self formatContext], &pkt) == 0) return [self unlockFormatContext];
 	} else {
 		_scaledFrame->quality = 1;
 		int size = avcodec_encode_video([self codecContext], _convertedBuffer, ECV_VIDEO_BUFFER_SIZE, _scaledFrame);
@@ -266,12 +279,11 @@ bail:
 			if(codedFrame->key_frame) pkt.flags |= AV_PKT_FLAG_KEY;
 			pkt.data = _convertedBuffer;
 			pkt.size = size;
-			success = av_interleaved_write_frame([self formatContext], &pkt) == 0;
+			if(av_interleaved_write_frame([self formatContext], &pkt) == 0) return [self unlockFormatContext];
 		}
 	}
-
-	NSData *const data = [self unlockFormatContext];
-	return success ? data : nil;
+	(void)[self unlockFormatContext];
+	return nil;
 }
 
 #pragma mark -ECVStreamEncoder
@@ -295,7 +307,12 @@ bail:
 		codecCtx->width = inputSize.width;
 		codecCtx->height = round((double)inputSize.height * ratio.denom / ratio.numer);
 
-		QTTime const rate = [vs frameRate];
+		QTTime rate = [vs frameRate];
+		_frameRepeatCount = 1;
+		if(QTTimeCompare(rate, QTMakeTime(1001, 15000)) == NSOrderedSame) { // FIXME: We should find a list of supported frame rates and convert automatically or something.
+			rate = QTMakeTime(1001, 30000);
+			_frameRepeatCount = 2;
+		}
 		codecCtx->time_base = (AVRational){
 			.num = rate.timeValue,
 			.den = rate.timeScale,
