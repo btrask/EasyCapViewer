@@ -103,3 +103,16 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 - (NSMutableData *)mutableData;
 
 @end
+
+@interface ECVConcreteMutablePixelBuffer : ECVMutablePixelBuffer
+{
+	@private
+	ECVIntegerSize _pixelSize;
+	size_t _bytesPerRow;
+	OSType _pixelFormat;
+	void *_bytes;
+}
+
+- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat;
+
+@end

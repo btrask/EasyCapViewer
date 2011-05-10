@@ -27,6 +27,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 
+@interface ECVVideoStorage(Private)
+
+- (void)_read;
+- (void)_readOneFrame;
+
+@end
+
+static void ECVReadOneFrame(CFRunLoopTimerRef timer, ECVVideoStorage *self)
+{
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	[self _readOneFrame];
+	[pool drain];
+}
+
 @implementation ECVVideoStorage
 
 #pragma mark +NSObject
@@ -52,8 +66,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)setPixelSize:(ECVIntegerSize)size
 {
 	_pixelSize = size;
-	[_pendingBuffer release];
-	_pendingBuffer = nil;
 }
 - (OSType)pixelFormat
 {
@@ -62,8 +74,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)setPixelFormat:(OSType)format
 {
 	_pixelFormat = format;
-	[_pendingBuffer release];
-	_pendingBuffer = nil;
 }
 - (QTTime)frameRate
 {
@@ -103,43 +113,67 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[self lock];
 	[self addPipe:pipe];
-	CFSetAddValue(_pendingPipes, pipe);
 	[self unlock];
 }
 - (void)removeVideoPipe:(ECVVideoPipe *)pipe
 {
 	[self lock];
-	CFSetRemoveValue(_pendingPipes, pipe);
 	[self removePipe:pipe];
 	[self unlock];
 }
 
-#pragma mark -ECVVideoStorage(ECVFromPipe_Thread)
+#pragma mark -ECVVideoStorage(Private)
 
-- (void)videoPipeDidFinishFrame:(ECVVideoPipe *)pipe
+- (void)_read
 {
-	BOOL finishedFrame = NO;
-	ECVVideoFrame *frame = nil;
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	ECVLog(ECVNotice, @"Starting video storage thread.");
+	NSTimeInterval interval = 0.0;
+	(void)QTGetTimeInterval([self frameRate], &interval);
+	NSAssert(interval, @"Video storage must have valid frame rate.");
+
+	CFRunLoopTimerContext context = { .version = 0, .info = self };
+	CFRunLoopTimerRef const timer = CFRunLoopTimerCreate(kCFAllocatorDefault, 0.0, interval, kNilOptions, 0, (CFRunLoopTimerCallBack)ECVReadOneFrame, &context);
+	CFRunLoopAddTimer(CFRunLoopGetCurrent(), timer, kCFRunLoopDefaultMode);
+
+	CFRunLoopRun();
+
+	CFRunLoopTimerInvalidate(timer);
+	CFRelease(timer);
+	ECVLog(ECVNotice, @"Stopping video storage thread.");
+	[pool drain];
+}
+- (void)_readOneFrame
+{
 	[self lock];
-	CFSetRemoveValue(_pendingPipes, pipe);
-	if(!CFSetGetCount(_pendingPipes)) {
-		[(NSMutableSet *)_pendingPipes addObjectsFromArray:[self pipes]];
-		finishedFrame = YES;
-		if(_pendingBuffer) {
-			frame = [self finishedFrameWithFinishedBuffer:_pendingBuffer];
-			[_pendingBuffer release];
-		}
-		_pendingBuffer = [[self nextBuffer] retain];
-	}
+	ECVMutablePixelBuffer *const buffer = [self nextBuffer];
+	NSArray *const pipes = [self pipes];
 	[self unlock];
-	if(finishedFrame) for(ECVVideoPipe *const p in (NSSet *)_pendingPipes) [p nextOutputFrame];
+
+	for(ECVVideoPipe *const pipe in pipes) [pipe readIntoStorageBuffer:buffer];
+
+	[self lock];
+	ECVVideoFrame *const frame = [self finishedFrameWithFinishedBuffer:buffer];
+	if(!_read) CFRunLoopStop(CFRunLoopGetCurrent());
+	[self unlock];
+
 	if(frame) [[self delegate] videoStorage:self didFinishFrame:frame];
 }
-- (void)videoPipe:(ECVVideoPipe *)pipe drawPixelBuffer:(ECVPixelBuffer *)buffer
+
+#pragma mark -ECVStorage
+
+- (void)play
 {
-	// We don't need to lock because _pendingBuffer only changes once every frame is done drawing to it.
-	// We don't need to expose the drawing options because by this point, the buffer should already be deinterlaced.
-	[_pendingBuffer drawPixelBuffer:buffer options:ECVDrawToHighField | ECVDrawToLowField atPoint:[pipe position]]; // TODO: We should use kNilOptions once we have deinterlacing.
+	[self lock];
+	_read = YES;
+	[self unlock];
+	[NSThread detachNewThreadSelector:@selector(_read) toTarget:self withObject:nil];
+}
+- (void)stop
+{
+	[self lock];
+	_read = NO;
+	[self unlock];
 }
 
 #pragma mark -NSObject
@@ -148,15 +182,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	if((self = [super init])) {
 		_lock = [[NSRecursiveLock alloc] init];
-		_pendingPipes = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 	}
 	return self;
 }
 - (void)dealloc
 {
 	[_lock release];
-	if(_pendingPipes) CFRelease(_pendingPipes);
-	[_pendingBuffer release];
 	[super dealloc];
 }
 

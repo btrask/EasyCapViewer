@@ -62,7 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[vs setPixelFormat:kCVPixelFormatType_422YpCbCr8];
 	[vs setPixelAspectRatio:ECVMakeRational(4320, 4739)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>.
 	[vs setFrameRate:QTMakeTime(1001, 30000)];
-	[vs setPixelSize:(ECVIntegerSize){720 * 2, 480}];
+	[vs setPixelSize:(ECVIntegerSize){704 * 2, 480}];
 
 	// FIXME: Yes, we REALLY shouldn't be hardcoding all of this.
 	switch([inputPopUp selectedTag]) {
@@ -73,7 +73,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			ECVVideoPipe *const p1 = [s1 videoPipeWithInput:[[s1 inputs] objectAtIndex:1]];
 			ECVVideoPipe *const p2 = [s2 videoPipeWithInput:[[s2 inputs] objectAtIndex:1]];
 			[p1 setPosition:(ECVIntegerPoint){0, 0}];
-			[p2 setPosition:(ECVIntegerPoint){720, 0}];
+			[p2 setPosition:(ECVIntegerPoint){704, 0}];
 			[vs addVideoPipe:p1];
 			[vs addVideoPipe:p2];
 			break;
@@ -85,7 +85,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			ECVVideoPipe *const p1 = [s1 videoPipeWithInput:[[s1 inputs] objectAtIndex:0]];
 			ECVVideoPipe *const p2 = [s2 videoPipeWithInput:[[s2 inputs] objectAtIndex:0]];
 			[p1 setPosition:(ECVIntegerPoint){0, 0}];
-			[p2 setPosition:(ECVIntegerPoint){720, 0}];
+			[p2 setPosition:(ECVIntegerPoint){704, 0}];
 			[vs addVideoPipe:p1];
 			[vs addVideoPipe:p2];
 			break;
@@ -96,7 +96,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			ECVVideoPipe *const p1 = [s videoPipeWithInput:[[s inputs] objectAtIndex:1]];
 			ECVVideoPipe *const p2 = [s videoPipeWithInput:[[s inputs] objectAtIndex:2]];
 			[p1 setPosition:(ECVIntegerPoint){0, 0}];
-			[p2 setPosition:(ECVIntegerPoint){720, 0}];
+			[p2 setPosition:(ECVIntegerPoint){704, 0}];
 			[vs addVideoPipe:p1];
 			[vs addVideoPipe:p2];
 			[vs setFrameRate:QTMakeTime(1001, 30000 / 2)];
@@ -106,14 +106,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			if([sources count] < 1) return;
 			ECVVideoSource *const s = [sources objectAtIndex:0];
 			[vs addVideoPipe:[s videoPipeWithInput:[[s inputs] objectAtIndex:0]]];
-			[vs setPixelSize:(ECVIntegerSize){720, 480}];
+			[vs setPixelSize:(ECVIntegerSize){704, 480}];
 			break;
 		}
 		case 5: { // 1 EasyCap, Composite 1
 			if([sources count] < 1) return;
 			ECVVideoSource *const s = [sources objectAtIndex:0];
 			[vs addVideoPipe:[s videoPipeWithInput:[[s inputs] objectAtIndex:1]]];
-			[vs setPixelSize:(ECVIntegerSize){720, 480}];
+			[vs setPixelSize:(ECVIntegerSize){704, 480}];
 			break;
 		}
 		default:

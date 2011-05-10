@@ -41,8 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	OSType _pixelFormat;
 	QTTime _frameRate;
 	ECVRational _pixelAspectRatio;
-	CFMutableSetRef _pendingPipes;
-	ECVMutablePixelBuffer *_pendingBuffer;
+	BOOL _read;
 }
 
 @property(assign) NSObject<ECVVideoStorageDelegate> *delegate;

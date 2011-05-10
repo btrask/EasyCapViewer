@@ -25,6 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "SAA711XChip.h"
 #import "VT1612AChip.h" // TODO: Technically, this is an audio chipset...
 
+// Models/Storages/Video
+@class ECVMutablePixelBuffer;
+
 @interface ECV05e1_0408Source : ECVUSBVideoSource <SAA711XDevice, VT1612ADevice>
 {
 	@private
@@ -32,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	VT1612AChip *_VT1612AChip;
 	CFMutableArrayRef _pipesForInput[5];
 	NSUInteger _currentInput;
+	ECVMutablePixelBuffer *_pendingBuffer;
 	NSUInteger _offset;
 	NSUInteger _frameSkipCount;
 }

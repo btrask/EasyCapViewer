@@ -98,6 +98,7 @@ NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 con
 }
 static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, ECVIntegerSize size, ECVPixelBufferDrawingOptions options)
 {
+	if(!src || !dst) return;
 	ECVFastPixelBufferInfo dstInfo = {
 		.bytesPerRow = [dst bytesPerRow],
 		.bytesPerPixel = ECVPixelFormatBytesPerPixel([dst pixelFormat]),
@@ -356,6 +357,69 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 - (void)dealloc
 {
 	[_data release];
+	[super dealloc];
+}
+
+@end
+
+@implementation ECVConcreteMutablePixelBuffer
+
+#pragma mark -ECVConcreteMutablePixelBuffer
+
+- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat
+{
+	if((self = [super init])) {
+		_pixelSize = pixelSize;
+		_bytesPerRow = bytesPerRow;
+		_pixelFormat = pixelFormat;
+		_bytes = malloc([self fullRange].length);
+	}
+	return self;
+}
+
+#pragma mark -ECVMutablePixelBuffer(ECVAbstract)
+
+- (void *)mutableBytes
+{
+	return _bytes;
+}
+
+#pragma mark -ECVPixelBuffer(ECVAbstract)
+
+- (ECVIntegerSize)pixelSize
+{
+	return _pixelSize;
+}
+- (size_t)bytesPerRow
+{
+	return _bytesPerRow;
+}
+- (OSType)pixelFormat
+{
+	return _pixelFormat;
+}
+
+#pragma mark -
+
+- (void const *)bytes
+{
+	return _bytes;
+}
+- (NSRange)validRange
+{
+	return [self fullRange];
+}
+
+#pragma mark -ECVPixelBuffer(ECVAbstract) <NSLocking>
+
+- (void)lock {}
+- (void)unlock {}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	if(_bytes) free(_bytes);
 	[super dealloc];
 }
 

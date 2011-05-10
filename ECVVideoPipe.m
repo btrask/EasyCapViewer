@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithVideoSource:(ECVVideoSource *)source
 {
 	if((self = [super initWithSource:source])) {
-		_waitingForNextInputField = YES;
+		_lock = [[NSLock alloc] init];
 	}
 	return self;
 }
@@ -55,38 +55,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (void)setPosition:(ECVIntegerPoint)point
 {
+	[_lock lock];
 	_position = point;
+	[_lock unlock];
 }
 
 #pragma mark -ECVVideoPipe(ECVFromSource_Threaded)
 
-- (void)nextInputFieldType:(ECVFieldType)fieldType
+- (void)writeField:(ECVPixelBuffer *)buffer type:(ECVFieldType)fieldType
 {
-	if(!_waitingForHighField) {
-		[[self videoStorage] videoPipeDidFinishFrame:self]; // TODO: Right now we're just dropping low fields. Do full deinterlacing later.
-		_waitingForNextInputField = NO;
-	}
-	_waitingForHighField = (ECVHighField != fieldType);
-}
-- (void)drawInputPixelBuffer:(ECVPixelBuffer *)buffer
-{
-	if(!_waitingForHighField && !_waitingForNextInputField) {
-		[[self videoStorage] videoPipe:self drawPixelBuffer:buffer];
-	}
+	if(ECVHighField != fieldType) return;
+	[_lock lock];
+	[_buffer release];
+	_buffer = [buffer retain];
+	[_lock unlock];
 }
 
 #pragma mark -ECVVideoPipe(ECVFromStorage)
 
-- (void)setVideoStorage:(ECVVideoStorage *)videoStorage;
+- (void)setVideoStorage:(ECVVideoStorage *)videoStorage
 {
 	[self setStorage:videoStorage];
 }
 
 #pragma mark -ECVVideoPipe(ECVFromStorage_Threaded)
 
-- (void)nextOutputFrame
+- (void)readIntoStorageBuffer:(ECVMutablePixelBuffer *)buffer
 {
-	_waitingForNextInputField = YES; // FIXME: It isn't this simple. We probably need to buffer the drawing instead of just ignoring it.
+	[_lock lock];
+	ECVPixelBuffer *const current = [[_buffer retain] autorelease];
+	ECVIntegerPoint const position = [self position];
+	[_lock unlock];
+	[buffer drawPixelBuffer:current options:kNilOptions atPoint:position];
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_lock release];
+	[super dealloc];
 }
 
 @end

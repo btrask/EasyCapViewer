@@ -78,7 +78,11 @@ enum {
 - (void)_nextFieldType:(ECVFieldType)fieldType;
 - (void)_removePipe:(ECV05e1_0408Pipe *)pipe;
 
-- (ECVIntegerSize)_inputSize;
+- (ECVIntegerSize)_inputFieldSize;
+- (ECVIntegerSize)_inputFrameSize;
+- (ECVIntegerSize)_outputFieldSize;
+- (ECVIntegerSize)_outputFrameSize;
+
 - (BOOL)_initializeAudio;
 - (BOOL)_initializeResolution;
 - (BOOL)_setVideoSource:(NSUInteger)source;
@@ -123,7 +127,10 @@ enum {
 {
 	BOOL const multipleInputs = [self _compositeInputCount] > 1;
 	if(multipleInputs) {
-		if(ECVHighField == fieldType) _frameSkipCount--;
+		if(ECVHighField == fieldType) {
+			if(_frameSkipCount > 0) _frameSkipCount--;
+			else _frameSkipCount = 1;
+		}
 		if(ECVLowField == fieldType && !_frameSkipCount) {
 			[self _setVideoSource:[self _nextInput]];
 			_frameSkipCount = 1;
@@ -136,9 +143,14 @@ enum {
 	CFIndex i;
 	for(i = 0; i < count; ++i) {
 		ECV05e1_0408Pipe *const pipe = CFArrayGetValueAtIndex(pipes, i);
-		[pipe nextInputFieldType:fieldType];
+		[pipe writeField:_pendingBuffer type:fieldType];
 	}
 
+	[_pendingBuffer release];
+	ECVIntegerSize const pixelSize = [self _outputFrameSize];
+	OSType const pixelFormat = kCVPixelFormatType_422YpCbCr8;
+	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
+	_pendingBuffer = [[ECVConcreteMutablePixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat];
 	_offset = 0;
 }
 - (void)_removePipe:(ECV05e1_0408Pipe *)pipe
@@ -150,10 +162,25 @@ enum {
 
 #pragma mark -
 
-- (ECVIntegerSize)_inputSize
+- (ECVIntegerSize)_inputFieldSize
+{
+	return (ECVIntegerSize){720, [self is60HzFormat] ? 240 : 288};
+}
+- (ECVIntegerSize)_inputFrameSize
 {
 	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
 }
+- (ECVIntegerSize)_outputFieldSize
+{
+	return (ECVIntegerSize){704, [self is60HzFormat] ? 240 : 288};
+}
+- (ECVIntegerSize)_outputFrameSize
+{
+	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
+}
+
+#pragma mark -
+
 - (BOOL)_initializeAudio
 {
 	if(![self writeVT1612ARegister:0x94 value:0x00]) return NO;
@@ -165,7 +192,7 @@ enum {
 }
 - (BOOL)_initializeResolution
 {
-	ECVIntegerSize inputSize = [self _inputSize];
+	ECVIntegerSize inputSize = [self _inputFrameSize];
 	ECVIntegerSize standardSize = inputSize;
 	switch(inputSize.width) {
 		case 704:
@@ -319,19 +346,13 @@ enum {
 	if(length <= header || _frameSkipCount) return;
 
 	NSUInteger const realLength = length - header;
-	ECVIntegerSize const inputSize = [self _inputSize];
-	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
+	ECVIntegerSize const pixelSize = [self _inputFieldSize];
 	OSType const pixelFormat = kCVPixelFormatType_422YpCbCr8;
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + header validRange:NSMakeRange(_offset, realLength)];
 
-	CFMutableArrayRef const pipes = _pipesForInput[_currentInput];
-	CFIndex const count = CFArrayGetCount(pipes);
-	CFIndex i;
-	for(i = 0; i < count; ++i) {
-		ECV05e1_0408Pipe *const pipe = CFArrayGetValueAtIndex(pipes, i);
-		[pipe drawInputPixelBuffer:buffer];
-	}
+	ECVIntegerSize const outputSize = [self _outputFieldSize];
+	[_pendingBuffer drawPixelBuffer:buffer options:ECVDrawToHighField | ECVDrawToLowField atPoint:(ECVIntegerPoint){(outputSize.width - pixelSize.width) / 2, (outputSize.height - pixelSize.height) / 2}];
 
 	[buffer release];
 	_offset += realLength;

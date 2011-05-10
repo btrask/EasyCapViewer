@@ -294,7 +294,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[_readThreadLock lock];
 	if([self _keepReading]) {
-		ECVLog(ECVNotice, @"Starting.");
+		ECVLog(ECVNotice, @"Starting device %@.", [self name]);
 
 		IOReturn err = kIOReturnSuccess;
 		err = err ?: ((_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
@@ -328,7 +328,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 		_USBInterface = NULL;
 		_USBDevice = NULL;
 
-		ECVLog(ECVNotice, @"Stopping.");
+		ECVLog(ECVNotice, @"Stopping device %@.", [self name]);
 	}
 	[_readThreadLock unlock];
 	[pool drain];

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models/Video
 @class ECVPixelBuffer;
+@class ECVMutablePixelBuffer;
 
 @interface ECVVideoPipe : ECVPipe
 {
@@ -37,12 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 //	ECVDeinterlacer *_deinterlacer;
 //	ECVFrameRateConverter *_frameRateConverter;
 //	NSUInteger _frameRepeatCount;
-
 	// TODO: More powerful frame conversion (right now we just drop low fields).
-	BOOL _waitingForNextInputField;
-	BOOL _waitingForHighField;
 
-
+	NSLock *_lock;
+	ECVPixelBuffer *_buffer;
 	ECVIntegerPoint _position;
 }
 
@@ -75,8 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVVideoPipe(ECVFromSource_Threaded)
 
-- (void)nextInputFieldType:(ECVFieldType)fieldType;
-- (void)drawInputPixelBuffer:(ECVPixelBuffer *)buffer;
+- (void)writeField:(ECVPixelBuffer *)buffer type:(ECVFieldType)fieldType;
 
 @end
 
@@ -92,6 +90,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVVideoPipe(ECVFromStorage_Threaded)
 
-- (void)nextOutputFrame;
+- (void)readIntoStorageBuffer:(ECVMutablePixelBuffer *)buffer;
 
 @end
