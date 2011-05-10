@@ -60,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
 	ECVVideoStorage *const vs = [doc videoStorage];
 	[vs setPixelFormat:kCVPixelFormatType_422YpCbCr8];
-	[vs setPixelAspectRatio:ECVMakeRational(4320, 4739)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>.
+	[vs setPixelAspectRatio:ECVMakeRational(11, 10)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>.
 	[vs setFrameRate:QTMakeTime(1001, 30000)];
 	[vs setPixelSize:(ECVIntegerSize){704 * 2, 480}];
 

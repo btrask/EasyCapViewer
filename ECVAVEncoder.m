@@ -304,8 +304,8 @@ bail:
 
 		ECVIntegerSize const inputSize = [vs pixelSize];
 		ECVRational const ratio = [vs pixelAspectRatio];
-		codecCtx->width = inputSize.width;
-		codecCtx->height = round((double)inputSize.height * ratio.denom / ratio.numer);
+		codecCtx->width = round((double)inputSize.width / ratio.numer * ratio.denom);
+		codecCtx->height = inputSize.height;
 
 		QTTime rate = [vs frameRate];
 		_frameRepeatCount = 1;
