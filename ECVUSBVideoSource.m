@@ -94,7 +94,9 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	SInt32 ignored = 0;
 	IOCFPlugInInterface **devicePlugInInterface = NULL;
-	(void)ECVIOReturn2(IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored));
+	if(kIOReturnSuccess != ECVIOReturn2(IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored))) {
+		return NULL;
+	}
 
 	IOUSBDeviceInterface320 **device = NULL;
 	(*devicePlugInInterface)->QueryInterface(devicePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID320), (LPVOID)&device);
@@ -118,7 +120,10 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
 	SInt32 ignored = 0;
 	IOCFPlugInInterface **interfacePlugInInterface = NULL;
-	(void)ECVIOReturn2(IOCreatePlugInInterfaceForService(service, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored));
+	if(kIOReturnSuccess != ECVIOReturn2(IOCreatePlugInInterfaceForService(service, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored))) {
+		IOObjectRelease(service);
+		return NULL;
+	}
 
 	IOUSBInterfaceInterface300 **interface = NULL;
 	(*interfacePlugInInterface)->QueryInterface(interfacePlugInInterface, CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID300), (LPVOID)&interface);
