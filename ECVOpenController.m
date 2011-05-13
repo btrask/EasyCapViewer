@@ -90,18 +90,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			[vs addVideoPipe:p2];
 			break;
 		}
-		case 3: { // 1 EasyCap, Composite 1 & 2
-			if([sources count] < 1) return;
-			ECVVideoSource *const s = [sources objectAtIndex:0];
-			ECVVideoPipe *const p1 = [s videoPipeWithInput:[[s inputs] objectAtIndex:1]];
-			ECVVideoPipe *const p2 = [s videoPipeWithInput:[[s inputs] objectAtIndex:2]];
-			[p1 setPosition:(ECVIntegerPoint){0, 0}];
-			[p2 setPosition:(ECVIntegerPoint){704, 0}];
-			[vs addVideoPipe:p1];
-			[vs addVideoPipe:p2];
-			[vs setFrameRate:QTMakeTime(1001, 30000 / 2)];
-			break;
-		}
+		// FIXME: We can't support multiple simultaneous inputs from the 002. It just isn't happening.
 		case 4: { // 1 EasyCap, S-Video
 			if([sources count] < 1) return;
 			ECVVideoSource *const s = [sources objectAtIndex:0];
