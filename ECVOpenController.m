@@ -112,7 +112,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	ECVAVEncoder *const encoder = [[[ECVAVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:vs, nil]] autorelease];
 	ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:3453] autorelease];
-	ECVStreamingServer *const server = [[ECVStreamingServer alloc] init];
+	ECVStreamingServer *const server = [[[ECVStreamingServer alloc] init] autorelease];
 	[server setEncoder:encoder];
 	[server setServer:HTTPServer];
 	[doc addReceiver:server];

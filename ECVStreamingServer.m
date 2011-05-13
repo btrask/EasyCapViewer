@@ -89,6 +89,7 @@ enum {
 		}
 		@catch(id error) {
 			[_receiveLock lock];
+			[handle closeFile];
 			[_fileHandles removeObjectIdenticalTo:handle];
 			[_receiveLock unlock];
 		}
@@ -156,7 +157,7 @@ enum {
 		(void)close(socket);
 		return;
 	}
-	NSFileHandle *const handle = [[NSFileHandle alloc] initWithFileDescriptor:socket closeOnDealloc:YES];
+	NSFileHandle *const handle = [[[NSFileHandle alloc] initWithFileDescriptor:socket closeOnDealloc:YES] autorelease];
 	[handle writeData:[HTTPHeader dataUsingEncoding:NSUTF8StringEncoding]];
 	[handle writeData:[_encoder header]];
 	[_receiveLock lock];
