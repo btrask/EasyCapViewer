@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[NSBundle ECV_prepareToAutoLocalize];
-	if([NSDate timeIntervalSinceReferenceDate] > 327383940.0) [[NSImage class] registerImageRepClass:[NSImageRep class]];
 	[pool drain];
 	return NSApplicationMain(argc, (const char **)argv);
 }
