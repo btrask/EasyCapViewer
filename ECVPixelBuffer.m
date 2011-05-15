@@ -165,6 +165,13 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	return NSMakeRange(0, [self bytesPerRow] * [self pixelSize].height);
 }
+- (BOOL)lockIfHasBytes
+{
+	[self lock];
+	if([self hasBytes]) return YES;
+	[self unlock];
+	return NO;
+}
 
 @end
 
@@ -183,6 +190,10 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 		_validRange = validRange;
 	}
 	return self;
+}
+- (void)invalidate
+{
+	_bytes = NULL;
 }
 
 #pragma mark -ECVPixelBuffer(ECVAbstract)
@@ -205,6 +216,10 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 - (void const *)bytes
 {
 	return _bytes;
+}
+- (BOOL)hasBytes
+{
+	return !!_bytes;
 }
 - (NSRange)validRange
 {
@@ -296,6 +311,10 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	return CVPixelBufferGetBaseAddress(_pixelBuffer);
 }
+- (BOOL)hasBytes
+{
+	return YES;
+}
 - (NSRange)validRange
 {
 	return [self fullRange];
@@ -371,6 +390,10 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 {
 	return [_data bytes];
 }
+- (BOOL)hasBytes
+{
+	return YES;
+}
 - (NSRange)validRange
 {
 	return NSMakeRange(_offset, [_data length]);
@@ -433,6 +456,10 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 - (void const *)bytes
 {
 	return _bytes;
+}
+- (BOOL)hasBytes
+{
+	return YES;
 }
 - (NSRange)validRange
 {

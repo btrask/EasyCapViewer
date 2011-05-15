@@ -248,19 +248,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [[self videoStorage] bytesAtIndex:_bufferIndex];
 }
-
-#pragma mark -
-
 - (BOOL)hasBytes
 {
 	return NSNotFound != _bufferIndex;
-}
-- (BOOL)lockIfHasBytes
-{
-	[self lock];
-	if([self hasBytes]) return YES;
-	[self unlock];
-	return NO;
 }
 
 #pragma mark -ECVVideoFrame(ECVAbstract) <NSLocking>

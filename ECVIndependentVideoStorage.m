@@ -81,14 +81,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [_data bytes];
 }
-
-#pragma mark -
-
 - (BOOL)hasBytes
-{
-	return YES;
-}
-- (BOOL)lockIfHasBytes
 {
 	return YES;
 }

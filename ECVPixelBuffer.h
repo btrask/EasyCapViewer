@@ -38,6 +38,7 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 @interface ECVPixelBuffer : NSObject
 
 - (NSRange)fullRange;
+- (BOOL)lockIfHasBytes;
 
 @end
 
@@ -48,6 +49,7 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 - (OSType)pixelFormat;
 
 - (void const *)bytes;
+- (BOOL)hasBytes;
 - (NSRange)validRange;
 
 @end
@@ -64,6 +66,7 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 }
 
 - (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat bytes:(void const *)bytes validRange:(NSRange)validRange;
+- (void)invalidate;
 
 @end
 

@@ -96,6 +96,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void const *)bytes;
 - (BOOL)hasBytes;
-- (BOOL)lockIfHasBytes;
 
 @end
