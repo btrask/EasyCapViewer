@@ -31,15 +31,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVAVEncoder : NSObject
 {
 	@private
-//	id _delegate;
 	AVFormatContext *_formatCtx;
 	CFMutableDictionaryRef _encoderByStorage;
 	NSData *_header;
 }
 
 - (id)initWithStorages:(NSArray *)storages;
-
-//@property(assign) id delegate;
 
 - (NSString *)MIMEType;
 - (NSData *)header;
