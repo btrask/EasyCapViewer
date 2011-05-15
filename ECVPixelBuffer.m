@@ -21,6 +21,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVPixelBuffer.h"
 
+// Other Sources
+#import "ECVDebug.h"
+
 typedef struct {
 	NSInteger location;
 	NSUInteger length;
@@ -50,12 +53,13 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	switch(t) {
 		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
 	}
+	ECVCAssertNotReached(@"Unrecognized pixel format.");
 	return 0;
 }
 
 typedef struct {
 	size_t bytesPerRow;
-	size_t bytesPerPixel;
+	OSType pixelFormat;
 	NSRange validRange;
 } const ECVFastPixelBufferInfo;
 
@@ -63,17 +67,33 @@ NS_INLINE NSRange ECVValidRows(ECVFastPixelBufferInfo *info)
 {
 	return NSMakeRange(info->validRange.location / info->bytesPerRow, info->validRange.length / info->bytesPerRow + 2);
 }
-NS_INLINE void ECVDraw(UInt8 *dst, UInt8 const *src, size_t length, BOOL blended)
+NS_INLINE void ECVDrawByte(UInt8 *dst, UInt8 const *src, OSType format, NSUInteger byteInPixel, ECVPixelBufferDrawingOptions options)
 {
-	if(blended) {
-		size_t i;
-		for(i = 0; i < length; ++i) dst[i] = dst[i] / 2 + src[i] / 2;
-	} else memcpy(dst, src, length);
+	switch(format) {
+		case k2vuyPixelFormat:
+		case k24RGBPixelFormat:
+		case k32ARGBPixelFormat:
+		case k24BGRPixelFormat:
+		case k32BGRAPixelFormat:
+		case k32ABGRPixelFormat:
+		case k32RGBAPixelFormat:
+		{
+			if((0 == byteInPixel && ECVDrawChannel1 & options) ||
+			   (1 == byteInPixel && ECVDrawChannel2 & options) ||
+			   (2 == byteInPixel && ECVDrawChannel3 & options) ||
+			   (3 == byteInPixel && ECVDrawChannel4 & options)) *dst = ECVDrawBlended & options ? (*dst / 2 + *src / 2) : *src;
+			return;
+		}
+	}
+	ECVCAssertNotReached(@"Pixel format '%@' does not support channel drawing options.", (NSString *)UTCreateStringForOSType(format));
 }
-NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 const *src, ECVFastPixelBufferInfo *srcInfo, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, size_t length, BOOL blended)
+NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 const *src, ECVFastPixelBufferInfo *srcInfo, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, size_t length, ECVPixelBufferDrawingOptions options)
 {
-	ECVRange const dstDesiredRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow + dstPoint.x * dstInfo->bytesPerPixel, length * dstInfo->bytesPerPixel};
-	ECVRange const srcDesiredRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow + srcPoint.x * srcInfo->bytesPerPixel, length * srcInfo->bytesPerPixel};
+	NSUInteger const dstBytesPerPixel = ECVPixelFormatBytesPerPixel(dstInfo->pixelFormat);
+	NSUInteger const srcBytesPerPixel = ECVPixelFormatBytesPerPixel(srcInfo->pixelFormat);
+
+	ECVRange const dstDesiredRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow + dstPoint.x * dstBytesPerPixel, length * dstBytesPerPixel};
+	ECVRange const srcDesiredRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow + srcPoint.x * srcBytesPerPixel, length * srcBytesPerPixel};
 
 	ECVRange const dstRowRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow, dstInfo->bytesPerRow};
 	ECVRange const srcRowRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow, srcInfo->bytesPerRow};
@@ -90,40 +110,49 @@ NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 con
 	NSUInteger const commonLength = MIN(dstMaxLength, srcMaxLength);
 
 	if(!commonLength) return;
-	NSRange const dstRange = ECVRebaseRange(NSMakeRange(dstDesiredRange.location + commonOffset, commonLength), dstInfo->validRange);
-	NSRange const srcRange = ECVRebaseRange(NSMakeRange(srcDesiredRange.location + commonOffset, commonLength), srcInfo->validRange);
-	UInt8 *const dstBytes = dst + dstRange.location;
-	UInt8 const *const srcBytes = src + srcRange.location;
-	ECVDraw(dstBytes, srcBytes, commonLength, blended);
+
+	NSRange const dstRange = NSMakeRange(dstDesiredRange.location + commonOffset, commonLength);
+	NSRange const srcRange = NSMakeRange(srcDesiredRange.location + commonOffset, commonLength);
+	UInt8 *const dstBytes = dst + (dstRange.location - dstInfo->validRange.location);
+	UInt8 const *const srcBytes = src + (srcRange.location - srcInfo->validRange.location);
+
+	if(ECVDrawChannelMask & options) {
+		size_t i;
+		for(i = 0; i < commonLength; ++i) ECVDrawByte(dstBytes + i, srcBytes + i, dstInfo->pixelFormat, (dstRange.location + i) % dstBytesPerPixel, options);
+	} else if(ECVDrawBlended & options) {
+		size_t i;
+		for(i = 0; i < commonLength; ++i) dstBytes[i] = dstBytes[i] / 2 + srcBytes[i] / 2;
+	} else {
+		memcpy(dstBytes, srcBytes, commonLength);
+	}
 }
 static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, ECVIntegerSize size, ECVPixelBufferDrawingOptions options)
 {
 	if(!src || !dst) return;
 	ECVFastPixelBufferInfo dstInfo = {
 		.bytesPerRow = [dst bytesPerRow],
-		.bytesPerPixel = ECVPixelFormatBytesPerPixel([dst pixelFormat]),
+		.pixelFormat = [dst pixelFormat],
 		.validRange = [dst validRange],
 	};
 	ECVFastPixelBufferInfo srcInfo = {
 		.bytesPerRow = [src bytesPerRow],
-		.bytesPerPixel = ECVPixelFormatBytesPerPixel([src pixelFormat]),
+		.pixelFormat = [src pixelFormat],
 		.validRange = [src validRange],
 	};
 	UInt8 *const dstBytes = [dst mutableBytes];
 	UInt8 const *const srcBytes = [src bytes];
 	BOOL const useFields = ECVDrawToHighField & options || ECVDrawToLowField & options;
 	NSUInteger const dstRowSpacing = useFields ? 2 : 1;
-	BOOL const blended = !!(ECVDrawBlended & options);
 
 	NSRange const dstRows = ECVIntersectionRange2((ECVRange){dstPoint.y, size.height}, ECVValidRows(&dstInfo));
 	NSRange const srcRows = ECVIntersectionRange2((ECVRange){srcPoint.y, size.height}, ECVValidRows(&srcInfo));
 	NSUInteger i;
 	for(i = srcRows.location; i < NSMaxRange(srcRows); ++i) {
 		if(ECVDrawToHighField & options || !useFields) {
-			ECVDrawRow(dstBytes, &dstInfo, srcBytes, &srcInfo, (ECVIntegerPoint){dstPoint.x, dstPoint.y + 0 + (i * dstRowSpacing)}, (ECVIntegerPoint){srcPoint.x, srcPoint.y + i}, size.width, blended);
+			ECVDrawRow(dstBytes, &dstInfo, srcBytes, &srcInfo, (ECVIntegerPoint){dstPoint.x, dstPoint.y + 0 + (i * dstRowSpacing)}, (ECVIntegerPoint){srcPoint.x, srcPoint.y + i}, size.width, options);
 		}
 		if(ECVDrawToLowField & options) {
-			ECVDrawRow(dstBytes, &dstInfo, srcBytes, &srcInfo, (ECVIntegerPoint){dstPoint.x, dstPoint.y + 1 + (i * dstRowSpacing)}, (ECVIntegerPoint){srcPoint.x, srcPoint.y + i}, size.width, blended);
+			ECVDrawRow(dstBytes, &dstInfo, srcBytes, &srcInfo, (ECVIntegerPoint){dstPoint.x, dstPoint.y + 1 + (i * dstRowSpacing)}, (ECVIntegerPoint){srcPoint.x, srcPoint.y + i}, size.width, options);
 		}
 	}
 }

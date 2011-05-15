@@ -26,6 +26,11 @@ enum {
 	ECVDrawToLowField = 1 << 1,
 	ECVDrawFromHighField = 1 << 2, // Unimplemented
 	ECVDrawFromLowField = 1 << 3, // Unimplemented
+	ECVDrawChannel1 = 1 << 4,
+	ECVDrawChannel2 = 1 << 5,
+	ECVDrawChannel3 = 1 << 6,
+	ECVDrawChannel4 = 1 << 7,
+	ECVDrawChannelMask = ECVDrawChannel1 | ECVDrawChannel2 | ECVDrawChannel3 | ECVDrawChannel4,
 	ECVDrawBlended = 1 << 16,
 };
 typedef NSUInteger ECVPixelBufferDrawingOptions;
