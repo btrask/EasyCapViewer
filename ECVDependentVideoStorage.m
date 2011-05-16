@@ -143,7 +143,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_frames = [[NSMutableArray alloc] initWithCapacity:ECVDependentBufferCount];
 		_numberOfBuffers = ECVDependentBufferCount;
 		_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
-		_allBufferData = [[NSMutableData alloc] initWithLength:MAX(1, _numberOfBuffers * [self bufferSize])];
+		_allBufferData = [[NSMutableData alloc] initWithLength:1];
 	}
 	return self;
 }

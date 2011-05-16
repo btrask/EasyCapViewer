@@ -36,6 +36,7 @@ NS_INLINE GLenum ECVPixelFormatToGLFormat(OSType t)
 {
 	switch(t) {
 		case kCVPixelFormatType_422YpCbCr8: return GL_YCBCR_422_APPLE;
+		case kCVPixelFormatType_24RGB: return GL_RGB;
 	}
 	return 0;
 }
@@ -47,6 +48,7 @@ NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
 #else
 		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_REV_APPLE;
 #endif
+		case kCVPixelFormatType_24RGB: return GL_UNSIGNED_BYTE;
 	}
 	return 0;
 }

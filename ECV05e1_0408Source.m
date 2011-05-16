@@ -377,7 +377,9 @@ enum {
 	ECV05e1_0408Pipe *const pipe = [[[ECV05e1_0408Pipe alloc] initWithVideoSource:self] autorelease];
 	[pipe setInput:i];
 	[pipe setName:[self localizedStringForInput:input]];
-	// TODO: Set up other pipe attrs.
+	[pipe setInputFrameRate:[self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50)];
+	[pipe setInputPixelSize:[self _outputFrameSize]];
+	[pipe setInputPixelFormat:kCVPixelFormatType_422YpCbCr8];
 	CFArrayAppendValue(_pipesForInput[i], pipe); // TODO: Locking will eventually be necessary.
 	return pipe;
 }

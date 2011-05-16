@@ -27,6 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models/Storages/Video
 #import "ECVVideoStorage.h"
 
+// Models
+#import "ECVPixelBufferConverter.h"
+
 @implementation ECVVideoPipe
 
 #pragma mark -ECVVideoPipe
@@ -49,6 +52,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
+- (QTTime)inputFrameRate
+{
+	return _inputFrameRate;
+}
+- (ECVIntegerSize)inputPixelSize
+{
+	return _inputPixelSize;
+}
+- (OSType)inputPixelFormat
+{
+	return _inputPixelFormat;
+}
+
+#pragma mark -
+
+- (QTTime)outputFrameRate
+{
+	return _outputFrameRate;
+}
+- (ECVIntegerSize)outputPixelSize
+{
+	return _outputPixelSize;
+}
+- (OSType)outputPixelFormat
+{
+	return _outputPixelFormat;
+}
+
+#pragma mark -
+
 - (ECVIntegerPoint)position
 {
 	return _position;
@@ -57,6 +90,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[_lock lock];
 	_position = point;
+	[_lock unlock];
+}
+
+#pragma mark -ECVVideoPipe(ECVFromSource)
+
+- (void)setInputFrameRate:(QTTime)rate
+{
+	[_lock lock];
+	_inputFrameRate = rate;
+	[_converter release];
+	_converter = nil;
+	[_lock unlock];
+}
+- (void)setInputPixelSize:(ECVIntegerSize)size
+{
+	[_lock lock];
+	_inputPixelSize = size;
+	[_converter release];
+	_converter = nil;
+	[_lock unlock];
+}
+- (void)setInputPixelFormat:(OSType)format
+{
+	[_lock lock];
+	_inputPixelFormat = format;
+	[_converter release];
+	_converter = nil;
 	[_lock unlock];
 }
 
@@ -78,15 +138,48 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self setStorage:videoStorage];
 }
 
+#pragma mark -
+
+- (void)setOutputFrameRate:(QTTime)rate
+{
+	[_lock lock];
+	_outputFrameRate = rate;
+	[_converter release];
+	_converter = nil;
+	[_lock unlock];
+}
+- (void)setOutputPixelSize:(ECVIntegerSize)size
+{
+	[_lock lock];
+	_outputPixelSize = size;
+	[_converter release];
+	_converter = nil;
+	[_lock unlock];
+}
+- (void)setOutputPixelFormat:(OSType)format
+{
+	[_lock lock];
+	_outputPixelFormat = format;
+	[_converter release];
+	_converter = nil;
+	[_lock unlock];
+}
+
 #pragma mark -ECVVideoPipe(ECVFromStorage_Threaded)
 
 - (void)readIntoStorageBuffer:(ECVMutablePixelBuffer *)buffer
 {
 	[_lock lock];
+	if(!_converter) _converter = [[ECVPixelBufferConverter alloc] initWithInputSize:[self inputPixelSize] pixelFormat:[self inputPixelFormat] outputSize:[self outputPixelSize] pixelFormat:[self outputPixelFormat]];
 	ECVPixelBuffer *const current = [[_buffer retain] autorelease];
 	ECVIntegerPoint const position = [self position];
+	ECVPixelBufferConverter *const converter = [[_converter retain] autorelease];
 	[_lock unlock];
-	[buffer drawPixelBuffer:current options:kNilOptions atPoint:position];
+	ECVPixelBuffer *const convertedCurrentBuffer = [converter convertedPixelBuffer:current];
+	if([convertedCurrentBuffer lockIfHasBytes]) {
+		[buffer drawPixelBuffer:convertedCurrentBuffer options:kNilOptions atPoint:position];
+		[convertedCurrentBuffer unlock];
+	}
 }
 
 #pragma mark -NSObject
@@ -94,6 +187,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)dealloc
 {
 	[_lock release];
+	[_buffer release];
+	[_converter release];
 	[super dealloc];
 }
 

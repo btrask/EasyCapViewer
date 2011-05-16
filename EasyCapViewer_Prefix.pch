@@ -67,9 +67,11 @@ NS_INLINE NSRect ECVScaledRect(NSRect r, NSSize s)
 static size_t ECVPixelFormatBytesPerPixel(OSType format)
 {
 	switch(format) {
-		case k2vuyPixelFormat: return 2;
-		default: return 0;
+		case k2vuyPixelFormat: return 2; // kCVPixelFormatType_422YpCbCr8, k422YpCbCr8CodecType
+		case k24RGBPixelFormat: return 3; // kCVPixelFormatType_24RGB
 	}
+	assert(0); // TODO: Use one of our ECVDebug.h macros.
+	return 0;
 }
 
 #endif // __OBJC__

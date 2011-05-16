@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	switch(pixelFormat) {
 		case kCVPixelFormatType_422YpCbCr8: return PIX_FMT_UYVY422;
 		case kCVPixelFormatType_420YpCbCr8Planar: return PIX_FMT_YUV420P;
+		case kCVPixelFormatType_24RGB: return PIX_FMT_RGB24;
 	}
 	ECVCAssertNotReached(@"Unsupported pixel format.");
 	return PIX_FMT_NONE;

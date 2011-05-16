@@ -32,6 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVPixelBuffer;
 @class ECVMutablePixelBuffer;
 
+// Models
+@class ECVPixelBufferConverter;
+
 @interface ECVVideoPipe : ECVPipe
 {
 	@private
@@ -43,6 +46,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSLock *_lock;
 	ECVPixelBuffer *_buffer;
 	ECVIntegerPoint _position;
+
+	QTTime _inputFrameRate;
+	ECVIntegerSize _inputPixelSize;
+	OSType _inputPixelFormat;
+
+	QTTime _outputFrameRate;
+	ECVIntegerSize _outputPixelSize;
+	OSType _outputPixelFormat;
+
+	ECVPixelBufferConverter *_converter;
 }
 
 - (id)initWithVideoSource:(ECVVideoSource *)source;
@@ -50,14 +63,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) ECVVideoStorage *videoStorage;
 
 // Input
-//@property(readonly) ECVIntegerSize inputSize;
-//@property(readonly) QTTime inputFrameRate;
-//@property(readonly) OSType inputPixelFormat;
+- (QTTime)inputFrameRate;
+- (ECVIntegerSize)inputPixelSize;
+- (OSType)inputPixelFormat;
 
 // Output
-//@property(readonly) ECVIntegerSize outputSize;
-//@property(readonly) QTTime outputFrameRate;
-//@property(readonly) OSType outputPixelFormat;
+- (QTTime)outputFrameRate;
+- (ECVIntegerSize)outputPixelSize;
+- (OSType)outputPixelFormat;
 
 // Options
 @property(assign) ECVIntegerPoint position;
@@ -66,9 +79,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVVideoPipe(ECVFromSource)
 
-//@property(assign) ECVIntegerSize inputSize;
-//@property(assign) QTTime inputFrameRate;
-//@property(assign) OSType inputPixelFormat;
+- (void)setInputFrameRate:(QTTime)rate;
+- (void)setInputPixelSize:(ECVIntegerSize)size;
+- (void)setInputPixelFormat:(OSType)format;
 
 @end
 
@@ -82,9 +95,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @property(assign) ECVVideoStorage *videoStorage;
 
-//@property(assign) ECVIntegerSize outputSize;
-//@property(assign) QTTime outputFrameRate;
-//@property(assign) OSType outputPixelFormat;
+- (void)setOutputFrameRate:(QTTime)rate;
+- (void)setOutputPixelSize:(ECVIntegerSize)size;
+- (void)setOutputPixelFormat:(OSType)format;
 
 @end
 
