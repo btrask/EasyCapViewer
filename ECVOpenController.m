@@ -90,6 +90,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			[vs addVideoPipe:p2];
 			break;
 		}
+		case 6: {
+			if([sources count] < 2) return;
+			[vs setPixelFormat:kCVPixelFormatType_24RGB];
+			[vs setPixelSize:(ECVIntegerSize){704, 480}];
+			ECVVideoSource *const s1 = [sources objectAtIndex:0];
+			ECVVideoSource *const s2 = [sources objectAtIndex:1];
+			ECVVideoPipe *const p1 = [s1 videoPipeWithInput:[[s1 inputs] objectAtIndex:1]];
+			ECVVideoPipe *const p2 = [s2 videoPipeWithInput:[[s2 inputs] objectAtIndex:1]];
+			[p1 setExtraDrawingOptions:ECVDrawChannel1];
+			[p2 setExtraDrawingOptions:ECVDrawChannel2 | ECVDrawChannel3];
+			[vs addVideoPipe:p1];
+			[vs addVideoPipe:p2];
+			break;
+		}
 		// FIXME: We can't support multiple simultaneous inputs from the 002. It just isn't happening.
 		case 4: { // 1 EasyCap, S-Video
 			if([sources count] < 1) return;
