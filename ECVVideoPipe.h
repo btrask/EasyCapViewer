@@ -29,8 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVVideoStorage;
 
 // Models/Video
-@class ECVPixelBuffer;
-@class ECVMutablePixelBuffer;
+#import "ECVPixelBuffer.h"
 
 // Models
 @class ECVPixelBufferConverter;
@@ -45,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSLock *_lock;
 	ECVPixelBuffer *_buffer;
-	ECVIntegerPoint _position;
+	ECVPixelBufferConverter *_converter;
 
 	QTTime _inputFrameRate;
 	ECVIntegerSize _inputPixelSize;
@@ -55,7 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVIntegerSize _outputPixelSize;
 	OSType _outputPixelFormat;
 
-	ECVPixelBufferConverter *_converter;
+	ECVIntegerPoint _position;
+	ECVPixelBufferDrawingOptions _extraDrawingOptions;
 }
 
 - (id)initWithVideoSource:(ECVVideoSource *)source;
@@ -74,6 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Options
 @property(assign) ECVIntegerPoint position;
+@property(assign) ECVPixelBufferDrawingOptions extraDrawingOptions;
 
 @end
 

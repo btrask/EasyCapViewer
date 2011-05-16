@@ -92,6 +92,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	_position = point;
 	[_lock unlock];
 }
+- (ECVPixelBufferDrawingOptions)extraDrawingOptions
+{
+	return _extraDrawingOptions;
+}
+- (void)setExtraDrawingOptions:(ECVPixelBufferDrawingOptions)opts
+{
+	[_lock lock];
+	_extraDrawingOptions = opts;
+	[_lock unlock];
+}
 
 #pragma mark -ECVVideoPipe(ECVFromSource)
 
@@ -174,10 +184,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVPixelBuffer *const current = [[_buffer retain] autorelease];
 	ECVIntegerPoint const position = [self position];
 	ECVPixelBufferConverter *const converter = [[_converter retain] autorelease];
+	ECVPixelBufferDrawingOptions const options = [self extraDrawingOptions];
 	[_lock unlock];
 	ECVPixelBuffer *const convertedCurrentBuffer = [converter convertedPixelBuffer:current];
 	if([convertedCurrentBuffer lockIfHasBytes]) {
-		[buffer drawPixelBuffer:convertedCurrentBuffer options:kNilOptions atPoint:position];
+		[buffer drawPixelBuffer:convertedCurrentBuffer options:options atPoint:position];
 		[convertedCurrentBuffer unlock];
 	}
 }
