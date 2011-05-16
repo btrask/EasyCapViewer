@@ -27,19 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models/Storages/Video
 #import "ECVVideoStorage.h"
 
+// Models
+#import "ECVPixelBufferConverter.h"
+
 // Other Sources
 #import "ECVDebug.h"
 
 #define ECV_VIDEO_BUFFER_SIZE 200000 // Arbitrary, but recommended by libavformat.
-
-static enum PixelFormat ECVCodecIDFromPixelFormat(OSType pixelFormat)
-{
-	switch(pixelFormat) {
-		case kCVPixelFormatType_422YpCbCr8: return PIX_FMT_UYVY422;
-	}
-	ECVCAssertNotReached(@"Unsupported pixel format.");
-	return PIX_FMT_NONE;
-}
 
 @interface ECVAVEncoder(Private)
 
@@ -243,11 +237,7 @@ bail:
 
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame
 {
-	if(![frame lockIfHasBytes]) return nil;
-	int const lineSize[4] = { [frame bytesPerRow], 0, 0, 0 };
-	uint8_t const *const bytes = [frame bytes];
-	sws_scale(_converter, &bytes, lineSize, 0, [frame pixelSize].height, _scaledFrame->data, _scaledFrame->linesize);
-	[frame unlock];
+	if(![_converter convertedPixelBuffer:frame]) return nil;
 
 	if(1 == _frameRepeatCount) return [self _encodedData];
 
@@ -261,18 +251,19 @@ bail:
 
 - (NSData *)_encodedData
 {
+	AVFrame *const frame = [_converter currentFrame];
 	[self lockFormatContext];
 	AVPacket pkt;
 	av_init_packet(&pkt);
 	pkt.stream_index = [self stream]->index;
 	if(AVFMT_RAWPICTURE & [self formatContext]->oformat->flags) {
-		pkt.data = (uint8_t *)_scaledFrame;
+		pkt.data = (uint8_t *)frame;
 		pkt.size = sizeof(AVPicture);
 		pkt.flags |= AV_PKT_FLAG_KEY;
 		if(av_interleaved_write_frame([self formatContext], &pkt) == 0) return [self unlockFormatContext];
 	} else {
-		_scaledFrame->quality = 1;
-		int size = avcodec_encode_video([self codecContext], _convertedBuffer, ECV_VIDEO_BUFFER_SIZE, _scaledFrame);
+		frame->quality = 1;
+		int size = avcodec_encode_video([self codecContext], _convertedBuffer, ECV_VIDEO_BUFFER_SIZE, frame);
 		if(size > 0) {
 			AVFrame *const codedFrame = [self codecContext]->coded_frame;
 			if((uint64_t)codedFrame->pts != AV_NOPTS_VALUE) pkt.pts= av_rescale_q(codedFrame->pts, [self codecContext]->time_base, [self stream]->time_base);
@@ -294,18 +285,19 @@ bail:
 		ECVVideoStorage *const vs = storage;
 		AVStream *const stream = [self stream];
 		AVCodecContext *const codecCtx = [self codecContext];
-		enum PixelFormat const targetPixelFormat = PIX_FMT_YUV420P;
+		OSType const targetPixelFormat = kCVPixelFormatType_420YpCbCr8Planar;
 
 		codecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
 		codecCtx->codec_id = CODEC_ID_MPEG1VIDEO;
 		codecCtx->bit_rate = 400000; // TODO: Adjustable?
 		codecCtx->gop_size = 12;
-		codecCtx->pix_fmt = targetPixelFormat;
+		codecCtx->pix_fmt = [ECVPixelBufferConverter AVPixelFormatWithOSType:targetPixelFormat];
 
-		ECVIntegerSize const inputSize = [vs pixelSize];
 		ECVRational const ratio = [vs pixelAspectRatio];
-		codecCtx->width = round((double)inputSize.width / ratio.numer * ratio.denom);
-		codecCtx->height = inputSize.height;
+		ECVIntegerSize const inputSize = [vs pixelSize];
+		ECVIntegerSize const outputSize = (ECVIntegerSize){round((double)inputSize.width / ratio.numer * ratio.denom), inputSize.height};
+		codecCtx->width = outputSize.width;
+		codecCtx->height = outputSize.height;
 
 		QTTime rate = [vs frameRate];
 		_frameRepeatCount = 1;
@@ -318,29 +310,20 @@ bail:
 			.den = rate.timeScale,
 		};
 
-		if(!(_converter = sws_getContext(inputSize.width, inputSize.height, ECVCodecIDFromPixelFormat([vs pixelFormat]), codecCtx->width, codecCtx->height, targetPixelFormat, SWS_FAST_BILINEAR, NULL, NULL, NULL))) goto bail;
-		if(!(_scaledFrame = avcodec_alloc_frame())) goto bail;
-		uint8_t *buffer = av_malloc(avpicture_get_size(targetPixelFormat, codecCtx->width, codecCtx->height));
-		if(!buffer) goto bail;
-		(void)avpicture_fill((AVPicture *)_scaledFrame, buffer, targetPixelFormat, codecCtx->width, codecCtx->height);
-		if(!(_convertedBuffer = av_malloc(ECV_VIDEO_BUFFER_SIZE))) goto bail;
+		_converter = [[ECVPixelBufferConverter alloc] initWithInputSize:inputSize pixelFormat:[vs pixelFormat] outputSize:outputSize pixelFormat:targetPixelFormat];
+		if(!(_convertedBuffer = av_malloc(ECV_VIDEO_BUFFER_SIZE))) {
+			[self release];
+			return nil;
+		}
 	}
 	return self;
-bail:
-	[self release];
-	return nil;
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	if(_converter) sws_freeContext(_converter);
-	if(_scaledFrame) {
-		if(_scaledFrame->data[0]) av_free(_scaledFrame->data[0]);
-		av_free(_scaledFrame);
-	}
-	if(_convertedBuffer) av_free(_convertedBuffer);
+	[_converter release];
 	[super dealloc];
 }
 

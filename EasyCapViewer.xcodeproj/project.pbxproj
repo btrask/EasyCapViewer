@@ -136,6 +136,8 @@
 		B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09997131CE0550066FEB5 /* ECVRational.m */; };
 		B5F09999131CE0550066FEB5 /* ECVRational.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09997131CE0550066FEB5 /* ECVRational.m */; };
+		B5F1042A13809AB7002E3FCD /* ECVPixelBufferConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F1042913809AB7002E3FCD /* ECVPixelBufferConverter.m */; };
+		B5F1042B13809AB7002E3FCD /* ECVPixelBufferConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F1042913809AB7002E3FCD /* ECVPixelBufferConverter.m */; };
 		B5F250D7136AB050003EB5AC /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
 		B5F250D8136AB051003EB5AC /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
 /* End PBXBuildFile section */
@@ -322,6 +324,8 @@
 		B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameRateConverter.m; sourceTree = "<group>"; };
 		B5F09996131CE0550066FEB5 /* ECVRational.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVRational.h; sourceTree = "<group>"; };
 		B5F09997131CE0550066FEB5 /* ECVRational.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVRational.m; sourceTree = "<group>"; };
+		B5F1042813809AB6002E3FCD /* ECVPixelBufferConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelBufferConverter.h; sourceTree = "<group>"; };
+		B5F1042913809AB7002E3FCD /* ECVPixelBufferConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBufferConverter.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -392,6 +396,8 @@
 				B5BCBAFA13668EE400769D61 /* Storages */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
 				0E0C489C10B91DC2008731F2 /* ECVMovieRecorder.m */,
+				B5F1042813809AB6002E3FCD /* ECVPixelBufferConverter.h */,
+				B5F1042913809AB7002E3FCD /* ECVPixelBufferConverter.m */,
 				B5A05BD4136EDD1E0009C702 /* ECVAVEncoder.h */,
 				B5A05BD5136EDD1E0009C702 /* ECVAVEncoder.m */,
 				B5A05CDF136F148B0009C702 /* ECVHTTPServer.h */,
@@ -854,6 +860,7 @@
 				B5A05BD6136EDD1E0009C702 /* ECVAVEncoder.m in Sources */,
 				B5A05CE2136F148B0009C702 /* ECVHTTPServer.m in Sources */,
 				B5A05CE6136F22D50009C702 /* ECVStreamingServer.m in Sources */,
+				B5F1042B13809AB7002E3FCD /* ECVPixelBufferConverter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -907,6 +914,7 @@
 				B5A05CE1136F148B0009C702 /* ECVHTTPServer.m in Sources */,
 				B5A05CE5136F22D50009C702 /* ECVStreamingServer.m in Sources */,
 				B58AE0541374725A00E64F37 /* ECVOpenController.m in Sources */,
+				B5F1042A13809AB7002E3FCD /* ECVPixelBufferConverter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -20,70 +20,34 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <libavformat/avformat.h>
+#import <libswscale/swscale.h>
 
-// Models/Storages
-#import "ECVStorage.h"
+// Models/Storages/Video
+@class ECVPixelBuffer;
+@class ECVPointerPixelBuffer;
 
-// Models/Video
-@class ECVVideoFrame;
-
-// Models
-@class ECVPixelBufferConverter;
-
-@interface ECVAVEncoder : NSObject
+@interface ECVPixelBufferConverter : NSObject
 {
 	@private
-	AVFormatContext *_formatCtx;
-	CFMutableDictionaryRef _encoderByStorage;
-	NSData *_header;
+	ECVIntegerSize _inputPixelSize;
+	OSType _inputPixelFormat;
+	ECVIntegerSize _outputPixelSize;
+	OSType _outputPixelFormat;
+	struct SwsContext *_converterCtx;
+	AVFrame *_frame;
+	ECVPointerPixelBuffer *_buffer;
+	int _bufferSize;
 }
 
-- (id)initWithStorages:(NSArray *)storages;
++ (enum PixelFormat)AVPixelFormatWithOSType:(OSType)pixelFormat;
 
-- (NSString *)MIMEType;
-- (NSData *)header;
-- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame;
+- (id)initWithInputSize:(ECVIntegerSize)inSize pixelFormat:(OSType)inFormat outputSize:(ECVIntegerSize)outSize pixelFormat:(OSType)outFormat;
+- (ECVPixelBuffer *)convertedPixelBuffer:(ECVPixelBuffer *)buffer;
 
 @end
 
-@interface ECVStreamEncoder : NSObject
-{
-	@private
-	ECVAVEncoder *_encoder;
-	ECVStorage *_storage;
-	AVFormatContext *_formatCtx;
-	AVStream *_stream;
-}
+@interface ECVPixelBufferConverter(ECVDeprecated)
 
-- (id)initWithEncoder:(ECVAVEncoder *)encoder storage:(id)storage;
-
-@property(readonly) ECVAVEncoder *encoder;
-@property(readonly) id storage;
-
-@property(readonly) AVFormatContext *formatContext;
-@property(readonly) AVStream *stream;
-@property(readonly) AVCodecContext *codecContext;
-@property(readonly) AVCodec *codec;
-
-- (void)lockFormatContext;
-- (NSData *)unlockFormatContext;
-
-@end
-
-@interface ECVVideoStreamEncoder : ECVStreamEncoder
-{
-	@private
-	ECVPixelBufferConverter *_converter;
-	uint8_t *_convertedBuffer;
-	NSUInteger _frameRepeatCount;
-}
-
-- (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame;
-
-@end
-
-@interface ECVStorage(ECVEncoding)
-
-- (ECVStreamEncoder *)streamEncoderForEncoder:(ECVAVEncoder *)encoder;
+- (AVFrame *)currentFrame;
 
 @end
