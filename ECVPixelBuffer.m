@@ -38,7 +38,7 @@ NS_INLINE ECVRange ECVIntersectionRange(ECVRange a, ECVRange b)
 NS_INLINE NSRange ECVIntersectionRange2(ECVRange a, NSRange b)
 {
 	NSUInteger const location = MAX((NSUInteger)MAX(a.location, 0), b.location);
-	NSUInteger const maximum = MAX(MIN(a.location + a.length, b.location + b.length), 0);
+	NSUInteger const maximum = MIN((NSUInteger)MAX(a.location + a.length, 0), b.location + b.length);
 	return NSMakeRange(location, SUB_ZERO(maximum, location));
 }
 
@@ -48,10 +48,24 @@ NS_INLINE NSRange ECVRebaseRange(NSRange range, NSRange base)
 	r.location -= base.location;
 	return r;
 }
+NS_INLINE NSRange ECVRebaseRange2(NSRange range, ECVRange base)
+{
+	NSRange r = ECVIntersectionRange2(base, range);
+	r.location -= base.location;
+	return r;
+}
 NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 {
 	switch(t) {
 		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
+	}
+	ECVCAssertNotReached(@"Unrecognized pixel format.");
+	return 0;
+}
+NS_INLINE NSUInteger ECVPixelFormatPixelsPerBlock(OSType t)
+{
+	switch(t) {
+		case k2vuyPixelFormat: return 2;
 	}
 	ECVCAssertNotReached(@"Unrecognized pixel format.");
 	return 0;
@@ -67,10 +81,27 @@ NS_INLINE NSRange ECVValidRows(ECVFastPixelBufferInfo *info)
 {
 	return NSMakeRange(info->validRange.location / info->bytesPerRow, info->validRange.length / info->bytesPerRow + 2);
 }
-NS_INLINE void ECVDrawByte(UInt8 *dst, UInt8 const *src, OSType format, NSUInteger byteInPixel, ECVPixelBufferDrawingOptions options)
+NS_INLINE void ECVCopyByte(UInt8 *dstPixel, NSUInteger dstIndex, UInt8 const *srcPixel, NSUInteger srcIndex, NSRange range, ECVPixelBufferDrawingOptions options)
 {
-	switch(format) {
+	if(!NSLocationInRange(dstIndex, range) || !NSLocationInRange(srcIndex, range)) return;
+	NSUInteger const d = dstIndex - range.location;
+	NSUInteger const s = srcIndex - range.location;
+	dstPixel[d] = ECVDrawBlended & options ? dstPixel[d] / 2 + srcPixel[s] / 2 : srcPixel[s];
+}
+NS_INLINE void ECVDrawPixel(UInt8 *dstPixel, OSType dstFormat, UInt8 const *srcPixel, OSType srcFormat, NSRange range, ECVPixelBufferDrawingOptions options)
+{
+	NSParameterAssert(dstFormat == srcFormat);
+	if(!(ECVDrawChannelMask & options)) options |= ECVDrawChannelMask;
+	#define ECV_COPY_BYTE(d, s) (ECVCopyByte(dstPixel, (d), srcPixel, (s), range, options))
+	switch(srcFormat) {
 		case k2vuyPixelFormat:
+		{
+			if(ECVDrawChannel1 & options) ECV_COPY_BYTE(0, 0);
+			if(ECVDrawChannel2 & options) ECV_COPY_BYTE(1, ECVDrawMirroredHorz & options ? 3 : 1);
+			if(ECVDrawChannel3 & options) ECV_COPY_BYTE(2, 2);
+			if(ECVDrawChannel2 & options) ECV_COPY_BYTE(3, ECVDrawMirroredHorz & options ? 1 : 3);
+			return;
+		}
 		case k24RGBPixelFormat:
 		case k32ARGBPixelFormat:
 		case k24BGRPixelFormat:
@@ -78,14 +109,14 @@ NS_INLINE void ECVDrawByte(UInt8 *dst, UInt8 const *src, OSType format, NSUInteg
 		case k32ABGRPixelFormat:
 		case k32RGBAPixelFormat:
 		{
-			if((0 == byteInPixel && ECVDrawChannel1 & options) ||
-			   (1 == byteInPixel && ECVDrawChannel2 & options) ||
-			   (2 == byteInPixel && ECVDrawChannel3 & options) ||
-			   (3 == byteInPixel && ECVDrawChannel4 & options)) *dst = ECVDrawBlended & options ? (*dst / 2 + *src / 2) : *src;
+			if(ECVDrawChannel1 & options) ECV_COPY_BYTE(0, 0);
+			if(ECVDrawChannel2 & options) ECV_COPY_BYTE(1, 1);
+			if(ECVDrawChannel3 & options) ECV_COPY_BYTE(2, 2);
+			if(ECVDrawChannel4 & options) ECV_COPY_BYTE(3, 3);
 			return;
 		}
 	}
-	ECVCAssertNotReached(@"Pixel format '%@' does not support channel drawing options.", (NSString *)UTCreateStringForOSType(format));
+	ECVCAssertNotReached(@"Pixel format '%@' does not support channel drawing options.", (NSString *)UTCreateStringForOSType(srcFormat));
 }
 NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 const *src, ECVFastPixelBufferInfo *srcInfo, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, size_t length, ECVPixelBufferDrawingOptions options)
 {
@@ -98,32 +129,48 @@ NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 con
 	ECVRange const dstDesiredRange = (ECVRange){dstRowRange.location + dstPoint.x * dstBytesPerPixel, length * dstBytesPerPixel};
 	ECVRange const srcDesiredRange = (ECVRange){srcRowRange.location + srcPoint.x * srcBytesPerPixel, length * srcBytesPerPixel};
 
+	if(!dstDesiredRange.length || !srcDesiredRange.length) return;
+
+	if(ECVDrawChannelMask & options || ECVDrawMirroredHorz & options || dstInfo->pixelFormat != srcInfo->pixelFormat) {
+		BOOL const dstFlip = YES;
+		BOOL const srcFlip = NO;
+		NSUInteger const dstBlockSize = ECVPixelFormatPixelsPerBlock(dstInfo->pixelFormat) * dstBytesPerPixel;
+		NSUInteger const srcBlockSize = ECVPixelFormatPixelsPerBlock(srcInfo->pixelFormat) * srcBytesPerPixel;
+		NSUInteger i;
+		for(i = 0; ; ++i) {
+			ECVRange const dstDesiredPixelRange = (ECVRange){dstDesiredRange.location + (dstFlip ? dstDesiredRange.length - (i + 1) * dstBlockSize : i * dstBlockSize), dstBlockSize};
+			ECVRange const srcDesiredPixelRange = (ECVRange){srcDesiredRange.location + (srcFlip ? srcDesiredRange.length - (i + 1) * srcBlockSize : i * srcBlockSize), srcBlockSize};
+
+			NSRange const dstValidPixelRange = ECVIntersectionRange2(ECVIntersectionRange(dstDesiredPixelRange, dstRowRange), dstInfo->validRange);
+			NSRange const srcValidPixelRange = ECVIntersectionRange2(ECVIntersectionRange(srcDesiredPixelRange, srcRowRange), srcInfo->validRange);
+			NSRange const pixelCommon = NSIntersectionRange(ECVRebaseRange2(dstValidPixelRange, dstDesiredPixelRange), ECVRebaseRange2(srcValidPixelRange, srcDesiredPixelRange));
+			if(!pixelCommon.length) break;
+
+			NSRange const dstPixelRange = NSMakeRange(dstDesiredPixelRange.location + pixelCommon.location, pixelCommon.length);
+			NSRange const srcPixelRange = NSMakeRange(srcDesiredPixelRange.location + pixelCommon.location, pixelCommon.length);
+			UInt8 *const dstPixelBytes = dst + (dstPixelRange.location - dstInfo->validRange.location);
+			UInt8 const *const srcPixelBytes = src + (srcPixelRange.location - srcInfo->validRange.location);
+
+			ECVDrawPixel(dstPixelBytes, dstInfo->pixelFormat, srcPixelBytes, srcInfo->pixelFormat, pixelCommon, options);
+		}
+		return;
+	}
+
 	NSRange const dstValidRange = ECVIntersectionRange2(ECVIntersectionRange(dstDesiredRange, dstRowRange), dstInfo->validRange);
 	NSRange const srcValidRange = ECVIntersectionRange2(ECVIntersectionRange(srcDesiredRange, srcRowRange), srcInfo->validRange);
+	NSRange const common = NSIntersectionRange(ECVRebaseRange2(dstValidRange, dstDesiredRange), ECVRebaseRange2(srcValidRange, srcDesiredRange));
+	if(!common.length) return;
 
-	NSUInteger const dstMinOffset = dstValidRange.location - dstDesiredRange.location;
-	NSUInteger const srcMinOffset = srcValidRange.location - srcDesiredRange.location;
-	NSUInteger const commonOffset = MAX(dstMinOffset, srcMinOffset);
-
-	NSUInteger const dstMaxLength = SUB_ZERO(dstValidRange.length, commonOffset - dstMinOffset);
-	NSUInteger const srcMaxLength = SUB_ZERO(srcValidRange.length, commonOffset - srcMinOffset);
-	NSUInteger const commonLength = MIN(dstMaxLength, srcMaxLength);
-
-	if(!commonLength) return;
-
-	NSRange const dstRange = NSMakeRange(dstDesiredRange.location + commonOffset, commonLength);
-	NSRange const srcRange = NSMakeRange(srcDesiredRange.location + commonOffset, commonLength);
+	NSRange const dstRange = NSMakeRange(dstDesiredRange.location + common.location, common.length);
+	NSRange const srcRange = NSMakeRange(srcDesiredRange.location + common.location, common.length);
 	UInt8 *const dstBytes = dst + (dstRange.location - dstInfo->validRange.location);
 	UInt8 const *const srcBytes = src + (srcRange.location - srcInfo->validRange.location);
 
-	if(ECVDrawChannelMask & options) {
+	if(ECVDrawBlended & options) {
 		size_t i;
-		for(i = 0; i < commonLength; ++i) ECVDrawByte(dstBytes + i, srcBytes + i, dstInfo->pixelFormat, (dstRange.location + i) % dstBytesPerPixel, options);
-	} else if(ECVDrawBlended & options) {
-		size_t i;
-		for(i = 0; i < commonLength; ++i) dstBytes[i] = dstBytes[i] / 2 + srcBytes[i] / 2;
+		for(i = 0; i < common.length; ++i) dstBytes[i] = dstBytes[i] / 2 + srcBytes[i] / 2;
 	} else {
-		memcpy(dstBytes, srcBytes, commonLength);
+		memcpy(dstBytes, srcBytes, common.length);
 	}
 }
 static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, ECVIntegerSize size, ECVPixelBufferDrawingOptions options)
