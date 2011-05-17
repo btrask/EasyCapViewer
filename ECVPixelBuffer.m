@@ -92,11 +92,11 @@ NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 con
 	NSUInteger const dstBytesPerPixel = ECVPixelFormatBytesPerPixel(dstInfo->pixelFormat);
 	NSUInteger const srcBytesPerPixel = ECVPixelFormatBytesPerPixel(srcInfo->pixelFormat);
 
-	ECVRange const dstDesiredRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow + dstPoint.x * dstBytesPerPixel, length * dstBytesPerPixel};
-	ECVRange const srcDesiredRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow + srcPoint.x * srcBytesPerPixel, length * srcBytesPerPixel};
-
 	ECVRange const dstRowRange = (ECVRange){dstPoint.y * dstInfo->bytesPerRow, dstInfo->bytesPerRow};
 	ECVRange const srcRowRange = (ECVRange){srcPoint.y * srcInfo->bytesPerRow, srcInfo->bytesPerRow};
+
+	ECVRange const dstDesiredRange = (ECVRange){dstRowRange.location + dstPoint.x * dstBytesPerPixel, length * dstBytesPerPixel};
+	ECVRange const srcDesiredRange = (ECVRange){srcRowRange.location + srcPoint.x * srcBytesPerPixel, length * srcBytesPerPixel};
 
 	NSRange const dstValidRange = ECVIntersectionRange2(ECVIntersectionRange(dstDesiredRange, dstRowRange), dstInfo->validRange);
 	NSRange const srcValidRange = ECVIntersectionRange2(ECVIntersectionRange(srcDesiredRange, srcRowRange), srcInfo->validRange);
