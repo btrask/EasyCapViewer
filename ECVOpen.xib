@@ -157,7 +157,7 @@
 											<string key="NSAction">_popUpItemAction:</string>
 											<reference key="NSTarget" ref="903523653"/>
 										</object>
-										<object class="NSMenuItem" id="282172939">
+										<object class="NSMenuItem" id="502096273">
 											<reference key="NSMenu" ref="63449153"/>
 											<string key="NSTitle">2 × EasyCap - Composite (Anaglyphic)</string>
 											<string key="NSKeyEquiv"/>
@@ -166,6 +166,17 @@
 											<reference key="NSMixedImage" ref="1025806950"/>
 											<string key="NSAction">_popUpItemAction:</string>
 											<int key="NSTag">6</int>
+											<reference key="NSTarget" ref="903523653"/>
+										</object>
+										<object class="NSMenuItem" id="282172939">
+											<reference key="NSMenu" ref="63449153"/>
+											<string key="NSTitle">2 × EasyCap - Composite (Anaglyphic, Flipped)</string>
+											<string key="NSKeyEquiv"/>
+											<int key="NSMnemonicLoc">2147483647</int>
+											<reference key="NSOnImage" ref="530162819"/>
+											<reference key="NSMixedImage" ref="1025806950"/>
+											<string key="NSAction">_popUpItemAction:</string>
+											<int key="NSTag">7</int>
 											<reference key="NSTarget" ref="903523653"/>
 										</object>
 									</object>
@@ -517,6 +528,7 @@
 							<reference ref="873868484"/>
 							<reference ref="678188510"/>
 							<reference ref="282172939"/>
+							<reference ref="502096273"/>
 						</object>
 						<reference key="parent" ref="903523653"/>
 					</object>
@@ -623,6 +635,11 @@
 						<reference key="object" ref="282172939"/>
 						<reference key="parent" ref="63449153"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">41</int>
+						<reference key="object" ref="502096273"/>
+						<reference key="parent" ref="63449153"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -667,6 +684,7 @@
 					<string>33.IBPluginDependency</string>
 					<string>39.IBPluginDependency</string>
 					<string>40.IBPluginDependency</string>
+					<string>41.IBPluginDependency</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -686,7 +704,7 @@
 						<bytes key="NSTransformStruct">P4AAAL+AAABDOwAAwiAAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{587, 613}, {330, 123}}</string>
+					<string>{{587, 593}, {388, 143}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -718,6 +736,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="unlocalizedProperties">
@@ -736,7 +755,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">40</int>
+			<int key="maxID">41</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
