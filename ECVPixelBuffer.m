@@ -67,8 +67,7 @@ NS_INLINE NSUInteger ECVPixelFormatPixelsPerBlock(OSType t)
 	switch(t) {
 		case k2vuyPixelFormat: return 2;
 	}
-	ECVCAssertNotReached(@"Unrecognized pixel format.");
-	return 0;
+	return 1;
 }
 
 typedef struct {
