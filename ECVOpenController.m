@@ -47,9 +47,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)runModal
 {
 	if(![NSApp runModalForWindow:[self window]]) return [NSApp terminate:nil];
-
-sleep(15);
-
 	NSArray *const sources = [ECVVideoSource sources];
 	ECVLog(ECVNotice, @"Recognized sources: %@", sources);
 	if(![sources count]) {
@@ -160,8 +157,6 @@ sleep(15);
 	[[NSDocumentController sharedDocumentController] addDocument:doc];
 	[doc makeWindowControllers];
 	[doc showWindows];
-
-[doc setPlaying:YES];
 }
 
 #pragma mark -NSWindowController
