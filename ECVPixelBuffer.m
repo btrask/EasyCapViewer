@@ -59,7 +59,6 @@ NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
 	switch(t) {
 		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
 	}
-	ECVCAssertNotReached(@"Unrecognized pixel format.");
 	return 0;
 }
 NS_INLINE NSUInteger ECVPixelFormatPixelsPerBlock(OSType t)
