@@ -104,7 +104,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			[vs addVideoPipe:p2];
 			break;
 		}
-		case 7: { // 2 EasyCaps, Composite, Anaglyph, Flipped
+		case 7: { // 2 EasyCaps, Composite, Anaglyph, Mirrored
 			if([sources count] < 2) return;
 			[vs setPixelFormat:kCVPixelFormatType_24RGB];
 			[vs setPixelSize:(ECVIntegerSize){704, 480}];
@@ -112,7 +112,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			ECVVideoSource *const s2 = [sources objectAtIndex:1];
 			ECVVideoPipe *const p1 = [s1 videoPipeWithInput:[[s1 inputs] objectAtIndex:1]];
 			ECVVideoPipe *const p2 = [s2 videoPipeWithInput:[[s2 inputs] objectAtIndex:1]];
-			[p1 setExtraDrawingOptions:ECVDrawChannel1 | ECVDrawMirroredHorz | ECVDrawMirroredVert];
+			[p1 setExtraDrawingOptions:ECVDrawChannel1 | ECVDrawMirroredVert];
 			[p2 setExtraDrawingOptions:ECVDrawChannel2 | ECVDrawChannel3];
 			[vs addVideoPipe:p1];
 			[vs addVideoPipe:p2];

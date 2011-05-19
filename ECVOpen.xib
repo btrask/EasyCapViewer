@@ -181,7 +181,7 @@
 										</object>
 										<object class="NSMenuItem" id="282172939">
 											<reference key="NSMenu" ref="63449153"/>
-											<string key="NSTitle">2 × EasyCap - Composite (Anaglyphic, Flipped)</string>
+											<string key="NSTitle">2 × EasyCap - Composite (Anaglyphic, Mirrored)</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSMnemonicLoc">2147483647</int>
 											<reference key="NSOnImage" ref="530162819"/>
@@ -722,7 +722,7 @@
 						<bytes key="NSTransformStruct">P4AAAL+AAABDOwAAwiAAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{587, 573}, {388, 163}}</string>
+					<string>{{587, 573}, {397, 163}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
