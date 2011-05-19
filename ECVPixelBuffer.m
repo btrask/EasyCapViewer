@@ -130,7 +130,7 @@ NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 con
 	if(!dstDesiredRange.length || !srcDesiredRange.length) return;
 
 	if(ECVDrawChannelMask & options || ECVDrawMirroredHorz & options || dstInfo->pixelFormat != srcInfo->pixelFormat) {
-		BOOL const dstFlip = YES;
+		BOOL const dstFlip = !!(ECVDrawMirroredHorz & options);
 		BOOL const srcFlip = NO;
 		NSUInteger const dstBlockSize = ECVPixelFormatPixelsPerBlock(dstInfo->pixelFormat) * dstBytesPerPixel;
 		NSUInteger const srcBlockSize = ECVPixelFormatPixelsPerBlock(srcInfo->pixelFormat) * srcBytesPerPixel;
