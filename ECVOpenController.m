@@ -133,11 +133,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			[vs setPixelSize:(ECVIntegerSize){704, 480}];
 			break;
 		}
-		case 8: { // 1 EasyCap, Composite 1, Mirrored
+		case 8: { // 1 EasyCap, Composite 1, Mirrored X
 			if([sources count] < 1) return;
 			ECVVideoSource *const s = [sources objectAtIndex:0];
 			ECVVideoPipe *const pipe = [s videoPipeWithInput:[[s inputs] objectAtIndex:1]];
 			[pipe setExtraDrawingOptions:ECVDrawMirroredHorz];
+			[vs addVideoPipe:pipe];
+			[vs setPixelSize:(ECVIntegerSize){704, 480}];
+			break;
+		}
+		case 9: { // 1 EasyCap, Composite 1, Mirrored Y
+			if([sources count] < 1) return;
+			ECVVideoSource *const s = [sources objectAtIndex:0];
+			ECVVideoPipe *const pipe = [s videoPipeWithInput:[[s inputs] objectAtIndex:1]];
+			[pipe setExtraDrawingOptions:ECVDrawMirroredVert];
 			[vs addVideoPipe:pipe];
 			[vs setPixelSize:(ECVIntegerSize){704, 480}];
 			break;
