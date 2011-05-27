@@ -88,7 +88,7 @@ NS_INLINE void ECVCopyByte(UInt8 *dstPixel, NSUInteger dstIndex, UInt8 const *sr
 }
 NS_INLINE void ECVDrawPixel(UInt8 *dstPixel, OSType dstFormat, UInt8 const *srcPixel, OSType srcFormat, NSRange range, ECVPixelBufferDrawingOptions options)
 {
-	NSParameterAssert(dstFormat == srcFormat);
+	NSCParameterAssert(dstFormat == srcFormat);
 	if(!(ECVDrawChannelMask & options)) options |= ECVDrawChannelMask;
 	#define ECV_COPY_BYTE(d, s) (ECVCopyByte(dstPixel, (d), srcPixel, (s), range, options))
 	switch(srcFormat) {

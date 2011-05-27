@@ -52,36 +52,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-- (QTTime)inputFrameRate
+- (ECVVideoFormat *)format
 {
-	return _inputFrameRate;
+	return [[_format retain] autorelease];
 }
-- (ECVIntegerSize)inputPixelSize
+- (void)setFormat:(ECVVideoFormat *)format
 {
-	return _inputPixelSize;
+	[_lock lock];
+	[_format autorelease];
+	_format = [format copy];
+	[_lock unlock];
 }
-- (OSType)inputPixelFormat
-{
-	return _inputPixelFormat;
-}
-
-#pragma mark -
-
-- (QTTime)outputFrameRate
-{
-	return _outputFrameRate;
-}
-- (ECVIntegerSize)outputPixelSize
-{
-	return _outputPixelSize;
-}
-- (OSType)outputPixelFormat
-{
-	return _outputPixelFormat;
-}
-
-#pragma mark -
-
 - (ECVIntegerPoint)position
 {
 	return _position;
@@ -105,21 +86,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoPipe(ECVFromSource)
 
-- (void)setInputFrameRate:(QTTime)rate
+- (OSType)inputPixelFormat
 {
-	[_lock lock];
-	_inputFrameRate = rate;
-	[_converter release];
-	_converter = nil;
-	[_lock unlock];
-}
-- (void)setInputPixelSize:(ECVIntegerSize)size
-{
-	[_lock lock];
-	_inputPixelSize = size;
-	[_converter release];
-	_converter = nil;
-	[_lock unlock];
+	return _inputPixelFormat;
 }
 - (void)setInputPixelFormat:(OSType)format
 {
@@ -150,21 +119,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
-- (void)setOutputFrameRate:(QTTime)rate
+- (OSType)outputPixelFormat
 {
-	[_lock lock];
-	_outputFrameRate = rate;
-	[_converter release];
-	_converter = nil;
-	[_lock unlock];
-}
-- (void)setOutputPixelSize:(ECVIntegerSize)size
-{
-	[_lock lock];
-	_outputPixelSize = size;
-	[_converter release];
-	_converter = nil;
-	[_lock unlock];
+	return _outputPixelFormat;
 }
 - (void)setOutputPixelFormat:(OSType)format
 {
@@ -180,7 +137,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)readIntoStorageBuffer:(ECVMutablePixelBuffer *)buffer
 {
 	[_lock lock];
-	if(!_converter) _converter = [[ECVPixelBufferConverter alloc] initWithInputSize:[self inputPixelSize] pixelFormat:[self inputPixelFormat] outputSize:[self outputPixelSize] pixelFormat:[self outputPixelFormat]];
+	if(!_converter) {
+		ECVIntegerSize const size = [[self format] pixelSize];
+		_converter = [[ECVPixelBufferConverter alloc] initWithInputSize:size pixelFormat:[self inputPixelFormat] outputSize:size pixelFormat:[self outputPixelFormat]];
+	}
 	ECVPixelBuffer *const current = [[_buffer retain] autorelease];
 	ECVIntegerPoint const position = [self position];
 	ECVPixelBufferConverter *const converter = [[_converter retain] autorelease];

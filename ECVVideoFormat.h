@@ -19,23 +19,31 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVUSBVideoSource.h"
+// Other Sources
+#import "ECVRational.h"
 
-// Models/Sources/Video/Chipsets
-#import "SAA711XChip.h"
-#import "VT1612AChip.h" // TODO: Technically, this is an audio chipset...
-
-// Models/Storages/Video
-@class ECVMutablePixelBuffer;
-
-@interface ECV05e1_0408Source : ECVUSBVideoSource <SAA711XDevice, VT1612ADevice>
+@interface ECVVideoFormat : NSObject <NSCopying>
 {
 	@private
-	SAA711XChip *_SAA711XChip;
-	VT1612AChip *_VT1612AChip;
-	CFMutableArrayRef _pipes; // FIXME: We'll need some sort of lock to protect this.
-	ECVMutablePixelBuffer *_pendingBuffer;
-	NSUInteger _offset;
+	NSString *_identifier;
+	NSDictionary *_properties;
 }
+
++ (NSArray *)formats;
++ (id)formatWithIdentifier:(NSString *)ident;
++ (void)registerFormat:(ECVVideoFormat *)format;
+
+- (id)initWithIdentifier:(NSString *)ident dictionary:(NSDictionary *)dict;
+- (NSDictionary *)properties;
+- (id)valueForProperty:(NSString *)key;
+
+- (NSString *)identifier;
+- (NSString *)localizedName;
+- (ECVRational)frameRate;
+- (ECVIntegerSize)pixelSize;
+- (ECVRational)sampleMatrixAspectRatio;
+
+- (ECVRational)sampleAspectRatioWithDisplayAspectRatio:(ECVRational)DAR;
+- (ECVIntegerSize)nativeOutputSizeWithDisplayAspectRatio:(ECVRational)DAR;
 
 @end

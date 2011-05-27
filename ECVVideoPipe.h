@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 @class ECVPixelBufferConverter;
+@class ECVVideoFormat;
 
 @interface ECVVideoPipe : ECVPipe
 {
@@ -46,33 +47,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVPixelBuffer *_buffer;
 	ECVPixelBufferConverter *_converter;
 
-	QTTime _inputFrameRate;
-	ECVIntegerSize _inputPixelSize;
-	OSType _inputPixelFormat;
-
-	QTTime _outputFrameRate;
-	ECVIntegerSize _outputPixelSize;
-	OSType _outputPixelFormat;
-
+	ECVVideoFormat *_format;
 	ECVIntegerPoint _position;
 	ECVPixelBufferDrawingOptions _extraDrawingOptions;
+
+	OSType _inputPixelFormat;
+	OSType _outputPixelFormat;
 }
 
 - (id)initWithVideoSource:(ECVVideoSource *)source;
 @property(readonly) id videoSource;
 @property(readonly) ECVVideoStorage *videoStorage;
 
-// Input
-- (QTTime)inputFrameRate;
-- (ECVIntegerSize)inputPixelSize;
-- (OSType)inputPixelFormat;
-
-// Output
-- (QTTime)outputFrameRate;
-- (ECVIntegerSize)outputPixelSize;
-- (OSType)outputPixelFormat;
-
 // Options
+@property(copy) ECVVideoFormat *format;
 @property(assign) ECVIntegerPoint position;
 @property(assign) ECVPixelBufferDrawingOptions extraDrawingOptions;
 
@@ -80,8 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @interface ECVVideoPipe(ECVFromSource)
 
-- (void)setInputFrameRate:(QTTime)rate;
-- (void)setInputPixelSize:(ECVIntegerSize)size;
+- (OSType)inputPixelFormat;
 - (void)setInputPixelFormat:(OSType)format;
 
 @end
@@ -96,8 +83,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @property(assign) ECVVideoStorage *videoStorage;
 
-- (void)setOutputFrameRate:(QTTime)rate;
-- (void)setOutputPixelSize:(ECVIntegerSize)size;
+- (OSType)outputPixelFormat;
 - (void)setOutputPixelFormat:(OSType)format;
 
 @end

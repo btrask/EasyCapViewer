@@ -30,8 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models/Video
 #import "ECVPixelBuffer.h"
 
+// Models
+#import "ECVVideoFormat.h"
+
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVFoundationAdditions.h"
 
 enum {
 	ECVSVideoInput = 0,
@@ -39,21 +43,6 @@ enum {
 	ECVComposite2Input = 2,
 	ECVComposite3Input = 3,
 	ECVComposite4Input = 4,
-};
-enum {
-	ECVAuto60HzFormat = 0,
-	ECVNTSCMFormat = 8,
-	ECVPAL60Format = 2,
-	ECVNTSC44360HzFormat = 6,
-	ECVPALMFormat = 3,
-	ECVNTSCJFormat = 9,
-
-	ECVAuto50HzFormat = 1,
-	ECVPALBGDHIFormat = 10,
-	ECVNTSC44350HzFormat = 7,
-	ECVPALNFormat = 4,
-	ECVNTSCNFormat = 5,
-	ECVSECAMFormat = 11,
 };
 enum {
 	ECVHighFieldFlag = 1 << 6,
@@ -72,9 +61,9 @@ enum {
 
 @interface ECV05e1_0408Source(Private)
 
-- (NSUInteger)_compositeInputCount;
-- (NSUInteger)_firstInput;
-- (NSUInteger)_nextInput;
+- (ECV05e1_0408Pipe *)_primaryPipe;
+- (NSUInteger)_currentInput;
+- (ECVVideoFormat *)_currentFormat;
 - (void)_nextFieldType:(ECVFieldType)fieldType;
 - (void)_removePipe:(ECV05e1_0408Pipe *)pipe;
 
@@ -95,54 +84,30 @@ enum {
 
 #pragma mark -ECV05e1_0408Source(Private)
 
-- (NSUInteger)_compositeInputCount
+- (ECV05e1_0408Pipe *)_primaryPipe
 {
-	NSUInteger count = 0;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite1Input])) count++;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite2Input])) count++;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite3Input])) count++;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite4Input])) count++;
-	return count;
+	return CFArrayGetCount(_pipes) ? CFArrayGetValueAtIndex(_pipes, 0) : nil;
 }
-- (NSUInteger)_firstInput
+- (NSUInteger)_currentInput
 {
-	if(CFArrayGetCount(_pipesForInput[ECVComposite1Input])) return ECVComposite1Input;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite2Input])) return ECVComposite2Input;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite3Input])) return ECVComposite3Input;
-	if(CFArrayGetCount(_pipesForInput[ECVComposite4Input])) return ECVComposite4Input;
-	if(CFArrayGetCount(_pipesForInput[ECVSVideoInput])) return ECVSVideoInput;
-	return ECVComposite1Input;
+	return [[self _primaryPipe] input];
 }
-- (NSUInteger)_nextInput
+- (ECVVideoFormat *)_currentFormat
 {
-	if(ECVSVideoInput == _currentInput) return ECVSVideoInput;
-	NSUInteger i;
-	for(i = 0; i < 4; ++i) {
-		NSUInteger const input = (_currentInput + i) % 4 + 1;
-		if(CFArrayGetCount(_pipesForInput[input])) return input;
-	}
-	return ECVComposite1Input;
+	return [[self _primaryPipe] format];
 }
 - (void)_nextFieldType:(ECVFieldType)fieldType
 {
-	BOOL const multipleInputs = [self _compositeInputCount] > 1;
-	if(multipleInputs) {
-		if(ECVHighField == fieldType) {
-			if(_frameSkipCount > 0) _frameSkipCount--;
-			else _frameSkipCount = 1;
-		}
-		if(ECVLowField == fieldType && !_frameSkipCount) {
-			[self _setVideoSource:[self _nextInput]];
-			_frameSkipCount = 1;
-		}
-		if(_frameSkipCount) return;
-	}
+	NSUInteger const input = [self _currentInput];
+	ECVVideoFormat *const format = [self _currentFormat];
 
-	CFMutableArrayRef const pipes = _pipesForInput[_currentInput];
+	CFMutableArrayRef const pipes = _pipes;
 	CFIndex const count = CFArrayGetCount(pipes);
 	CFIndex i;
 	for(i = 0; i < count; ++i) {
 		ECV05e1_0408Pipe *const pipe = CFArrayGetValueAtIndex(pipes, i);
+		if([pipe input] != input) continue;
+		if(!ECVEqualObjects([pipe format], format)) continue;
 		[pipe writeField:_pendingBuffer type:fieldType];
 	}
 
@@ -155,28 +120,31 @@ enum {
 }
 - (void)_removePipe:(ECV05e1_0408Pipe *)pipe
 {
-	CFMutableArrayRef const pipes = _pipesForInput[[pipe input]];
+	CFMutableArrayRef const pipes = _pipes;
 	CFIndex const i = CFArrayGetFirstIndexOfValue(pipes, CFRangeMake(0, CFArrayGetCount(pipes)), pipe);
 	if(kCFNotFound != i) CFArrayRemoveValueAtIndex(pipes, i);
+	// TODO: The current format may have changed, so we may need to stop and restart the device.
 }
 
 #pragma mark -
 
 - (ECVIntegerSize)_inputFieldSize
 {
-	return (ECVIntegerSize){720, [self is60HzFormat] ? 240 : 288};
+	ECVIntegerSize const s = [self _inputFrameSize];
+	return (ECVIntegerSize){s.width, s.height / 2};
 }
 - (ECVIntegerSize)_inputFrameSize
 {
-	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
+	return ECVIntegerSizeFromString([[self _currentFormat] valueForProperty:@"ECV05e1_0408InputSize"]);
 }
 - (ECVIntegerSize)_outputFieldSize
 {
-	return (ECVIntegerSize){704, [self is60HzFormat] ? 240 : 288};
+	ECVIntegerSize const s = [self _outputFrameSize];
+	return (ECVIntegerSize){s.width, s.height / 2};
 }
 - (ECVIntegerSize)_outputFrameSize
 {
-	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
+	return [[self _currentFormat] pixelSize];
 }
 
 #pragma mark -
@@ -244,18 +212,14 @@ enum {
 {
 	UInt8 val = 0;
 	switch(source) {
-		case ECVSVideoInput:
-			_currentInput = source;
-			return YES;
 		case ECVComposite1Input: val = 3; break;
 		case ECVComposite2Input: val = 2; break;
 		case ECVComposite3Input: val = 1; break;
 		case ECVComposite4Input: val = 0; break;
-		default:
-			return NO;
+		case ECVSVideoInput: return YES;
+		default: return NO;
 	}
 	if(dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | val << 3)) return NO;
-	_currentInput = source;
 	return YES;
 }
 - (BOOL)_setStreaming:(BOOL)flag
@@ -292,12 +256,7 @@ enum {
 		[_SAA711XChip setDevice:self];
 		_VT1612AChip = [[VT1612AChip alloc] init];
 		[_VT1612AChip setDevice:self];
-
-		_pipesForInput[ECVSVideoInput] = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-		_pipesForInput[ECVComposite1Input] = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-		_pipesForInput[ECVComposite2Input] = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-		_pipesForInput[ECVComposite3Input] = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
-		_pipesForInput[ECVComposite4Input] = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+		_pipes = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	}
 	return self;
 }
@@ -306,14 +265,12 @@ enum {
 
 - (void)read
 {
-	_currentInput = [self _firstInput];
 	_offset = 0;
-	_frameSkipCount = 0;
 	dev_stk0408_initialize_device(self);
 	if(![_SAA711XChip initialize]) return;
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
 	if(![self _initializeAudio]) return;
-	if(![self _setVideoSource:_currentInput]) return;
+	if(![self _setVideoSource:[self _currentInput]]) return;
 	if(![self _initializeResolution]) return;
 	if(![self setAlternateInterface:5]) return;
 	if(![self _setStreaming:YES]) return;
@@ -343,7 +300,7 @@ enum {
 		[self _nextFieldType:ECVHighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
 		header += 4;
 	}
-	if(length <= header || _frameSkipCount) return;
+	if(length <= header) return;
 
 	NSUInteger const realLength = length - header;
 	ECVIntegerSize const pixelSize = [self _inputFieldSize];
@@ -377,10 +334,8 @@ enum {
 	ECV05e1_0408Pipe *const pipe = [[[ECV05e1_0408Pipe alloc] initWithVideoSource:self] autorelease];
 	[pipe setInput:i];
 	[pipe setName:[self localizedStringForInput:input]];
-	[pipe setInputFrameRate:[self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50)];
-	[pipe setInputPixelSize:[self _outputFrameSize]];
 	[pipe setInputPixelFormat:kCVPixelFormatType_422YpCbCr8];
-	CFArrayAppendValue(_pipesForInput[i], pipe); // TODO: Locking will eventually be necessary.
+	CFArrayAppendValue(_pipes, pipe); // TODO: Locking will eventually be necessary.
 	return pipe;
 }
 
@@ -415,11 +370,7 @@ enum {
 {
 	[_SAA711XChip release];
 	[_VT1612AChip release];
-	CFRelease(_pipesForInput[ECVSVideoInput]);
-	CFRelease(_pipesForInput[ECVComposite1Input]);
-	CFRelease(_pipesForInput[ECVComposite2Input]);
-	CFRelease(_pipesForInput[ECVComposite3Input]);
-	CFRelease(_pipesForInput[ECVComposite4Input]);
+	CFRelease(_pipes);
 	[super dealloc];
 }
 
@@ -452,48 +403,15 @@ enum {
 }
 - (BOOL)SVideo
 {
-	return ![self _compositeInputCount];
+	return [self _currentInput] == ECVSVideoInput;
 }
 - (SAA711XCSTDFormat)SAA711XCSTDFormat
 {
-	switch(ECVNTSCMFormat) { // TODO: Handle formats.
-		case ECVAuto60HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
-		case ECVNTSCMFormat:       return SAA711XCSTDNTSCM;
-		case ECVPAL60Format:       return SAA711XCSTDPAL60Hz;
-		case ECVPALMFormat:        return SAA711XCSTDPALM;
-		case ECVNTSC44360HzFormat: return SAA711XCSTDNTSC44360Hz;
-		case ECVNTSCJFormat:       return SAA711XCSTDNTSCJ;
-
-		case ECVAuto50HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
-		case ECVPALBGDHIFormat:    return SAA711XCSTDPAL_BGDHI;
-		case ECVPALNFormat:        return SAA711XCSTDPALN;
-		case ECVNTSC44350HzFormat: return SAA711XCSTDNTSC44350Hz;
-		case ECVNTSCNFormat:       return SAA711XCSTDNTSCN;
-		case ECVSECAMFormat:       return SAA711XCSTDSECAM;
-		default: return 0;
-	}
+	return [[[self _currentFormat] valueForProperty:@"SAA711XCSTDFormat"] unsignedIntegerValue];
 }
 - (BOOL)is60HzFormat
 {
-	switch(ECVNTSCMFormat) { // TODO: Handle formats.
-		case ECVAuto60HzFormat:
-		case ECVNTSCMFormat:
-		case ECVPAL60Format:
-		case ECVPALMFormat:
-		case ECVNTSC44360HzFormat:
-		case ECVNTSCJFormat:
-			return YES;
-		case ECVAuto50HzFormat:
-		case ECVPALBGDHIFormat:
-		case ECVPALNFormat:
-		case ECVNTSCNFormat:
-		case ECVNTSC44350HzFormat:
-		case ECVSECAMFormat:
-			return NO;
-		default:
-			ECVAssertNotReached(@"Invalid video format.");
-			return NO;
-	}
+	return [[[self _currentFormat] valueForProperty:@"SAA711XIs60Hz"] boolValue];
 }
 - (BOOL)SAA711XRTP0OutputPolarityInverted
 {

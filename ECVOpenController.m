@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureDocument.h"
 #import "ECVAVEncoder.h"
 #import "ECVStreamingServer.h"
+#import "ECVVideoFormat.h"
 
 // Other Sources
 #import "ECVDebug.h"
@@ -156,6 +157,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			return;
 	}
 
+	for(ECVVideoPipe *const pipe in [vs pipes]) [pipe setFormat:[[formatPopUp selectedItem] representedObject]];
+
 	ECVAVEncoder *const encoder = [[[ECVAVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:vs, nil]] autorelease];
 	ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:3453] autorelease];
 	ECVStreamingServer *const server = [[[ECVStreamingServer alloc] init] autorelease];
@@ -178,6 +181,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[storage replaceCharactersInRange:NSMakeRange(0, [storage length]) withAttributedString:[[[NSAttributedString alloc] initWithPath:[[NSBundle bundleForClass:[self class]] pathForResource:@"Release Notes" ofType:@"rtf"] documentAttributes:NULL] autorelease]];
 
 	// TODO: Select the default item in the input popup.
+
+	NSMenu *const formatMenu = [formatPopUp menu];
+	[formatMenu removeAllItems];
+	for(ECVVideoFormat *const format in [ECVVideoFormat formats]) { // TODO: Sort formats.
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[format localizedName] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:format];
+		[formatMenu addItem:item];
+	}
+	NSInteger const i = [formatPopUp indexOfItemWithRepresentedObject:[ECVVideoFormat formatWithIdentifier:@"NTSC-M"]];
+	if(-1 != i) [formatPopUp selectItemAtIndex:i];
 }
 
 #pragma mark -NSObject

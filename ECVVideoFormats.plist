@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NTSC-M</key><dict>
+		<key>ECVName</key><string>NTSC</string>
+		<key>ECVFrameRate</key><string>{1001 / 60000}</string>
+		<key>ECVPixelSize</key><string>{704, 480}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{4739 / 3240}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 480}</string>
+		<key>SAA711XCSTDFormat</key><integer>0</integer>
+		<key>SAA711XIs60Hz</key><true/>
+	</dict>
+	<key>PAL-BGDHI</key><dict>
+		<key>ECVName</key><string>PAL</string>
+		<key>ECVFrameRate</key><string>{1 / 50}</string>
+		<key>ECVPixelSize</key><string>{702, 576}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 576}</string>
+		<key>SAA711XCSTDFormat</key><integer>0</integer>
+		<key>SAA711XIs60Hz</key><false/>
+	</dict>
+</dict>
+</plist>

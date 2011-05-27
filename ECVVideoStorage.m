@@ -111,8 +111,6 @@ static void ECVReadOneFrame(CFRunLoopTimerRef timer, ECVVideoStorage *self)
 
 - (void)addVideoPipe:(ECVVideoPipe *)pipe
 {
-	[pipe setOutputFrameRate:[self frameRate]];
-	[pipe setOutputPixelSize:[pipe inputPixelSize]];
 	[pipe setOutputPixelFormat:[self pixelFormat]];
 	[self lock];
 	[self addPipe:pipe];

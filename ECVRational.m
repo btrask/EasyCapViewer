@@ -46,3 +46,9 @@ NSString *ECVRationalToString(ECVRational r)
 {
 	return [NSString stringWithFormat:@"{%ld / %ld}", r.numer, r.denom];
 }
+ECVRational ECVRationalFromString(NSString *str)
+{
+	long numer = 0, denom = 0;
+	int const count = sscanf([str UTF8String], "{%ld / %ld}", &numer, &denom);
+	return 2 == count ? ECVMakeRational(numer, denom) : (ECVRational){0, 0};
+}

@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	IBOutlet NSTextView *textView;
 	IBOutlet NSPopUpButton *inputPopUp;
+	IBOutlet NSPopUpButton *formatPopUp;
 }
 
 - (IBAction)open:(id)sender;

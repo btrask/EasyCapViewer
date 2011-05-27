@@ -56,6 +56,10 @@ NS_INLINE ECVIntegerSize ECVIntegerSizeFromNSSize(NSSize s)
 {
 	return (ECVIntegerSize){round(s.width), round(s.height)};
 }
+NS_INLINE ECVIntegerSize ECVIntegerSizeFromString(NSString *str)
+{
+	return ECVIntegerSizeFromNSSize(NSSizeFromString(str));
+}
 NS_INLINE BOOL ECVEqualPixelSizes(ECVIntegerSize a, ECVIntegerSize b)
 {
 	return a.width == b.width && a.height == b.height;
