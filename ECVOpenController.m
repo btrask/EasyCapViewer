@@ -61,8 +61,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
 	ECVVideoStorage *const vs = [doc videoStorage];
 	[vs setPixelFormat:kCVPixelFormatType_422YpCbCr8];
-	[vs setPixelAspectRatio:ECVMakeRational(11, 10)]; // Aspect ratios are hard <http://lipas.uwasa.fi/~f76998/video/conversion/>.
-	[vs setFrameRate:QTMakeTime(1001, 30000)];
 	[vs setPixelSize:(ECVIntegerSize){704 * 2, 480}];
 
 	// FIXME: Yes, we REALLY shouldn't be hardcoding all of this.
@@ -157,7 +155,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 			return;
 	}
 
-	for(ECVVideoPipe *const pipe in [vs pipes]) [pipe setFormat:[[formatPopUp selectedItem] representedObject]];
+	ECVVideoFormat *const format = [[formatPopUp selectedItem] representedObject];
+	for(ECVVideoPipe *const pipe in [vs pipes]) [pipe setFormat:format];
+	[vs setFrameRate:QTMakeTime([format frameRate].numer, [format frameRate].denom / 2)];
+	[vs setSampleAspectRatio:[format sampleAspectRatioWithDisplayAspectRatio:(ECVRational){4, 3}]];
 
 	ECVAVEncoder *const encoder = [[[ECVAVEncoder alloc] initWithStorages:[NSArray arrayWithObjects:vs, nil]] autorelease];
 	ECVHTTPServer *const HTTPServer = [[[ECVHTTPServer alloc] initWithPort:3453] autorelease];
@@ -184,10 +185,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	NSMenu *const formatMenu = [formatPopUp menu];
 	[formatMenu removeAllItems];
-	for(ECVVideoFormat *const format in [ECVVideoFormat formats]) { // TODO: Sort formats.
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[format localizedName] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:format];
-		[formatMenu addItem:item];
+	NSMutableArray *const formats = [[[ECVVideoFormat formats] mutableCopy] autorelease];
+	[formats sortUsingSelector:@selector(compare:)];
+	while([formats count]) {
+		ECVRational const rate = [(ECVVideoFormat *)[formats objectAtIndex:0] frameRate];
+		NSMenuItem *const label = [[[NSMenuItem alloc] initWithTitle:[NSString localizedStringWithFormat:@"%0.2fHz", (double)rate.denom / rate.numer] action:NULL keyEquivalent:@""] autorelease];
+		[label setEnabled:NO];
+		[formatMenu addItem:label];
+		for(ECVVideoFormat *const format in [[formats copy] autorelease]) {
+			if(!ECVEqualRationals([format frameRate], rate)) continue;
+			NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[format localizedName] action:NULL keyEquivalent:@""] autorelease];
+			[item setRepresentedObject:format];
+			[item setIndentationLevel:1];
+			[formatMenu addItem:item];
+			[formats removeObjectIdenticalTo:format];
+		}
 	}
 	NSInteger const i = [formatPopUp indexOfItemWithRepresentedObject:[ECVVideoFormat formatWithIdentifier:@"NTSC-M"]];
 	if(-1 != i) [formatPopUp selectItemAtIndex:i];

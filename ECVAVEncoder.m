@@ -293,7 +293,7 @@ bail:
 		codecCtx->gop_size = 12;
 		codecCtx->pix_fmt = [ECVPixelBufferConverter AVPixelFormatWithOSType:targetPixelFormat];
 
-		ECVRational const ratio = [vs pixelAspectRatio];
+		ECVRational const ratio = [vs sampleAspectRatio];
 		ECVIntegerSize const inputSize = [vs pixelSize];
 		ECVIntegerSize const outputSize = (ECVIntegerSize){round((double)inputSize.width / ratio.numer * ratio.denom), inputSize.height};
 		codecCtx->width = outputSize.width;

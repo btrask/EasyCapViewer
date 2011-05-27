@@ -29,7 +29,7 @@ extern NSUInteger ECVIntegerLCM(NSInteger a, NSInteger b);
 extern ECVRational ECVRationalGCD(ECVRational a, ECVRational b);
 extern ECVRational ECVRationalLCM(ECVRational a, ECVRational b);
 extern NSString *ECVRationalToString(ECVRational r);
-ECVRational ECVRationalFromString(NSString *str);
+extern ECVRational ECVRationalFromString(NSString *str);
 
 static ECVRational ECVMakeRational(NSInteger numer, NSInteger denom)
 {
@@ -72,4 +72,8 @@ static NSInteger ECVRationalToNSInteger(ECVRational r)
 {
 	NSCParameterAssert(1 == r.denom);
 	return r.numer;
+}
+static BOOL ECVEqualRationals(ECVRational a, ECVRational b)
+{
+	return a.numer == b.numer && a.denom == b.denom;
 }

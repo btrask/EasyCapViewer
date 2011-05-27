@@ -83,13 +83,13 @@ static void ECVReadOneFrame(CFRunLoopTimerRef timer, ECVVideoStorage *self)
 {
 	_frameRate = rate;
 }
-- (ECVRational)pixelAspectRatio
+- (ECVRational)sampleAspectRatio
 {
-	return _pixelAspectRatio;
+	return _sampleAspectRatio;
 }
-- (void)setPixelAspectRatio:(ECVRational)ratio
+- (void)setSampleAspectRatio:(ECVRational)ratio
 {
-	_pixelAspectRatio = ratio;
+	_sampleAspectRatio = ratio;
 }
 
 #pragma mark -

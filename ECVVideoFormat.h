@@ -46,4 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVRational)sampleAspectRatioWithDisplayAspectRatio:(ECVRational)DAR;
 - (ECVIntegerSize)nativeOutputSizeWithDisplayAspectRatio:(ECVRational)DAR;
 
+- (NSComparisonResult)compare:(ECVVideoFormat *)format;
+
 @end

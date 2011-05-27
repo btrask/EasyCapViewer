@@ -108,6 +108,13 @@ static NSMutableDictionary *ECVVideoFormatByIdentifier = nil;
 	return (ECVIntegerSize){widthToNearestMacroblock, pixelSize.height};
 }
 
+#pragma mark -
+
+- (NSComparisonResult)compare:(ECVVideoFormat *)format
+{
+	return [[self localizedName] compare:[format localizedName]];
+}
+
 #pragma mark -ECVVideoFormat<NSCopying>
 
 - (id)copyWithZone:(NSZone *)zone

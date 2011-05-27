@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVIntegerSize _pixelSize;
 	OSType _pixelFormat;
 	QTTime _frameRate;
-	ECVRational _pixelAspectRatio;
+	ECVRational _sampleAspectRatio;
 	BOOL _read;
 }
 
@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) ECVIntegerSize pixelSize;
 @property(assign) OSType pixelFormat;
 @property(assign) QTTime frameRate;
-@property(assign) ECVRational pixelAspectRatio;
+@property(assign) ECVRational sampleAspectRatio;
 
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;
