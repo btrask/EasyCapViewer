@@ -21,7 +21,7 @@
 		<key>SAA711XIs60Hz</key><true/>
 	</dict>
 	<key>NTSC-4.43-60Hz</key><dict>
-		<key>ECVName</key><string>NTSC 4.43 (60Hz)</string>
+		<key>ECVName</key><string>NTSC 4.43</string>
 		<key>ECVFrameRate</key><string>{1001 / 60000}</string>
 		<key>ECVPixelSize</key><string>{704, 480}</string>
 		<key>ECVSampleMatrixAspectRatio</key><string>{4739 / 3240}</string>
@@ -58,7 +58,7 @@
 		<key>SAA711XIs60Hz</key><false/>
 	</dict>
 	<key>NTSC-4.43-50Hz</key><dict>
-		<key>ECVName</key><string>NTSC 4.43 (50Hz)</string>
+		<key>ECVName</key><string>NTSC 4.43</string>
 		<key>ECVFrameRate</key><string>{1 / 50}</string>
 		<key>ECVPixelSize</key><string>{702, 576}</string>
 		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
