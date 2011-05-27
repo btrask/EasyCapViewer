@@ -11,6 +11,43 @@
 		<key>SAA711XCSTDFormat</key><integer>0</integer>
 		<key>SAA711XIs60Hz</key><true/>
 	</dict>
+	<key>PAL-60</key><dict>
+		<key>ECVName</key><string>PAL-60</string>
+		<key>ECVFrameRate</key><string>{1001 / 60000}</string>
+		<key>ECVPixelSize</key><string>{704, 480}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{4739 / 3240}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 480}</string>
+		<key>SAA711XCSTDFormat</key><integer>16</integer>
+		<key>SAA711XIs60Hz</key><true/>
+	</dict>
+	<key>NTSC-4.43-60Hz</key><dict>
+		<key>ECVName</key><string>NTSC 4.43 (60Hz)</string>
+		<key>ECVFrameRate</key><string>{1001 / 60000}</string>
+		<key>ECVPixelSize</key><string>{704, 480}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{4739 / 3240}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 480}</string>
+		<key>SAA711XCSTDFormat</key><integer>32</integer>
+		<key>SAA711XIs60Hz</key><true/>
+	</dict>
+	<key>PAL-M</key><dict>
+		<key>ECVName</key><string>PAL-M</string>
+		<key>ECVFrameRate</key><string>{1001 / 60000}</string>
+		<key>ECVPixelSize</key><string>{704, 480}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{4739 / 3240}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 480}</string>
+		<key>SAA711XCSTDFormat</key><integer>48</integer>
+		<key>SAA711XIs60Hz</key><true/>
+	</dict>
+	<key>NTSC-J</key><dict>
+		<key>ECVName</key><string>NTSC-J</string>
+		<key>ECVFrameRate</key><string>{1001 / 60000}</string>
+		<key>ECVPixelSize</key><string>{704, 480}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{4739 / 3240}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 480}</string>
+		<key>SAA711XCSTDFormat</key><integer>64</integer>
+		<key>SAA711XIs60Hz</key><true/>
+	</dict>
+
 	<key>PAL-BGDHI</key><dict>
 		<key>ECVName</key><string>PAL</string>
 		<key>ECVFrameRate</key><string>{1 / 50}</string>
@@ -18,6 +55,42 @@
 		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
 		<key>ECV05e1_0408InputSize</key><string>{720, 576}</string>
 		<key>SAA711XCSTDFormat</key><integer>0</integer>
+		<key>SAA711XIs60Hz</key><false/>
+	</dict>
+	<key>NTSC-4.43-50Hz</key><dict>
+		<key>ECVName</key><string>NTSC 4.43 (50Hz)</string>
+		<key>ECVFrameRate</key><string>{1 / 50}</string>
+		<key>ECVPixelSize</key><string>{702, 576}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 576}</string>
+		<key>SAA711XCSTDFormat</key><integer>16</integer>
+		<key>SAA711XIs60Hz</key><false/>
+	</dict>
+	<key>PAL-N</key><dict>
+		<key>ECVName</key><string>PAL-N</string>
+		<key>ECVFrameRate</key><string>{1 / 50}</string>
+		<key>ECVPixelSize</key><string>{702, 576}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 576}</string>
+		<key>SAA711XCSTDFormat</key><integer>32</integer>
+		<key>SAA711XIs60Hz</key><false/>
+	</dict>
+	<key>NTSC-N</key><dict>
+		<key>ECVName</key><string>NTSC-N</string>
+		<key>ECVFrameRate</key><string>{1 / 50}</string>
+		<key>ECVPixelSize</key><string>{702, 576}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 576}</string>
+		<key>SAA711XCSTDFormat</key><integer>48</integer>
+		<key>SAA711XIs60Hz</key><false/>
+	</dict>
+	<key>SECAM</key><dict>
+		<key>ECVName</key><string>SECAM</string>
+		<key>ECVFrameRate</key><string>{1 / 50}</string>
+		<key>ECVPixelSize</key><string>{702, 576}</string>
+		<key>ECVSampleMatrixAspectRatio</key><string>{39 / 32}</string>
+		<key>ECV05e1_0408InputSize</key><string>{720, 576}</string>
+		<key>SAA711XCSTDFormat</key><integer>80</integer>
 		<key>SAA711XIs60Hz</key><false/>
 	</dict>
 </dict>
