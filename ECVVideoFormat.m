@@ -48,7 +48,6 @@ static NSMutableDictionary *ECVVideoFormatByIdentifier = nil;
 	ECVVideoFormatByIdentifier = [[NSMutableDictionary alloc] init];
 	NSDictionary *const formatByIdent = [[[NSDictionary alloc] initWithContentsOfFile:[[NSBundle bundleForClass:self] pathForResource:@"ECVVideoFormats" ofType:@"plist"]] autorelease];
 	for(NSString *const ident in formatByIdent) [self registerFormat:[[[self alloc] initWithIdentifier:ident dictionary:[formatByIdent objectForKey:ident]] autorelease]];
-	NSLog(@"%@", ECVVideoFormatByIdentifier);
 }
 
 #pragma mark -ECVVideoFormat
