@@ -289,7 +289,7 @@ bail:
 
 		ECVRational const ratio = [vs sampleAspectRatio];
 		ECVIntegerSize const inputSize = [vs pixelSize];
-		ECVIntegerSize const outputSize = (ECVIntegerSize){round((double)inputSize.width / ratio.numer * ratio.denom), inputSize.height};
+		ECVIntegerSize const outputSize = (ECVIntegerSize){round((double)inputSize.width * ratio.numer / ratio.denom / 16.0) * 16, inputSize.height};
 		codecCtx->width = outputSize.width;
 		codecCtx->height = outputSize.height;
 
