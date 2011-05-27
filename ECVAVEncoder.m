@@ -238,13 +238,7 @@ bail:
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame
 {
 	if(![_converter convertedPixelBuffer:frame]) return nil;
-
-	if(1 == _frameRepeatCount) return [self _encodedData];
-
-	NSMutableData *const data = [NSMutableData data];
-	NSUInteger i = _frameRepeatCount;
-	while(i--) [data appendData:[self _encodedData]];
-	return data;
+	return [self _encodedData];
 }
 
 #pragma mark -ECVVideoStreamEncoder(Private)
@@ -299,12 +293,7 @@ bail:
 		codecCtx->width = outputSize.width;
 		codecCtx->height = outputSize.height;
 
-		QTTime rate = [vs frameRate];
-		_frameRepeatCount = 1;
-		if(QTTimeCompare(rate, QTMakeTime(1001, 15000)) == NSOrderedSame) { // FIXME: We should find a list of supported frame rates and convert automatically or something.
-			rate = QTMakeTime(1001, 30000);
-			_frameRepeatCount = 2;
-		}
+		QTTime const rate = [vs frameRate];
 		codecCtx->time_base = (AVRational){
 			.num = rate.timeValue,
 			.den = rate.timeScale,

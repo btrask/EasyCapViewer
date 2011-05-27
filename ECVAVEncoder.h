@@ -75,7 +75,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	ECVPixelBufferConverter *_converter;
 	uint8_t *_convertedBuffer;
-	NSUInteger _frameRepeatCount;
 }
 
 - (NSData *)encodedDataWithVideoFrame:(ECVVideoFrame *)frame;
