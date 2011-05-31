@@ -24,6 +24,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)ECV_fillWithGradientFromColor:(NSColor *)startColor atPoint:(NSPoint)startPoint toColor:(NSColor *)endColor atPoint:(NSPoint)endPoint;
 - (void)ECV_fillWithHUDButtonGradientWithHighlight:(BOOL)highlight enabled:(BOOL)enabled;
 
+- (void)ECV_appendArcWithCenter:(NSPoint)center radius:(CGFloat)radius start:(CGFloat)start end:(CGFloat)end clockwise:(BOOL)clockwise;
+
 @end
 
 @interface NSBitmapImageRep(ECVAppKitAdditions)

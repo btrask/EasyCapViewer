@@ -72,6 +72,14 @@ static void ECVGradientCallback(CGFloat colors[2][ECVNumberOfColorSpaceComponent
 	[self ECV_fillWithGradientFromColor:startColor atPoint:NSMakePoint(NSMinX(b), NSMinY(b)) toColor:endColor atPoint:NSMakePoint(NSMinX(b), NSMaxY(b))];
 }
 
+#pragma mark -
+
+- (void)ECV_appendArcWithCenter:(NSPoint)center radius:(CGFloat)radius start:(CGFloat)start end:(CGFloat)end clockwise:(BOOL)clockwise
+{
+	if(clockwise) [self appendBezierPathWithArcWithCenter:center radius:radius startAngle:90.0 - start endAngle:90.0 - end clockwise:YES];
+	else [self appendBezierPathWithArcWithCenter:center radius:radius startAngle:90.0 + start endAngle:90.0 + end clockwise:NO];
+}
+
 @end
 
 @implementation NSBitmapImageRep(ECVAppKitAdditions)

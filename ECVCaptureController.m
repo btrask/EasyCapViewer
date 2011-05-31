@@ -37,6 +37,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVConfigController.h"
 
+// Other Sources
+#import "ECVAppKitAdditions.h"
+#import "ECVFoundationAdditions.h"
+
 // External
 #import "BTUserDefaults.h"
 
@@ -49,6 +53,107 @@ static NSString *const ECVVideoQualityKey = @"ECVVideoQuality";
 static NSString *const ECVCropRectKey = @"ECVCropRect";
 static NSString *const ECVCropSourceAspectRatioKey = @"ECVCropSourceAspectRatio";
 static NSString *const ECVCropBorderKey = @"ECVCropBorder";
+
+static NSImage *ECVTemplateImageForInput(NSUInteger input)
+{
+	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
+	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
+	[result lockFocus];
+
+	NSMutableAttributedString *const str = [[[NSMutableAttributedString alloc] initWithString:[NSString stringWithFormat:@"%lu", (unsigned long)input]] autorelease];
+	[str setAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
+		[NSFont boldSystemFontOfSize:28.0], NSFontAttributeName,
+		[NSColor blackColor], NSForegroundColorAttributeName,
+		nil] range:NSMakeRange(0, [str length])];
+	NSSize const s = [str size];
+	[str drawAtPoint:NSMakePoint(NSMidX(r) - s.width / 2.0, NSMidY(r) - s.height / 2.0)];
+
+	[result unlockFocus];
+	return result;
+}
+static NSImage *ECVAudioInputTemplateImage()
+{
+	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
+	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
+	[result lockFocus];
+
+	[[NSColor blackColor] set];
+	NSBezierPath *const path = [NSBezierPath bezierPathWithOvalInRect:NSMakeRect(8.0, 8.0, 16.0, 16.0)];
+	[path setLineWidth:3.0];
+	[path stroke];
+
+	[result unlockFocus];
+	return result;
+}
+static NSImage *ECVTemplateImageForRecording(BOOL flag)
+{
+	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
+	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
+	[result lockFocus];
+
+	[[NSColor blackColor] set];
+	if(flag) [[NSBezierPath bezierPathWithRect:NSMakeRect(6.0, 6.0, 20.0, 20.0)] fill];
+	else [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(6.0, 6.0, 20.0, 20.0)] fill];
+
+	[result unlockFocus];
+	return result;
+}
+static NSImage *ECVGearTemplateImage()
+{
+	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
+	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
+	[result lockFocus];
+
+	[[NSColor blackColor] set];
+
+	NSUInteger const teeth = 12;
+	CGFloat const revolution = 360.0;
+	CGFloat const pitch = revolution / teeth;
+	CGFloat const top = pitch / 3.0;
+	CGFloat const bottom = pitch / 3.0;
+	CGFloat const face = (pitch - (top + bottom)) / 2.0;
+	CGFloat const outsideRadius = 12.0;
+	CGFloat const rootRadius = 10.0;
+	NSPoint const center = NSMakePoint(NSMidX(r), NSMidY(r));
+
+	NSUInteger tooth;
+	NSBezierPath *const path = [NSBezierPath bezierPath];
+	for(tooth = 0; tooth < teeth; ++tooth) {
+		CGFloat const start = pitch * tooth - top / 2.0;
+		[path ECV_appendArcWithCenter:center radius:outsideRadius start:start end:start + top clockwise:YES];
+		[path ECV_appendArcWithCenter:center radius:rootRadius start:start + top + face end:start + top + face + bottom clockwise:YES];
+	}
+	[path closePath];
+	[path appendBezierPathWithArcWithCenter:center radius:5.0 startAngle:0.0 endAngle:revolution clockwise:NO];
+	[path setWindingRule:NSEvenOddWindingRule];
+	[path fill];
+
+	[result unlockFocus];
+	return result;
+}
+static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
+{
+	if(!templateImage) return nil;
+	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
+	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
+	[result lockFocus];
+	[NSGraphicsContext saveGraphicsState];
+	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
+	[shadow setShadowColor:[NSColor colorWithDeviceWhite:1.0 alpha:0.67]];
+	[shadow setShadowOffset:NSMakeSize(0, -1)];
+	[shadow setShadowBlurRadius:1.0];
+	[shadow set];
+	CGContextRef const context = [[NSGraphicsContext currentContext] graphicsPort];
+	CGContextBeginTransparencyLayer(context, NULL);
+
+	[[NSBezierPath bezierPathWithRect:r] ECV_fillWithGradientFromColor:[NSColor colorWithDeviceWhite:0.35 alpha:1.0] atPoint:NSMakePoint(0, NSMaxY(r)) toColor:[NSColor colorWithDeviceWhite:0.1 alpha:1.0] atPoint:NSMakePoint(0, NSMinY(r))];
+	[templateImage drawInRect:r fromRect:NSZeroRect operation:NSCompositeDestinationIn fraction:1.0];
+
+	CGContextEndTransparencyLayer(context);
+	[NSGraphicsContext restoreGraphicsState];
+	[result unlockFocus];
+	return result;
+}
 
 @interface ECVCaptureController(Private)
 
@@ -294,6 +399,12 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[w setLevel:[oldWindow level]];
 	[w setContentAspectRatio:[oldWindow contentAspectRatio]];
 	[w setMinSize:[oldWindow minSize]];
+
+	NSToolbar *const toolbar = [[[NSToolbar alloc] initWithIdentifier:@"ECVToolbar"] autorelease];
+	[toolbar setDelegate:self];
+	[w setToolbar:toolbar];
+	[w setShowsToolbarButton:NO];
+
 	[self setWindow:w];
 	[self synchronizeWindowTitleWithDocumentName];
 	[w setDocumentEdited:[oldWindow isDocumentEdited]];
@@ -544,6 +655,80 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	}
 #endif
 	return NO;
+}
+
+#pragma mark -<NSToolbarDelegate>
+
+- (NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)ident willBeInsertedIntoToolbar:(BOOL)flag
+{
+	NSArray *const systemIdentifiers = [NSArray arrayWithObjects:NSToolbarSeparatorItemIdentifier, NSToolbarSpaceItemIdentifier, NSToolbarFlexibleSpaceItemIdentifier, nil];
+	if([systemIdentifiers containsObject:ident]) return [[[NSToolbarItem alloc] initWithItemIdentifier:ident] autorelease];
+
+	NSToolbarItem *const item = [[[NSToolbarItem alloc] initWithItemIdentifier:ident] autorelease];
+	[item setTarget:self];
+	[item setAction:@selector(defaults)]; // TODO: Set up real selectors.
+	if(ECVEqualObjects(ident, @"ECVToolbarInput1Item")) {
+		[item setLabel:NSLocalizedString(@"Channel", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(1))];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarInput2Item")) {
+		[item setLabel:NSLocalizedString(@"Channel", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(2))];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarInput3Item")) {
+		[item setLabel:NSLocalizedString(@"Channel", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(3))];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarInput4Item")) {
+		[item setLabel:NSLocalizedString(@"Channel", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(4))];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarAudioInputItem")) {
+		[item setLabel:NSLocalizedString(@"Audio", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVAudioInputTemplateImage())];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarToggleRecordingItem")) {
+		[item setLabel:NSLocalizedString(@"Record", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForRecording(NO))];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarConfigureDeviceItem")) {
+		[item setLabel:NSLocalizedString(@"Configure", nil)];
+		[item setImage:ECVToolbarImageFromTemplate(ECVGearTemplateImage())];
+		
+	} else if(ECVEqualObjects(ident, @"ECVToolbarAboutItem")) {
+		[item setLabel:NSLocalizedString(@"About", nil)];
+		[item setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"RTC-Small"])];
+	}
+	return item;
+}
+- (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar
+{
+	return [NSArray arrayWithObjects:
+		@"ECVToolbarInput1Item",
+		@"ECVToolbarInput2Item",
+		@"ECVToolbarInput3Item",
+		@"ECVToolbarInput4Item",
+		NSToolbarSeparatorItemIdentifier,
+		@"ECVToolbarAudioInputItem",
+		NSToolbarFlexibleSpaceItemIdentifier,
+		@"ECVToolbarToggleRecordingItem",
+		NSToolbarSeparatorItemIdentifier,
+		@"ECVToolbarConfigureDeviceItem",
+		@"ECVToolbarAboutItem",
+		nil];
+}
+- (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar*)toolbar
+{
+	return [self toolbarDefaultItemIdentifiers:toolbar];
+}
+- (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
+{
+	return [NSArray arrayWithObjects:
+		@"ECVToolbarInput1Item",
+		@"ECVToolbarInput2Item",
+		@"ECVToolbarInput3Item",
+		@"ECVToolbarInput4Item",
+		nil];
 }
 
 #pragma mark -<NSWindowDelegate>

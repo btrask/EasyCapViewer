@@ -105,6 +105,7 @@
 		B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */; };
 		B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
+		B50AEE0713954BCB004408EC /* RTC-Small.png in Resources */ = {isa = PBXBuildFile; fileRef = B50AEE0613954BCB004408EC /* RTC-Small.png */; };
 		B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
 		B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
@@ -251,6 +252,7 @@
 		B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVIndependentVideoStorage.m; sourceTree = "<group>"; };
 		B506006F132794E400B2F202 /* ECVPixelBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelBuffer.h; sourceTree = "<group>"; };
 		B5060070132794E400B2F202 /* ECVPixelBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBuffer.m; sourceTree = "<group>"; };
+		B50AEE0613954BCB004408EC /* RTC-Small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RTC-Small.png"; sourceTree = "<group>"; };
 		B5280FE6130C89E100FBE537 /* BTUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTUserDefaults.h; sourceTree = "<group>"; };
 		B5280FE7130C89E100FBE537 /* BTUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUserDefaults.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
@@ -484,6 +486,7 @@
 				0E9F9B2D10F679A400935C48 /* ECVConfig.strings */,
 				0E9F9B2F10F679A400935C48 /* ECVErrorLog.strings */,
 				0E9F9B3510F679A400935C48 /* Localizable.strings */,
+				B50AEE0613954BCB004408EC /* RTC-Small.png */,
 				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
@@ -628,6 +631,7 @@
 				0E9F9B4410F679B800935C48 /* ECVErrorLog.xib in Resources */,
 				0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */,
 				0E9FAA861107A5A7005C55CE /* ECVDevices.plist in Resources */,
+				B50AEE0713954BCB004408EC /* RTC-Small.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
