@@ -72,16 +72,25 @@ static NSImage *ECVTemplateImageForInput(NSUInteger input)
 	[result unlockFocus];
 	return result;
 }
-static NSImage *ECVTemplateImageForRecording(BOOL flag)
+static NSImage *ECVImageForRecording(BOOL flag)
 {
 	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
 	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
 	[result lockFocus];
+	[NSGraphicsContext saveGraphicsState];
+	NSShadow *const shadow = [[[NSShadow alloc] init] autorelease];
+	[shadow setShadowColor:[NSColor colorWithDeviceWhite:1.0 alpha:0.67]];
+	[shadow setShadowOffset:NSMakeSize(0, -1)];
+	[shadow setShadowBlurRadius:1.0];
+	[shadow set];
+	CGContextRef const context = [[NSGraphicsContext currentContext] graphicsPort];
+	CGContextBeginTransparencyLayer(context, NULL);
 
-	[[NSColor blackColor] set];
-	if(flag) [[NSBezierPath bezierPathWithRect:NSMakeRect(6.0, 6.0, 20.0, 20.0)] fill];
-	else [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(6.0, 6.0, 20.0, 20.0)] fill];
+	if(flag) [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(6.0, 6.0, 20.0, 20.0)] ECV_fillWithGradientFromColor:[NSColor colorWithDeviceHue:0.0 saturation:0.6 brightness:1.0 alpha:1.0] atPoint:NSMakePoint(0, NSMaxY(r)) toColor:[NSColor colorWithDeviceHue:0.0 saturation:1.0 brightness:0.9 alpha:1.0] atPoint:NSMakePoint(0, NSMinY(r))];
+	else [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(6.0, 6.0, 20.0, 20.0)] ECV_fillWithGradientFromColor:[NSColor colorWithDeviceWhite:0.35 alpha:1.0] atPoint:NSMakePoint(0, NSMaxY(r)) toColor:[NSColor colorWithDeviceWhite:0.1 alpha:1.0] atPoint:NSMakePoint(0, NSMinY(r))];
 
+	CGContextEndTransparencyLayer(context);
+	[NSGraphicsContext restoreGraphicsState];
 	[result unlockFocus];
 	return result;
 }
@@ -632,6 +641,19 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	return [self respondsToSelector:action];
 }
 
+#pragma mark -NSObject(NSToolbarItemValidation)
+
+- (BOOL)validateToolbarItem:(NSToolbarItem *)item
+{
+	SEL const action = [item action];
+	if(@selector(toggleRecording:) == action) {
+		[item setLabel:NSLocalizedString(_movieRecorder ? @"Stop" : @"Record", nil)];
+		[item setImage:ECVImageForRecording(!!_movieRecorder)];
+		if(![[self document] isPlaying]) return NO;
+	}
+	return [self respondsToSelector:action];
+}
+
 #pragma mark -<ECVCropCellDelegate>
 
 - (void)cropCellDidFinishCropping:(ECVCropCell *)sender
@@ -710,8 +732,8 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 		[item setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"Microphone"])];
 		
 	} else if(ECVEqualObjects(ident, @"ECVToolbarToggleRecordingItem")) {
-		[item setLabel:NSLocalizedString(@"Record", nil)];
-		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForRecording(NO))];
+		[item setLabel:NSLocalizedString(_movieRecorder ? @"Stop" : @"Record", nil)];
+		[item setImage:ECVImageForRecording(!!_movieRecorder)];
 		[item setAction:@selector(toggleRecording:)];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarConfigureDeviceItem")) {
 		[item setLabel:NSLocalizedString(@"Configure", nil)];
