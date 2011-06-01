@@ -55,6 +55,7 @@ NSString *const ECVSaturationKey = @"ECVSaturation";
 
 NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
 
+NSString *const ECVCaptureDeviceVideoSourceDidChangeNotification = @"ECVCaptureDeviceVideoSourceDidChange";
 NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";

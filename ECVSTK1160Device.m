@@ -63,6 +63,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(source == _videoSource) return;
 	ECVPauseWhile(self, { _videoSource = source; });
 	[[self defaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
+	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVideoSourceDidChangeNotification object:self];
 }
 @synthesize videoFormat = _videoFormat;
 - (void)setVideoFormat:(ECVSTK1160VideoFormat)format

@@ -117,4 +117,6 @@ typedef NSInteger ECVCropBorder;
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame;
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue;
 
+- (void)videoSourceDidChange:(NSNotification *)aNotif;
+
 @end

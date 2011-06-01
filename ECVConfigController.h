@@ -59,6 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(nonatomic, assign) ECVCaptureDevice *captureDevice;
 
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
+- (void)videoSourceDidChange:(NSNotification *)aNotif;
 - (void)volumeDidChange:(NSNotification *)aNotif;
 
 @end

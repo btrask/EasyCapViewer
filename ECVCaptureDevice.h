@@ -48,6 +48,7 @@ extern NSString *const ECVSaturationKey;
 
 extern NSString *const ECVCaptureDeviceErrorDomain;
 
+extern NSString *const ECVCaptureDeviceVideoSourceDidChangeNotification;
 extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 #define ECVPauseWhile(obj, code) do {\

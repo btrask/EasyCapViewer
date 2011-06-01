@@ -102,27 +102,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @synthesize captureDevice = _captureDevice;
 - (void)setCaptureDevice:(ECVCaptureDevice *)c
 {
+	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceVideoSourceDidChangeNotification];
 	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceVolumeDidChangeNotification];
 	_captureDevice = c;
+	[_captureDevice ECV_addObserver:self selector:@selector(videoSourceDidChange:) name:ECVCaptureDeviceVideoSourceDidChangeNotification];
 	[_captureDevice ECV_addObserver:self selector:@selector(volumeDidChange:) name:ECVCaptureDeviceVolumeDidChangeNotification];
+	[self videoSourceDidChange:nil];
 	[self volumeDidChange:nil];
 
 	if(![self isWindowLoaded]) return;
-
-	[sourcePopUp removeAllItems];
-	if([_captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [_captureDevice allVideoSourceObjects]) {
-		if([NSNull null] == videoSourceObject) {
-			[[sourcePopUp menu] addItem:[NSMenuItem separatorItem]];
-			continue;
-		}
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureDevice localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:videoSourceObject];
-		[item setEnabled:[_captureDevice isValidVideoSourceObject:videoSourceObject]];
-		[item setIndentationLevel:[_captureDevice indentationLevelForVideoSourceObject:videoSourceObject]];
-		[[sourcePopUp menu] addItem:item];
-	}
-	[sourcePopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoSourceObject)]];
-	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[_captureDevice videoSourceObject]]];
 
 	[formatPopUp removeAllItems];
 	if([_captureDevice respondsToSelector:@selector(allVideoFormatObjects)]) for(id const videoFormatObject in [_captureDevice allVideoFormatObjects]) {
@@ -181,6 +169,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if([[audioSourcePopUp menu] numberOfItems] > 1) [[audioSourcePopUp menu] insertItem:[NSMenuItem separatorItem] atIndex:1];
 	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:[_captureDevice audioInput]]];
 	[audioSourcePopUp setEnabled:!![[audioSourcePopUp menu] numberOfItems]];
+}
+- (void)videoSourceDidChange:(NSNotification *)aNotif
+{
+	if(![self isWindowLoaded]) return;
+	[sourcePopUp removeAllItems];
+	if([_captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [_captureDevice allVideoSourceObjects]) {
+		if([NSNull null] == videoSourceObject) {
+			[[sourcePopUp menu] addItem:[NSMenuItem separatorItem]];
+			continue;
+		}
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureDevice localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:videoSourceObject];
+		[item setEnabled:[_captureDevice isValidVideoSourceObject:videoSourceObject]];
+		[item setIndentationLevel:[_captureDevice indentationLevelForVideoSourceObject:videoSourceObject]];
+		[[sourcePopUp menu] addItem:item];
+	}
+	[sourcePopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoSourceObject)]];
+	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[_captureDevice videoSourceObject]]];
 }
 - (void)volumeDidChange:(NSNotification *)aNotif
 {

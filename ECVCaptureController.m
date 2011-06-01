@@ -344,6 +344,13 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 #pragma mark -
 
+- (IBAction)changeSource:(id)sender
+{
+	[[self document] setVideoSourceObject:[[[self document] allVideoSourceObjects] objectAtIndex:[sender tag]]];
+}
+
+#pragma mark -
+
 - (BTUserDefaults *)defaults
 {
 	return [(ECVCaptureDevice *)[self document] defaults];
@@ -396,6 +403,7 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	[toolbar setDelegate:self];
 	[w setToolbar:toolbar];
 	[w setShowsToolbarButton:NO];
+	[self videoSourceDidChange:nil];
 
 	[self setWindow:w];
 	[self synchronizeWindowTitleWithDocumentName];
@@ -488,6 +496,16 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	}
 }
 
+#pragma mark -
+
+- (void)videoSourceDidChange:(NSNotification *)aNotif
+{
+	if(![self isWindowLoaded]) return;
+	NSUInteger const i = [[[self document] allVideoSourceObjects] indexOfObject:[[self document] videoSourceObject]];
+	if(NSNotFound == i) return;
+	[[[self window] toolbar] setSelectedItemIdentifier:[NSString stringWithFormat:@"ECVToolbarVideoSourceItem-%lu", (unsigned long)i]];
+}
+
 #pragma mark -ECVCaptureController(Private)
 
 - (void)_hideMenuBar
@@ -514,6 +532,12 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 #pragma mark -NSWindowController
 
+- (void)setDocument:(NSDocument *)doc
+{
+	[[self document] ECV_removeObserver:self name:ECVCaptureDeviceVideoSourceDidChangeNotification];
+	[super setDocument:doc];
+	[[self document] ECV_addObserver:self selector:@selector(videoSourceDidChange:) name:ECVCaptureDeviceVideoSourceDidChangeNotification];
+}
 - (void)windowDidLoad
 {
 	[[self defaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -549,6 +573,8 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	[_playButtonCell setAction:@selector(togglePlaying:)];
 	[videoView setCell:_playButtonCell];
 
+	[self videoSourceDidChange:nil];
+
 	[w center];
 	[super windowDidLoad];
 }
@@ -562,6 +588,7 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 }
 - (void)dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[_playButtonCell release];
 	[_movieRecorder release];
 	[super dealloc];
@@ -658,22 +685,26 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 	NSToolbarItem *const item = [[[NSToolbarItem alloc] initWithItemIdentifier:ident] autorelease];
 	[item setTarget:self];
-	if(ECVEqualObjects(ident, @"ECVToolbarInput1Item")) {
+	if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-0")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(1))];
-		
-	} else if(ECVEqualObjects(ident, @"ECVToolbarInput2Item")) {
+		[item setAction:@selector(changeSource:)];
+		[item setTag:0];
+	} else if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-1")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(2))];
-		
-	} else if(ECVEqualObjects(ident, @"ECVToolbarInput3Item")) {
+		[item setAction:@selector(changeSource:)];
+		[item setTag:1];
+	} else if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-2")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(3))];
-		
-	} else if(ECVEqualObjects(ident, @"ECVToolbarInput4Item")) {
+		[item setAction:@selector(changeSource:)];
+		[item setTag:2];
+	} else if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-3")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(4))];
-		
+		[item setAction:@selector(changeSource:)];
+		[item setTag:3];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarAudioInputItem")) {
 		[item setLabel:NSLocalizedString(@"Audio", nil)];
 		[item setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"Microphone"])];
@@ -698,10 +729,10 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar*)toolbar
 {
 	return [NSArray arrayWithObjects:
-		@"ECVToolbarInput1Item",
-		@"ECVToolbarInput2Item",
-		@"ECVToolbarInput3Item",
-		@"ECVToolbarInput4Item",
+		@"ECVToolbarVideoSourceItem-0",
+		@"ECVToolbarVideoSourceItem-1",
+		@"ECVToolbarVideoSourceItem-2",
+		@"ECVToolbarVideoSourceItem-3",
 		NSToolbarSeparatorItemIdentifier,
 		@"ECVToolbarAudioInputItem",
 		NSToolbarFlexibleSpaceItemIdentifier,
@@ -718,10 +749,10 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 - (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
 {
 	return [NSArray arrayWithObjects:
-		@"ECVToolbarInput1Item",
-		@"ECVToolbarInput2Item",
-		@"ECVToolbarInput3Item",
-		@"ECVToolbarInput4Item",
+		@"ECVToolbarVideoSourceItem-0",
+		@"ECVToolbarVideoSourceItem-1",
+		@"ECVToolbarVideoSourceItem-2",
+		@"ECVToolbarVideoSourceItem-3",
 		nil];
 }
 
