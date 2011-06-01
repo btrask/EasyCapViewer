@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
 
 // Models
+#import "ECVController.h"
 #import "ECVCaptureDevice.h"
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
@@ -265,6 +266,11 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	[alert setInformativeText:NSLocalizedString(@"Movies recorded to RAM are limited to 2GB in size. Make sure you have enough available RAM to store the entire movie.", nil)];
 	[[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)] setKeyEquivalent:@"\r"];
 	[alert beginSheetModalForWindow:[sender window] modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
+}
+- (IBAction)toggleRecording:(id)sender
+{
+	if(_movieRecorder) [self stopRecording:sender];
+	else [self startRecording:sender];
 }
 
 #pragma mark -
@@ -652,7 +658,6 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 	NSToolbarItem *const item = [[[NSToolbarItem alloc] initWithItemIdentifier:ident] autorelease];
 	[item setTarget:self];
-	[item setAction:@selector(defaults)]; // TODO: Set up real selectors.
 	if(ECVEqualObjects(ident, @"ECVToolbarInput1Item")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(1))];
@@ -676,14 +681,17 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	} else if(ECVEqualObjects(ident, @"ECVToolbarToggleRecordingItem")) {
 		[item setLabel:NSLocalizedString(@"Record", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForRecording(NO))];
-		
+		[item setAction:@selector(toggleRecording:)];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarConfigureDeviceItem")) {
 		[item setLabel:NSLocalizedString(@"Configure", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVGearTemplateImage())];
-		
+		[item setTarget:[ECVController sharedController]];
+		[item setAction:@selector(configureDevice:)];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarAboutItem")) {
 		[item setLabel:NSLocalizedString(@"About", nil)];
 		[item setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"RTC-Small"])];
+		[item setTarget:NSApp];
+		[item setAction:@selector(orderFrontStandardAboutPanel:)];
 	}
 	return item;
 }

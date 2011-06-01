@@ -85,6 +85,7 @@ typedef NSInteger ECVCropBorder;
 - (IBAction)stopRecording:(id)sender;
 - (IBAction)changeCodec:(id)sender;
 - (IBAction)showRecordsToRAMInfo:(id)sender;
+- (IBAction)toggleRecording:(id)sender;
 
 - (IBAction)toggleFullScreen:(id)sender;
 - (IBAction)changeScale:(id)sender;
