@@ -155,6 +155,7 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 - (void)_hideMenuBar;
 - (void)_updateCropRect;
+- (void)_rebuildAudioInputMenuForPopUpButton:(NSPopUpButton *)popup;
 
 @end
 
@@ -353,9 +354,13 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 #pragma mark -
 
-- (IBAction)changeSource:(id)sender
+- (IBAction)changeVideoSource:(id)sender
 {
 	[[self document] setVideoSourceObject:[[[self document] allVideoSourceObjects] objectAtIndex:[sender tag]]];
+}
+- (IBAction)changeAudioSource:(id)sender
+{
+	[[self document] setAudioInput:[[sender selectedItem] representedObject]];
 }
 
 #pragma mark -
@@ -507,6 +512,14 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 
 #pragma mark -
 
+- (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif
+{
+	if(![self isWindowLoaded]) return;
+	for(NSToolbarItem *const toolbarItem in [[[self window] toolbar] items]) {
+		if(!ECVEqualObjects([toolbarItem itemIdentifier], @"")) continue;
+		[self _rebuildAudioInputMenuForPopUpButton:(NSPopUpButton *)[toolbarItem view]];
+	}
+}
 - (void)videoSourceDidChange:(NSNotification *)aNotif
 {
 	if(![self isWindowLoaded]) return;
@@ -537,6 +550,28 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	}
 	[[self defaults] setInteger:_cropSourceAspectRatio forKey:ECVCropSourceAspectRatioKey];
 	[[self defaults] setInteger:_cropBorder forKey:ECVCropBorderKey];
+}
+- (void)_rebuildAudioInputMenuForPopUpButton:(NSPopUpButton *)popup
+{
+	[popup removeAllItems];
+	ECVAudioDevice *const preferredInput = [[self document] audioInputOfCaptureHardware];
+	if(preferredInput) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[preferredInput name] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:preferredInput];
+		[[popup menu] addItem:item];
+	}
+	for(ECVAudioDevice *const device in [ECVAudioDevice allDevicesInput:YES]) {
+		if(ECVEqualObjects(device, preferredInput)) continue;
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[device name] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:device];
+		[[popup menu] addItem:item];
+	}
+	if([[popup menu] numberOfItems] > 1) [[popup menu] insertItem:[NSMenuItem separatorItem] atIndex:1];
+	[popup setEnabled:!![[popup menu] numberOfItems]];
+
+	NSMenuItem *const labelItem = [[[NSMenuItem alloc] initWithTitle:@"" action:NULL keyEquivalent:@""] autorelease];
+	[labelItem setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"Microphone"])];
+	[[popup menu] insertItem:labelItem atIndex:0];
 }
 
 #pragma mark -NSWindowController
@@ -583,6 +618,8 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	[videoView setCell:_playButtonCell];
 
 	[self videoSourceDidChange:nil];
+
+	[[ECVAudioDevice class] ECV_addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification];
 
 	[w center];
 	[super windowDidLoad];
@@ -710,31 +747,40 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-0")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(1))];
-		[item setAction:@selector(changeSource:)];
+		[item setAction:@selector(changeVideoSource:)];
 		[item setTag:0];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-1")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(2))];
-		[item setAction:@selector(changeSource:)];
+		[item setAction:@selector(changeVideoSource:)];
 		[item setTag:1];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-2")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(3))];
-		[item setAction:@selector(changeSource:)];
+		[item setAction:@selector(changeVideoSource:)];
 		[item setTag:2];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarVideoSourceItem-3")) {
 		[item setLabel:NSLocalizedString(@"Channel", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVTemplateImageForInput(4))];
-		[item setAction:@selector(changeSource:)];
+		[item setAction:@selector(changeVideoSource:)];
 		[item setTag:3];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarAudioInputItem")) {
+		NSPopUpButton *const popup = [[[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:YES] autorelease];
+		[[popup cell] setArrowPosition:NSPopUpArrowAtBottom];
+		[popup setBezelStyle:NSShadowlessSquareBezelStyle];
+		[popup setImagePosition:NSImageRight];
+		[popup setBordered:NO];
+		[popup setTarget:self];
+		[popup setAction:@selector(changeAudioSource:)];
+		[self _rebuildAudioInputMenuForPopUpButton:popup];
+
 		[item setLabel:NSLocalizedString(@"Audio", nil)];
-		[item setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"Microphone"])];
-		
+		[item setMinSize:NSMakeSize(49, 32)];
+		[item setMaxSize:NSMakeSize(49, 32)];
+		[item setView:popup];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarToggleRecordingItem")) {
-		[item setLabel:NSLocalizedString(_movieRecorder ? @"Stop" : @"Record", nil)];
-		[item setImage:ECVImageForRecording(!!_movieRecorder)];
 		[item setAction:@selector(toggleRecording:)];
+		[self validateToolbarItem:item];
 	} else if(ECVEqualObjects(ident, @"ECVToolbarConfigureDeviceItem")) {
 		[item setLabel:NSLocalizedString(@"Configure", nil)];
 		[item setImage:ECVToolbarImageFromTemplate(ECVGearTemplateImage())];

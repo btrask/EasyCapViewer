@@ -103,9 +103,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)setCaptureDevice:(ECVCaptureDevice *)c
 {
 	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceVideoSourceDidChangeNotification];
+	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceAudioSourceDidChangeNotification];
 	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceVolumeDidChangeNotification];
 	_captureDevice = c;
 	[_captureDevice ECV_addObserver:self selector:@selector(videoSourceDidChange:) name:ECVCaptureDeviceVideoSourceDidChangeNotification];
+	[_captureDevice ECV_addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVCaptureDeviceAudioSourceDidChangeNotification];
 	[_captureDevice ECV_addObserver:self selector:@selector(volumeDidChange:) name:ECVCaptureDeviceVolumeDidChangeNotification];
 	[self videoSourceDidChange:nil];
 	[self volumeDidChange:nil];

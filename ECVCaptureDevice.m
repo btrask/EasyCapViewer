@@ -56,6 +56,7 @@ NSString *const ECVSaturationKey = @"ECVSaturation";
 NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
 
 NSString *const ECVCaptureDeviceVideoSourceDidChangeNotification = @"ECVCaptureDeviceVideoSourceDidChange";
+NSString *const ECVCaptureDeviceAudioSourceDidChangeNotification = @"ECVCaptureDeviceAudioSourceDidChange";
 NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";
@@ -533,6 +534,7 @@ ECVNoDeviceError:
 		[_audioPreviewingPipe release];
 		_audioPreviewingPipe = nil;
 	});
+	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceAudioSourceDidChangeNotification object:self];
 }
 - (ECVAudioDevice *)audioOutput
 {

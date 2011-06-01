@@ -101,6 +101,9 @@ typedef NSInteger ECVCropBorder;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
+- (IBAction)changeVideoSource:(id)sender;
+- (IBAction)changeAudioSource:(id)sender;
+
 @property(readonly) BTUserDefaults *defaults;
 @property(assign) NSSize aspectRatio;
 @property(readonly) NSRect cropRect;
@@ -117,6 +120,7 @@ typedef NSInteger ECVCropBorder;
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame;
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue;
 
+- (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
 - (void)videoSourceDidChange:(NSNotification *)aNotif;
 
 @end
