@@ -59,6 +59,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 @synthesize videoSource = _videoSource;
 - (void)setVideoSource:(ECVSTK1160VideoSource)source
 {
+	if(ECVSTK1160SVideoInput == source || ECVSTK1160Composite1234Input == source) source = ECVSTK1160Composite1Input;
 	if(source == _videoSource) return;
 	ECVPauseWhile(self, { _videoSource = source; });
 	[[self defaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
@@ -331,12 +332,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (NSArray *)allVideoSourceObjects
 {
 	return [NSArray arrayWithObjects:
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160SVideoInput],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite2Input],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite3Input],
 		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite4Input],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1234Input],
 		nil];
 }
 - (id)videoSourceObject
