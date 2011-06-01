@@ -351,10 +351,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	switch([obj unsignedIntegerValue]) {
 		case ECVSTK1160SVideoInput: return NSLocalizedString(@"S-Video", nil);
-		case ECVSTK1160Composite1Input: return NSLocalizedString(@"Composite 1", nil);
-		case ECVSTK1160Composite2Input: return NSLocalizedString(@"Composite 2", nil);
-		case ECVSTK1160Composite3Input: return NSLocalizedString(@"Composite 3", nil);
-		case ECVSTK1160Composite4Input: return NSLocalizedString(@"Composite 4", nil);
+		case ECVSTK1160Composite1Input: return NSLocalizedString(@"Channel 1", nil);
+		case ECVSTK1160Composite2Input: return NSLocalizedString(@"Channel 2", nil);
+		case ECVSTK1160Composite3Input: return NSLocalizedString(@"Channel 3", nil);
+		case ECVSTK1160Composite4Input: return NSLocalizedString(@"Channel 4", nil);
 		case ECVSTK1160Composite1234Input: return NSLocalizedString(@"Composite 1-4", nil);
 	}
 	return nil;
