@@ -71,20 +71,6 @@ static NSImage *ECVTemplateImageForInput(NSUInteger input)
 	[result unlockFocus];
 	return result;
 }
-static NSImage *ECVAudioInputTemplateImage()
-{
-	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
-	NSImage *const result = [[[NSImage alloc] initWithSize:r.size] autorelease];
-	[result lockFocus];
-
-	[[NSColor blackColor] set];
-	NSBezierPath *const path = [NSBezierPath bezierPathWithOvalInRect:NSMakeRect(8.0, 8.0, 16.0, 16.0)];
-	[path setLineWidth:3.0];
-	[path stroke];
-
-	[result unlockFocus];
-	return result;
-}
 static NSImage *ECVTemplateImageForRecording(BOOL flag)
 {
 	NSRect const r = (NSRect){NSZeroPoint, {32, 32}};
@@ -685,7 +671,7 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 		
 	} else if(ECVEqualObjects(ident, @"ECVToolbarAudioInputItem")) {
 		[item setLabel:NSLocalizedString(@"Audio", nil)];
-		[item setImage:ECVToolbarImageFromTemplate(ECVAudioInputTemplateImage())];
+		[item setImage:ECVToolbarImageFromTemplate([NSImage imageNamed:@"Microphone"])];
 		
 	} else if(ECVEqualObjects(ident, @"ECVToolbarToggleRecordingItem")) {
 		[item setLabel:NSLocalizedString(@"Record", nil)];
