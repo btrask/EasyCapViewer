@@ -42,7 +42,7 @@ resource 'STR ' (128)
 };
 resource 'STR ' (129)
 {
-	"EasyCapViewer QuickTime Video Digitizer Component"
+	"RTC ToolView QuickTime Video Digitizer Component"
 };
 resource 'dlle' (256)
 {

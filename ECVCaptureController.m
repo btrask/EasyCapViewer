@@ -193,7 +193,7 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 #if __LP64__
 	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
 	[alert setMessageText:NSLocalizedString(@"Recording is not supported in 64-bit mode.", nil)];
-	[alert setInformativeText:NSLocalizedString(@"Relaunch EasyCapViewer in 32-bit mode to record.", nil)];
+	[alert setInformativeText:NSLocalizedString(@"Relaunch RTC ToolView in 32-bit mode to record.", nil)];
 	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
 	[alert runModal];
 #else

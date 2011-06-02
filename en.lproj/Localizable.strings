@@ -4,7 +4,7 @@
 "This device requires a USB 2.0 High Speed port in order to operate." = "This device requires a USB 2.0 High Speed port in order to operate.";
 "Make sure it is plugged into a port that supports high speed." = "Make sure it is plugged into a port that supports high speed.";
 "Recording is not supported in 64-bit mode." = "Recording is not supported in 64-bit mode.";
-"Relaunch EasyCapViewer in 32-bit mode to record." = "Relaunch EasyCapViewer in 32-bit mode to record.";
+"Relaunch RTC ToolView in 32-bit mode to record." = "Relaunch RTC ToolView in 32-bit mode to record.";
 "Exit Full Screen" = "Exit Full Screen";
 "Enter Full Screen" = "Enter Full Screen";
 "Pause" = "Pause";
