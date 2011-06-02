@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (NSImage *)playButtonImage
 {
+	return [NSImage imageNamed:@"RTC-Logo"];
 	NSBitmapImageRep *const rep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVPlayButtonSize pixelsHigh:ECVPlayButtonSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVPlayButtonSize * 4 bitsPerPixel:0] autorelease];
 	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:rep]];
 
@@ -101,7 +102,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _textureName));
 	GLfloat const c = [self isHighlighted] ? 0.67f : 1.0f;
 	glColor4f(c, c, c, 1.0f);
-	ECVGLDrawTextureInRect(NSMakeRect(round(NSMidX(r) - ECVPlayButtonSize / 2.0f), round(NSMinY(r) + (NSHeight(r) - ECVPlayButtonSize) * 0.67f), ECVPlayButtonSize, ECVPlayButtonSize));
+
+	NSRect const b = [v bounds];
+	NSSize s = [[self image] size];
+	CGFloat scaleX = MIN(1.0, NSWidth(b) / round(s.width));
+	CGFloat scaleY = MIN(1.0, NSHeight(b) / round(s.height));
+	scaleX = scaleY = MIN(scaleX, scaleY);
+	ECVGLDrawTextureInRectWithBounds(
+		NSMakeRect(
+			round(NSMinX(r) + (NSWidth(r) - (s.width * scaleX)) / 2.0f),
+			round(NSMinY(r) + (NSHeight(r) - (s.height * scaleY)) / 2.0f),
+			round(s.width * scaleX),
+			round(s.height * scaleY)
+		),
+		(NSRect){NSZeroPoint, s}
+	);
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 
