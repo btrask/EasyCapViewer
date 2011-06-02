@@ -417,7 +417,6 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	[toolbar setDelegate:self];
 	[w setToolbar:toolbar];
 	[w setShowsToolbarButton:NO];
-	[self videoSourceDidChange:nil];
 
 	[self setWindow:w];
 	[self synchronizeWindowTitleWithDocumentName];
@@ -425,6 +424,7 @@ static NSImage *ECVToolbarImageFromTemplate(NSImage *templateImage)
 	[w makeKeyAndOrderFront:self];
 	[oldWindow close];
 	if(!flag) [w center];
+	[self videoSourceDidChange:nil];
 	NSEnableScreenUpdates();
 }
 - (NSSize)windowContentSize
