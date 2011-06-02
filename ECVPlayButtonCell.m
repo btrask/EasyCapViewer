@@ -34,30 +34,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (NSImage *)playButtonImage
 {
-	return [NSImage imageNamed:@"RTC-Logo"];
-	NSBitmapImageRep *const rep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVPlayButtonSize pixelsHigh:ECVPlayButtonSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVPlayButtonSize * 4 bitsPerPixel:0] autorelease];
+	NSImage *const logo = [NSImage imageNamed:@"RTC-Logo"];
+	NSRect const b = (NSRect){NSZeroPoint, [logo size]};
+
+	NSBitmapImageRep *const rep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:NSWidth(b) pixelsHigh:NSHeight(b) bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:NSWidth(b) * 4 bitsPerPixel:0] autorelease];
 	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:rep]];
 
 	[[NSColor clearColor] set];
-	NSRect const b = NSMakeRect(0.0f, 0.0f, ECVPlayButtonSize, ECVPlayButtonSize);
 	NSRectFill(b);
-	[[NSColor colorWithCalibratedWhite:0.5f alpha:0.67f] set];
-	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
 
-	NSShadow *const s = [[[NSShadow alloc] init] autorelease];
-	[s setShadowBlurRadius:4.0f];
-	[s setShadowOffset:NSMakeSize(0.0f, -2.0f)];
-	[s set];
-	[[NSColor whiteColor] set];
+	[[NSColor colorWithDeviceWhite:0.0 alpha:0.75] set];
+	[[NSBezierPath bezierPathWithRoundedRect:b xRadius:10.0 yRadius:10.0] fill];
 
-	NSBezierPath *const iconPath = [NSBezierPath bezierPath];
-	[iconPath moveToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.75f), round(NSMidY(b)))];
-	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.7f))];
-	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.3f))];
-	[iconPath closePath];
-	[iconPath fill];
+	[logo drawInRect:b fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 
-	NSImage *const image = [[[NSImage alloc] initWithSize:NSMakeSize(ECVPlayButtonSize, ECVPlayButtonSize)] autorelease];
+	NSImage *const image = [[[NSImage alloc] initWithSize:b.size] autorelease];
 	[image addRepresentation:rep];
 	return image;
 }

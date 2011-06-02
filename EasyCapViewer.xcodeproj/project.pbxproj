@@ -114,7 +114,7 @@
 		B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5DBD09A13983DD20083C7CD /* RTC ToolView.icns in Resources */ = {isa = PBXBuildFile; fileRef = B5DBD09913983DD20083C7CD /* RTC ToolView.icns */; };
-		B5DBD0EF1398445C0083C7CD /* RTC-Logo.png in Resources */ = {isa = PBXBuildFile; fileRef = B5DBD0EE1398445C0083C7CD /* RTC-Logo.png */; };
+		B5DBD14913984CCB0083C7CD /* RTC-Logo.png in Resources */ = {isa = PBXBuildFile; fileRef = B5DBD14813984CCB0083C7CD /* RTC-Logo.png */; };
 		B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09997131CE0550066FEB5 /* ECVRational.m */; };
@@ -264,7 +264,7 @@
 		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacingMode.m; sourceTree = "<group>"; };
 		B5DBD09913983DD20083C7CD /* RTC ToolView.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "RTC ToolView.icns"; sourceTree = "<group>"; };
-		B5DBD0EE1398445C0083C7CD /* RTC-Logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RTC-Logo.png"; sourceTree = "<group>"; };
+		B5DBD14813984CCB0083C7CD /* RTC-Logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RTC-Logo.png"; sourceTree = "<group>"; };
 		B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameRateConverter.h; sourceTree = "<group>"; };
 		B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameRateConverter.m; sourceTree = "<group>"; };
 		B5F09996131CE0550066FEB5 /* ECVRational.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVRational.h; sourceTree = "<group>"; };
@@ -495,7 +495,7 @@
 				B50AEE0613954BCB004408EC /* RTC-Small.png */,
 				B50AEFD31395C628004408EC /* Microphone.png */,
 				B5DBD09913983DD20083C7CD /* RTC ToolView.icns */,
-				B5DBD0EE1398445C0083C7CD /* RTC-Logo.png */,
+				B5DBD14813984CCB0083C7CD /* RTC-Logo.png */,
 				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
@@ -643,7 +643,7 @@
 				B50AEE0713954BCB004408EC /* RTC-Small.png in Resources */,
 				B50AEFD41395C628004408EC /* Microphone.png in Resources */,
 				B5DBD09A13983DD20083C7CD /* RTC ToolView.icns in Resources */,
-				B5DBD0EF1398445C0083C7CD /* RTC-Logo.png in Resources */,
+				B5DBD14913984CCB0083C7CD /* RTC-Logo.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
