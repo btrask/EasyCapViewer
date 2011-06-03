@@ -647,7 +647,7 @@ ECVNoDeviceError:
 }
 - (NSString *)displayName
 {
-	return _productName ? _productName : @"";
+	return [[NSProcessInfo processInfo] processName];
 }
 - (void)close
 {
