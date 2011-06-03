@@ -26,10 +26,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	NSOpenGLContext *_context;
-	GLuint _textureName;
+	NSImage *_buttonImage;
+	NSImage *_logoImage;
+	GLuint _buttonTextureName;
+	GLuint _logoTextureName;
+	BOOL _once;
 }
 
 + (NSImage *)playButtonImage;
++ (NSImage *)logoImage;
 
 - (id)initWithOpenGLContext:(NSOpenGLContext *)context;
 

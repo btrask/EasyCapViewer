@@ -34,6 +34,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (NSImage *)playButtonImage
 {
+	NSBitmapImageRep *const rep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:ECVPlayButtonSize pixelsHigh:ECVPlayButtonSize bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:ECVPlayButtonSize * 4 bitsPerPixel:0] autorelease];
+	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:rep]];
+
+	[[NSColor clearColor] set];
+	NSRect const b = NSMakeRect(0.0f, 0.0f, ECVPlayButtonSize, ECVPlayButtonSize);
+	NSRectFill(b);
+	[[NSColor colorWithCalibratedWhite:0.5f alpha:0.67f] set];
+	[[NSBezierPath bezierPathWithOvalInRect:NSInsetRect(b, 0.5f, 0.5f)] fill];
+
+	NSShadow *const s = [[[NSShadow alloc] init] autorelease];
+	[s setShadowBlurRadius:4.0f];
+	[s setShadowOffset:NSMakeSize(0.0f, -2.0f)];
+	[s set];
+	[[NSColor whiteColor] set];
+
+	NSBezierPath *const iconPath = [NSBezierPath bezierPath];
+	[iconPath moveToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.75f), round(NSMidY(b)))];
+	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.7f))];
+	[iconPath lineToPoint:NSMakePoint(round(NSMinX(b) + NSWidth(b) * 0.33f), round(NSMinY(b) + NSHeight(b) * 0.3f))];
+	[iconPath closePath];
+	[iconPath fill];
+
+	NSImage *const image = [[[NSImage alloc] initWithSize:NSMakeSize(ECVPlayButtonSize, ECVPlayButtonSize)] autorelease];
+	[image addRepresentation:rep];
+	return image;
+}
++ (NSImage *)logoImage
+{
 	NSImage *const logo = [NSImage imageNamed:@"RTC-Logo"];
 	NSRect const b = (NSRect){NSZeroPoint, [logo size]};
 
@@ -58,28 +86,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (id)initWithOpenGLContext:(NSOpenGLContext *)context
 {
 	if((self = [super init])) {
+		_once = YES;
 		_context = [context retain];
+		CGLContextObj const contextObj = ECVLockContext(_context);
+
+		_buttonImage = [[[self class] playButtonImage] retain];
+		_buttonTextureName = [(NSBitmapImageRep *)[_buttonImage bestRepresentationForDevice:nil] ECV_textureName];
+
+		_logoImage = [[[self class] logoImage] retain];
+		_logoTextureName = [(NSBitmapImageRep *)[_logoImage bestRepresentationForDevice:nil] ECV_textureName];
+
+		ECVUnlockContext(contextObj);
 	}
 	return self;
-}
-
-#pragma mark -NSCell
-
-- (void)setImage:(NSImage *)image
-{
-	CGLContextObj const contextObj = ECVLockContext(_context);
-	ECVGLError(glDeleteTextures(1, &_textureName));
-	NSBitmapImageRep *const rep = (NSBitmapImageRep *)[image bestRepresentationForDevice:nil];
-	if(rep) _textureName = [rep ECV_textureName];
-	ECVUnlockContext(contextObj);
-	[super setImage:image];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	ECVGLError(glDeleteTextures(1, &_textureName));
+	[_buttonImage release];
+	[_logoImage release];
+	ECVGLError(glDeleteTextures(1, &_buttonTextureName));
+	ECVGLError(glDeleteTextures(1, &_logoTextureName));
 	[_context release];
 	[super dealloc];
 }
@@ -88,26 +117,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)drawWithFrame:(NSRect)r inVideoView:(ECVVideoView *)v playing:(BOOL)flag
 {
-	if(flag) return;
+	if(flag) {
+		_once = NO;
+		return;
+	}
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _textureName));
+
+	if(_once) {
+		ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _logoTextureName));
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		NSRect const b = [v bounds];
+		NSSize s = [_logoImage size];
+		CGFloat scaleX = MIN(1.0, NSWidth(b) / round(s.width));
+		CGFloat scaleY = MIN(1.0, NSHeight(b) / round(s.height));
+		scaleX = scaleY = MIN(scaleX, scaleY);
+		ECVGLDrawTextureInRectWithBounds(
+			NSMakeRect(
+				round(NSMinX(r) + (NSWidth(r) - (s.width * scaleX)) / 2.0f),
+				round(NSMinY(r) + (NSHeight(r) - (s.height * scaleY)) * 0.25),
+				round(s.width * scaleX),
+				round(s.height * scaleY)
+			),
+			(NSRect){NSZeroPoint, s}
+		);
+	}
+
+	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _buttonTextureName));
 	GLfloat const c = [self isHighlighted] ? 0.67f : 1.0f;
 	glColor4f(c, c, c, 1.0f);
+	ECVGLDrawTextureInRect(NSMakeRect(round(NSMidX(r) - ECVPlayButtonSize / 2.0f), round(NSMinY(r) + (NSHeight(r) - ECVPlayButtonSize) * 0.75f), ECVPlayButtonSize, ECVPlayButtonSize));
 
-	NSRect const b = [v bounds];
-	NSSize s = [[self image] size];
-	CGFloat scaleX = MIN(1.0, NSWidth(b) / round(s.width));
-	CGFloat scaleY = MIN(1.0, NSHeight(b) / round(s.height));
-	scaleX = scaleY = MIN(scaleX, scaleY);
-	ECVGLDrawTextureInRectWithBounds(
-		NSMakeRect(
-			round(NSMinX(r) + (NSWidth(r) - (s.width * scaleX)) / 2.0f),
-			round(NSMinY(r) + (NSHeight(r) - (s.height * scaleY)) / 2.0f),
-			round(s.width * scaleX),
-			round(s.height * scaleY)
-		),
-		(NSRect){NSZeroPoint, s}
-	);
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 
