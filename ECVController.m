@@ -127,7 +127,7 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 		[devices addObjectsFromArray:[class devicesWithIterator:iterator]];
 		[_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
 ECVGenericError:
-ECVNoDeviceError: 0;
+ECVNoDeviceError: (void)0;
 	}
 	if([devices count]) return [devices makeObjectsPerformSelector:@selector(ECV_display)];
 	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
