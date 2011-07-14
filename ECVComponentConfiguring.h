@@ -22,12 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @protocol ECVComponentConfiguring
 
 @property(readonly) long inputCapabilityFlags;
-
-@property(readonly) short numberOfInputs;
-@property(nonatomic, assign) short inputIndex;
-- (short)inputFormatForInputAtIndex:(short)i;
-- (NSString *)localizedStringForInputAtIndex:(long)i;
-
+- (short)inputFormatForVideoSourceObject:(id)obj;
 @property(nonatomic, assign) short inputStandard;
 
 @end

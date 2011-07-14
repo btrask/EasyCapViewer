@@ -426,24 +426,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
 }
-
-#pragma mark -
-
-- (short)numberOfInputs
+- (short)inputFormatForVideoSourceObject:(id)obj
 {
-	return [[self allVideoSourceObjects] count];
-}
-- (short)inputIndex
-{
-	return [[self allVideoSourceObjects] indexOfObject:[self videoSourceObject]];
-}
-- (void)setInputIndex:(short)i
-{
-	[self setVideoSourceObject:[[self allVideoSourceObjects] objectAtIndex:i]];
-}
-- (short)inputFormatForInputAtIndex:(short)i
-{
-	switch([[[self allVideoSourceObjects] objectAtIndex:i] unsignedIntegerValue]) {
+	switch([obj unsignedIntegerValue]) {
 		case ECVSTK1160SVideoInput:
 			return sVideoIn;
 		case ECVSTK1160Composite1Input:
@@ -452,17 +437,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		case ECVSTK1160Composite4Input:
 			return compositeIn;
 		default:
-			ECVAssertNotReached(@"Invalid input %hi.", i);
+			ECVAssertNotReached(@"Invalid video source %lu.", (unsigned long)[obj unsignedIntegerValue]);
 			return 0;
 	}
 }
-- (NSString *)localizedStringForInputAtIndex:(long)i
-{
-	return [self localizedStringForVideoSourceObject:[[self allVideoSourceObjects] objectAtIndex:i]];
-}
-
-#pragma mark -
-
 - (short)inputStandard
 {
 	switch([self videoFormat]) {

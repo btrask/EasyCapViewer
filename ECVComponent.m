@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 typedef struct {
 	ECVCaptureDevice<ECVComponentConfiguring> *device;
 	CFMutableDictionaryRef frameByBuffer;
+	NSMutableArray *inputCombinations;
 	TimeBase timeBase;
 } ECVCStorage;
 
@@ -79,6 +80,9 @@ typedef struct {
 		return noErr;\
 	}
 
+static NSString *const ECVVideoSourceObject = @"ECVVideoSourceObjectKey";
+static NSString *const ECVVideoFormatObject = @"ECVVideoFormatObjectKey";
+
 static Rect ECVNSRectToRect(NSRect r)
 {
 	return (Rect){NSMinX(r), NSMinY(r), NSMaxX(r), NSMaxY(r)};
@@ -118,6 +122,7 @@ ECV_CALLCOMPONENT_FUNCTION(Close, ComponentInstance instance)
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device release];
 	CFRelease(self->frameByBuffer);
+	[self->inputCombinations release];
 	free(self);
 	[pool drain];
 	return noErr;
@@ -162,7 +167,19 @@ ECV_VDIG_FUNCTION(GetNumberOfInputs, short *inputs)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	*inputs = [self->device numberOfInputs] - 1;
+	[self->inputCombinations release];
+	self->inputCombinations = [[NSMutableArray alloc] init];
+	for(id const source in [self->device allVideoSourceObjects]) {
+		if(![self->device isValidVideoSourceObject:source]) continue;
+		for(id const format in [self->device allVideoFormatObjects]) {
+			if(![self->device isValidVideoFormatObject:format]) continue;
+			[self->inputCombinations addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+				source, ECVVideoSourceObject,
+				format, ECVVideoFormatObject,
+				nil]];
+		}
+	}
+	*inputs = MIN(SHRT_MAX, [self->inputCombinations count] - 1);
 	[pool drain];
 	return noErr;
 }
@@ -170,7 +187,7 @@ ECV_VDIG_FUNCTION(GetInputFormat, short input, short *format)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	*format = [self->device inputFormatForInputAtIndex:input];
+	*format = [self->device inputFormatForVideoSourceObject:[[self->inputCombinations objectAtIndex:input] objectForKey:ECVVideoSourceObject]];
 	[pool drain];
 	return noErr;
 }
@@ -178,7 +195,10 @@ ECV_VDIG_FUNCTION(GetInputName, long videoInput, Str255 name)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	CFStringGetPascalString((CFStringRef)[self->device localizedStringForInputAtIndex:videoInput], name, 256, kCFStringEncodingUTF8);
+	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:videoInput];
+	NSString *const sourceLabel = [self->device localizedStringForVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
+	NSString *const formatLabel = [self->device localizedStringForVideoFormatObject:[inputCombination objectForKey:ECVVideoFormatObject]];
+	CFStringGetPascalString((CFStringRef)[NSString stringWithFormat:@"%@ - %@", sourceLabel, formatLabel], name, 256, kCFStringEncodingUTF8);
 	[pool drain];
 	return noErr;
 }
@@ -186,7 +206,13 @@ ECV_VDIG_FUNCTION(GetInput, short *input)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	*input = [self->device inputIndex];
+	NSDictionary *const inputCombination = [NSDictionary dictionaryWithObjectsAndKeys:
+		[self->device videoSourceObject], ECVVideoSourceObject,
+		[self->device videoFormatObject], ECVVideoFormatObject,
+		nil];
+	NSUInteger i = [self->inputCombinations indexOfObject:inputCombination];
+	if(NSNotFound == i) i = 0;
+	*input = MIN(SHRT_MAX, i);
 	[pool drain];
 	return noErr;
 }
@@ -194,7 +220,10 @@ ECV_VDIG_FUNCTION(SetInput, short input)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[self->device setInputIndex:input];
+	ECVLog(ECVNotice, @"TESTING TESTING %hd", input);
+	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:input];
+	[self->device setVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
+	[self->device setVideoFormatObject:[inputCombination objectForKey:ECVVideoFormatObject]];
 	[pool drain];
 	return noErr;
 }
