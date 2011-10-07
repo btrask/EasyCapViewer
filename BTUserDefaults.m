@@ -143,7 +143,7 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 		for(NSString *const suite in _suites) {
 			if(!CFPreferencesSynchronize((CFStringRef)suite, (CFStringRef)_user, (CFStringRef)_host)) success = NO;
 		}
-		[[NSProcessInfo processInfo] enableSuddenTermination];
+		[[NSProcessInfo processInfo] ECV_enableSuddenTermination];
 		[_syncTimer invalidate];
 		[_syncTimer release];
 		_syncTimer = nil;
@@ -158,7 +158,7 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 {
 	if(_syncTimer) return;
 	if(BTSynchronizationDelay > 0.0) {
-		[[NSProcessInfo processInfo] disableSuddenTermination];
+		[[NSProcessInfo processInfo] ECV_disableSuddenTermination];
 		_syncTimer = [[NSTimer timerWithTimeInterval:BTSynchronizationDelay target:self selector:@selector(synchronize) userInfo:nil repeats:NO] retain];
 		[[NSRunLoop mainRunLoop] addTimer:_syncTimer forMode:NSRunLoopCommonModes];
 	} else {

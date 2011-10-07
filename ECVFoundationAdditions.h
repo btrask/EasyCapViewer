@@ -48,3 +48,10 @@ NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
 - (void)ECV_removeObserver:(id)observer name:(NSString *)aName;
 
 @end
+
+@interface NSProcessInfo(ECVFoundationAdditions)
+
+- (void)ECV_enableSuddenTermination;
+- (void)ECV_disableSuddenTermination;
+
+@end

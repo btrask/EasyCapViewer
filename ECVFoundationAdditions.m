@@ -68,3 +68,16 @@ static NSString *const ECVMainSuiteNameKey = @"ECVMainSuiteName";
 }
 
 @end
+
+@implementation NSProcessInfo(ECVFoundationAdditions)
+
+- (void)ECV_enableSuddenTermination
+{
+	if([self respondsToSelector:@selector(enableSuddenTermination)]) [self enableSuddenTermination];
+}
+- (void)ECV_disableSuddenTermination
+{
+	if([self respondsToSelector:@selector(disableSuddenTermination)]) [self disableSuddenTermination];
+}
+
+@end
