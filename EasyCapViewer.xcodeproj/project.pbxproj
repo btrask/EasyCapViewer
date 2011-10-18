@@ -810,7 +810,7 @@
 		0E4D75C311044A5A00FE3DDC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 0.5.4;
+				CURRENT_PROJECT_VERSION = 0.5.5a;
 				GCC_PREFIX_HEADER = EasyCapViewer_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = (
 					"$(inherited)",
@@ -872,7 +872,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CURRENT_PROJECT_VERSION = 0.5.4;
+				CURRENT_PROJECT_VERSION = 0.5.5a;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
