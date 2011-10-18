@@ -53,9 +53,9 @@ typedef struct {
 #include <QuickTime/ComponentDispatchHelper.c>
 
 #if defined(__i386__)
-	#define ECV_MSG_SEND_CGFLOAT ((CGFloat (*)(id, SEL))objc_msgSend_fpret)
+	#define ECV_objc_msgSend_CGFloat objc_msgSend_fpret
 #else
-	#define ECV_MSG_SEND_CGFLOAT ((CGFloat (*)(id, SEL))objc_msgSend)
+	#define ECV_objc_msgSend_CGFloat objc_msgSend
 #endif
 
 #define ECV_CALLCOMPONENT_FUNCTION(name, args...) pascal ComponentResult ADD_CALLCOMPONENT_BASENAME(name)(VD_GLOBALS() self, ##args)
@@ -69,14 +69,14 @@ typedef struct {
 	{\
 		ECV_DEBUG_LOG();\
 		if(![self->device respondsToSelector:getterSel]) return digiUnimpErr;\
-		*v = ECV_MSG_SEND_CGFLOAT(self->device, getterSel) * USHRT_MAX;\
+		*v = ((CGFloat (*)(id, SEL))ECV_objc_msgSend_CGFloat)(self->device, getterSel) * USHRT_MAX;\
 		return noErr;\
 	}\
 	ECV_VDIG_FUNCTION(Set ## prop, unsigned short *v)\
 	{\
 		ECV_DEBUG_LOG();\
 		if(![self->device respondsToSelector:setterSel]) return digiUnimpErr;\
-		(void)objc_msgSend(self->device, setterSel, (CGFloat)*v / USHRT_MAX);\
+		((void (*)(id, SEL, CGFloat))objc_msgSend)(self->device, setterSel, (CGFloat)*v / USHRT_MAX);\
 		return noErr;\
 	}
 
@@ -220,7 +220,6 @@ ECV_VDIG_FUNCTION(SetInput, short input)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVLog(ECVNotice, @"TESTING TESTING %hd", input);
 	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:input];
 	[self->device setVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
 	[self->device setVideoFormatObject:[inputCombination objectForKey:ECVVideoFormatObject]];
@@ -292,20 +291,20 @@ ECV_VDIG_FUNCTION(SetCompression, OSType compressType, short depth, Rect *bounds
 	// TODO: Most of these settings don't apply to us...
 	return noErr;
 }
-ECV_VDIG_FUNCTION(CompressOneFrameAsync)
-{
-	ECV_DEBUG_LOG();
-	if(![self->device isPlaying]) return badCallOrderErr;
-	return noErr;
-}
 ECV_VDIG_FUNCTION(ResetCompressSequence)
 {
 	ECV_DEBUG_LOG();
 	return noErr;
 }
+ECV_VDIG_FUNCTION(CompressOneFrameAsync)
+{
+//	ECV_DEBUG_LOG();
+	if(![self->device isPlaying]) return badCallOrderErr;
+	return noErr;
+}
 ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t)
 {
-	ECV_DEBUG_LOG();
+//	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVVideoStorage *const vs = [self->device videoStorage];
 	ECVVideoFrame *const frame = [vs currentFrame];
@@ -326,7 +325,7 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 }
 ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 {
-	ECV_DEBUG_LOG();
+//	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
 	[pool drain];
