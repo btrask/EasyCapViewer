@@ -157,7 +157,7 @@ ECV_VDIG_FUNCTION(GetCurrentFlags, long *inputCurrentFlag, long *outputCurrentFl
 {
 	ECV_DEBUG_LOG();
 	DigitizerInfo info;
-	if(!ADD_CALLCOMPONENT_BASENAME(GetDigitizerInfo)(self, &info)) return -1;
+	if(noErr != ADD_CALLCOMPONENT_BASENAME(GetDigitizerInfo)(self, &info)) return -1;
 	*inputCurrentFlag = info.inputCurrentFlags;
 	*outputCurrentFlag = info.outputCurrentFlags;
 	return noErr;
