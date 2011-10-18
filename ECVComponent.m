@@ -142,7 +142,9 @@ ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 
 	*info = (DigitizerInfo){};
 	info->vdigType = vdTypeBasic;
-	info->inputCapabilityFlags = digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
+	info->inputCapabilityFlags = kNilOptions;
+		// We lie because many applications don't respect these options, and NTSC/PAL/SECAM is more limited than what we actually support.
+		// digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo
 	info->outputCapabilityFlags = digiOutDoes32 | digiOutDoesCompress | digiOutDoesCompressOnly | digiOutDoesNotNeedCopyOfCompressData;
 	info->inputCurrentFlags = info->inputCapabilityFlags;
 	info->outputCurrentFlags = info->outputCurrentFlags;
@@ -239,7 +241,7 @@ ECV_VDIG_FUNCTION(GetDeviceNameAndFlags, Str255 outName, UInt32 *outNameFlags)
 {
 	ECV_DEBUG_LOG();
 	*outNameFlags = kNilOptions;
-	CFStringGetPascalString(CFSTR("Test Device"), outName, 256, kCFStringEncodingUTF8);
+	CFStringGetPascalString((CFStringRef)@"ECVComponent", outName, 256, kCFStringEncodingUTF8);
 	// TODO: Enumerate the devices and register vdigs for each. Use vdDeviceFlagHideDevice for ourself. Not sure if this is actually necessary (?)
 	return noErr;
 }
@@ -270,8 +272,8 @@ ECV_VDIG_FUNCTION(GetCompressionTypes, VDCompressionListHandle h)
 		.formatFlags = codecInfoDepth24,
 		.compressFlags = codecInfoDoes32,
 	};
-	CFStringGetPascalString(CFSTR("Test Type Name"), p[0].typeName, 64, kCFStringEncodingUTF8);
-	CFStringGetPascalString(CFSTR("Test Name"), p[0].name, 64, kCFStringEncodingUTF8);
+	CFStringGetPascalString((CFStringRef)@"Native Output", p[0].typeName, 64, kCFStringEncodingUTF8);
+	CFStringGetPascalString((CFStringRef)@"Test Name", p[0].name, 64, kCFStringEncodingUTF8);
 
 	HSetState((Handle)h, handleState);
 	return noErr;
