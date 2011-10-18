@@ -35,16 +35,17 @@ void ECVLog(ECVErrorLevel level, NSString *format, ...)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	va_list arguments;
-#if !defined(ECV_LOG_TO_DESKTOP)
-	va_start(arguments, format);
-	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
-	va_end(arguments);
-#if defined(ECV_DEBUG)
+#if defined(ECV_LOG_TO_CONSOLE)
 	va_start(arguments, format);
 	NSLogv(format, arguments);
 	va_end(arguments);
 #endif
-#elif defined(ECV_DEBUG)
+#if defined(ECV_LOG_TO_WINDOW)
+	va_start(arguments, format);
+	[[ECVErrorLogController sharedErrorLogController] logLevel:level format:format arguments:arguments];
+	va_end(arguments);
+#endif
+#if defined(ECV_LOG_TO_DESKTOP)
 	NSOutputStream *const stream = [NSOutputStream outputStreamToFileAtPath:[@"~/Desktop/ECVComponent.log" stringByExpandingTildeInPath] append:YES];
 	[stream open];
 	va_start(arguments, format);
