@@ -147,7 +147,7 @@ ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 		// digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo
 	info->outputCapabilityFlags = digiOutDoes32 | digiOutDoesCompress | digiOutDoesCompressOnly | digiOutDoesNotNeedCopyOfCompressData;
 	info->inputCurrentFlags = info->inputCapabilityFlags;
-	info->outputCurrentFlags = info->outputCurrentFlags;
+	info->outputCurrentFlags = info->outputCapabilityFlags;
 
 	info->minDestWidth = 0;
 	info->minDestHeight = 0;
