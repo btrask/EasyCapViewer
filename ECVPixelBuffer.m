@@ -96,7 +96,6 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 	NSUInteger const dstRowSpacing = useFields ? 2 : 1;
 	BOOL const blended = !!(ECVDrawBlended & options);
 
-	NSRange const dstRows = NSIntersectionRange(NSMakeRange(dstPoint.y, size.height), ECVValidRows(&dstInfo));
 	NSRange const srcRows = NSIntersectionRange(NSMakeRange(srcPoint.y, size.height), ECVValidRows(&srcInfo));
 	NSUInteger i;
 	for(i = srcRows.location; i < NSMaxRange(srcRows); ++i) {
