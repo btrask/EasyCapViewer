@@ -341,6 +341,7 @@ ECVNoDeviceError:
 - (void)threadMain_play
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	ECVTransfer *transfers = NULL;
 	NSUInteger i;
 
 	[_playLock lock];
@@ -373,7 +374,7 @@ ECVNoDeviceError:
 
 	NSUInteger const simultaneousTransfers = [self simultaneousTransfers];
 	NSUInteger const microframesPerTransfer = [self microframesPerTransfer];
-	ECVTransfer *const transfers = calloc(simultaneousTransfers, sizeof(ECVTransfer));
+	transfers = calloc(simultaneousTransfers, sizeof(ECVTransfer));
 	for(i = 0; i < simultaneousTransfers; ++i) {
 		ECVTransfer *const transfer = transfers + i;
 		ECVIOReturn((*_interfaceInterface)->LowLatencyCreateBuffer(_interfaceInterface, (void **)&transfer->list, sizeof(IOUSBLowLatencyIsocFrame) * microframesPerTransfer, kUSBLowLatencyFrameListBuffer));
