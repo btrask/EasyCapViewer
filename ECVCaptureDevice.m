@@ -449,14 +449,14 @@ bail:
 }
 - (void)threaded_nextFieldType:(ECVFieldType)fieldType
 {
-	ECVVideoFrame *frameToDraw = [_videoStorage finishedFrameWithNextFieldType:fieldType];
-#if !defined(ECV_NO_CONTROLLERS)
+	ECVVideoFrame *const frameToDraw = [_videoStorage finishedFrameWithNextFieldType:fieldType];
 	if(frameToDraw) {
+#if !defined(ECV_NO_CONTROLLERS)
 		[_windowControllersLock readLock];
 		[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frameToDraw];
 		[_windowControllersLock unlock];
-	}
 #endif
+	}
 }
 - (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
 {
