@@ -58,6 +58,7 @@ NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
 NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";
+static NSString *const ECVAudioInputUIDKey = @"ECVAudioInputUID";
 static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 
 typedef struct {
@@ -519,6 +520,10 @@ ECVNoDeviceError:
 }
 - (ECVAudioDevice *)audioInput
 {
+	if(!_audioInput) {
+		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
+		if(UID) _audioInput = [[ECVAudioDevice deviceWithUID:UID input:YES] retain];
+	}
 	if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
 	if(!_audioInput) _audioInput = [[ECVAudioDevice defaultInputDevice] retain];
 	return [[_audioInput retain] autorelease];
@@ -526,13 +531,19 @@ ECVNoDeviceError:
 - (void)setAudioInput:(ECVAudioDevice *)device
 {
 	NSParameterAssert([device isInput] || !device);
-	if(ECVEqualObjects(device, _audioInput)) return;
-	ECVPauseWhile(self, {
-		[_audioInput release];
-		_audioInput = [device retain];
-		[_audioPreviewingPipe release];
-		_audioPreviewingPipe = nil;
-	});
+	if(!ECVEqualObjects(device, _audioInput)) {
+		ECVPauseWhile(self, {
+			[_audioInput release];
+			_audioInput = [device retain];
+			[_audioPreviewingPipe release];
+			_audioPreviewingPipe = nil;
+		});
+	}
+	if(ECVEqualObjects([self audioInputOfCaptureHardware], device)) {
+		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
+	} else {
+		[[self defaults] setObject:[device UID] forKey:ECVAudioInputUIDKey];
+	}
 }
 - (ECVAudioDevice *)audioOutput
 {

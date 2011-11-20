@@ -47,6 +47,7 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 @property(assign) NSObject<ECVAudioDeviceDelegate> *delegate;
 @property(readonly) AudioDeviceID deviceID;
 @property(readonly) BOOL isInput;
+@property(readonly) NSString *UID;
 
 @property(nonatomic, copy) NSString *name;
 @property(readonly) NSArray *streams;

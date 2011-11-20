@@ -147,6 +147,13 @@ ECVNoDeviceError:
 @synthesize delegate;
 @synthesize deviceID = _deviceID;
 @synthesize isInput = _isInput;
+- (NSString *)UID
+{
+	NSString *UID = nil;
+	UInt32 UIDSize = sizeof(UID);
+	ECVOSStatus(AudioDeviceGetProperty([self deviceID], 0, [self isInput], kAudioDevicePropertyDeviceUID, &UIDSize, &UID));
+	return [UID autorelease];
+}
 
 #pragma mark -
 
