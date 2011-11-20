@@ -125,7 +125,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
 	[options setURL:[savePanel URL]];
 	[options setVideoStorage:[(ECVCaptureDevice *)[self document] videoStorage]];
-	[options setAudioDevice:[[self document] audioInput]];
+	[options setAudioInput:[[self document] audioInput]];
 
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[options setVideoQuality:[videoQualitySlider doubleValue]];

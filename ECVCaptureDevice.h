@@ -84,8 +84,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	NSConditionLock *_playLock;
 
 #if defined(ECV_ENABLE_AUDIO)
-	ECVAudioDevice *_audioInput;
-	ECVAudioDevice *_audioOutput;
+	ECVAudioInput *_audioInput;
+	ECVAudioOutput *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
 	NSTimeInterval _audioStopTime;
 	BOOL _muted;
@@ -127,9 +127,9 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (BOOL)setFeatureAtIndex:(u_int16_t)i;
 
 #if defined(ECV_ENABLE_AUDIO)
-@property(readonly) ECVAudioDevice *audioInputOfCaptureHardware;
-@property(nonatomic, retain) ECVAudioDevice *audioInput;
-@property(nonatomic, retain) ECVAudioDevice *audioOutput;
+@property(readonly) ECVAudioInput *audioInputOfCaptureHardware;
+@property(nonatomic, retain) ECVAudioInput *audioInput;
+@property(nonatomic, retain) ECVAudioOutput *audioOutput;
 - (BOOL)startAudio;
 - (void)stopAudio;
 #endif

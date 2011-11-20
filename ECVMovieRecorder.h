@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVFrameRateConverter;
 
 // Other Sources
-@class ECVAudioDevice;
+@class ECVAudioInput;
 @class ECVAudioPipe;
 
 @interface ECVMovieRecordingOptions : NSObject
@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	NSURL *_URL;
 	ECVVideoStorage *_videoStorage;
-	ECVAudioDevice *_audioDevice;
+	ECVAudioInput *_audioInput;
 
 	OSType _videoCodec;
 	CGFloat _videoQuality;
@@ -53,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @property(copy) NSURL *URL;
 @property(retain) ECVVideoStorage *videoStorage;
-@property(retain) ECVAudioDevice *audioDevice;
+@property(retain) ECVAudioInput *audioInput;
 
 // Video
 @property(assign) OSType videoCodec;

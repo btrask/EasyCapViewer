@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @synthesize URL = _URL;
 @synthesize videoStorage = _videoStorage;
-@synthesize audioDevice = _audioDevice;
+@synthesize audioInput = _audioInput;
 
 #pragma mark -
 
@@ -89,7 +89,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	[_URL release];
 	[_videoStorage release];
-	[_audioDevice release];
+	[_audioInput release];
 	[super dealloc];
 }
 
@@ -180,7 +180,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		nil], &callback, &_compressionSession));
 	ICMCompressionSessionOptionsRelease(ICMOpts);
 
-	ECVAudioStream *const inputStream = [[[[options audioDevice] streams] objectEnumerator] nextObject];
+	ECVAudioStream *const inputStream = [[[[options audioInput] streams] objectEnumerator] nextObject];
 	if(inputStream) {
 		_audioPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription upconvertFromMono:[options upconvertsFromMono]];
 		[_audioPipe setDropsBuffers:NO];

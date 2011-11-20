@@ -35,11 +35,11 @@ static OSStatus ECVAudioHardwarePropertyListenerProc(AudioHardwarePropertyID pro
 	}
 	return noErr;
 }
-static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, ECVAudioDevice *device)
+static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, id device)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	if(device.isInput) [device.delegate audioDevice:device didReceiveInput:inInputData atTime:inInputTime];
-	else [device.delegate audioDevice:device didRequestOutput:outOutputData forTime:inOutputTime];
+	if([device isInput]) [[device delegate] audioInput:device didReceiveBufferList:inInputData atTime:inInputTime];
+	else [[device delegate] audioOutput:device didRequestBufferList:outOutputData forTime:inOutputTime];
 	[pool drain];
 	return noErr;
 }
@@ -53,10 +53,15 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 	if([ECVAudioDevice class] != self) return;
 	ECVOSStatus(AudioHardwareAddPropertyListener(kAudioHardwarePropertyDevices, (AudioHardwarePropertyListenerProc)ECVAudioHardwarePropertyListenerProc, self));
 }
++ (id)allocWithZone:(NSZone *)zone
+{
+	NSAssert([self respondsToSelector:@selector(isInput)], @"ECVAudioDevice is abstract.");
+	return [super allocWithZone:zone];
+}
 
 #pragma mark +ECVAudioDevice
 
-+ (NSArray *)allDevicesInput:(BOOL)flag
++ (NSArray *)allDevices
 {
 	NSMutableArray *const devices = [NSMutableArray array];
 	UInt32 size = 0;
@@ -67,27 +72,20 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &size, deviceIDs));
 	NSUInteger i = 0;
 	for(; i < size / sizeof(AudioDeviceID); i++) {
-		ECVAudioDevice *const device = [[[self alloc] initWithDeviceID:deviceIDs[i] input:flag] autorelease];
-		if([[device streams] count]) [devices addObject:device];
+		ECVAudioDevice *const device = [[[self alloc] initWithDeviceID:deviceIDs[i]] autorelease];
+		if(device) [devices addObject:device];
 	}
 	free(deviceIDs);
 	return devices;
 }
-+ (id)defaultInputDevice
++ (id)defaultDevice
 {
 	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	UInt32 deviceIDSize = sizeof(deviceID);
-	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &deviceIDSize, &deviceID));
-	return [[[self alloc] initWithDeviceID:deviceID input:YES] autorelease];
+	ECVOSStatus(AudioHardwareGetProperty([self isInput] ? kAudioHardwarePropertyDefaultInputDevice : kAudioHardwarePropertyDefaultOutputDevice, &deviceIDSize, &deviceID));
+	return [[[self alloc] initWithDeviceID:deviceID] autorelease];
 }
-+ (id)defaultOutputDevice
-{
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	UInt32 deviceIDSize = sizeof(deviceID);
-	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &deviceIDSize, &deviceID));
-	return [[[self alloc] initWithDeviceID:deviceID input:NO] autorelease];
-}
-+ (id)deviceWithUID:(NSString *)UID input:(BOOL)flag
++ (id)deviceWithUID:(NSString *)UID
 {
 	NSParameterAssert(UID);
 	AudioDeviceID deviceID = kAudioDeviceUnknown;
@@ -99,16 +97,16 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 	};
 	UInt32 translationSize = sizeof(deviceUIDTranslation);
 	ECVOSStatus(AudioHardwareGetProperty(kAudioHardwarePropertyDeviceForUID, &translationSize, &deviceUIDTranslation));
-	return [[[self alloc] initWithDeviceID:deviceID input:flag] autorelease];
+	return [[[self alloc] initWithDeviceID:deviceID] autorelease];
 }
-+ (id)deviceWithIODevice:(io_service_t)device input:(BOOL)flag
++ (id)deviceWithIODevice:(io_service_t)device
 {
 	io_iterator_t iterator = IO_OBJECT_NULL;
 	io_service_t subservice = IO_OBJECT_NULL;
 	ECVIOReturn(IORegistryEntryCreateIterator(device, kIOServicePlane, kIORegistryIterateRecursively, &iterator));
 	while((subservice = IOIteratorNext(iterator))) if(IOObjectConformsTo(subservice, kIOAudioEngineClassName)) {
 		NSString *const UID = [(NSString *)IORegistryEntryCreateCFProperty(subservice, CFSTR(kIOAudioEngineGlobalUniqueIDKey), kCFAllocatorDefault, 0) autorelease];
-		return UID ? [self deviceWithUID:UID input:flag] : nil;
+		return UID ? [self deviceWithUID:UID] : nil;
 	}
 ECVGenericError:
 ECVNoDeviceError:
@@ -117,7 +115,7 @@ ECVNoDeviceError:
 
 #pragma mark -ECVAudioDevice
 
-- (id)initWithDeviceID:(AudioDeviceID)deviceID input:(BOOL)flag
+- (id)initWithDeviceID:(AudioDeviceID)deviceID
 {
 	if((self = [super init])) {
 		if(kAudioDeviceUnknown == deviceID) {
@@ -126,7 +124,6 @@ ECVNoDeviceError:
 		}
 
 		_deviceID = deviceID;
-		_isInput = flag;
 
 		Float64 rate = 0.0f;
 		UInt32 rateSize= sizeof(rate);
@@ -138,6 +135,11 @@ ECVNoDeviceError:
 
 		UInt32 const size = (UInt32)CLAMP(rateRange.mMinimum, roundf(rate / 100.0f), rateRange.mMaximum); // Using either the minimum or the maximum frame size results in choppy audio. I don't know why the ideal buffer frame size is the 1% of the nominal sample rate, but it's what the MTCoreAudio framework uses and it works.
 		ECVOSStatus(AudioDeviceSetProperty([self deviceID], NULL, 0, [self isInput], kAudioDevicePropertyBufferFrameSize, sizeof(size), &size));
+
+		if(![[self streams] count]) {
+			[self release];
+			return nil;
+		}
 	}
 	return self;
 }
@@ -146,7 +148,10 @@ ECVNoDeviceError:
 
 @synthesize delegate;
 @synthesize deviceID = _deviceID;
-@synthesize isInput = _isInput;
+- (BOOL)isInput
+{
+	return [[self class] isInput];
+}
 - (NSString *)UID
 {
 	NSString *UID = nil;
@@ -219,11 +224,11 @@ ECVNoDeviceError:
 
 - (NSUInteger)hash
 {
-	return [[self class] hash] ^ _deviceID ^ _isInput;
+	return [[self class] hash] ^ _deviceID;
 }
 - (BOOL)isEqual:(id)obj
 {
-	return [obj isKindOfClass:[ECVAudioDevice class]] && [obj deviceID] == [self deviceID] && [obj isInput] == [self isInput];
+	return [obj isMemberOfClass:[self class]] && [obj deviceID] == [self deviceID];
 }
 
 #pragma mark -
@@ -235,10 +240,32 @@ ECVNoDeviceError:
 
 @end
 
+@implementation ECVAudioInput
+
+#pragma mark +ECVAudioDevice(ECVAbstract)
+
++ (BOOL)isInput
+{
+	return YES;
+}
+
+@end
+
+@implementation ECVAudioOutput
+
+#pragma mark +ECVAudioDevice(ECVAbstract)
+
++ (BOOL)isInput
+{
+	return NO;
+}
+
+@end
+
 @implementation NSObject(ECVAudioDeviceDelegate)
 
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t {}
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t {}
+- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t {}
+- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t {}
 
 @end
 

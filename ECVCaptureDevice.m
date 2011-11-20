@@ -512,51 +512,49 @@ ECVNoDeviceError:
 #pragma mark -
 
 #if defined(ECV_ENABLE_AUDIO)
-- (ECVAudioDevice *)audioInputOfCaptureHardware
+- (ECVAudioInput *)audioInputOfCaptureHardware
 {
-	ECVAudioDevice *const input = [ECVAudioDevice deviceWithIODevice:_service input:YES];
+	ECVAudioInput *const input = [ECVAudioInput deviceWithIODevice:_service];
 	[input setName:_productName];
 	return input;
 }
-- (ECVAudioDevice *)audioInput
+- (ECVAudioInput *)audioInput
 {
 	if(!_audioInput) {
 		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
-		if(UID) _audioInput = [[ECVAudioDevice deviceWithUID:UID input:YES] retain];
+		if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
 	}
 	if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
-	if(!_audioInput) _audioInput = [[ECVAudioDevice defaultInputDevice] retain];
+	if(!_audioInput) _audioInput = [[ECVAudioInput defaultDevice] retain];
 	return [[_audioInput retain] autorelease];
 }
-- (void)setAudioInput:(ECVAudioDevice *)device
+- (void)setAudioInput:(ECVAudioInput *)input
 {
-	NSParameterAssert([device isInput] || !device);
-	if(!ECVEqualObjects(device, _audioInput)) {
+	if(!ECVEqualObjects(input, _audioInput)) {
 		ECVPauseWhile(self, {
 			[_audioInput release];
-			_audioInput = [device retain];
+			_audioInput = [input retain];
 			[_audioPreviewingPipe release];
 			_audioPreviewingPipe = nil;
 		});
 	}
-	if(ECVEqualObjects([self audioInputOfCaptureHardware], device)) {
+	if(ECVEqualObjects([self audioInputOfCaptureHardware], input)) {
 		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
 	} else {
-		[[self defaults] setObject:[device UID] forKey:ECVAudioInputUIDKey];
+		[[self defaults] setObject:[input UID] forKey:ECVAudioInputUIDKey];
 	}
 }
-- (ECVAudioDevice *)audioOutput
+- (ECVAudioOutput *)audioOutput
 {
-	if(!_audioOutput) return _audioOutput = [[ECVAudioDevice defaultOutputDevice] retain];
+	if(!_audioOutput) return _audioOutput = [[ECVAudioOutput defaultDevice] retain];
 	return [[_audioOutput retain] autorelease];
 }
-- (void)setAudioOutput:(ECVAudioDevice *)device
+- (void)setAudioOutput:(ECVAudioOutput *)output
 {
-	NSParameterAssert(![device isInput] || !device);
-	if(ECVEqualObjects(device, _audioOutput)) return;
+	if(ECVEqualObjects(output, _audioOutput)) return;
 	ECVPauseWhile(self, {
 		[_audioOutput release];
-		_audioOutput = [device retain];
+		_audioOutput = [output retain];
 		[_audioPreviewingPipe release];
 		_audioPreviewingPipe = nil;
 	});
@@ -568,8 +566,8 @@ ECVNoDeviceError:
 	NSTimeInterval const timeSinceLastStop = [NSDate ECV_timeIntervalSinceReferenceDate] - _audioStopTime;
 	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
 
-	ECVAudioDevice *const input = [self audioInput];
-	ECVAudioDevice *const output = [self audioOutput];
+	ECVAudioInput *const input = [self audioInput];
+	ECVAudioOutput *const output = [self audioOutput];
 
 	ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
 	if(!inputStream) {
@@ -600,8 +598,8 @@ ECVNoDeviceError:
 }
 - (void)stopAudio
 {
-	ECVAudioDevice *const input = [self audioInput];
-	ECVAudioDevice *const output = [self audioOutput];
+	ECVAudioInput *const input = [self audioInput];
+	ECVAudioOutput *const output = [self audioOutput];
 	[input stop];
 	[output stop];
 	[input setDelegate:nil];
@@ -699,7 +697,7 @@ ECVNoDeviceError:
 #pragma mark -<ECVAudioDeviceDelegate>
 
 #if defined(ECV_ENABLE_AUDIO)
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
+- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioInput) return;
 	[_audioPreviewingPipe receiveInputBufferList:bufferList];
@@ -707,7 +705,7 @@ ECVNoDeviceError:
 	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
 	[_windowControllersLock unlock];
 }
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
+- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
 {
 	if(sender != _audioOutput) return;
 	[_audioPreviewingPipe requestOutputBufferList:bufferList];

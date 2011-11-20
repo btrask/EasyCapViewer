@@ -31,18 +31,16 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 	@private
 	IBOutlet NSObject<ECVAudioDeviceDelegate> *delegate;
 	AudioDeviceID _deviceID;
-	BOOL _isInput;
 	NSString *_name;
 	AudioDeviceIOProcID _procID;
 }
 
-+ (NSArray *)allDevicesInput:(BOOL)flag;
-+ (id)defaultInputDevice;
-+ (id)defaultOutputDevice;
-+ (id)deviceWithUID:(NSString *)UID input:(BOOL)flag;
-+ (id)deviceWithIODevice:(io_service_t)device input:(BOOL)flag;
++ (NSArray *)allDevices;
++ (id)defaultDevice;
++ (id)deviceWithUID:(NSString *)UID;
++ (id)deviceWithIODevice:(io_service_t)device;
 
-- (id)initWithDeviceID:(AudioDeviceID)deviceID input:(BOOL)flag;
+- (id)initWithDeviceID:(AudioDeviceID)deviceID;
 
 @property(assign) NSObject<ECVAudioDeviceDelegate> *delegate;
 @property(readonly) AudioDeviceID deviceID;
@@ -57,11 +55,22 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
 @end
 
+@interface ECVAudioDevice(ECVAbstract)
+
++ (BOOL)isInput;
+
+@end
+
+@interface ECVAudioInput : ECVAudioDevice
+@end
+@interface ECVAudioOutput : ECVAudioDevice
+@end
+
 @protocol ECVAudioDeviceDelegate <NSObject>
 
 @optional
-- (void)audioDevice:(ECVAudioDevice *)sender didReceiveInput:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t;
-- (void)audioDevice:(ECVAudioDevice *)sender didRequestOutput:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t;
+- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t;
+- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t;
 
 @end
 

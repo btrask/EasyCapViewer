@@ -166,16 +166,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif
 {
 	[audioSourcePopUp removeAllItems];
-	ECVAudioDevice *const preferredInput = [_captureDevice audioInputOfCaptureHardware];
+	ECVAudioInput *const preferredInput = [_captureDevice audioInputOfCaptureHardware];
 	if(preferredInput) {
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[preferredInput name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:preferredInput];
 		[[audioSourcePopUp menu] addItem:item];
 	}
-	for(ECVAudioDevice *const device in [ECVAudioDevice allDevicesInput:YES]) {
-		if(ECVEqualObjects(device, preferredInput)) continue;
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[device name] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:device];
+	for(ECVAudioInput *const input in [ECVAudioInput allDevices]) {
+		if(ECVEqualObjects(input, preferredInput)) continue;
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[input name] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:input];
 		[[audioSourcePopUp menu] addItem:item];
 	}
 	if([[audioSourcePopUp menu] numberOfItems] > 1) [[audioSourcePopUp menu] insertItem:[NSMenuItem separatorItem] atIndex:1];
