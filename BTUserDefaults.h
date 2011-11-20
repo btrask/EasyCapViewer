@@ -48,6 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)registerDefaults:(NSDictionary *)registrationDictionary;
 
-- (BOOL)synchronize;
+- (void)synchronizeAfterDelay;
+- (BOOL)synchronizeNow;
 
 @end

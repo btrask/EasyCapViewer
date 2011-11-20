@@ -26,12 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static NSTimeInterval const BTSynchronizationDelay = 5.0;
 
-@interface BTUserDefaults(Private)
-
-- (void)_synchronize;
-
-@end
-
 @implementation BTUserDefaults
 
 #pragma mark -BTUserDefaults
@@ -52,10 +46,10 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 		_user = [username copy];
 		_defaults = [[NSMutableDictionary alloc] init];
 
-		[NSApp ECV_addObserver:self selector:@selector(synchronize) name:NSApplicationWillTerminateNotification];
-		[NSApp ECV_addObserver:self selector:@selector(synchronize) name:NSApplicationDidResignActiveNotification]; // Also works when hiding.
-		[[[NSWorkspace sharedWorkspace] notificationCenter]  addObserver:self selector:@selector(synchronize) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
-		[[[NSWorkspace sharedWorkspace] notificationCenter]  addObserver:self selector:@selector(synchronize) name:NSWorkspaceWillPowerOffNotification object:[NSWorkspace sharedWorkspace]];
+		[NSApp ECV_addObserver:self selector:@selector(synchronizeNow) name:NSApplicationWillTerminateNotification];
+		[NSApp ECV_addObserver:self selector:@selector(synchronizeNow) name:NSApplicationDidResignActiveNotification]; // Also works when hiding.
+		[[[NSWorkspace sharedWorkspace] notificationCenter]  addObserver:self selector:@selector(synchronizeNow) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
+		[[[NSWorkspace sharedWorkspace] notificationCenter]  addObserver:self selector:@selector(synchronizeNow) name:NSWorkspaceWillPowerOffNotification object:[NSWorkspace sharedWorkspace]];
 	}
 	return self;
 }
@@ -76,13 +70,13 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 {
 	NSAssert([_suites count], @"BTUserDefaults object must have at least one suite before values can be set");
 	CFPreferencesSetValue((CFStringRef)defaultName, (CFPropertyListRef)value, (CFStringRef)[_suites objectAtIndex:0], (CFStringRef)_user, (CFStringRef)_host);
-	[self _synchronize];
+	[self synchronizeAfterDelay];
 }
 - (void)removeObjectForKey:(NSString *)defaultName
 {
 	NSAssert([_suites count], @"BTUserDefaults object must have at least one suite before values can be removed");
 	CFPreferencesSetValue((CFStringRef)defaultName, NULL, (CFStringRef)[_suites objectAtIndex:0], (CFStringRef)_user, (CFStringRef)_host);
-	[self _synchronize];
+	[self synchronizeAfterDelay];
 }
 
 #pragma mark -
@@ -136,7 +130,18 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 
 #pragma mark -
 
-- (BOOL)synchronize
+- (void)synchronizeAfterDelay
+{
+	if(_syncTimer) return;
+	if(BTSynchronizationDelay > 0.0) {
+		[[NSProcessInfo processInfo] ECV_disableSuddenTermination];
+		_syncTimer = [[NSTimer timerWithTimeInterval:BTSynchronizationDelay target:self selector:@selector(synchronizeNow) userInfo:nil repeats:NO] retain];
+		[[NSRunLoop mainRunLoop] addTimer:_syncTimer forMode:NSRunLoopCommonModes];
+	} else {
+		[self synchronizeNow];
+	}
+}
+- (BOOL)synchronizeNow
 {
 	BOOL success = YES;
 	if(_syncTimer) {
@@ -147,23 +152,9 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 		[_syncTimer invalidate];
 		[_syncTimer release];
 		_syncTimer = nil;
-		if(!success) [self _synchronize];
+		if(!success) [self synchronizeAfterDelay];
 	}
 	return success;
-}
-
-#pragma mark -BTUserDefaults(Private)
-
-- (void)_synchronize
-{
-	if(_syncTimer) return;
-	if(BTSynchronizationDelay > 0.0) {
-		[[NSProcessInfo processInfo] ECV_disableSuddenTermination];
-		_syncTimer = [[NSTimer timerWithTimeInterval:BTSynchronizationDelay target:self selector:@selector(synchronize) userInfo:nil repeats:NO] retain];
-		[[NSRunLoop mainRunLoop] addTimer:_syncTimer forMode:NSRunLoopCommonModes];
-	} else {
-		[self synchronize];
-	}
 }
 
 #pragma mark -NSObject
@@ -176,7 +167,7 @@ static NSTimeInterval const BTSynchronizationDelay = 5.0;
 {
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[self synchronize];
+	[self synchronizeNow];
 	[_suites release];
 	[_host release];
 	[_user release];
