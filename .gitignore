@@ -3,6 +3,8 @@
 *.mode1v3
 *.perspective
 *.perspectivev3
+*.xcworkspace
+xcuserdata/
 .DS_Store
 .svn
 build/
