@@ -68,12 +68,12 @@ NSRect ECVRectByScalingEdgeToPoint(NSRect rect, ECVRectEdgeMask mask, NSPoint p,
 	CGFloat const length = hypot(d.width, d.height);
 	CGFloat u = ((p.x - p1.x) * d.width + (p.y - p1.y) * d.height) / pow(length, 2.0f);
 	if(ECVRectHorz & mask) {
-		u = MAX(u, (minSize.width - NSWidth(rect)) / fabs(d.width));
+		u = MAX(u, (minSize.width - NSWidth(rect)) / ABS(d.width));
 		u = MIN(u, (ECVRectPoint(maxRect, mask).x - p1.x) / d.width);
 	}
 	if(ECVRectVert & mask) {
-		u = MAX(u, (minSize.height - NSHeight(rect)) / fabs(d.height));
+		u = MAX(u, (minSize.height - NSHeight(rect)) / ABS(d.height));
 		u = MIN(u, (ECVRectPoint(maxRect, mask).y - p1.y) / d.height);
 	}
-	return ECVRectByAddingSizeFromEdge(rect, NSMakeSize(u * fabs(d.width), u * fabs(d.height)), mask);
+	return ECVRectByAddingSizeFromEdge(rect, NSMakeSize(u * ABS(d.width), u * ABS(d.height)), mask);
 }
