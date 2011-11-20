@@ -27,6 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <mach/mach_port.h>
 #import <Foundation/NSDebug.h>
 #import <string.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+	#import <OpenGL/gl.h>
+#endif
 
 // Controllers
 #import "ECVErrorLogController.h"

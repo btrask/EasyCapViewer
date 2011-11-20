@@ -203,7 +203,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)windowDidLoad
 {
 	[super windowDidLoad];
-	[(NSPanel *)[self window] setBecomesKeyOnlyIfNeeded:YES];
+	NSPanel *const w = (NSPanel *)[self window];
+	[w setBecomesKeyOnlyIfNeeded:YES];
+	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenAuxiliary];
 	[[ECVAudioDevice class] ECV_addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification];
 	[self setCaptureDevice:_captureDevice];
 }

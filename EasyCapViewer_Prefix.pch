@@ -72,6 +72,16 @@ static size_t ECVPixelFormatBytesPerPixel(OSType format)
 	}
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
+enum {
+	NSFullScreenWindowMask = 1 << 14,
+};
+enum {
+	NSWindowCollectionBehaviorFullScreenPrimary = 1 << 7,
+	NSWindowCollectionBehaviorFullScreenAuxiliary = 1 << 8,
+};
+#endif
+
 #endif // __OBJC__
 
 #define numberof(x) (sizeof(x) / sizeof(x[0]))

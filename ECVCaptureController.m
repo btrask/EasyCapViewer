@@ -270,7 +270,10 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	return [[videoView cell] respondsToSelector:@selector(cropRect)] ? [(ECVCropCell *)[videoView cell] cropRect] : [videoView cropRect];
 }
-@synthesize fullScreen = _fullScreen;
+- (BOOL)isFullScreen
+{
+	return _fullScreen || !!([[self window] styleMask] & NSFullScreenWindowMask);
+}
 - (void)setFullScreen:(BOOL)flag
 {
 	if(flag == _fullScreen) return;
@@ -294,6 +297,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[w setLevel:[oldWindow level]];
 	[w setContentAspectRatio:[oldWindow contentAspectRatio]];
 	[w setMinSize:[oldWindow minSize]];
+	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 	[self setWindow:w];
 	[self synchronizeWindowTitleWithDocumentName];
 	[w setDocumentEdited:[oldWindow isDocumentEdited]];
@@ -428,6 +432,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	NSWindow *const w = [self window];
 	ECVIntegerSize const s = [[self document] captureSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
+	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 
 	_cropSourceAspectRatio = [[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
 	_cropBorder = [[self defaults] integerForKey:ECVCropBorderKey];
@@ -565,6 +570,17 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (void)windowWillClose:(NSNotification *)aNotif
 {
 	if([aNotif object] == [self window]) [self stopRecording:self];
+}
+
+#pragma mark -
+
+- (NSSize)window:(NSWindow *)window willUseFullScreenContentSize:(NSSize)proposedSize
+{
+	return proposedSize;
+}
+- (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
+{
+	return proposedOptions;
 }
 
 @end
