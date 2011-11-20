@@ -419,7 +419,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	[[self defaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:ECVAspectRatio4x3], ECVAspectRatio2Key,
-		[NSNumber numberWithBool:NO], ECVVsyncKey,
+		[NSNumber numberWithBool:YES], ECVVsyncKey,
 		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
 		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
 		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
