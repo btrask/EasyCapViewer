@@ -371,7 +371,10 @@ ECVNoDeviceError:
 		ECVLog(ECVError, @"Invalid transfer type %lu", (unsigned long)transferType);
 		goto ECVGenericError;
 	}
-	NSParameterAssert(frameRequestSize);
+	if(!frameRequestSize) {
+		ECVLog(ECVError, @"No USB bandwidth (try a different USB port or unplug other devices)");
+		goto ECVGenericError;
+	}
 
 	NSUInteger const simultaneousTransfers = [self simultaneousTransfers];
 	NSUInteger const microframesPerTransfer = [self microframesPerTransfer];
