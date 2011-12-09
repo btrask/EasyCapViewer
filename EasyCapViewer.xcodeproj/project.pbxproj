@@ -111,6 +111,7 @@
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
 		B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
+		B5E3760E14928D2F00ED097A /* EasyCapViewer.icns in Resources */ = {isa = PBXBuildFile; fileRef = B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */; };
 		B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09997131CE0550066FEB5 /* ECVRational.m */; };
@@ -257,6 +258,7 @@
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacingMode.m; sourceTree = "<group>"; };
+		B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = EasyCapViewer.icns; sourceTree = "<group>"; };
 		B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameRateConverter.h; sourceTree = "<group>"; };
 		B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameRateConverter.m; sourceTree = "<group>"; };
 		B5F09996131CE0550066FEB5 /* ECVRational.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVRational.h; sourceTree = "<group>"; };
@@ -488,6 +490,7 @@
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
 				0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */,
+				B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -631,6 +634,7 @@
 				0E9F9B4410F679B800935C48 /* ECVErrorLog.xib in Resources */,
 				0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */,
 				0E9FAA861107A5A7005C55CE /* ECVDevices.plist in Resources */,
+				B5E3760E14928D2F00ED097A /* EasyCapViewer.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
