@@ -21,13 +21,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <Foundation/Foundation.h>
 
-NS_INLINE BOOL ECVEqualObjects(id<NSObject> a, id<NSObject> b)
-{
-	if(a == b) return YES;
-	if(!a || !b) return NO;
-	return [a isEqual:b];
-}
-
 @interface NSBundle(ECVFoundationAdditions)
 
 - (NSString *)ECV_mainSuiteName;

@@ -24,7 +24,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
-#import "ECVFoundationAdditions.h"
 
 NSString *const ECVAudioHardwareDevicesDidChangeNotification = @"ECVAudioHardwareDevicesDidChange";
 
@@ -229,7 +228,7 @@ ECVNoDeviceError:
 }
 - (void)setName:(NSString *)name
 {
-	if(ECVEqualObjects(_name, name)) return;
+	if(BTEqualObjects(_name, name)) return;
 	[_name release];
 	_name = [name copy];
 }

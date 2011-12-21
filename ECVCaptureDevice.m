@@ -527,7 +527,7 @@ ECVNoDeviceError:
 {
 	if(!_audioInput) {
 		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
-		if(!ECVEqualObjects(ECVAudioInputNone, UID)) {
+		if(!BTEqualObjects(ECVAudioInputNone, UID)) {
 			if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
 			if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
 		}
@@ -536,7 +536,7 @@ ECVNoDeviceError:
 }
 - (void)setAudioInput:(ECVAudioInput *)input
 {
-	if(!ECVEqualObjects(input, _audioInput)) {
+	if(!BTEqualObjects(input, _audioInput)) {
 		ECVPauseWhile(self, {
 			[_audioInput release];
 			_audioInput = [input retain];
@@ -544,7 +544,7 @@ ECVNoDeviceError:
 			_audioPreviewingPipe = nil;
 		});
 	}
-	if(ECVEqualObjects([self audioInputOfCaptureHardware], input)) {
+	if(BTEqualObjects([self audioInputOfCaptureHardware], input)) {
 		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
 	} else if(input) {
 		[[self defaults] setObject:[input UID] forKey:ECVAudioInputUIDKey];
@@ -559,7 +559,7 @@ ECVNoDeviceError:
 }
 - (void)setAudioOutput:(ECVAudioOutput *)output
 {
-	if(ECVEqualObjects(output, _audioOutput)) return;
+	if(BTEqualObjects(output, _audioOutput)) return;
 	ECVPauseWhile(self, {
 		[_audioOutput release];
 		_audioOutput = [output retain];

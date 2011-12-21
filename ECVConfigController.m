@@ -179,7 +179,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[[audioSourcePopUp menu] addItem:separator];
 	BOOL hasAdditionalItems = NO;
 	for(ECVAudioInput *const input in [ECVAudioInput allDevices]) {
-		if(ECVEqualObjects(input, preferredInput)) continue;
+		if(BTEqualObjects(input, preferredInput)) continue;
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[input name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:input];
 		[[audioSourcePopUp menu] addItem:item];
