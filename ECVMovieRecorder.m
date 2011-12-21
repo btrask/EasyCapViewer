@@ -28,8 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVFrameRateConverter.h"
 
 // Other Sources
+#if defined(ECV_ENABLE_AUDIO)
 #import "ECVAudioDevice.h"
 #import "ECVAudioPipe.h"
+#endif
 #import "ECVDebug.h"
 
 @implementation ECVMovieRecordingOptions

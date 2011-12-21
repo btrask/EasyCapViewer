@@ -36,8 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #endif
 
 // Other Sources
+#if defined(ECV_ENABLE_AUDIO)
 #import "ECVAudioDevice.h"
 #import "ECVAudioPipe.h"
+#endif
 #import "ECVDebug.h"
 #import "ECVFoundationAdditions.h"
 #import "ECVReadWriteLock.h"

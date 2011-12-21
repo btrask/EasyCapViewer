@@ -26,7 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDeinterlacingMode.h"
 
 // Other Sources
+#if defined(ECV_ENABLE_AUDIO)
 #import "ECVAudioDevice.h"
+#endif
 #import "ECVFoundationAdditions.h"
 
 @interface ECVConfigController(Private)
