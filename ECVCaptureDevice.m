@@ -61,6 +61,8 @@ static NSString *const ECVVolumeKey = @"ECVVolume";
 static NSString *const ECVAudioInputUIDKey = @"ECVAudioInputUID";
 static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 
+static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
+
 typedef struct {
 	IOUSBLowLatencyIsocFrame *list;
 	UInt8 *data;
@@ -525,10 +527,11 @@ ECVNoDeviceError:
 {
 	if(!_audioInput) {
 		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
-		if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
+		if(!ECVEqualObjects(ECVAudioInputNone, UID)) {
+			if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
+			if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
+		}
 	}
-	if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
-	if(!_audioInput) _audioInput = [[ECVAudioInput defaultDevice] retain];
 	return [[_audioInput retain] autorelease];
 }
 - (void)setAudioInput:(ECVAudioInput *)input
@@ -543,8 +546,10 @@ ECVNoDeviceError:
 	}
 	if(ECVEqualObjects([self audioInputOfCaptureHardware], input)) {
 		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
-	} else {
+	} else if(input) {
 		[[self defaults] setObject:[input UID] forKey:ECVAudioInputUIDKey];
+	} else {
+		[[self defaults] setObject:ECVAudioInputNone forKey:ECVAudioInputUIDKey];
 	}
 }
 - (ECVAudioOutput *)audioOutput
@@ -571,31 +576,32 @@ ECVNoDeviceError:
 
 	ECVAudioInput *const input = [self audioInput];
 	ECVAudioOutput *const output = [self audioOutput];
+	if(input && output) {
+		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
+		if(!inputStream) {
+			ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
+			return NO;
+		}
+		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
+		if(!outputStream) {
+			ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
+			return NO;
+		}
 
-	ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
-	if(!inputStream) {
-		ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
-		return NO;
-	}
-	ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-	if(!outputStream) {
-		ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
-		return NO;
-	}
+		_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
+		[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
+		[input setDelegate:self];
+		[output setDelegate:self];
 
-	_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
-	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[input setDelegate:self];
-	[output setDelegate:self];
-
-	if(![input start]) {
-		ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
-		return NO;
-	}
-	if(![output start]) {
-		[output stop];
-		ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
-		return NO;
+		if(![input start]) {
+			ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
+			return NO;
+		}
+		if(![output start]) {
+			[output stop];
+			ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
+			return NO;
+		}
 	}
 	return YES;
 }

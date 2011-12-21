@@ -159,6 +159,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [_captureDevice upconvertsFromMono]];
 
 	[self audioHardwareDevicesDidChange:nil];
+	[audioSourcePopUp setEnabled:!!_captureDevice];
 }
 
 #pragma mark -
@@ -166,21 +167,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif
 {
 	[audioSourcePopUp removeAllItems];
+	NSMenuItem *const nilItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"No Input", nil) action:NULL keyEquivalent:@""] autorelease];
+	[[audioSourcePopUp menu] addItem:nilItem];
 	ECVAudioInput *const preferredInput = [_captureDevice audioInputOfCaptureHardware];
 	if(preferredInput) {
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[preferredInput name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:preferredInput];
 		[[audioSourcePopUp menu] addItem:item];
 	}
+	NSMenuItem *const separator = [NSMenuItem separatorItem];
+	[[audioSourcePopUp menu] addItem:separator];
+	BOOL hasAdditionalItems = NO;
 	for(ECVAudioInput *const input in [ECVAudioInput allDevices]) {
 		if(ECVEqualObjects(input, preferredInput)) continue;
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[input name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:input];
 		[[audioSourcePopUp menu] addItem:item];
+		hasAdditionalItems = YES;
 	}
-	if([[audioSourcePopUp menu] numberOfItems] > 1) [[audioSourcePopUp menu] insertItem:[NSMenuItem separatorItem] atIndex:1];
-	[audioSourcePopUp selectItemAtIndex:[audioSourcePopUp indexOfItemWithRepresentedObject:[_captureDevice audioInput]]];
-	[audioSourcePopUp setEnabled:_captureDevice && [[audioSourcePopUp menu] numberOfItems]];
+	if(!hasAdditionalItems) [[audioSourcePopUp menu] removeItem:separator];
+	ECVAudioInput *const input = [_captureDevice audioInput];
+	[audioSourcePopUp selectItemAtIndex:input ? [audioSourcePopUp indexOfItemWithRepresentedObject:input] : 0];
 }
 - (void)volumeDidChange:(NSNotification *)aNotif
 {
