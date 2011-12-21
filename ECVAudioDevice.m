@@ -183,8 +183,18 @@ ECVNoDeviceError:
 
 #pragma mark -
 
-@synthesize delegate;
-@synthesize deviceID = _deviceID;
+- (NSObject<ECVAudioDeviceDelegate> *)delegate
+{
+	return delegate;
+}
+- (void)setDelegate:(NSObject<ECVAudioDeviceDelegate> *)obj
+{
+	delegate = obj;
+}
+- (AudioDeviceID)deviceID
+{
+	return _deviceID;
+}
 - (BOOL)isInput
 {
 	return [[self class] isInput];
@@ -332,10 +342,10 @@ ECVNoDeviceError:
 	}
 	return self;
 }
-
-#pragma mark -
-
-@synthesize streamID = _streamID;
+- (AudioStreamID)streamID
+{
+	return _streamID;
+}
 
 #pragma mark -
 

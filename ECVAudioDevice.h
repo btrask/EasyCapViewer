@@ -42,13 +42,15 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
 - (id)initWithDeviceID:(AudioDeviceID)deviceID;
 
-@property(assign) NSObject<ECVAudioDeviceDelegate> *delegate;
-@property(readonly) AudioDeviceID deviceID;
-@property(readonly) BOOL isInput;
-@property(readonly) NSString *UID;
+- (NSObject<ECVAudioDeviceDelegate> *)delegate;
+- (void)setDelegate:(NSObject<ECVAudioDeviceDelegate> *)obj;
+- (AudioDeviceID)deviceID;
+- (BOOL)isInput;
+- (NSString *)UID;
 
-@property(nonatomic, copy) NSString *name;
-@property(readonly) NSArray *streams;
+- (NSString *)name;
+- (void)setName:(NSString *)str;
+- (NSArray *)streams;
 
 - (BOOL)start;
 - (void)stop;
@@ -81,8 +83,7 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 }
 
 - (id)initWithStreamID:(AudioStreamID)streamID;
-
-@property(readonly) AudioStreamID streamID;
+- (AudioStreamID)streamID;
 
 - (AudioStreamBasicDescription)basicDescription;
 
