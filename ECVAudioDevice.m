@@ -28,10 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 NSString *const ECVAudioHardwareDevicesDidChangeNotification = @"ECVAudioHardwareDevicesDidChange";
 
-static OSStatus ECVAudioHardwarePropertyListenerProc(AudioHardwarePropertyID propertyID, id obj)
+static OSStatus ECVAudioObjectPropertyListenerProc(AudioObjectID inObjectID, UInt32 inNumberAddresses, AudioObjectPropertyAddress const inAddresses[], id obj)
 {
-	switch(propertyID) {
-		case kAudioHardwarePropertyDevices: [[NSNotificationCenter defaultCenter] postNotificationName:ECVAudioHardwareDevicesDidChangeNotification object:obj]; break;
+	for(UInt32 i = 0; i < inNumberAddresses; ++i) {
+		if(kAudioHardwarePropertyDevices != inAddresses[i].mSelector) continue;
+		[[NSNotificationCenter defaultCenter] postNotificationName:ECVAudioHardwareDevicesDidChangeNotification object:obj];
+		break;
 	}
 	return noErr;
 }
@@ -51,7 +53,12 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStam
 + (void)initialize
 {
 	if([ECVAudioDevice class] != self) return;
-	ECVOSStatus(AudioHardwareAddPropertyListener(kAudioHardwarePropertyDevices, (AudioHardwarePropertyListenerProc)ECVAudioHardwarePropertyListenerProc, self));
+	AudioObjectPropertyAddress const addr = {
+		.mSelector = kAudioHardwarePropertyDevices,
+		.mScope = kAudioObjectPropertyScopeGlobal,
+		.mElement = kAudioObjectPropertyElementMaster,
+	};
+	ECVOSStatus(AudioObjectAddPropertyListener(kAudioObjectSystemObject, &addr, (AudioObjectPropertyListenerProc)ECVAudioObjectPropertyListenerProc, self));
 }
 + (id)allocWithZone:(NSZone *)zone
 {
