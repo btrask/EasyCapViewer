@@ -232,16 +232,18 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	[movie attachToCurrentThread];
 
 	Track const videoTrack = NewMovieTrack([movie quickTimeMovie], Long2Fix(_outputSize.width), Long2Fix(_outputSize.height), kNoVolume);
-	Track const audioTrack = NewMovieTrack([movie quickTimeMovie], 0, 0, (short)round(_volume * kFullVolume));
 	_videoMedia = NewTrackMedia(videoTrack, VideoMediaType, [_frameRateConverter targetFrameRate].timeScale, NULL, 0);
-	_audioMedia = NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0);
 	ECVOSErr(BeginMediaEdits(_videoMedia));
-	ECVOSErr(BeginMediaEdits(_audioMedia));
 
 	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(_compressionSession), &_pixelBuffer));
 
-	ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_audioDescriptionHandle));
-	_audioBufferBytes = malloc(ECVAudioBufferBytesSize);
+	Track const audioTrack = _audioPipe ? NewMovieTrack([movie quickTimeMovie], 0, 0, (short)round(_volume * kFullVolume)) : NULL;
+	if(_audioPipe) {
+		_audioMedia = NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0);
+		ECVOSErr(BeginMediaEdits(_audioMedia));
+		ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &_audioDescriptionHandle));
+		_audioBufferBytes = malloc(ECVAudioBufferBytesSize);
+	}
 
 	BOOL stop = NO;
 	while(!stop) {
@@ -262,11 +264,11 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 		[innerPool release];
 	}
 
-	ECVOSStatus(ICMCompressionSessionCompleteFrames(_compressionSession, true, 0, 0));
-	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_videoMedia), 0, GetMediaDisplayStartTime(_videoMedia), GetMediaDisplayDuration(_videoMedia), fixed1));
-	ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_audioMedia), 0, GetMediaDisplayStartTime(_audioMedia), GetMediaDisplayDuration(_audioMedia), fixed1));
-	ECVOSErr(EndMediaEdits(_videoMedia));
-	ECVOSErr(EndMediaEdits(_audioMedia));
+	if(_compressionSession) ECVOSStatus(ICMCompressionSessionCompleteFrames(_compressionSession, true, 0, 0));
+	if(_videoMedia) ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_videoMedia), 0, GetMediaDisplayStartTime(_videoMedia), GetMediaDisplayDuration(_videoMedia), fixed1));
+	if(_audioMedia) ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(_audioMedia), 0, GetMediaDisplayStartTime(_audioMedia), GetMediaDisplayDuration(_audioMedia), fixed1));
+	if(_videoMedia) ECVOSErr(EndMediaEdits(_videoMedia));
+	if(_audioMedia) ECVOSErr(EndMediaEdits(_audioMedia));
 	if(_writeURL) [movie writeToFile:[_writeURL path] withAttributes:nil];
 	else [movie updateMovieFile];
 
@@ -280,11 +282,12 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	if(_audioBufferBytes) free(_audioBufferBytes);
 	_audioBufferBytes = NULL;
 
-	DisposeTrackMedia(_videoMedia);
-	DisposeTrackMedia(_audioMedia);
-	DisposeMovieTrack(videoTrack);
-	DisposeMovieTrack(audioTrack);
+	if(_videoMedia) DisposeTrackMedia(_videoMedia);
+	if(videoTrack) DisposeMovieTrack(videoTrack);
 	_videoMedia = NULL;
+
+	if(_audioMedia) DisposeTrackMedia(_audioMedia);
+	if(audioTrack) DisposeMovieTrack(audioTrack);
 	_audioMedia = NULL;
 
 	[movie detachFromCurrentThread];
