@@ -289,7 +289,7 @@ ECVNoDeviceError:
 }
 - (BOOL)isEqual:(id)obj
 {
-	return [obj isMemberOfClass:[self class]] && [obj deviceID] == [self deviceID];
+	return [obj isMemberOfClass:[self class]] && [(ECVAudioDevice *)obj deviceID] == [self deviceID];
 }
 
 #pragma mark -
