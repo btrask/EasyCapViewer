@@ -281,7 +281,9 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)dealloc
 {
 	[_SAA711XChip setDevice:nil];
+	[_VT1612AChip setDevice:nil];
 	[_SAA711XChip release];
+	[_VT1612AChip release];
 	[super dealloc];
 }
 
