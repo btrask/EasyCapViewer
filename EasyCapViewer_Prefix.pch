@@ -71,13 +71,6 @@ NS_INLINE NSRect ECVScaledRect(NSRect r, NSSize s)
 {
 	return NSMakeRect(NSMinX(r) * s.width, NSMinY(r) * s.height, NSWidth(r) * s.width, NSHeight(r) * s.height);
 }
-static size_t ECVPixelFormatBytesPerPixel(OSType format)
-{
-	switch(format) {
-		case k2vuyPixelFormat: return 2;
-		default: return 0;
-	}
-}
 
 #if !defined(MAC_OS_X_VERSION_10_7)
 #define MAC_OS_X_VERSION_10_7 1070

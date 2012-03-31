@@ -263,6 +263,7 @@
 		B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameRateConverter.m; sourceTree = "<group>"; };
 		B5F09996131CE0550066FEB5 /* ECVRational.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVRational.h; sourceTree = "<group>"; };
 		B5F09997131CE0550066FEB5 /* ECVRational.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVRational.m; sourceTree = "<group>"; };
+		B5F3C19B15277374005232AA /* ECVPixelFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelFormat.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -459,6 +460,7 @@
 				0E9F9B1C10F6753C00935C48 /* ECVLocalizing.m */,
 				0E7FFD1F1089D651000C8217 /* ECVOpenGLAdditions.h */,
 				0E7FFD201089D651000C8217 /* ECVOpenGLAdditions.m */,
+				B5F3C19B15277374005232AA /* ECVPixelFormat.h */,
 				B5F09996131CE0550066FEB5 /* ECVRational.h */,
 				B5F09997131CE0550066FEB5 /* ECVRational.m */,
 				0E89833D10C2D740006BA9C6 /* ECVReadWriteLock.h */,

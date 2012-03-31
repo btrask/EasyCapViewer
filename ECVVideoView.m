@@ -32,25 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAppKitAdditions.h"
 #import "ECVDebug.h"
 #import "ECVOpenGLAdditions.h"
-
-NS_INLINE GLenum ECVPixelFormatTypeToGLFormat(OSType t)
-{
-	switch(t) {
-		case kCVPixelFormatType_422YpCbCr8: return GL_YCBCR_422_APPLE;
-	}
-	return 0;
-}
-NS_INLINE GLenum ECVPixelFormatTypeToGLType(OSType t)
-{
-	switch(t) {
-#if __LITTLE_ENDIAN__
-		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_APPLE;
-#else
-		case kCVPixelFormatType_422YpCbCr8: return GL_UNSIGNED_SHORT_8_8_REV_APPLE;
-#endif
-	}
-	return 0;
-}
+#import "ECVPixelFormat.h"
 
 @interface ECVVideoView(Private)
 

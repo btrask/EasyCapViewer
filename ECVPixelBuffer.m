@@ -21,18 +21,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVPixelBuffer.h"
 
+// Other Sources
+#import "ECVPixelFormat.h"
+
 NS_INLINE NSRange ECVRebaseRange(NSRange range, NSRange base)
 {
 	NSRange r = NSIntersectionRange(range, base);
 	r.location -= base.location;
 	return r;
-}
-NS_INLINE uint64_t ECVPixelFormatBlackPattern(OSType t)
-{
-	switch(t) {
-		case k2vuyPixelFormat: return CFSwapInt64HostToBig(0x8010801080108010ULL);
-	}
-	return 0;
 }
 
 typedef struct {

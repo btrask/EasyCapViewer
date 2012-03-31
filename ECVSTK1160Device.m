@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
+#import "ECVPixelFormat.h"
 
 // External
 #import "BTUserDefaults.h"
@@ -217,7 +218,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (OSType)pixelFormatType
 {
-	return kCVPixelFormatType_422YpCbCr8; // AKA k2vuyPixelFormat or k422YpCbCr8CodecType.
+	return k2vuyPixelFormat;
 }
 
 #pragma mark -

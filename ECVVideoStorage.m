@@ -24,6 +24,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVDeinterlacingMode.h"
 
+// Other Sources
+#import "ECVPixelFormat.h"
+
 @implementation ECVVideoStorage
 
 #pragma mark +ECVVideoStorage
