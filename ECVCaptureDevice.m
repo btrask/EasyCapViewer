@@ -490,6 +490,7 @@ ECVNoDeviceError:
 {
 	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
 	IOReturn const error = (*_interfaceInterface)->ControlRequest(_interfaceInterface, 0, &r);
+	if(r.wLenDone != r.wLength) return NO;
 	switch(error) {
 		case kIOReturnSuccess: return YES;
 		case kIOUSBPipeStalled: ECVIOReturn((*_interfaceInterface)->ClearPipeStall(_interfaceInterface, 0)); return YES;
