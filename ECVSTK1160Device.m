@@ -20,6 +20,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVSTK1160Device.h"
+#import "stk11xx.h"
 
 // Video
 #import "ECVDeinterlacingMode.h"
@@ -70,6 +71,24 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(format == _videoFormat) return;
 	ECVPauseWhile(self, { _videoFormat = format; });
 	[[self defaults] setInteger:format forKey:ECVSTK1160VideoFormatKey];
+}
+
+#pragma mark -
+
+- (BOOL)readIndex:(UInt16 const)i value:(out UInt8 *const)outValue
+{
+	UInt8 v = 0;
+	BOOL const r = [self readRequest:kUSBRqGetStatus value:0 index:i length:sizeof(v) data:&v];
+	if(outValue) *outValue = v;
+	return r;
+}
+- (BOOL)writeIndex:(UInt16 const)i value:(UInt8 const)v
+{
+	return [self writeRequest:kUSBRqClearFeature value:v index:i length:0 data:NULL];
+}
+- (BOOL)setFeatureAtIndex:(u_int16_t)i
+{
+	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:i length:0 data:NULL];
 }
 
 #pragma mark -ECVSTK1160Device(Private)

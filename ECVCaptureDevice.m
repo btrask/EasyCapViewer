@@ -173,6 +173,7 @@ static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 	ECVIOReturn(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
 	[properties autorelease];
 	_productName = [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] copy];
+	if(![_productName length]) _productName = [NSLocalizedString(@"Capture Device", nil) retain];
 
 	NSString *const mainSuiteName = [[NSBundle bundleForClass:[self class]] ECV_mainSuiteName];
 	NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04x.%04x", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
@@ -486,7 +487,7 @@ ECVGenericError:
 ECVNoDeviceError:
 	return NO;
 }
-- (BOOL)controlRequestWithType:(u_int8_t)type request:(u_int8_t)request value:(u_int16_t)v index:(u_int16_t)i length:(u_int16_t)length data:(void *)data
+- (BOOL)controlRequestWithType:(u_int8_t)type request:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(inout void *const)data
 {
 	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
 	IOReturn const error = (*_interfaceInterface)->ControlRequest(_interfaceInterface, 0, &r);
@@ -501,20 +502,13 @@ ECVGenericError:
 ECVNoDeviceError:
 	return NO;
 }
-- (BOOL)writeIndex:(u_int16_t)i value:(u_int16_t)v
+- (BOOL)readRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(out void *const)data
 {
-	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:kUSBRqClearFeature value:v index:i length:0 data:NULL];
+	return [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:request value:v index:i length:length data:data];
 }
-- (BOOL)readIndex:(u_int16_t)i value:(out u_int8_t *)outValue
+- (BOOL)writeRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(in void *const)data
 {
-	u_int8_t v = 0;
-	BOOL const r = [self controlRequestWithType:USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice) request:kUSBRqGetStatus value:0 index:i length:sizeof(v) data:&v];
-	if(outValue) *outValue = v;
-	return r;
-}
-- (BOOL)setFeatureAtIndex:(u_int16_t)i
-{
-	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBDevice) request:kUSBRqSetFeature value:0 index:i length:0 data:NULL];
+	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:request value:v index:i length:length data:data];
 }
 
 #pragma mark -

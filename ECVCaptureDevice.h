@@ -121,10 +121,9 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
 
 - (BOOL)setAlternateInterface:(u_int8_t)alternateSetting;
-- (BOOL)controlRequestWithType:(u_int8_t)type request:(u_int8_t)request value:(u_int16_t)v index:(u_int16_t)i length:(u_int16_t)length data:(void *)data;
-- (BOOL)writeIndex:(u_int16_t)i value:(u_int16_t)v;
-- (BOOL)readIndex:(u_int16_t)i value:(out u_int8_t *)outValue;
-- (BOOL)setFeatureAtIndex:(u_int16_t)i;
+- (BOOL)controlRequestWithType:(u_int8_t)type request:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(inout void *const)data;
+- (BOOL)readRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(out void *const)data;
+- (BOOL)writeRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(in void *const)data;
 
 #if defined(ECV_ENABLE_AUDIO)
 @property(readonly) ECVAudioInput *audioInputOfCaptureHardware;

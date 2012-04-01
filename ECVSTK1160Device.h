@@ -22,10 +22,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
 #import "ECVCaptureDevice.h"
 
-// STK1160
-@class ECVSTK1160Device;
-#import "stk11xx.h"
-
 // Chipsets
 #import "SAA711XChip.h"
 #import "VT1612AChip.h"
@@ -70,5 +66,9 @@ typedef NSUInteger ECVSTK1160VideoFormat;
 
 @property(nonatomic, assign) ECVSTK1160VideoSource videoSource;
 @property(nonatomic, assign) ECVSTK1160VideoFormat videoFormat;
+
+- (BOOL)readIndex:(UInt16 const)i value:(out UInt8 *const)outValue;
+- (BOOL)writeIndex:(UInt16 const)i value:(UInt8 const)v;
+- (BOOL)setFeatureAtIndex:(u_int16_t)i;
 
 @end
