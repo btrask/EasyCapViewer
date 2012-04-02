@@ -233,7 +233,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (QTTime)frameRate
 {
-	return [self is60HzFormat] ? QTMakeTime(1001 : 60000) : QTMakeTime(1, 50); // FIXME: Figure out why the A/V sync goes bad over time.
+	return [self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50); // FIXME: Figure out why the A/V sync goes bad over time.
 }
 - (OSType)pixelFormatType
 {
