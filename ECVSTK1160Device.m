@@ -233,7 +233,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (QTTime)frameRate
 {
-	return [self is60HzFormat] ? QTMakeTime(1, 60) : QTMakeTime(1, 50); // FIXME: Normally, NTSC should be 1001 : 60000, but the video is slightly too fast after a long period of recording. Perhaps this will work better.
+	return [self is60HzFormat] ? QTMakeTime(1001 : 60000) : QTMakeTime(1, 50); // FIXME: Figure out why the A/V sync goes bad over time.
 }
 - (OSType)pixelFormatType
 {
