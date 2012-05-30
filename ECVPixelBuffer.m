@@ -181,17 +181,18 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 	};
 	UInt8 *const dstBytes = [dst mutableBytes];
 	UInt8 const *const srcBytes = [src bytes];
-	BOOL const useFields = ECVDrawToHighField & options || ECVDrawToLowField & options;
+	BOOL const useFields = !!(ECVDrawToFieldMask & options);
 	NSUInteger const dstRowSpacing = useFields ? 2 : 1;
 
 	NSRange const srcRows = ECVIntersectionRange2((ECVRange){srcPoint.y, size.height}, ECVValidRows(&srcInfo));
 	NSUInteger i;
 	for(i = srcRows.location; i < NSMaxRange(srcRows); ++i) {
 		NSUInteger const dstRowOffset = (ECVDrawMirroredVert & options ? size.height - i : i) * dstRowSpacing;
-		if(ECVDrawToHighField & options || !useFields) {
+		BOOL const outputField = ECVDrawMirroredVert & options ? (ECVDrawToFieldMask & ~options) : ECVDrawToFieldMask & options;
+		if(ECVDrawToHighField & outputField || !useFields) {
 			ECVDrawRow(dstBytes, &dstInfo, srcBytes, &srcInfo, (ECVIntegerPoint){dstPoint.x, dstPoint.y + 0 + dstRowOffset}, (ECVIntegerPoint){srcPoint.x, srcPoint.y + i}, size.width, options);
 		}
-		if(ECVDrawToLowField & options) {
+		if(ECVDrawToLowField & outputField) {
 			ECVDrawRow(dstBytes, &dstInfo, srcBytes, &srcInfo, (ECVIntegerPoint){dstPoint.x, dstPoint.y + 1 + dstRowOffset}, (ECVIntegerPoint){srcPoint.x, srcPoint.y + i}, size.width, options);
 		}
 	}

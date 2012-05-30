@@ -24,8 +24,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 enum {
 	ECVDrawToHighField = 1 << 0,
 	ECVDrawToLowField = 1 << 1,
+	ECVDrawToFieldMask = ECVDrawToHighField | ECVDrawToLowField,
 	ECVDrawFromHighField = 1 << 2, // Unimplemented
 	ECVDrawFromLowField = 1 << 3, // Unimplemented
+	ECVDrawFromFieldMask = ECVDrawFromHighField | ECVDrawFromLowField, // Unimplemented
 
 	ECVDrawChannel1 = 1 << 4,
 	ECVDrawChannel2 = 1 << 5,
