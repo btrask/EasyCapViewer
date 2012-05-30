@@ -79,6 +79,14 @@ NS_INLINE void ECVDrawPixel(UInt8 *dstPixel, OSType dstFormat, UInt8 const *srcP
 	if(!(ECVDrawChannelMask & options)) options |= ECVDrawChannelMask;
 	#define ECV_COPY_BYTE(d, s) (ECVCopyByte(dstPixel, (d), srcPixel, (s), range, options))
 	switch(srcFormat) {
+		case kYVYU422PixelFormat:
+		{
+			if(ECVDrawChannel1 & options) ECV_COPY_BYTE(0, ECVDrawMirroredHorz & options ? 2 : 0);
+			if(ECVDrawChannel2 & options) ECV_COPY_BYTE(1, 1);
+			if(ECVDrawChannel3 & options) ECV_COPY_BYTE(2, ECVDrawMirroredHorz & options ? 0 : 2);
+			if(ECVDrawChannel2 & options) ECV_COPY_BYTE(3, 3);
+			return;
+		}
 		case k2vuyPixelFormat:
 		{
 			if(ECVDrawChannel1 & options) ECV_COPY_BYTE(0, 0);
@@ -101,7 +109,7 @@ NS_INLINE void ECVDrawPixel(UInt8 *dstPixel, OSType dstFormat, UInt8 const *srcP
 			return;
 		}
 	}
-	ECVCAssertNotReached(@"Pixel format '%@' does not support channel drawing options.", (NSString *)UTCreateStringForOSType(srcFormat));
+	ECVCAssertNotReached(@"Combination of source pixel format %@ and destination pixel format %@ are unsupported", (NSString *)UTCreateStringForOSType(srcFormat), (NSString *)UTCreateStringForOSType(dstFormat));
 }
 NS_INLINE void ECVDrawRow(UInt8 *dst, ECVFastPixelBufferInfo *dstInfo, UInt8 const *src, ECVFastPixelBufferInfo *srcInfo, ECVIntegerPoint dstPoint, ECVIntegerPoint srcPoint, size_t length, ECVPixelBufferDrawingOptions options)
 {
