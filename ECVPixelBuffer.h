@@ -26,16 +26,6 @@ enum {
 	ECVDrawToLowField = 1 << 1,
 	ECVDrawFromHighField = 1 << 2, // Unimplemented
 	ECVDrawFromLowField = 1 << 3, // Unimplemented
-
-	ECVDrawChannel1 = 1 << 4,
-	ECVDrawChannel2 = 1 << 5,
-	ECVDrawChannel3 = 1 << 6,
-	ECVDrawChannel4 = 1 << 7,
-	ECVDrawChannelMask = ECVDrawChannel1 | ECVDrawChannel2 | ECVDrawChannel3 | ECVDrawChannel4,
-
-	ECVDrawMirroredHorz = 1 << 8, // Unimplemented
-	ECVDrawMirroredVert = 1 << 9,
-
 	ECVDrawBlended = 1 << 16,
 };
 typedef NSUInteger ECVPixelBufferDrawingOptions;
@@ -43,7 +33,6 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 @interface ECVPixelBuffer : NSObject
 
 - (NSRange)fullRange;
-- (BOOL)lockIfHasBytes;
 
 @end
 
@@ -54,7 +43,6 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 - (OSType)pixelFormat;
 
 - (void const *)bytes;
-- (BOOL)hasBytes;
 - (NSRange)validRange;
 
 @end
@@ -71,7 +59,6 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 }
 
 - (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat bytes:(void const *)bytes validRange:(NSRange)validRange;
-- (void)invalidate;
 
 @end
 
@@ -114,18 +101,5 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 
 - (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat data:(NSMutableData *)data offset:(NSUInteger)offset;
 - (NSMutableData *)mutableData;
-
-@end
-
-@interface ECVConcreteMutablePixelBuffer : ECVMutablePixelBuffer
-{
-	@private
-	ECVIntegerSize _pixelSize;
-	size_t _bytesPerRow;
-	OSType _pixelFormat;
-	void *_bytes;
-}
-
-- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat;
 
 @end
