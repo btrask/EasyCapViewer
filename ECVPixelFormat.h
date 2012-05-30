@@ -35,15 +35,6 @@ static size_t ECVPixelFormatBytesPerPixel(OSType const t)
 	ECVCAssertNotReached(@"Unknown pixel format");
 	return 0;
 }
-NS_INLINE NSUInteger ECVPixelFormatPixelsPerBlock(OSType const t)
-{
-	switch(t) {
-		case k2vuyPixelFormat: return 2;
-		case kYVYU422PixelFormat: return 2;
-	}
-	ECVCAssertNotReached(@"Unknown pixel format");
-	return 0;
-}
 static uint64_t ECVPixelFormatBlackPattern(OSType const t)
 {
 	switch(t) {
