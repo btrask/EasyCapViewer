@@ -89,9 +89,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate
+- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormat frameRate:(QTTime)frameRate
 {
-	if((self = [super initWithDeinterlacingMode:mode captureSize:captureSize pixelFormat:pixelFormatType frameRate:frameRate])) {
+	if((self = [super initWithDeinterlacingMode:mode captureSize:captureSize pixelFormat:pixelFormat frameRate:frameRate])) {
 		_frames = [[NSMutableArray alloc] initWithCapacity:ECVDependentBufferCount];
 		_numberOfBuffers = ECVDependentBufferCount;
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * [self bufferSize]];
@@ -178,9 +178,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [_videoStorage bytesPerRow];
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
-	return [_videoStorage pixelFormatType];
+	return [_videoStorage pixelFormat];
 }
 
 #pragma mark -

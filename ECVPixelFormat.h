@@ -35,6 +35,15 @@ static size_t ECVPixelFormatBytesPerPixel(OSType const t)
 	ECVCAssertNotReached(@"Unknown pixel format");
 	return 0;
 }
+NS_INLINE NSUInteger ECVPixelFormatPixelsPerBlock(OSType const t)
+{
+	switch(t) {
+		case k2vuyPixelFormat: return 2;
+		case kYVYU422PixelFormat: return 2;
+	}
+	ECVCAssertNotReached(@"Unknown pixel format");
+	return 0;
+}
 static uint64_t ECVPixelFormatBlackPattern(OSType const t)
 {
 	switch(t) {
@@ -44,7 +53,7 @@ static uint64_t ECVPixelFormatBlackPattern(OSType const t)
 	ECVCAssertNotReached(@"Unknown pixel format");
 	return 0;
 }
-static GLenum ECVPixelFormatTypeToGLFormat(OSType const t)
+static GLenum ECVPixelFormatToGLFormat(OSType const t)
 {
 	switch(t) {
 		case k2vuyPixelFormat: return GL_YCBCR_422_APPLE;
@@ -53,7 +62,7 @@ static GLenum ECVPixelFormatTypeToGLFormat(OSType const t)
 	ECVCAssertNotReached(@"Unknown pixel format");
 	return 0;
 }
-static GLenum ECVPixelFormatTypeToGLType(OSType const t)
+static GLenum ECVPixelFormatToGLType(OSType const t)
 {
 	switch(t) {
 #if __LITTLE_ENDIAN__

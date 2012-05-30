@@ -51,9 +51,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [_videoStorage bytesPerRow];
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
-	return [_videoStorage pixelFormatType];
+	return [_videoStorage pixelFormat];
 }
 
 #pragma mark -

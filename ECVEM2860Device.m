@@ -111,7 +111,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 {
 	return [self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50); // FIXME: Figure out why the A/V sync goes bad over time.
 }
-- (OSType)pixelFormatType
+- (OSType)pixelFormat
 {
 	return kYVYU422PixelFormat;
 }
@@ -524,9 +524,9 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	NSUInteger const realLength = length - skip;
 	ECVIntegerSize const inputSize = [self captureSize];
 	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
-	OSType const pixelFormatType = [self pixelFormatType];
-	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormatType) * pixelSize.width;
-	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormatType bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
+	OSType const pixelFormat = [self pixelFormat];
+	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
+	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
 	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){0, 0}];
 	[buffer release];
 	_offset += realLength;

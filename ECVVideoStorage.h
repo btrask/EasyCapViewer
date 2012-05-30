@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	@private
 	ECVDeinterlacingMode *_deinterlacingMode;
 	ECVIntegerSize _captureSize;
-	OSType _pixelFormatType;
+	OSType _pixelFormat;
 	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
@@ -39,10 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (Class)preferredVideoStorageClass;
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormatType frameRate:(QTTime)frameRate;
+- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormat frameRate:(QTTime)frameRate;
 @property(readonly) ECVIntegerSize captureSize;
 @property(readonly) ECVIntegerSize pixelSize;
-@property(readonly) OSType pixelFormatType;
+@property(readonly) OSType pixelFormat;
 @property(readonly) QTTime frameRate;
 @property(readonly) size_t bytesPerPixel;
 @property(readonly) size_t bytesPerRow;

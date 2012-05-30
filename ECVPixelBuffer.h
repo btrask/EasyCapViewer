@@ -40,7 +40,7 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 
 - (ECVIntegerSize)pixelSize;
 - (size_t)bytesPerRow;
-- (OSType)pixelFormatType;
+- (OSType)pixelFormat;
 
 - (void const *)bytes;
 - (NSRange)validRange;
@@ -52,13 +52,13 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 	@private
 	ECVIntegerSize _pixelSize;
 	size_t _bytesPerRow;
-	OSType _pixelFormatType;
+	OSType _pixelFormat;
 
 	void const *_bytes;
 	NSRange _validRange;
 }
 
-- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormatType bytes:(void const *)bytes validRange:(NSRange)validRange;
+- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat bytes:(void const *)bytes validRange:(NSRange)validRange;
 
 @end
 
@@ -93,13 +93,13 @@ typedef NSUInteger ECVPixelBufferDrawingOptions;
 	@private
 	ECVIntegerSize _pixelSize;
 	size_t _bytesPerRow;
-	OSType _pixelFormatType;
+	OSType _pixelFormat;
 
 	NSMutableData *_data;
 	NSUInteger _offset;
 }
 
-- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormatType data:(NSMutableData *)data offset:(NSUInteger)offset;
+- (id)initWithPixelSize:(ECVIntegerSize)pixelSize bytesPerRow:(size_t)bytesPerRow pixelFormat:(OSType)pixelFormat data:(NSMutableData *)data offset:(NSUInteger)offset;
 - (NSMutableData *)mutableData;
 
 @end

@@ -167,7 +167,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_CPUTimeBudget, (UInt32)QTMakeTimeScaled([_frameRateConverter targetFrameRate], ECVMicrosecondsPerSecond).timeValue);
 	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
 	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_Quality, (CodecQ)round([options videoQuality] * codecMaxQuality));
-	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_Depth, [_videoStorage pixelFormatType]);
+	ECVCSOSetProperty(ICMOpts, kICMCompressionSessionOptionsPropertyID_Depth, [_videoStorage pixelFormat]);
 	ICMEncodedFrameOutputRecord callback = {};
 	callback.frameDataAllocator = kCFAllocatorDefault;
 	callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVEncodedFrameOutputCallback;
@@ -175,7 +175,7 @@ static OSStatus ECVEncodedFrameOutputCallback(ECVMovieRecorder *movieRecorder, I
 	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, _outputSize.width, _outputSize.height, [options videoCodec], [_frameRateConverter targetFrameRate].timeScale, ICMOpts, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].width], kCVPixelBufferWidthKey,
 		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].height], kCVPixelBufferHeightKey,
-		[NSNumber numberWithUnsignedInt:[_videoStorage pixelFormatType]], kCVPixelBufferPixelFormatTypeKey,
+		[NSNumber numberWithUnsignedInt:[_videoStorage pixelFormat]], kCVPixelBufferPixelFormatTypeKey,
 		[NSDictionary dictionaryWithObjectsAndKeys:
 			[options cleanAperatureDictionary], kCVImageBufferCleanApertureKey,
 			nil], kCVBufferNonPropagatedAttachmentsKey,

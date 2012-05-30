@@ -141,7 +141,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 @property(readonly) ECVIntegerSize captureSize;
 @property(readonly) UInt8 isochReadingPipe;
 @property(readonly) QTTime frameRate;
-@property(readonly) OSType pixelFormatType;
+@property(readonly) OSType pixelFormat;
 
 - (BOOL)threaded_play;
 - (BOOL)threaded_pause;

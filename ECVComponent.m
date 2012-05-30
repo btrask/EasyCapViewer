@@ -250,7 +250,7 @@ ECV_VDIG_FUNCTION(GetDeviceNameAndFlags, Str255 outName, UInt32 *outNameFlags)
 ECV_VDIG_FUNCTION(GetCompressionTime, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime)
 {
 	ECV_DEBUG_LOG();
-	if(compressionType && [self->device pixelFormatType] != compressionType) return noCodecErr;
+	if(compressionType && [self->device pixelFormat] != compressionType) return noCodecErr;
 	*spatialQuality = codecLosslessQuality;
 	*temporalQuality = 0;
 	*compressTime = 0;
@@ -264,7 +264,7 @@ ECV_VDIG_FUNCTION(GetCompressionTypes, VDCompressionListHandle h)
 	SetHandleSize((Handle)h, sizeof(VDCompressionList));
 	HLock((Handle)h);
 
-	CodecType const codec = [self->device pixelFormatType];
+	CodecType const codec = [self->device pixelFormat];
 	ComponentDescription cd = {compressorComponentType, codec, 0, kNilOptions, kAnyComponentFlagsMask};
 	VDCompressionListPtr const p = *h;
 	p[0] = (VDCompressionList){
@@ -290,7 +290,7 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 ECV_VDIG_FUNCTION(SetCompression, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
 {
 	ECV_DEBUG_LOG();
-	if(compressType && [self->device pixelFormatType] != compressType) return noCodecErr;
+	if(compressType && [self->device pixelFormat] != compressType) return noCodecErr;
 	// TODO: Most of these settings don't apply to us...
 	return noErr;
 }
@@ -352,7 +352,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	SetHandleSize((Handle)desc, sizeof(ImageDescription));
 	*descPtr = (ImageDescription){
 		.idSize = sizeof(ImageDescription),
-		.cType = [self->device pixelFormatType],
+		.cType = [self->device pixelFormat],
 		.version = 2,
 		.spatialQuality = codecLosslessQuality,
 		.width = captureSize.width,
