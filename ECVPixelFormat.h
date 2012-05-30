@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 /* Equivalent formats (preferred constant listed first):
 - k2vuyPixelFormat, kCVPixelFormatType_422YpCbCr8, k422YpCbCr8CodecType
+	- kUYVY422PixelFormat seems to be the same but Core Video doesn't like it.
 - kYVYU422PixelFormat, kIOYVYU422PixelFormat
 */
 

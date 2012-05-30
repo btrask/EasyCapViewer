@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVPixelBuffer.h"
 #import "ECVPixelFormat.h"
 
+static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
+	for(size_t i = 0; i < len / sizeof(uint16_t); ++i) bytes[i] = CFSwapInt16(bytes[i]);
+}
+
 static NSString *const ECVEM2860VideoSourceKey = @"ECVEM2860VideoSource";
 static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
@@ -113,7 +117,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 }
 - (OSType)pixelFormat
 {
-	return kYVYU422PixelFormat;
+	return k2vuyPixelFormat; // Native format is kYVYU422PixelFormat, but we convert because QuickTime can't handle it (surprisingly).
 }
 
 #pragma mark -
@@ -526,6 +530,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
 	OSType const pixelFormat = [self pixelFormat];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
+	ECVPixelFormatHack((void *)bytes + skip, realLength);
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
 	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){0, 0}];
 	[buffer release];
