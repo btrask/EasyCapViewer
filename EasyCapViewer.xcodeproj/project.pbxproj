@@ -112,6 +112,7 @@
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
 		B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
+		B5CFB51315769D54004F3ED6 /* ECVEM2860Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B54758481507B29B006C0E44 /* ECVEM2860Device.m */; };
 		B5E3760E14928D2F00ED097A /* EasyCapViewer.icns in Resources */ = {isa = PBXBuildFile; fileRef = B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */; };
 		B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
 		B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */; };
@@ -690,6 +691,7 @@
 				B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */,
 				B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */,
 				B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */,
+				B5CFB51315769D54004F3ED6 /* ECVEM2860Device.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
