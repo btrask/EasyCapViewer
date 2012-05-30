@@ -64,11 +64,10 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (BOOL)modifyIndex:(UInt16 const)idx enable:(UInt8 const)enable disable:(UInt8 const)disable
 {
 	NSAssert(!(enable & disable), @"Can't enable and disable the same flag(s).");
-	UInt8 value = 0;
-	if(![self readRequest:kUSBRqGetStatus value:0 index:idx length:sizeof(value) data:&value]) return NO;
-	value |= enable;
-	value &= ~disable;
-	if(![self writeRequest:kUSBRqGetStatus value:0 index:idx length:sizeof(value) data:&value]) return NO;
+	UInt8 old = 0;
+	if(![self readRequest:kUSBRqGetStatus value:0 index:idx length:sizeof(old) data:&old]) return NO;
+	UInt8 new = (old | enable) & ~disable;
+	if(![self writeRequest:kUSBRqGetStatus value:0 index:idx length:sizeof(new) data:&new]) return NO;
 	return YES;
 }
 
@@ -232,7 +231,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	SEND(kUSBRqGetStatus, 0x0010, 0x00);
 	//RECEIVE(kUSBRqGetStatus, 0x0011, 0x11);
 	//SEND(kUSBRqGetStatus, 0x0011, 0x11);
-	[self modifyIndex:0x0011 enable:0 disable:0];
+	[self modifyIndex:0x0011 enable:1 << 4 disable:0];
 	if(resolution640) {
 		SEND(kUSBRqGetStatus, 0x0028, 0x01);
 		SEND(kUSBRqGetStatus, 0x0029, 0xaf);
