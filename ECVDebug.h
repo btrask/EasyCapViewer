@@ -19,6 +19,8 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#import <CoreAudio/CoreAudio.h> // TODO: Perhaps break this up into several files so we don't need to import everything.
+
 enum {
 	ECVNotice,
 	ECVWarning,
@@ -33,6 +35,10 @@ extern NSString *ECVIOKitErrorToString(IOReturn error);
 extern NSString *ECVCVReturnToString(CVReturn error);
 extern NSString *ECVOpenGLErrorToString(GLenum error);
 extern NSString *ECVErrnoToString(int error);
+
+extern NSString *ECVAudioFormatIDToString(UInt32 const formatID);
+extern NSString *ECVAudioFormatFlagsToString(UInt32 const formatID, UInt32 const formatFlags);
+extern NSString *ECVAudioStreamBasicDescriptionToString(AudioStreamBasicDescription const d);
 
 #define ECVOSStatus(x) do {\
 	OSStatus const __e = (x);\

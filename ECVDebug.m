@@ -292,3 +292,84 @@ NSString *ECVErrnoToString(int error)
 {
 	return [NSString stringWithFormat:@"%s", strerror(error)];
 }
+
+#pragma mark -
+
+NSString *ECVAudioFormatIDToString(UInt32 const formatID)
+{
+	switch(formatID) {
+		ERROR_CASE(kAudioFormatLinearPCM)
+		ERROR_CASE(kAudioFormatAC3)
+		ERROR_CASE(kAudioFormat60958AC3)
+		ERROR_CASE(kAudioFormatAppleIMA4)
+		ERROR_CASE(kAudioFormatMPEG4AAC)
+		ERROR_CASE(kAudioFormatMPEG4CELP)
+		ERROR_CASE(kAudioFormatMPEG4HVXC)
+		ERROR_CASE(kAudioFormatMPEG4TwinVQ)
+		ERROR_CASE(kAudioFormatMACE3)
+		ERROR_CASE(kAudioFormatMACE6)
+		ERROR_CASE(kAudioFormatULaw)
+		ERROR_CASE(kAudioFormatALaw)
+		ERROR_CASE(kAudioFormatQDesign)
+		ERROR_CASE(kAudioFormatQDesign2)
+		ERROR_CASE(kAudioFormatQUALCOMM)
+		ERROR_CASE(kAudioFormatMPEGLayer1)
+		ERROR_CASE(kAudioFormatMPEGLayer2)
+		ERROR_CASE(kAudioFormatMPEGLayer3)
+		ERROR_CASE(kAudioFormatTimeCode)
+		ERROR_CASE(kAudioFormatMIDIStream)
+		ERROR_CASE(kAudioFormatParameterValueStream)
+		ERROR_CASE(kAudioFormatAppleLossless)
+		ERROR_CASE(kAudioFormatMPEG4AAC_HE)
+		ERROR_CASE(kAudioFormatMPEG4AAC_LD)
+		ERROR_CASE(kAudioFormatMPEG4AAC_HE_V2)
+		ERROR_CASE(kAudioFormatMPEG4AAC_Spatial)
+		ERROR_CASE(kAudioFormatAMR)
+		ERROR_CASE(kAudioFormatAudible)
+		ERROR_CASE(kAudioFormatiLBC)
+		ERROR_CASE(kAudioFormatDVIIntelIMA)
+		ERROR_CASE(kAudioFormatMicrosoftGSM)
+		ERROR_CASE(kAudioFormatAES3)
+	}
+	return [NSString stringWithFormat:@"Unknown audio format ID %lu", (unsigned long)formatID];
+}
+
+#define ADD_FORMAT_FLAG(flags, flag, array) ({ if((flags) & (flag)) [(array) addObject:[NSString stringWithUTF8String:#flag]]; })
+
+NSString *ECVAudioFormatFlagsToString(UInt32 const formatID, UInt32 const formatFlags)
+{
+	NSMutableArray *const results = [NSMutableArray array];
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsFloat, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsBigEndian, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsSignedInteger, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsPacked, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsAlignedHigh, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsNonInterleaved, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagIsNonMixable, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagsAreAllClear, results);
+	ADD_FORMAT_FLAG(formatFlags, kAudioFormatFlagsNativeEndian, results);
+	return [results componentsJoinedByString:@" | "];
+}
+NSString *ECVAudioStreamBasicDescriptionToString(AudioStreamBasicDescription const d)
+{
+	return [NSString stringWithFormat:
+		@"{\n"
+		@"mSampleRate %f\n"
+		@"mFormatID %@\n"
+		@"mFormatFlags %@\n"
+		@"mBytesPerPacket %lu\n"
+		@"mFramesPerPacket %lu\n"
+		@"mBytesPerFrame %lu\n"
+		@"mChannelsPerFrame %lu\n"
+		@"mBitsPerChannel %lu\n"
+		@"}",
+		d.mSampleRate,
+		ECVAudioFormatIDToString(d.mFormatID),
+		ECVAudioFormatFlagsToString(d.mFormatID, d.mFormatFlags),
+		(unsigned long)d.mBytesPerPacket,
+		(unsigned long)d.mFramesPerPacket,
+		(unsigned long)d.mBytesPerFrame,
+		(unsigned long)d.mChannelsPerFrame,
+		(unsigned long)d.mBitsPerChannel
+	];
+}

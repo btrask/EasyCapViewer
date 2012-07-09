@@ -52,6 +52,7 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 
 		_inputStreamDescription = inputDesc;
 		_outputStreamDescription = outputDesc;
+
 		_upconvertsFromMono = flag;
 		_volume = 1.0f;
 		_dropsBuffers = YES;
