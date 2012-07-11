@@ -60,9 +60,13 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 		_unusedBuffers = [[NSMutableArray alloc] init];
 		_usedBuffers = [[NSMutableArray alloc] init];
 
-		if(_upconvertsFromMono) _inputStreamDescription.mChannelsPerFrame = _outputStreamDescription.mChannelsPerFrame;
+		if(_upconvertsFromMono) {
+			_inputStreamDescription.mChannelsPerFrame = _outputStreamDescription.mChannelsPerFrame;
+			_inputStreamDescription.mBytesPerFrame = _inputStreamDescription.mBitsPerChannel / CHAR_BIT * _inputStreamDescription.mChannelsPerFrame;
+			_inputStreamDescription.mBytesPerPacket = _inputStreamDescription.mBytesPerFrame * _inputStreamDescription.mFramesPerPacket;
+		}
 
-		ECVOSStatus(AudioConverterNew(&inputDesc, &outputDesc, &_converter));
+		ECVOSStatus(AudioConverterNew(&_inputStreamDescription, &_outputStreamDescription, &_converter));
 		if(!_converter) {
 			[self release];
 			return nil;
@@ -97,18 +101,22 @@ static OSStatus ECVAudioConverterComplexInputDataProc(AudioConverterRef inAudioC
 	BOOL const upconvertFromMono = [self upconvertsFromMono];
 	UInt32 const intermediateChannelCount = [self inputStreamDescription].mChannelsPerFrame;
 	for(; i < inputBufferList->mNumberBuffers; i++) {
-		size_t const totalLength = inputBufferList->mBuffers[i].mDataByteSize;
-		if(!totalLength) continue;
+		size_t const inputLength = inputBufferList->mBuffers[i].mDataByteSize;
+		if(!inputLength) continue;
 		UInt32 const sourceChannelCount = inputBufferList->mBuffers[i].mNumberChannels;
 		NSAssert(upconvertFromMono || sourceChannelCount == intermediateChannelCount, @"If we aren't upconverting, we can't change the number of channels.");
-		size_t const channelLength = totalLength / sourceChannelCount;
-		float *const floats = malloc(channelLength * intermediateChannelCount);
+		size_t const channelLength = inputLength / sourceChannelCount;
+		size_t const outputLength = channelLength * intermediateChannelCount;
+		float *const floats = malloc(outputLength);
 		if(!floats) continue;
 		if(upconvertFromMono) {
 			UInt32 j = 0;
 			for(; j < intermediateChannelCount; j++) vDSP_vsmul(inputBufferList->mBuffers[i].mData, sourceChannelCount, &volume, floats + j, intermediateChannelCount, channelLength / sizeof(float));
-		} else vDSP_vsmul(inputBufferList->mBuffers[i].mData, 1, &volume, floats, 1, totalLength / sizeof(float));
-		[buffers addObject:[NSMutableData dataWithBytesNoCopy:floats length:totalLength freeWhenDone:YES]];
+		} else {
+			NSAssert(inputLength == outputLength, @"If we aren't upconverting, we can't change the data length.");
+			vDSP_vsmul(inputBufferList->mBuffers[i].mData, 1, &volume, floats, 1, outputLength / sizeof(float));
+		}
+		[buffers addObject:[NSMutableData dataWithBytesNoCopy:floats length:outputLength freeWhenDone:YES]];
 	}
 	[_lock lock];
 	if(_dropsBuffers) [_unusedBuffers setArray:buffers];
