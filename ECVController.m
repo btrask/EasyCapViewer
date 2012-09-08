@@ -43,10 +43,10 @@ static NSArray *ECVUSBDevices(void) // TODO: Put this somewhere better.
 		NSMutableDictionary *properties = nil;
 		ECVIOReturn(IORegistryEntryCreateCFProperties(service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
 		[properties autorelease];
-		[devices addObject:[NSString stringWithFormat:@"%@ %04x:%04x %@",
-			[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorString]] ?: @"????",
+		[devices addObject:[NSString stringWithFormat:@"(%04x:%04x) %@ - %@",
 			[[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntValue],
 			[[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntValue],
+			[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorString]] ?: @"????",
 			[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] ?: @"????"
 			]];
 		IOObjectRelease(service);
