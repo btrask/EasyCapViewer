@@ -33,6 +33,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAppKitAdditions.h"
 #import "ECVDebug.h"
 
+static NSArray *ECVUSBDevices(void) // TODO: Put this somewhere better.
+{
+	NSMutableArray *const devices = [NSMutableArray array];
+	io_iterator_t iterator = IO_OBJECT_NULL;
+	ECVIOReturn(IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching(kIOUSBDeviceClassName), &iterator));
+	io_service_t service = IO_OBJECT_NULL;
+	while((service = IOIteratorNext(iterator))) {
+		NSMutableDictionary *properties = nil;
+		ECVIOReturn(IORegistryEntryCreateCFProperties(service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
+		[properties autorelease];
+		[devices addObject:[NSString stringWithFormat:@"%@ %04x:%04x %@",
+			[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorString]] ?: @"????",
+			[[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntValue],
+			[[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntValue],
+			[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] ?: @"????"
+			]];
+		IOObjectRelease(service);
+	}
+ECVNoDeviceError:
+ECVGenericError:
+	return devices;
+}
+
 static ECVController *ECVSharedController;
 
 @interface ECVCaptureDevice(ECVDisplaying)
@@ -130,11 +153,13 @@ ECVGenericError:
 ECVNoDeviceError: (void)0;
 	}
 	if([devices count]) return [devices makeObjectsPerformSelector:@selector(ECV_display)];
+	ECVLog(ECVNotice, @"USB Devices: %@", ECVUSBDevices());
 	NSAlert *const alert = [[[NSAlert alloc] init] autorelease];
 	[alert setMessageText:NSLocalizedString(@"No supported capture hardware was found.", nil)];
 	[alert setInformativeText:NSLocalizedString(@"Please connect an EasyCap DC60 to your computer. Please note that the DC60+ is not supported.", nil)];
 	[alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
-	[alert runModal];
+	[alert addButtonWithTitle:NSLocalizedString(@"Show Error Log", nil)];
+	if(NSAlertSecondButtonReturn == [alert runModal]) [[ECVErrorLogController sharedErrorLogController] showWindow:nil];
 }
 
 #pragma mark -ECVController(Private)
