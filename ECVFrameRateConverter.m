@@ -70,8 +70,10 @@ static QTTime ECVRationalToQTTime(ECVRational r)
 	for(i = 0; i < sourceFrameCountInteger; ++i) values[i] = lowerBoundRatioInteger;
 
 	NSUInteger remaining = ECVRationalToNSInteger(extraFrames);
-	NSUInteger const extraFrameFrequency = floor(ECVRationalToCGFloat(ECVRationalDivide(sourceFrameCount, extraFrames)));
-	for(i = 0; i < sourceFrameCountInteger && remaining; i += extraFrameFrequency, --remaining) values[i]++;
+	if(remaining) {
+		NSUInteger const extraFrameFrequency = floor(ECVRationalToCGFloat(ECVRationalDivide(sourceFrameCount, extraFrames)));
+		for(i = 0; i < sourceFrameCountInteger && remaining; i += extraFrameFrequency, --remaining) values[i]++;
+	}
 
 	return data;
 }
