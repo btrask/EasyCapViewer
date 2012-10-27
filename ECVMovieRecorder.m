@@ -383,7 +383,17 @@ bail:
 		ICMEncodedFrameRelease(_encodedFrame);
 		_encodedFrame = ICMEncodedFrameRetain(frame);
 	}
-	if(_encodedFrame) ECVOSStatus(AddMediaSampleFromEncodedFrame(_videoMedia, _encodedFrame, NULL));
+	if(!_encodedFrame) return;
+
+	UInt8 const *const dataPtr = ICMEncodedFrameGetDataPtr(_encodedFrame);
+	ByteCount const bufferSize = ICMEncodedFrameGetDataSize(_encodedFrame);
+	TimeValue64 const decodeDuration = ICMEncodedFrameGetDecodeDuration(_encodedFrame);
+	TimeValue64 const displayOffset = ICMEncodedFrameGetDisplayOffset(_encodedFrame);
+	ImageDescriptionHandle descriptionHandle = NULL;
+	ECVOSStatus(ICMEncodedFrameGetImageDescription(_encodedFrame, &descriptionHandle));
+	MediaSampleFlags const mediaSampleFlags = ICMEncodedFrameGetMediaSampleFlags(_encodedFrame);
+
+	ECVOSStatus(AddMediaSample2(_videoMedia, dataPtr, bufferSize, decodeDuration, displayOffset, (SampleDescriptionHandle)descriptionHandle, 1, mediaSampleFlags, NULL));
 }
 
 #pragma mark -NSObject
