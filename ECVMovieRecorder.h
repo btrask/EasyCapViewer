@@ -76,23 +76,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	NSConditionLock *_lock;
-	BOOL _stop;
-	NSURL *_writeURL;
-
-	ECVVideoStorage *_videoStorage;
-	CVPixelBufferRef _pixelBuffer;
 	NSMutableArray *_videoFrames;
-	Media _videoMedia;
-	ICMCompressionSessionRef _compressionSession;
-	ICMEncodedFrameRef _encodedFrame;
-	ECVFrameRateConverter *_frameRateConverter;
-	ECVIntegerSize _outputSize;
-
-	Media _audioMedia;
 	ECVAudioPipe *_audioPipe;
-	SoundDescriptionHandle _audioDescriptionHandle;
-	void *_audioBufferBytes;
-	CGFloat _volume;
+	BOOL _stop;
+	ECVFrameRateConverter *_frameRateConverter;
+
+	Media _videoMedia;
+	ICMEncodedFrameRef _encodedFrame;
 }
 
 - (id)initWithOptions:(ECVMovieRecordingOptions *)options error:(out NSError **)outError;
