@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <mach/mach_port.h>
 #import <Foundation/NSDebug.h>
 #import <string.h>
+#import <QuickTime/QuickTimeErrors.h>
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
 	#import <OpenGL/gl.h>
 #endif
@@ -155,6 +156,34 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(badImageRgnErr)
 		ERROR_CASE(badImageErr)
 		ERROR_CASE(nonDragOriginatorErr)
+
+#if !__LP64__
+		ERROR_CASE(kQTMediaDoesNotSupportDisplayOffsetsErr)
+		ERROR_CASE(kQTMediaHasDisplayOffsetsErr)
+		ERROR_CASE(kQTDisplayTimeAlreadyInUseErr)
+		ERROR_CASE(kQTDisplayTimeTooEarlyErr)
+		ERROR_CASE(kQTTimeValueTooBigErr)
+		ERROR_CASE(kQTVisualContextRequiredErr)
+		ERROR_CASE(kQTVisualContextNotAllowedErr)
+		ERROR_CASE(kQTPropertyBadValueSizeErr)
+		ERROR_CASE(kQTPropertyNotSupportedErr)
+		ERROR_CASE(kQTPropertyAskLaterErr)
+		ERROR_CASE(kQTPropertyReadOnlyErr)
+		ERROR_CASE(kQTPropertyArrayElementUnprocessedErr)
+		ERROR_CASE(kQTCannotCoerceValueErr)
+		ERROR_CASE(kQTMessageNotHandledErr)
+		ERROR_CASE(kQTMessageCommandNotSupportedErr)
+		ERROR_CASE(kQTMessageNoSuchParameterErr)
+		ERROR_CASE(kQTObsoleteLPCMSoundFormatErr)
+		ERROR_CASE(kQTIncompatibleDescriptionErr)
+		ERROR_CASE(kQTMetaDataInvalidMetaDataErr)
+		ERROR_CASE(kQTMetaDataInvalidItemErr)
+		ERROR_CASE(kQTMetaDataInvalidStorageFormatErr)
+		ERROR_CASE(kQTMetaDataInvalidKeyFormatErr)
+		ERROR_CASE(kQTMetaDataNoMoreItemsErr)
+
+		ERROR_CASE(kICMCodecCantQueueOutOfOrderErr)
+#endif // !__LP64__
 
 #if defined(ECV_ENABLE_AUDIO)
 		ERROR_CASE(kAudioConverterErr_FormatNotSupported)
