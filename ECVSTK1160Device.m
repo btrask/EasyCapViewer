@@ -95,7 +95,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 - (ECVIntegerSize)_inputSize
 {
-	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
+	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
 }
 - (BOOL)_initializeAudio
 {
@@ -291,7 +291,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	OSType const pixelFormat = [self pixelFormat];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
-	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){0, 0}];
+	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;
 }

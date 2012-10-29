@@ -105,7 +105,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 }
 - (ECVIntegerSize)captureSize
 {
-	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
+	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
 }
 - (UInt8)isochReadingPipe
 {
@@ -532,7 +532,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
 	ECVPixelFormatHack((void *)bytes + skip, realLength);
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
-	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){0, 0}];
+	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;
 }
