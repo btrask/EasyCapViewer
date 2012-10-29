@@ -259,11 +259,11 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	[videoView setAspectRatio:ratio];
 	[[self window] setContentAspectRatio:ratio];
-	CGFloat const r = ratio.height / ratio.width;
+	CGFloat const r = ratio.width / ratio.height;
 	NSSize s = [self windowContentSize];
-	s.height = s.width * r;
+	s.width = s.height * r;
 	[self setWindowContentSize:s];
-	[[self window] setMinSize:NSMakeSize(200.0f, 200.0f * r)];
+	[[self window] setMinSize:NSMakeSize(120.0f * r, 120.0f)];
 	[self _updateCropRect];
 }
 - (NSRect)cropRect
@@ -324,7 +324,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	NSSize const ratio = [videoView aspectRatio];
 	ECVIntegerSize const s = [[self document] captureSize];
-	return NSMakeSize(s.width, s.width / ratio.width * ratio.height);
+	return NSMakeSize(s.height / ratio.height * ratio.width, s.height);
 }
 - (NSSize)outputSizeWithScale:(NSInteger)scale
 {
