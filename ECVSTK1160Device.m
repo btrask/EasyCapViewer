@@ -95,7 +95,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 - (ECVIntegerSize)_inputSize
 {
-	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
+	return (ECVIntegerSize){720, [self is60HzFormat] ? 480 : 576};
 }
 - (BOOL)_initializeAudio
 {
@@ -225,7 +225,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 }
 - (ECVIntegerSize)captureSize
 {
-	return [self _inputSize];
+	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
 }
 - (UInt8)isochReadingPipe
 {
