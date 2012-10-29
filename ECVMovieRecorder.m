@@ -126,6 +126,7 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &opts));
 
 	ECVCSOSetProperty(opts, DurationsNeeded, (Boolean)true);
+	ECVCSOSetProperty(opts, AllowAsyncCompletion, (Boolean)true);
 	NSTimeInterval frameRateInterval = 0.0;
 	if(QTGetTimeInterval(_frameRate, &frameRateInterval)) ECVCSOSetProperty(opts, ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
 	ECVCSOSetProperty(opts, CPUTimeBudget, (UInt32)QTMakeTimeScaled(_frameRate, ECVMicrosecondsPerSecond).timeValue);
@@ -184,16 +185,17 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 @end
 
 enum {
-	ECVRecordThreadWait,
-	ECVRecordThreadRun,
-	ECVRecordThreadFinished,
+	ECVThreadWait,
+	ECVThreadRun,
+	ECVThreadFinished,
 };
 
 @interface ECVMovieRecorder(Private)<ECVCompressionDelegate>
 
-- (void)_threaded_record:(ECVMovieRecordingOptions *const)options;
+- (void)_thread_compress:(ECVMovieRecordingOptions *const)options;
+- (void)_thread_record:(ECVMovieRecordingOptions *const)options;
 
-- (void)_addFrame:(ECVVideoFrame *const)frame withCompressionSession:(ICMCompressionSessionRef const)compressionSession pixelBuffer:(CVPixelBufferRef const)pixelBuffer displayDuration:(TimeValue64 const)displayDuration;
+- (void)_addEncodedFrame:(ICMEncodedFrameRef const)frame frameRateConverter:(ECVFrameRateConverter *const)frameRateConverter media:(Media const)media;
 - (void)_addAudioBufferFromPipe:(ECVAudioPipe *const)audioPipe description:(SoundDescriptionHandle const)description buffer:(void *const)buffer media:(Media const)media;
 
 @end
@@ -214,51 +216,107 @@ enum {
 	if(outError) *outError = nil;
 	if(!(self = [super init])) return nil;
 
-	_lock = [[NSConditionLock alloc] initWithCondition:ECVRecordThreadWait];
-	_videoFrames = [[NSMutableArray alloc] init];
-	_frameRateConverter = [[options _frameRateConverter] retain];
+	_compressLock = [[NSConditionLock alloc] initWithCondition:ECVThreadWait];
+	_compressQueue = [[NSMutableArray alloc] init];
+	_recordLock = [[NSConditionLock alloc] initWithCondition:ECVThreadWait];
+	_recordQueue = [[NSMutableArray alloc] init];
 	_audioPipe = [[options _audioPipe] retain];
 
-	[NSThread detachNewThreadSelector:@selector(_threaded_record:) toTarget:self withObject:options];
+	[NSThread detachNewThreadSelector:@selector(_thread_compress:) toTarget:self withObject:options];
+	[NSThread detachNewThreadSelector:@selector(_thread_record:) toTarget:self withObject:options];
 
 	return self;
 }
 
 #pragma mark -
 
-- (void)addVideoFrame:(ECVVideoFrame *)frame
+- (void)addVideoFrame:(ECVVideoFrame *const)frame
 {
-	[_lock lock];
-	if(ECVRecordThreadFinished == [_lock condition]) return [_lock unlock];
-	NSUInteger const count = [_frameRateConverter nextFrameRepeatCount];
-	if(!count) return [_lock unlock];
-	NSUInteger i;
-	for(i = 0; i < count; ++i) [_videoFrames insertObject:frame atIndex:0];
-	[_lock unlockWithCondition:ECVRecordThreadRun];
+	[_compressLock lock];
+	if(ECVThreadFinished == [_compressLock condition]) return [_compressLock unlock];
+	[_compressQueue insertObject:frame atIndex:0];
+	[_compressLock unlockWithCondition:ECVThreadRun];
 }
-- (void)addAudioBufferList:(AudioBufferList const *)bufferList
+- (void)addAudioBufferList:(AudioBufferList const *const)bufferList
 {
-	[_lock lock];
-	if(ECVRecordThreadFinished == [_lock condition]) return [_lock unlock];
+	[_recordLock lock];
+	if(ECVThreadFinished == [_recordLock condition]) return [_recordLock unlock];
 	[_audioPipe receiveInputBufferList:bufferList];
-	[_lock unlockWithCondition:ECVRecordThreadRun];
+	[_recordLock unlockWithCondition:ECVThreadRun];
 }
 
 #pragma mark -
 
 - (void)stopRecording
 {
-	[_lock lock];
-	if(ECVRecordThreadFinished == [_lock condition]) return [_lock unlock];
+	[_compressLock lock];
+	[_recordLock lock];
+	if(_stop) {
+		[_recordLock unlock];
+		[_compressLock unlock];
+		return;
+	}
 	_stop = YES;
-	[_lock unlockWithCondition:ECVRecordThreadRun];
-	[_lock lockWhenCondition:ECVRecordThreadFinished];
-	[_lock unlock];
+	[_recordLock unlockWithCondition:ECVThreadRun];
+	[_compressLock unlockWithCondition:ECVThreadRun];
+	[_recordLock lockWhenCondition:ECVThreadFinished];
+	[_recordLock unlock];
 }
 
 #pragma mark -ECVMovieRecorder(Private)
 
-- (void)_threaded_record:(ECVMovieRecordingOptions *const)options
+- (void)_thread_compress:(ECVMovieRecordingOptions *const)options
+{
+	NSAutoreleasePool *const outerPool = [[NSAutoreleasePool alloc] init];
+	ECVOSErr(EnterMoviesOnThread(kNilOptions));
+
+	ICMCompressionSessionRef const compressionSession = [options _compressionSessionWithDelegate:self];
+	CVPixelBufferRef pixelBuffer = NULL;
+	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(compressionSession), &pixelBuffer));
+
+	for(;;) {
+		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
+
+		[_compressLock lockWhenCondition:ECVThreadRun];
+		ECVVideoFrame *const frame = [[[_compressQueue lastObject] retain] autorelease];
+		if(frame) [_compressQueue removeLastObject];
+		BOOL const remaining = !![_compressQueue count];
+		BOOL const stop = _stop;
+		[_compressLock unlockWithCondition:remaining ? ECVThreadRun : ECVThreadWait];
+
+		if([frame lockIfHasBytes]) {
+			ECVCVPixelBuffer *const buffer = [[[ECVCVPixelBuffer alloc] initWithPixelBuffer:pixelBuffer] autorelease];
+			[buffer lock];
+			[buffer drawPixelBuffer:frame];
+			[buffer unlock];
+			[frame unlock];
+			ECVOSStatus(ICMCompressionSessionEncodeFrame(compressionSession, pixelBuffer, 0, [options frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+		} else if(frame) {
+			[self addEncodedFrame:NULL];
+		}
+
+		if(stop && !remaining) {
+			[innerPool drain];
+			break;
+		}
+
+		[innerPool release];
+	}
+
+	if(compressionSession) ECVOSStatus(ICMCompressionSessionCompleteFrames(compressionSession, true, 0, 0));
+	if(compressionSession) ICMCompressionSessionRelease(compressionSession);
+	CVPixelBufferRelease(pixelBuffer);
+
+	ICMEncodedFrameRelease(_encodedFrame);
+	_encodedFrame = NULL;
+
+	[_compressLock lock];
+	[_compressLock unlockWithCondition:ECVThreadFinished];
+
+	ECVOSErr(ExitMoviesOnThread());
+	[outerPool release];
+}
+- (void)_thread_record:(ECVMovieRecordingOptions *const)options
 {
 	NSAutoreleasePool *const outerPool = [[NSAutoreleasePool alloc] init];
 	ECVOSErr(EnterMoviesOnThread(kNilOptions));
@@ -282,15 +340,12 @@ enum {
 	}
 
 	ECVIntegerSize const outputSize = [options _outputSize];
-	ICMCompressionSessionRef const compressionSession = [options _compressionSessionWithDelegate:self];
 	ECVVideoStorage *const videoStorage = [options videoStorage];
+	ECVFrameRateConverter *const frameRateConverter = [options _frameRateConverter];
 
 	Track const videoTrack = NewMovieTrack(movie, Long2Fix(outputSize.width), Long2Fix(outputSize.height), kNoVolume);
-	Media const videoMedia = _videoMedia = NewTrackMedia(videoTrack, VideoMediaType, [_frameRateConverter targetFrameRate].timeScale, NULL, 0);
+	Media const videoMedia = NewTrackMedia(videoTrack, VideoMediaType, [options frameRate].timeScale, NULL, 0);
 	ECVOSErr(BeginMediaEdits(videoMedia));
-
-	CVPixelBufferRef pixelBuffer = NULL;
-	ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, ICMCompressionSessionGetPixelBufferPool(compressionSession), &pixelBuffer));
 
 	Track const audioTrack = _audioPipe ? NewMovieTrack(movie, 0, 0, (short)round([options volume] * kFullVolume)) : NULL;
 	Media const audioMedia = audioTrack ? NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0) : NULL;
@@ -301,26 +356,30 @@ enum {
 		ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &soundDescription));
 	}
 
-	BOOL stop = NO;
-	while(!stop) {
+	for(;;) {
 		NSAutoreleasePool *const innerPool = [[NSAutoreleasePool alloc] init];
 
-		[_lock lockWhenCondition:ECVRecordThreadRun];
-		NSUInteger dropCount = [videoStorage dropFramesFromArray:_videoFrames];
-		ECVVideoFrame *const frame = [[[_videoFrames lastObject] retain] autorelease];
-		if(frame) [_videoFrames removeLastObject];
-		BOOL const moreToDo = [_videoFrames count] || [_audioPipe hasReadyBuffers];
-		if(_stop && !moreToDo) stop = YES;
-		[_lock unlockWithCondition:moreToDo ? ECVRecordThreadRun : ECVRecordThreadWait];
+		[_recordLock lockWhenCondition:ECVThreadRun];
+		ICMEncodedFrameRef const frame = (ICMEncodedFrameRef)[[[_recordQueue lastObject] retain] autorelease];
+		if(frame) [_recordQueue removeLastObject];
+		BOOL const remaining = [_recordQueue count] || [_audioPipe hasReadyBuffers];
+		BOOL const stop = _stop;
+		[_recordLock unlockWithCondition:remaining ? ECVThreadRun : ECVThreadWait];
 
-		while(dropCount--) [self addEncodedFrame:NULL];
-		[self _addFrame:frame withCompressionSession:compressionSession pixelBuffer:pixelBuffer displayDuration:[_frameRateConverter targetFrameRate].timeValue];
+		[self _addEncodedFrame:frame frameRateConverter:frameRateConverter media:videoMedia];
 		[self _addAudioBufferFromPipe:_audioPipe description:soundDescription buffer:audioBuffer media:audioMedia];
+
+		if(stop && !remaining) {
+			[innerPool release];
+			break;
+		}
 
 		[innerPool release];
 	}
 
-	if(compressionSession) ECVOSStatus(ICMCompressionSessionCompleteFrames(compressionSession, true, 0, 0));
+	[_compressLock lockWhenCondition:ECVThreadFinished];
+	[_compressLock unlock];
+
 	if(videoMedia) ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(videoMedia), 0, GetMediaDisplayStartTime(videoMedia), GetMediaDisplayDuration(videoMedia), fixed1));
 	if(audioMedia) ECVOSErr(InsertMediaIntoTrack(GetMediaTrack(audioMedia), 0, GetMediaDisplayStartTime(audioMedia), GetMediaDisplayDuration(audioMedia), fixed1));
 	if(videoMedia) ECVOSErr(EndMediaEdits(videoMedia));
@@ -333,9 +392,6 @@ enum {
 		CloseMovieStorage(dataHandler);
 	}
 
-	if(compressionSession) ICMCompressionSessionRelease(compressionSession);
-	CVPixelBufferRelease(pixelBuffer);
-
 	if(soundDescription) DisposeHandle((Handle)soundDescription);
 	if(audioBuffer) free(audioBuffer);
 
@@ -345,34 +401,36 @@ enum {
 	if(audioMedia) DisposeTrackMedia(audioMedia);
 	if(audioTrack) DisposeMovieTrack(audioTrack);
 
-	_videoMedia = NULL;
-	if(_encodedFrame) ICMEncodedFrameRelease(_encodedFrame);
-	_encodedFrame = NULL;
-
 	DisposeMovie(movie);
 
 bail:
 
+	[_recordLock lock];
+	[_recordLock unlockWithCondition:ECVThreadFinished];
+
 	ECVOSErr(ExitMoviesOnThread());
-
-	[_lock lock];
-	[_lock unlockWithCondition:ECVRecordThreadFinished];
-
 	[outerPool release];
 }
 
 #pragma mark -
 
-- (void)_addFrame:(ECVVideoFrame *const)frame withCompressionSession:(ICMCompressionSessionRef const)compressionSession pixelBuffer:(CVPixelBufferRef const)pixelBuffer displayDuration:(TimeValue64 const)displayDuration
+- (void)_addEncodedFrame:(ICMEncodedFrameRef const)frame frameRateConverter:(ECVFrameRateConverter *const)frameRateConverter media:(Media const)media
 {
 	if(!frame) return;
-	if(![frame lockIfHasBytes]) return [self addEncodedFrame:NULL];
-	ECVCVPixelBuffer *const buffer = [[[ECVCVPixelBuffer alloc] initWithPixelBuffer:pixelBuffer] autorelease];
-	[buffer lock];
-	[buffer drawPixelBuffer:frame];
-	[buffer unlock];
-	[frame unlock];
-	ECVOSStatus(ICMCompressionSessionEncodeFrame(compressionSession, pixelBuffer, 0, displayDuration, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+
+	UInt8 const *const dataPtr = ICMEncodedFrameGetDataPtr(frame);
+	ByteCount const bufferSize = ICMEncodedFrameGetDataSize(frame);
+	TimeValue64 const decodeDuration = ICMEncodedFrameGetDecodeDuration(frame);
+	TimeValue64 const displayOffset = ICMEncodedFrameGetDisplayOffset(frame);
+	ImageDescriptionHandle descriptionHandle = NULL;
+	ECVOSStatus(ICMEncodedFrameGetImageDescription(frame, &descriptionHandle));
+	MediaSampleFlags const mediaSampleFlags = ICMEncodedFrameGetMediaSampleFlags(frame);
+
+	NSUInteger const count = [frameRateConverter nextFrameRepeatCount];
+
+	for(NSUInteger i = 0; i < count; ++i) {
+		ECVOSStatus(AddMediaSample2(media, dataPtr, bufferSize, decodeDuration, displayOffset, (SampleDescriptionHandle)descriptionHandle, 1, mediaSampleFlags, NULL));
+	}
 }
 - (void)_addAudioBufferFromPipe:(ECVAudioPipe *const)audioPipe description:(SoundDescriptionHandle const)description buffer:(void *const)buffer media:(Media const)media
 {
@@ -393,26 +451,20 @@ bail:
 		_encodedFrame = ICMEncodedFrameRetain(frame);
 	}
 	if(!_encodedFrame) return;
-
-	UInt8 const *const dataPtr = ICMEncodedFrameGetDataPtr(_encodedFrame);
-	ByteCount const bufferSize = ICMEncodedFrameGetDataSize(_encodedFrame);
-	TimeValue64 const decodeDuration = ICMEncodedFrameGetDecodeDuration(_encodedFrame);
-	TimeValue64 const displayOffset = ICMEncodedFrameGetDisplayOffset(_encodedFrame);
-	ImageDescriptionHandle descriptionHandle = NULL;
-	ECVOSStatus(ICMEncodedFrameGetImageDescription(_encodedFrame, &descriptionHandle));
-	MediaSampleFlags const mediaSampleFlags = ICMEncodedFrameGetMediaSampleFlags(_encodedFrame);
-
-	ECVOSStatus(AddMediaSample2(_videoMedia, dataPtr, bufferSize, decodeDuration, displayOffset, (SampleDescriptionHandle)descriptionHandle, 1, mediaSampleFlags, NULL));
+	[_recordLock lock];
+	[_recordQueue insertObject:(id)_encodedFrame atIndex:0];
+	[_recordLock unlockWithCondition:ECVThreadRun];
 }
 
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[_lock release];
-	[_videoFrames release];
+	[_compressLock release];
+	[_compressQueue release];
+	[_recordLock release];
+	[_recordQueue release];
 	[_audioPipe release];
-	[_frameRateConverter release];
 	[super dealloc];
 }
 

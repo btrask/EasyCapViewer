@@ -75,20 +75,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVMovieRecorder : NSObject
 {
 	@private
-	NSConditionLock *_lock;
-	NSMutableArray *_videoFrames;
+	NSConditionLock *_compressLock;
+	NSMutableArray *_compressQueue;
+	NSConditionLock *_recordLock;
+	NSMutableArray *_recordQueue;
 	ECVAudioPipe *_audioPipe;
 	BOOL _stop;
-	ECVFrameRateConverter *_frameRateConverter;
 
-	Media _videoMedia;
 	ICMEncodedFrameRef _encodedFrame;
 }
 
-- (id)initWithOptions:(ECVMovieRecordingOptions *)options error:(out NSError **)outError;
+- (id)initWithOptions:(ECVMovieRecordingOptions *const)options error:(out NSError **const)outError;
 
-- (void)addVideoFrame:(ECVVideoFrame *)frame;
-- (void)addAudioBufferList:(AudioBufferList const *)bufferList;
+- (void)addVideoFrame:(ECVVideoFrame *const)frame;
+- (void)addAudioBufferList:(AudioBufferList const *const)bufferList;
 
 - (void)stopRecording;
 
