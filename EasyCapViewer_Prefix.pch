@@ -41,8 +41,8 @@ enum {
 typedef NSUInteger ECVFieldType;
 
 typedef struct {
-	NSUInteger x;
-	NSUInteger y;
+	NSInteger x;
+	NSInteger y;
 } ECVIntegerPoint;
 
 typedef struct {
