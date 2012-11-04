@@ -82,12 +82,12 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	Class _deinterlacingMode;
 	ECVVideoStorage *_videoStorage;
 	NSConditionLock *_playLock;
+	NSTimeInterval _stopTime;
 
 #if defined(ECV_ENABLE_AUDIO)
 	ECVAudioInput *_audioInput;
 	ECVAudioOutput *_audioOutput;
 	ECVAudioPipe *_audioPreviewingPipe;
-	NSTimeInterval _audioStopTime;
 	BOOL _muted;
 	CGFloat _volume;
 	BOOL _upconvertsFromMono;

@@ -277,6 +277,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 	ECVIOReturn((*_interfaceInterface)->CreateInterfaceAsyncEventSource(_interfaceInterface, NULL));
 	_playLock = [[NSConditionLock alloc] initWithCondition:ECVNotPlaying];
+	_stopTime = [NSDate ECV_timeIntervalSinceReferenceDate];
 
 	[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[[self defaults] integerForKey:ECVDeinterlacingModeKey]]];
 
@@ -384,6 +385,8 @@ ECVNoDeviceError:
 		return;
 	}
 	ECVLog(ECVNotice, @"Starting playback.");
+	NSTimeInterval const timeSinceLastStop = [NSDate ECV_timeIntervalSinceReferenceDate] - _stopTime;
+	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let it be restarted too quickly.
 	[NSThread setThreadPriority:1.0f];
 	if(![self threaded_play]) goto bail;
 	[_playLock unlockWithCondition:ECVPlaying];
@@ -467,6 +470,7 @@ ECVNoDeviceError:
 bail:
 	ECVLog(ECVNotice, @"Stopping playback.");
 	NSParameterAssert([_playLock condition] != ECVNotPlaying);
+	_stopTime = [NSDate ECV_timeIntervalSinceReferenceDate];
 	[_playLock unlockWithCondition:ECVNotPlaying];
 	[pool drain];
 }
@@ -582,9 +586,6 @@ ECVNoDeviceError:
 {
 	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
 
-	NSTimeInterval const timeSinceLastStop = [NSDate ECV_timeIntervalSinceReferenceDate] - _audioStopTime;
-	usleep(MAX(0.75f - timeSinceLastStop, 0.0f) * ECVMicrosecondsPerSecond); // Don't let the audio be restarted too quickly.
-
 	ECVAudioInput *const input = [self audioInput];
 	ECVAudioOutput *const output = [self audioOutput];
 	if(input && output) {
@@ -626,7 +627,6 @@ ECVNoDeviceError:
 	[output setDelegate:nil];
 	[_audioPreviewingPipe release];
 	_audioPreviewingPipe = nil;
-	_audioStopTime = [NSDate ECV_timeIntervalSinceReferenceDate];
 }
 #endif
 
