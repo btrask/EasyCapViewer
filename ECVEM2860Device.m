@@ -107,10 +107,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 {
 	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
 }
-- (UInt8)isochReadingPipe
-{
-	return 2;
-}
 - (QTTime)frameRate
 {
 	return [self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50); // FIXME: Figure out why the A/V sync goes bad over time.

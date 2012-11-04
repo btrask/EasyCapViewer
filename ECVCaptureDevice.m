@@ -95,6 +95,33 @@ static void ECVDeviceRemoved(ECVCaptureDevice *device, io_service_t service, uin
 }
 static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
+static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interface, UInt8 *const outPipeIndex, UInt8 *const inoutDirection, UInt8 *const inoutTransferType, UInt16 *const inoutPacketSize, UInt8 *const outMillisecondInterval) // TODO: We should have a separate class for USB-specific devices, and this should probably be a method on it.
+{
+	IOReturn err = kIOReturnSuccess;
+	UInt8 count = 0;
+	err = (*interface)->GetNumEndpoints(interface, &count);
+	if(err) return err;
+	for(UInt8 i = 0; i <= count; ++i) {
+		UInt8 direction, ignored, transferType, millisecondInterval;
+		UInt16 packetSize;
+		err = (*interface)->GetPipeProperties(interface, i, &direction, &ignored, &transferType, &packetSize, &millisecondInterval);
+		if(err) continue;
+		if(direction != *inoutDirection && direction != kUSBAnyDirn) continue;
+		if(transferType != *inoutTransferType && transferType != kUSBAnyType) continue;
+		if(packetSize < *inoutPacketSize) {
+			err = kIOReturnNoBandwidth;
+			continue;
+		}
+		*outPipeIndex = i;
+		*inoutDirection = direction;
+		*inoutTransferType = transferType;
+		*inoutPacketSize = packetSize;
+		*outMillisecondInterval = millisecondInterval;
+		return kIOReturnSuccess;
+	}
+	return err ?: kIOReturnNotFound;
+}
+
 @implementation ECVCaptureDevice
 
 #pragma mark +ECVCaptureDevice
@@ -361,25 +388,12 @@ ECVNoDeviceError:
 	if(![self threaded_play]) goto bail;
 	[_playLock unlockWithCondition:ECVPlaying];
 
-	UInt8 const pipeIndex = [self isochReadingPipe];
-	UInt8 direction = kUSBNone;
-	UInt8 pipeNumberIgnored = 0;
-	UInt8 transferType = kUSBAnyType;
-	UInt16 frameRequestSize = 0;
+	UInt8 pipeIndex = 0;
+	UInt8 direction = kUSBIn;
+	UInt8 transferType = kUSBIsoc;
+	UInt16 frameRequestSize = 1;
 	UInt8 millisecondInterval = 0;
-	ECVIOReturn((*_interfaceInterface)->GetPipeProperties(_interfaceInterface, pipeIndex, &direction, &pipeNumberIgnored, &transferType, &frameRequestSize, &millisecondInterval));
-	if(direction != kUSBIn && direction != kUSBAnyDirn) {
-		ECVLog(ECVError, @"Invalid pipe direction %lu", (unsigned long)direction);
-		goto ECVGenericError;
-	}
-	if(transferType != kUSBIsoc) {
-		ECVLog(ECVError, @"Invalid transfer type %lu", (unsigned long)transferType);
-		goto ECVGenericError;
-	}
-	if(!frameRequestSize) {
-		ECVLog(ECVError, @"No USB bandwidth (try a different USB port or unplug other devices)");
-		goto ECVGenericError;
-	}
+	ECVIOReturn(ECVGetPipeWithProperties((void *)_interfaceInterface, &pipeIndex, &direction, &transferType, &frameRequestSize, &millisecondInterval));
 
 	NSUInteger const simultaneousTransfers = [self simultaneousTransfers];
 	NSUInteger const microframesPerTransfer = [self microframesPerTransfer];

@@ -139,7 +139,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 @property(readonly) BOOL requiresHighSpeed;
 @property(readonly) ECVIntegerSize captureSize;
-@property(readonly) UInt8 isochReadingPipe;
 @property(readonly) QTTime frameRate;
 @property(readonly) OSType pixelFormat;
 
