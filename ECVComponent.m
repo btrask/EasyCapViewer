@@ -80,6 +80,18 @@ typedef struct {
 		return noErr;\
 	}
 
+#define ECVICMImageDescriptionSetProperty(obj, name, val) \
+	({ \
+		__typeof__(val) const __val = (val);\
+		ECVOSStatus(ICMImageDescriptionSetProperty( \
+			(obj), \
+			kQTPropertyClass_ImageDescription, \
+			kICMImageDescriptionPropertyID_##name, \
+			sizeof(__val), \
+			&__val \
+		)); \
+	})
+
 static NSString *const ECVVideoSourceObject = @"ECVVideoSourceObjectKey";
 static NSString *const ECVVideoFormatObject = @"ECVVideoFormatObjectKey";
 
@@ -365,7 +377,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 
 	FieldInfoImageDescriptionExtension2 const fieldInfo = {kQTFieldsProgressiveScan, kQTFieldDetailUnknown};
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_FieldInfo, sizeof(FieldInfoImageDescriptionExtension2), &fieldInfo));
+	ECVICMImageDescriptionSetProperty(desc, FieldInfo, fieldInfo);
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
 		pixelSize.width, 1,
@@ -373,10 +385,10 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		0, 1,
 		0, 1,
 	};
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_CleanAperture, sizeof(CleanApertureImageDescriptionExtension), &cleanAperture));
+	ECVICMImageDescriptionSetProperty(desc, CleanAperture, cleanAperture);
 
 	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {captureSize.height, 540};
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_PixelAspectRatio, sizeof(PixelAspectRatioImageDescriptionExtension), &pixelAspectRatio));
+	ECVICMImageDescriptionSetProperty(desc, PixelAspectRatio, pixelAspectRatio);
 
 	NCLCColorInfoImageDescriptionExtension const colorInfo = {
 		kVideoColorInfoImageDescriptionExtensionType,
@@ -384,10 +396,10 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		kQTTransferFunction_ITU_R709_2,
 		kQTMatrix_ITU_R_601_4
 	};
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_NCLCColorInfo, sizeof(NCLCColorInfoImageDescriptionExtension), &colorInfo));
+	ECVICMImageDescriptionSetProperty(desc, NCLCColorInfo, colorInfo);
 
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedWidth, sizeof(pixelSize.width), &pixelSize.width));
-	ECVOSStatus(ICMImageDescriptionSetProperty(desc, kQTPropertyClass_ImageDescription, kICMImageDescriptionPropertyID_EncodedHeight, sizeof(pixelSize.height), &pixelSize.height));
+	ECVICMImageDescriptionSetProperty(desc, EncodedWidth, pixelSize.width);
+	ECVICMImageDescriptionSetProperty(desc, EncodedHeight, pixelSize.height);
 
 	return noErr;
 }
