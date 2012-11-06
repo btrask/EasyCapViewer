@@ -358,6 +358,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	}
 	ECVIntegerSize const captureSize = [videoStorage captureSize];
 	ECVIntegerSize const pixelSize = [videoStorage pixelSize];
+	size_t const bytesPerRow = [videoStorage bytesPerRow];
 	[pool drain];
 
 	ImageDescriptionPtr const descPtr = *desc;
@@ -398,8 +399,10 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 	ECVICMImageDescriptionSetProperty(desc, NCLCColorInfo, colorInfo);
 
-	ECVICMImageDescriptionSetProperty(desc, EncodedWidth, pixelSize.width);
-	ECVICMImageDescriptionSetProperty(desc, EncodedHeight, pixelSize.height);
+	ECVICMImageDescriptionSetProperty(desc, EncodedWidth, (SInt32)pixelSize.width);
+	ECVICMImageDescriptionSetProperty(desc, EncodedHeight, (SInt32)pixelSize.height);
+
+	ECVICMImageDescriptionSetProperty(desc, RowBytes, (SInt32)bytesPerRow);
 
 	return noErr;
 }
