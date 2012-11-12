@@ -201,4 +201,17 @@ enum {
 	}
 }
 
+#pragma mark -NSObject
+
+- (id)init
+{
+	if((self = [super init])) {
+		_brightness = 0.5;
+		_contrast = 0.5;
+		_saturation = 0.5;
+		_hue = 0.5;
+	}
+	return self;
+}
+
 @end
