@@ -1,4 +1,4 @@
-	ComponentComment ("SoftVDigXDispatch.h for SoftVDigX")
+	ComponentComment ("Based on SoftVDigXDispatch.h from SoftVDigX")
 
 	ComponentSelectorOffset (4)
 
@@ -28,12 +28,12 @@ ComponentComment("Video Digitizer Component Range")
 			ComponentCall	(GetDigitizerRect)
 			ComponentCall	(GetVBlankRect)
 		
-		ComponentError	(GetMaskPixMap)				// not used for Compressed Source ignore
+		ComponentCall	(GetMaskPixMap)				// not used for Compressed Source ignore
 		ComponentError	(0x0007)
-		ComponentError	(GetPlayThruDestination)	// not used for Compressed Source ignore
-		ComponentError	(UseThisCLUT)				// not used for Compressed Source ignore
-		ComponentError	(SetInputGammaValue)		// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetInputGammaValue)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetPlayThruDestination)	// not used for Compressed Source ignore
+		ComponentCall	(UseThisCLUT)				// not used for Compressed Source ignore
+		ComponentCall	(SetInputGammaValue)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetInputGammaValue)		// not called directly by Sequence Grabber QT6.3
 		
 			ComponentCall	(SetBrightness)
 			ComponentCall	(GetBrightness)
@@ -46,43 +46,43 @@ ComponentComment("Video Digitizer Component Range")
 			ComponentCall	(GetSharpness)
 			ComponentCall	(GetSaturation)
 		
-		ComponentError	(GrabOneFrame)				// not used for Compressed Source ignore
-		ComponentError	(GetMaxAuxBuffer)			// not used for Compressed Source ignore
+		ComponentCall	(GrabOneFrame)				// not used for Compressed Source ignore
+		ComponentCall	(GetMaxAuxBuffer)			// not used for Compressed Source ignore
 		ComponentError	(0x0018)					// private
 					
 			ComponentCall	(GetDigitizerInfo)
 			ComponentCall	(GetCurrentFlags)
 		
-		ComponentError	(SetKeyColor)				// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetKeyColor)				// not called unless vdTypeKey
-		ComponentError	(AddKeyColor)				// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetNextKeyColor)			// not called directly by Sequence Grabber QT6.3
-		ComponentError	(SetKeyColorRange)			// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetKeyColorRange)			// not called directly by Sequence Grabber QT6.3
-		ComponentError	(SetDigitizerUserInterrupt)	// not used
-		ComponentError	(SetInputColorSpaceMode)	// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetInputColorSpaceMode)	// not called directly by Sequence Grabber QT6.3
-		ComponentError	(SetClipState)
-		ComponentError	(GetClipState)
-		ComponentError	(SetClipRgn)
-		ComponentError	(ClearClipRgn)
-		ComponentError	(GetCLUTInUse)				// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(SetKeyColor)				// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetKeyColor)				// not called unless vdTypeKey
+		ComponentCall	(AddKeyColor)				// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetNextKeyColor)			// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(SetKeyColorRange)			// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetKeyColorRange)			// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(SetDigitizerUserInterrupt)	// not used
+		ComponentCall	(SetInputColorSpaceMode)	// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetInputColorSpaceMode)	// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(SetClipState)
+		ComponentCall	(GetClipState)
+		ComponentCall	(SetClipRgn)
+		ComponentCall	(ClearClipRgn)
+		ComponentCall	(GetCLUTInUse)				// not called directly by Sequence Grabber QT6.3
 		
 			ComponentCall	(SetPLLFilterType)		// called by Video Source Panel if implemented
 			ComponentCall	(GetPLLFilterType)		// called by Video Source Panel if implemented
 			
-		ComponentError	(GetMaskandValue)			// not called unless vdTypeAlpha
-		ComponentError	(SetMasterBlendLevel)		// not called directly by Sequence Grabber QT6.3
-		ComponentError	(SetPlayThruDestination)	// not used for Compressed Source ignore
-		ComponentError	(SetPlayThruOnOff)			// not used for Compressed Source ignore
-		ComponentError	(SetFieldPreference)		// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetFieldPreference)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetMaskandValue)			// not called unless vdTypeAlpha
+		ComponentCall	(SetMasterBlendLevel)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(SetPlayThruDestination)	// not used for Compressed Source ignore
+		ComponentCall	(SetPlayThruOnOff)			// not used for Compressed Source ignore
+		ComponentCall	(SetFieldPreference)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetFieldPreference)		// not called directly by Sequence Grabber QT6.3
 		ComponentError	(0x0031)					// private
-		ComponentError	(PreflightDestination)		// not used for Compressed Source ignore
-		ComponentError	(PreflightGlobalRect)		// not used for Compressed Source ignore
-		ComponentError	(SetPlayThruGlobalRect)		// not used for Compressed Source ignore
-		ComponentError	(SetInputGammaRecord)		// not called directly by Sequence Grabber QT6.3
-		ComponentError	(GetInputGammaRecord)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(PreflightDestination)		// not used for Compressed Source ignore
+		ComponentCall	(PreflightGlobalRect)		// not used for Compressed Source ignore
+		ComponentCall	(SetPlayThruGlobalRect)		// not used for Compressed Source ignore
+		ComponentCall	(SetInputGammaRecord)		// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(GetInputGammaRecord)		// not called directly by Sequence Grabber QT6.3
 		
 			ComponentCall	(SetBlackLevelValue)
 			ComponentCall	(GetBlackLevelValue)
@@ -95,9 +95,9 @@ ComponentComment("Video Digitizer Component Range")
 			ComponentCall	(GetInput)
 			ComponentCall	(SetInputStandard)
 		
-		ComponentError	(SetupBuffers)				// not used for Compressed Source ignore
-		ComponentError	(GrabOneFrameAsync)			// not used for Compressed Source ignore
-		ComponentError	(Done)						// not used for Compressed Source ignore
+		ComponentCall	(SetupBuffers)				// not used for Compressed Source ignore
+		ComponentCall	(GrabOneFrameAsync)			// not used for Compressed Source ignore
+		ComponentCall	(Done)						// not used for Compressed Source ignore
 		
 			// these are required selectors for Compress Source
 			// other Grab and PlayThru related selectors are no longer
@@ -114,29 +114,29 @@ ComponentComment("Video Digitizer Component Range")
 			ComponentCall	(SetFrameRate)
 			ComponentCall	(GetDataRate)
 		
-		ComponentError	(GetSoundInputDriver)
-		ComponentError	(GetDMADepths)					// not used for Compressed Source ignore
+		ComponentCall	(GetSoundInputDriver)
+		ComponentCall	(GetDMADepths)					// not used for Compressed Source ignore
 				
 			ComponentCall	(GetPreferredTimeScale)
 		
-		ComponentError	(ReleaseAsyncBuffers)			// not used for Compressed Source ignore
+		ComponentCall	(ReleaseAsyncBuffers)			// not used for Compressed Source ignore
 		ComponentError	(0x0053)
 		
 			ComponentCall	(SetDataRate)
 			ComponentCall	(GetTimeCode)
 			
-		ComponentError	(UseSafeBuffers)				// not used for Compressed Source ignore
-		ComponentError	(GetSoundInputSource)
+		ComponentCall	(UseSafeBuffers)				// not used for Compressed Source ignore
+		ComponentCall	(GetSoundInputSource)
 		
 			ComponentCall	(GetCompressionTime)
 		
-		ComponentError	(SetPreferredPacketSize)
-		ComponentError	(SetPreferredImageDimensions)	// not called directly by Sequence Grabber QT6.3
+		ComponentCall	(SetPreferredPacketSize)
+		ComponentCall	(SetPreferredImageDimensions)	// not called directly by Sequence Grabber QT6.3
 		
 			ComponentCall	(GetPreferredImageDimensions)
 			ComponentCall	(GetInputName)
 		
-		ComponentError	(SetDestinationPort)			// not used for Compressed Source ignore
+		ComponentCall	(SetDestinationPort)			// not used for Compressed Source ignore
 		
 			ComponentCall	(GetDeviceNameAndFlags)
 			ComponentCall	(CaptureStateChanging)

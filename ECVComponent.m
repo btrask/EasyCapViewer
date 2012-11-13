@@ -58,9 +58,15 @@ typedef struct {
 	#define ECV_objc_msgSend_CGFloat objc_msgSend
 #endif
 
+#if defined(ECV_DEBUG)
+#define ECV_UNIMPLEMENTED_LOG() ECVLog(ECVNotice, @"Unimplemented %s:%lu", __PRETTY_FUNCTION__, (unsigned long)__LINE__)
+#else
+#define ECV_UNIMPLEMENTED_LOG()
+#endif
+
 #define ECV_CALLCOMPONENT_FUNCTION(name, args...) pascal ComponentResult ADD_CALLCOMPONENT_BASENAME(name)(VD_GLOBALS() self, ##args)
 #define ECV_VDIG_FUNCTION(name, args...) pascal VideoDigitizerError ADD_CALLCOMPONENT_BASENAME(name)(VD_GLOBALS() self, ##args)
-#define ECV_VDIG_FUNCTION_UNIMPLEMENTED(name, args...) ECV_VDIG_FUNCTION(name, ##args) { ECV_DEBUG_LOG(); return digiUnimpErr; }
+#define ECV_VDIG_FUNCTION_UNIMPLEMENTED(name, args...) ECV_VDIG_FUNCTION(name, ##args) { ECV_UNIMPLEMENTED_LOG(); return digiUnimpErr; }
 #define ECV_VDIG_PROPERTY_UNIMPLEMENTED(prop) \
 	ECV_VDIG_FUNCTION_UNIMPLEMENTED(Get ## prop, unsigned short *v)\
 	ECV_VDIG_FUNCTION_UNIMPLEMENTED(Set ## prop, unsigned short *v)
@@ -490,3 +496,47 @@ ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetUniqueIDs, UInt64 *outDeviceID, UInt64 * outI
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(SelectUniqueIDs, const UInt64 *inDeviceID, const UInt64 *inInputID);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetTimeCode, TimeRecord *atTime, void *timeCodeFormat, void *timeCodeTime);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetFrameRate, Fixed framesPerSecond);
+
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetMaskPixMap, PixMapHandle maskPixMap);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetPlayThruDestination, PixMapHandle *dest, Rect *destRect, MatrixRecord *m, RgnHandle *mask);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(UseThisCLUT, CTabHandle colorTableHandle);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetInputGammaValue, Fixed channel1, Fixed channel2, Fixed channel3);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetInputGammaValue, Fixed *channel1, Fixed *channel2, Fixed *channel3);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GrabOneFrame);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetMaxAuxBuffer, PixMapHandle *pm, Rect *r);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetKeyColor, long index);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetKeyColor, long *index);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(AddKeyColor, long *index);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetNextKeyColor, long index);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetKeyColorRange, RGBColor *minRGB, RGBColor *maxRGB);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetKeyColorRange, RGBColor *minRGB, RGBColor *maxRGB);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDigitizerUserInterrupt, long flags, VdigIntUPP userInterruptProc, long refcon);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetInputColorSpaceMode, short colorSpaceMode);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetInputColorSpaceMode, short *colorSpaceMode);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetClipState, short clipEnable);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetClipState, short *clipEnable);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetClipRgn, RgnHandle clipRegion);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(ClearClipRgn, RgnHandle clipRegion);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetCLUTInUse, CTabHandle *colorTableHandle);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetMaskandValue, unsigned short blendLevel, long *mask, long *value);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetMasterBlendLevel, unsigned short *blendLevel);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPlayThruDestination, PixMapHandle dest, RectPtr destRect, MatrixRecordPtr m, RgnHandle mask);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPlayThruOnOff, short state);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetFieldPreference, short fieldFlag);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetFieldPreference, short *fieldFlag);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(PreflightDestination, Rect *digitizerRect, PixMap **dest, RectPtr destRect, MatrixRecordPtr m);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(PreflightGlobalRect, GrafPtr theWindow, Rect *globalRect);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPlayThruGlobalRect, GrafPtr theWindow, Rect *globalRect);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetInputGammaRecord, VDGamRecPtr inputGammaPtr);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetInputGammaRecord, VDGamRecPtr *inputGammaPtr);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetupBuffers, VdigBufferRecListHandle bufferList);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GrabOneFrameAsync, short buffer);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(Done, short buffer);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetSoundInputDriver, Str255 soundDriverName);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetDMADepths, long *depthArray, long *preferredDepth);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(ReleaseAsyncBuffers);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(UseSafeBuffers, Boolean useSafeBuffers);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetSoundInputSource, long videoInput, long *soundInput);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPreferredPacketSize, long preferredPacketSizeInBytes);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPreferredImageDimensions, long width, long height);
+ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDestinationPort, CGrafPtr destPort);

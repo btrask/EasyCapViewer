@@ -78,7 +78,7 @@ extern NSString *ECVAudioStreamBasicDescriptionToString(AudioStreamBasicDescript
 #define ECVCAssertNotReached(desc, args...) [[NSAssertionHandler currentHandler] handleFailureInFunction:[NSString stringWithUTF8String:__PRETTY_FUNCTION__] file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc), ##args]
 
 #if defined(ECV_DEBUG)
-#define ECV_DEBUG_LOG() ECVLog(ECVNotice, @"Reached %s %s:%lu", __FILE__, __PRETTY_FUNCTION__, (unsigned long)__LINE__)
+#define ECV_DEBUG_LOG() ECVLog(ECVNotice, @"Reached %s:%lu", __PRETTY_FUNCTION__, (unsigned long)__LINE__)
 #else
 #define ECV_DEBUG_LOG()
 #endif
