@@ -335,15 +335,6 @@
 			name = Models;
 			sourceTree = "<group>";
 		};
-		0E4D76C8110454AA00FE3DDC /* Entry Points */ = {
-			isa = PBXGroup;
-			children = (
-				0E4D778611046F9E00FE3DDC /* EasyCapViewer.m */,
-				0E4D76CA110454C000FE3DDC /* ECVComponent.m */,
-			);
-			name = "Entry Points";
-			sourceTree = "<group>";
-		};
 		0E78CD500FC9F8E500E9C148 /* STK1160 */ = {
 			isa = PBXGroup;
 			children = (
@@ -436,7 +427,7 @@
 				080E96DDFE201D6D7F000001 /* Controllers */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				B5280FFD130CADD400FBE537 /* External */,
-				0E4D76C8110454AA00FE3DDC /* Entry Points */,
+				B5C268C61652D84D0015D032 /* Component */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
@@ -447,6 +438,7 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				0E4D778611046F9E00FE3DDC /* EasyCapViewer.m */,
 				32CA4F630368D1EE00C91783 /* EasyCapViewer_Prefix.pch */,
 				0E8CE153107BE51C004F05A7 /* ECVAppKitAdditions.h */,
 				0E8CE154107BE51C004F05A7 /* ECVAppKitAdditions.m */,
@@ -456,7 +448,6 @@
 				0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */,
 				0ECDB5D7111C6A7100D5899C /* ECVComponentConfiguring.h */,
 				0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */,
-				0E3B7CB21108E8F0003A8A39 /* ECVComponentDispatch.h */,
 				0E78CB960FC92D8300E9C148 /* ECVDebug.h */,
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
 				0E9F9B2010F6764500935C48 /* ECVFoundationAdditions.h */,
@@ -496,7 +487,6 @@
 				0EFEE894109205C300312653 /* Cursor-Resize-45.tiff */,
 				0EFEE895109205C300312653 /* Cursor-Resize-135.tiff */,
 				0E984E20108C7F3D00CB469C /* Log-Clear.png */,
-				0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */,
 				B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */,
 			);
 			name = Resources;
@@ -548,6 +538,16 @@
 				B54758481507B29B006C0E44 /* ECVEM2860Device.m */,
 			);
 			name = "eMPIA EM2860";
+			sourceTree = "<group>";
+		};
+		B5C268C61652D84D0015D032 /* Component */ = {
+			isa = PBXGroup;
+			children = (
+				0E4D76CA110454C000FE3DDC /* ECVComponent.m */,
+				0E3B7CB21108E8F0003A8A39 /* ECVComponentDispatch.h */,
+				0E3B7BF11108CC2C003A8A39 /* ECVComponent.r */,
+			);
+			name = Component;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
