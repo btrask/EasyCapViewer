@@ -439,6 +439,12 @@ ECV_VDIG_FUNCTION(GetDigitizerRect, Rect *digitizerRect)
 	ECV_DEBUG_LOG();
 	return ADD_CALLCOMPONENT_BASENAME(GetMaxSrcRect)(self, ntscIn, digitizerRect);
 }
+ECV_VDIG_FUNCTION(SetDigitizerRect, Rect *digitizerRect)
+{
+	// According to my experiments with Macam, this function seems necessary, although it doesn't make any difference here.
+	ECV_DEBUG_LOG();
+	return noErr;
+}
 
 ECV_VDIG_FUNCTION(GetDataRate, long *milliSecPerFrame, Fixed *framesPerSecond, long *bytesPerSecond)
 {
@@ -489,7 +495,7 @@ ECV_VDIG_PROPERTY_UNIMPLEMENTED(Sharpness);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(CaptureStateChanging, UInt32 inStateFlags);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetPLLFilterType, short *pllType);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetPLLFilterType, short pllType);
-ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDigitizerRect, Rect *digitizerRect);
+//ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDigitizerRect, Rect *digitizerRect);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetPreferredImageDimensions, long *width, long *height);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(SetDataRate, long bytesPerSecond);
 ECV_VDIG_FUNCTION_UNIMPLEMENTED(GetUniqueIDs, UInt64 *outDeviceID, UInt64 * outInputID);
