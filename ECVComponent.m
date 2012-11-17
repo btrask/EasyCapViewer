@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 typedef struct {
 	ECVCaptureDevice<ECVComponentConfiguring> *device;
-	CFMutableDictionaryRef frameByBuffer;
+//	CFMutableDictionaryRef frameByBuffer;
 	NSMutableArray *inputCombinations;
 	TimeBase timeBase;
 } ECVCStorage;
@@ -105,6 +105,10 @@ static Rect ECVNSRectToRect(NSRect r)
 {
 	return (Rect){NSMinX(r), NSMinY(r), NSMaxX(r), NSMaxY(r)};
 }
+static OSType ECVOutputPixelFormat(ECVCStorage const *const self)
+{
+	return kRawCodecType;
+}
 
 ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 {
@@ -128,7 +132,7 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 			return internalComponentErr;
 		}
 		[self->device setDeinterlacingMode:[ECVDropDeinterlacingMode class]];
-		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
+//		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
 		SetComponentInstanceStorage(instance, (Handle)self);
 		[pool drain];
 	}
@@ -140,7 +144,7 @@ ECV_CALLCOMPONENT_FUNCTION(Close, ComponentInstance instance)
 	if(!self) return noErr;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device release];
-	CFRelease(self->frameByBuffer);
+//	CFRelease(self->frameByBuffer);
 	[self->inputCombinations release];
 	free(self);
 	[pool drain];
@@ -268,7 +272,7 @@ ECV_VDIG_FUNCTION(GetDeviceNameAndFlags, Str255 outName, UInt32 *outNameFlags)
 ECV_VDIG_FUNCTION(GetCompressionTime, OSType compressionType, short depth, Rect *srcRect, CodecQ *spatialQuality, CodecQ *temporalQuality, unsigned long *compressTime)
 {
 	ECV_DEBUG_LOG();
-	if(compressionType && [self->device pixelFormat] != compressionType) return noCodecErr;
+	if(compressionType && ECVOutputPixelFormat(self) != compressionType) return noCodecErr;
 	*spatialQuality = codecLosslessQuality;
 	*temporalQuality = 0;
 	*compressTime = 0;
@@ -282,14 +286,15 @@ ECV_VDIG_FUNCTION(GetCompressionTypes, VDCompressionListHandle h)
 	SetHandleSize((Handle)h, sizeof(VDCompressionList));
 	HLock((Handle)h);
 
-	CodecType const codec = [self->device pixelFormat];
-	ComponentDescription cd = {compressorComponentType, codec, 0, kNilOptions, kAnyComponentFlagsMask};
+	CodecType const codec = ECVOutputPixelFormat(self);
+	CodecInfo info;
+	ECVOSErr(GetCodecInfo(&info, codec, 0));
 	VDCompressionListPtr const p = *h;
 	p[0] = (VDCompressionList){
-		.codec = FindNextComponent(NULL, &cd),
+		.codec = 0,
 		.cType = codec,
-		.formatFlags = codecInfoDepth24,
-		.compressFlags = codecInfoDoes32,
+		.formatFlags = info.formatFlags,
+		.compressFlags = info.compressFlags,
 	};
 	CFStringGetPascalString((CFStringRef)@"Native Output", p[0].typeName, 64, kCFStringEncodingUTF8);
 	CFStringGetPascalString((CFStringRef)@"Test Name", p[0].name, 64, kCFStringEncodingUTF8);
@@ -308,7 +313,7 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 ECV_VDIG_FUNCTION(SetCompression, OSType compressType, short depth, Rect *bounds, CodecQ spatialQuality, CodecQ temporalQuality, long keyFrameRate)
 {
 	ECV_DEBUG_LOG();
-	if(compressType && [self->device pixelFormat] != compressType) return noCodecErr;
+	if(compressType && ECVOutputPixelFormat(self) != compressType) return noCodecErr;
 	// TODO: Most of these settings don't apply to us...
 	return noErr;
 }
@@ -329,27 +334,46 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	ECVVideoStorage *const vs = [self->device videoStorage];
 	ECVVideoFrame *const frame = [vs currentFrame];
-	*queuedFrameCount = 1;
+
+	*similarity = 0;
+
 	if(frame) {
-		void const *const bytes = [frame bytes];
-		CFDictionaryAddValue(self->frameByBuffer, bytes, frame);
-		*theData = (Ptr)bytes;
-		*dataSize = [[frame videoStorage] bufferSize];
+//		void const *const bytes = [frame bytes];
+//		CFDictionaryAddValue(self->frameByBuffer, bytes, frame);
+//		*theData = (Ptr)bytes;
+//		*dataSize = [[frame videoStorage] bufferSize];
+
+		int const bytesPerRow = [vs bytesPerRow];
+		UInt8 const *restrict const src = [frame bytes];
+		UInt8 *restrict const dst = malloc(704*240*3);
+		int x, y;
+		for(y = 0; y < 240; ++y) {
+			for(x = 0; x < 704; ++x) {
+				dst[y*704*3+x*3+0] = src[y*bytesPerRow+x*2+1];
+				dst[y*704*3+x*3+1] = src[y*bytesPerRow+x*2+1];
+				dst[y*704*3+x*3+2] = src[y*bytesPerRow+x*2+1];
+			}
+		}
+		*theData = (Ptr)dst;
+		*dataSize = 704*240*3;
+
+		*queuedFrameCount = 1;
 		GetTimeBaseTime(self->timeBase, [self->device frameRate].timeScale, t);
 	} else {
 		*theData = NULL;
 		*dataSize = 0;
+		*queuedFrameCount = 0;
 	}
-	*similarity = 0;
 	[pool drain];
 	return noErr;
 }
 ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 {
 //	ECV_DEBUG_LOG();
-	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
-	[pool drain];
+//	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+//	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
+//	[pool drain];
+	free(bufferAddr);
 	return noErr;
 }
 
@@ -371,7 +395,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	SetHandleSize((Handle)desc, sizeof(ImageDescription));
 	*descPtr = (ImageDescription){
 		.idSize = sizeof(ImageDescription),
-		.cType = [self->device pixelFormat],
+		.cType = ECVOutputPixelFormat(self),
 		.version = 2,
 		.spatialQuality = codecLosslessQuality,
 		.width = captureSize.width,
@@ -394,7 +418,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 	ECVICMImageDescriptionSetProperty(desc, CleanAperture, cleanAperture);
 
-	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {captureSize.height, 540};
+	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {pixelSize.height, captureSize.height}; // FIXME: Pretty sure this isn't quite right.
 	ECVICMImageDescriptionSetProperty(desc, PixelAspectRatio, pixelAspectRatio);
 
 	NCLCColorInfoImageDescriptionExtension const colorInfo = {
@@ -407,8 +431,6 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 
 	ECVICMImageDescriptionSetProperty(desc, EncodedWidth, (SInt32)pixelSize.width);
 	ECVICMImageDescriptionSetProperty(desc, EncodedHeight, (SInt32)pixelSize.height);
-
-	ECVICMImageDescriptionSetProperty(desc, RowBytes, (SInt32)bytesPerRow);
 
 	return noErr;
 }
