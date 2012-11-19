@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVAudioPipe.h"
 #endif
 #import "ECVDebug.h"
+#import "ECVICM.h"
 
 #define ECVFramesPerPacket 1
 #define ECVChannelsPerFrame 2
@@ -48,17 +49,6 @@ static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
 	0,
 };
 #define ECVAudioBufferBytesSize (ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000) // Should be more than enough to keep up with the incoming data.
-
-#define ECVCSOSetProperty(obj, prop, val) \
-	ECVOSStatus({ \
-		__typeof__(val) const __val = (val); \
-		ICMCompressionSessionOptionsSetProperty( \
-			obj, \
-			kQTPropertyClass_ICMCompressionSessionOptions, \
-			kICMCompressionSessionOptionsPropertyID_##prop, \
-			sizeof(__val), \
-			&__val); \
-	}) // Be sure to cast val to the right type, since no implicit conversion occurs.
 
 @protocol ECVCompressionDelegate
 
@@ -125,14 +115,14 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 	ICMCompressionSessionOptionsRef opts = NULL;
 	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &opts));
 
-	ECVCSOSetProperty(opts, DurationsNeeded, (Boolean)true);
-	ECVCSOSetProperty(opts, AllowAsyncCompletion, (Boolean)true);
+	ECVICMCSOSetProperty(opts, DurationsNeeded, (Boolean)true);
+	ECVICMCSOSetProperty(opts, AllowAsyncCompletion, (Boolean)true);
 	NSTimeInterval frameRateInterval = 0.0;
-	if(QTGetTimeInterval(_frameRate, &frameRateInterval)) ECVCSOSetProperty(opts, ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
-	ECVCSOSetProperty(opts, CPUTimeBudget, (UInt32)QTMakeTimeScaled(_frameRate, ECVMicrosecondsPerSecond).timeValue);
-	ECVCSOSetProperty(opts, ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
-	ECVCSOSetProperty(opts, Quality, (CodecQ)round([self videoQuality] * codecMaxQuality));
-	ECVCSOSetProperty(opts, Depth, [_videoStorage pixelFormat]);
+	if(QTGetTimeInterval(_frameRate, &frameRateInterval)) ECVICMCSOSetProperty(opts, ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
+	ECVICMCSOSetProperty(opts, CPUTimeBudget, (UInt32)QTMakeTimeScaled(_frameRate, ECVMicrosecondsPerSecond).timeValue);
+	ECVICMCSOSetProperty(opts, ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
+	ECVICMCSOSetProperty(opts, Quality, (CodecQ)round([self videoQuality] * codecMaxQuality));
+	ECVICMCSOSetProperty(opts, Depth, [_videoStorage pixelFormat]);
 	ICMEncodedFrameOutputRecord callback = {};
 	callback.frameDataAllocator = kCFAllocatorDefault;
 	callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVCompressionDelegateHandler;

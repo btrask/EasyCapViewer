@@ -32,10 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVDebug.h"
 #import "ECVComponentConfiguring.h"
+#import "ECVICM.h"
 
 typedef struct {
 	ECVCaptureDevice<ECVComponentConfiguring> *device;
-//	CFMutableDictionaryRef frameByBuffer;
+	ICMCompressionSessionRef compressionSession;
+	ICMEncodedFrameRef encodedFrame;
+	BOOL hasNewFrame;
+	NSLock *lock;
 	NSMutableArray *inputCombinations;
 	TimeBase timeBase;
 } ECVCStorage;
@@ -86,18 +90,6 @@ typedef struct {
 		return noErr;\
 	}
 
-#define ECVICMImageDescriptionSetProperty(obj, name, val) \
-	({ \
-		__typeof__(val) const __val = (val);\
-		ECVOSStatus(ICMImageDescriptionSetProperty( \
-			(obj), \
-			kQTPropertyClass_ImageDescription, \
-			kICMImageDescriptionPropertyID_##name, \
-			sizeof(__val), \
-			&__val \
-		)); \
-	})
-
 static NSString *const ECVVideoSourceObject = @"ECVVideoSourceObjectKey";
 static NSString *const ECVVideoFormatObject = @"ECVVideoFormatObjectKey";
 
@@ -107,7 +99,53 @@ static Rect ECVNSRectToRect(NSRect r)
 }
 static OSType ECVOutputPixelFormat(ECVCStorage const *const self)
 {
-	return kRawCodecType;
+	// Processing doesn't like '2vuy'. I don't know why.
+	// The transformation is pretty fast because all it does is swap bytes I think.
+	return kComponentVideoCodecType;//[self->device pixelFormat];//
+}
+
+static OSStatus ECVICMEncodedFrameOutputCallback(ECVCStorage *const self, ICMCompressionSessionRef const session, OSStatus const error, ICMEncodedFrameRef const frame, void const *const reserved)
+{
+	[self->lock lock];
+	if(frame) {
+		ICMEncodedFrameRelease(self->encodedFrame);
+		self->encodedFrame = ICMEncodedFrameRetain(frame);
+	}
+	self->hasNewFrame = YES;
+	[self->lock unlock];
+	return noErr;
+}
+static ICMCompressionSessionRef ECVCompressionSessionCreate(ECVCStorage *const self)
+{
+	ECVVideoStorage *const vs = [self->device videoStorage];
+	ICMCompressionSessionOptionsRef opts = NULL;
+	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &opts));
+	ECVICMCSOSetProperty(opts, DurationsNeeded, (Boolean)true);
+	ECVICMCSOSetProperty(opts, AllowAsyncCompletion, (Boolean)true);
+	QTTime const frameRate = [vs frameRate];
+	NSTimeInterval frameRateInterval = 0.0;
+	if(QTGetTimeInterval(frameRate, &frameRateInterval)) ECVICMCSOSetProperty(opts, ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
+	ECVICMCSOSetProperty(opts, CPUTimeBudget, (UInt32)QTMakeTimeScaled(frameRate, ECVMicrosecondsPerSecond).timeValue);
+//	ECVICMCSOSetProperty(opts, ScalingMode, (OSType)kICMScalingMode_StretchCleanAperture);
+	ECVICMCSOSetProperty(opts, Quality, (CodecQ)codecMaxQuality);
+	ECVICMCSOSetProperty(opts, Depth, [vs pixelFormat]);
+
+	ECVIntegerSize const s = [vs pixelSize];
+	ICMEncodedFrameOutputRecord cb = {
+		.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVICMEncodedFrameOutputCallback,
+		.encodedFrameOutputRefCon = self,
+	};
+	ICMCompressionSessionRef result = NULL;
+	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, s.width, s.height, ECVOutputPixelFormat(self), [self->device frameRate].timeScale, opts, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+		[NSNumber numberWithUnsignedInteger:s.width], kCVPixelBufferWidthKey,
+		[NSNumber numberWithUnsignedInteger:s.height], kCVPixelBufferHeightKey,
+		[NSNumber numberWithUnsignedInt:[vs pixelFormat]], kCVPixelBufferPixelFormatTypeKey,
+//		[NSDictionary dictionaryWithObjectsAndKeys:
+//			[self cleanAperatureDictionary], kCVImageBufferCleanApertureKey,
+//			nil], kCVBufferNonPropagatedAttachmentsKey,
+		nil], &cb, &result));
+	ICMCompressionSessionOptionsRelease(opts);
+	return result;
 }
 
 ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
@@ -132,7 +170,7 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 			return internalComponentErr;
 		}
 		[self->device setDeinterlacingMode:[ECVDropDeinterlacingMode class]];
-//		self->frameByBuffer = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, &kCFTypeDictionaryValueCallBacks);
+		self->lock = [[NSLock alloc] init];
 		SetComponentInstanceStorage(instance, (Handle)self);
 		[pool drain];
 	}
@@ -144,7 +182,9 @@ ECV_CALLCOMPONENT_FUNCTION(Close, ComponentInstance instance)
 	if(!self) return noErr;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device release];
-//	CFRelease(self->frameByBuffer);
+	ICMCompressionSessionRelease(self->compressionSession);
+	ICMEncodedFrameRelease(self->encodedFrame);
+	[self->lock release];
 	[self->inputCombinations release];
 	free(self);
 	[pool drain];
@@ -307,6 +347,8 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->device setPlaying:!!state];
+	ICMCompressionSessionRelease(self->compressionSession);
+	self->compressionSession = state ? ECVCompressionSessionCreate(self) : NULL;
 	[pool drain];
 	return noErr;
 }
@@ -325,37 +367,41 @@ ECV_VDIG_FUNCTION(ResetCompressSequence)
 ECV_VDIG_FUNCTION(CompressOneFrameAsync)
 {
 //	ECV_DEBUG_LOG();
-	if(![self->device isPlaying]) return badCallOrderErr;
+	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
+	if(![self->device isPlaying]) {
+		[pool drain];
+		return badCallOrderErr;
+	}
+	[pool drain];
+	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, kNilOptions), ^{
+		ECVVideoStorage *const vs = [self->device videoStorage];
+		ECVVideoFrame *const frame = [vs currentFrame];
+		if(!frame) ECVCompressOneFrameAsync(self);
+		else if([frame lockIfHasBytes]) {
+			CVPixelBufferPoolRef const p = ICMCompressionSessionGetPixelBufferPool(self->compressionSession);
+			CVPixelBufferRef pixelBuffer = NULL;
+			ECVCVReturn(CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, p, &pixelBuffer));
+			ECVCVPixelBuffer *const buffer = [[[ECVCVPixelBuffer alloc] initWithPixelBuffer:pixelBuffer] autorelease];
+			[buffer lock];
+			[buffer drawPixelBuffer:frame];
+			[buffer unlock];
+			[frame unlock];
+			ECVOSStatus(ICMCompressionSessionEncodeFrame(self->compressionSession, pixelBuffer, 0, [vs frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+			if(pixelBuffer) CVPixelBufferRelease(pixelBuffer);
+		} else if(frame) {
+			ECVICMEncodedFrameOutputCallback(self, self->compressionSession, noErr, NULL, NULL);
+		}
+	});
 	return noErr;
 }
 ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dataSize, UInt8 *similarity, TimeRecord *t)
 {
 //	ECV_DEBUG_LOG();
-	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVVideoStorage *const vs = [self->device videoStorage];
-	ECVVideoFrame *const frame = [vs currentFrame];
-
-	*similarity = 0;
-
-	if(frame) {
-//		void const *const bytes = [frame bytes];
-//		CFDictionaryAddValue(self->frameByBuffer, bytes, frame);
-//		*theData = (Ptr)bytes;
-//		*dataSize = [[frame videoStorage] bufferSize];
-
-		int const bytesPerRow = [vs bytesPerRow];
-		UInt8 const *restrict const src = [frame bytes];
-		UInt8 *restrict const dst = malloc(704*240*3);
-		int x, y;
-		for(y = 0; y < 240; ++y) {
-			for(x = 0; x < 704; ++x) {
-				dst[y*704*3+x*3+0] = src[y*bytesPerRow+x*2+1];
-				dst[y*704*3+x*3+1] = src[y*bytesPerRow+x*2+1];
-				dst[y*704*3+x*3+2] = src[y*bytesPerRow+x*2+1];
-			}
-		}
-		*theData = (Ptr)dst;
-		*dataSize = 704*240*3;
+	[self->lock lock];
+	if(self->hasNewFrame && self->encodedFrame) {
+		*theData = (Ptr)ICMEncodedFrameGetDataPtr(self->encodedFrame);
+		*dataSize = ICMEncodedFrameGetBufferSize(self->encodedFrame);
+		self->hasNewFrame = NO;
 
 		*queuedFrameCount = 1;
 		GetTimeBaseTime(self->timeBase, [self->device frameRate].timeScale, t);
@@ -364,16 +410,13 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 		*dataSize = 0;
 		*queuedFrameCount = 0;
 	}
-	[pool drain];
+	[self->lock unlock];
+	*similarity = 0;
 	return noErr;
 }
 ECV_VDIG_FUNCTION(ReleaseCompressBuffer, Ptr bufferAddr)
 {
 //	ECV_DEBUG_LOG();
-//	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-//	CFDictionaryRemoveValue(self->frameByBuffer, bufferAddr);
-//	[pool drain];
-	free(bufferAddr);
 	return noErr;
 }
 
@@ -408,7 +451,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 
 	FieldInfoImageDescriptionExtension2 const fieldInfo = {kQTFieldsProgressiveScan, kQTFieldDetailUnknown};
-	ECVICMImageDescriptionSetProperty(desc, FieldInfo, fieldInfo);
+	ECVICMIDSetProperty(desc, FieldInfo, fieldInfo);
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
 		pixelSize.width, 1,
@@ -416,10 +459,10 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		0, 1,
 		0, 1,
 	};
-	ECVICMImageDescriptionSetProperty(desc, CleanAperture, cleanAperture);
+	ECVICMIDSetProperty(desc, CleanAperture, cleanAperture);
 
 	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {pixelSize.height, captureSize.height}; // FIXME: Pretty sure this isn't quite right.
-	ECVICMImageDescriptionSetProperty(desc, PixelAspectRatio, pixelAspectRatio);
+	ECVICMIDSetProperty(desc, PixelAspectRatio, pixelAspectRatio);
 
 	NCLCColorInfoImageDescriptionExtension const colorInfo = {
 		kVideoColorInfoImageDescriptionExtensionType,
@@ -427,10 +470,10 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		kQTTransferFunction_ITU_R709_2,
 		kQTMatrix_ITU_R_601_4
 	};
-	ECVICMImageDescriptionSetProperty(desc, NCLCColorInfo, colorInfo);
+	ECVICMIDSetProperty(desc, NCLCColorInfo, colorInfo);
 
-	ECVICMImageDescriptionSetProperty(desc, EncodedWidth, (SInt32)pixelSize.width);
-	ECVICMImageDescriptionSetProperty(desc, EncodedHeight, (SInt32)pixelSize.height);
+	ECVICMIDSetProperty(desc, EncodedWidth, (SInt32)pixelSize.width);
+	ECVICMIDSetProperty(desc, EncodedHeight, (SInt32)pixelSize.height);
 
 	return noErr;
 }

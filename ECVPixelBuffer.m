@@ -232,8 +232,9 @@ static void ECVDrawRect(ECVMutablePixelBuffer *dst, ECVPixelBuffer *src, ECVInte
 
 #pragma mark -ECVCVPixelBuffer
 
-- (id)initWithPixelBuffer:(CVPixelBufferRef)pixelBuffer
+- (id)initWithPixelBuffer:(CVPixelBufferRef const)pixelBuffer
 {
+	NSParameterAssert(pixelBuffer);
 	if((self = [super init])) {
 		_pixelBuffer = CVPixelBufferRetain(pixelBuffer);
 	}
