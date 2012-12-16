@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Video
 #import "ECVVideoFormat.h"
+#import "ECVVideoStorage.h"
 #import "ECVDeinterlacingMode.h"
 #import "ECVPixelBuffer.h"
 
@@ -256,12 +257,13 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	}
 	return YES;
 }
-- (void)readBytes:(UInt8 const *const)bytes length:(NSUInteger const)length
+- (void)writeBytes:(UInt8 const *const)bytes length:(NSUInteger const)length toStorage:(ECVVideoStorage *const)storage
 {
 	if(!length) return;
 	size_t skip = 4;
 	if(ECVSTK1160NewImageFlag & bytes[0]) {
-		[self threaded_nextFieldType:ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField];
+		ECVFieldType const field = ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField;
+		[self finishedFrame:[storage finishedFrameWithNextFieldType:field]];
 		_offset = 0;
 		skip = 8;
 	}
@@ -272,7 +274,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	OSType const pixelFormat = [self pixelFormat];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
-	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
+	[storage drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;
 }

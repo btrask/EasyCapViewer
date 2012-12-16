@@ -15,6 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVEM2860Device.h"
 #import "SAA711XChip.h"
 #import "ECVVideoFormat.h"
+#import "ECVVideoStorage.h"
 #import "ECVPixelBuffer.h"
 #import "ECVPixelFormat.h"
 
@@ -487,13 +488,13 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	[super read];
 	(void)[self setAlternateInterface:0];
 }
-- (void)readBytes:(UInt8 const *const)bytes length:(NSUInteger const)length
+- (void)writeBytes:(UInt8 const *const)bytes length:(NSUInteger const)length toStorage:(ECVVideoStorage *const)storage
 {
 	if(!length) return;
 	if(0x22 == bytes[0]) {
 		ECVFieldType field = ECVHighField;
 		if(length >= 3) field = bytes[2] & 0x01 ? ECVLowField : ECVHighField;
-		[self threaded_nextFieldType:field];
+		[self finishedFrame:[storage finishedFrameWithNextFieldType:field]];
 		_offset = 0;
 	}
 	size_t const skip = 4;
@@ -505,7 +506,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
 	ECVPixelFormatHack((void *)bytes + skip, realLength);
 	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
-	[self threaded_drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
+	[storage drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;
 }

@@ -66,15 +66,10 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 	io_service_t _service;
 	NSString *_productName;
-
 	io_object_t _deviceRemovedNotification;
-//	IOUSBDeviceInterface320 **_deviceInterface;
-//	IOUSBInterfaceInterface300 **_interfaceInterface;
-	UInt32 _frameTime;
 
 	Class _deinterlacingMode;
 	ECVVideoStorage *_videoStorage;
-	NSConditionLock *_playLock;
 	NSTimeInterval _stopTime;
 
 #if defined(ECV_ENABLE_AUDIO)
@@ -100,19 +95,19 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 }
 
 + (NSArray *)deviceClasses;
-+ (void)registerDeviceClass:(Class)cls; // Add the device to ECVDevices.plist instead, if possible.
-+ (void)unregisterDeviceClass:(Class)cls;
++ (void)registerDeviceClass:(Class const)cls; // Add the device to ECVDevices.plist instead, if possible.
++ (void)unregisterDeviceClass:(Class const)cls;
 
 + (NSDictionary *)deviceDictionary;
 + (NSDictionary *)matchingDictionary;
-+ (NSArray *)devicesWithIterator:(io_iterator_t)iterator;
++ (NSArray *)devicesWithIterator:(io_iterator_t const)iterator;
 
-+ (IOUSBDeviceInterface320 **)USBDeviceWithService:(io_service_t)service;
-+ (IOUSBInterfaceInterface300 **)USBInterfaceWithDevice:(IOUSBDeviceInterface320 **)device;
++ (IOUSBDeviceInterface320 **)USBDeviceWithService:(io_service_t const)service;
++ (IOUSBInterfaceInterface300 **)USBInterfaceWithDevice:(IOUSBDeviceInterface320 **const)device;
 
-- (id)initWithService:(io_service_t)service error:(out NSError **)outError;
+- (id)initWithService:(io_service_t const)service error:(out NSError **const)outError;
 - (void)noteDeviceRemoved;
-- (void)workspaceWillSleep:(NSNotification *)aNotif;
+- (void)workspaceWillSleep:(NSNotification *const)aNotif;
 
 - (Class)deinterlacingMode;
 - (void)setDeinterlacingMode:(Class const)mode;
@@ -134,10 +129,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 
 
-- (void)threaded_nextFieldType:(ECVFieldType)fieldType;
-- (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
-
-
 
 // Ongoing refactoring... This code is new, the above code is not.
 
@@ -157,6 +148,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (NSString *)name;
 - (io_service_t)service;
 
+- (void)finishedFrame:(ECVVideoFrame *const)frame; // TODO: Part of the gradual split into two separate objects.
+
 @end
 
 @interface ECVCaptureDevice(ECVRead_Thread)
@@ -168,14 +161,13 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 @interface ECVCaptureDevice(ECVReadAbstract_Thread)
 
-- (void)readBytes:(UInt8 const *const)bytes length:(NSUInteger const)length;
+- (void)writeBytes:(UInt8 const *const)bytes length:(NSUInteger const)length toStorage:(ECVVideoStorage *const)storage;
 
 @end
 
 @interface ECVCaptureDevice(ECVAbstract)
 
 - (UInt32)maximumMicrosecondsInFrame;
-//- (BOOL)requiresHighSpeed;
 - (NSSet *)supportedVideoFormats;
 - (OSType)pixelFormat;
 
