@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVEM2860Device.h"
 #import "SAA711XChip.h"
+#import "ECVVideoFormat.h"
 #import "ECVPixelBuffer.h"
 #import "ECVPixelFormat.h"
 
@@ -29,13 +30,13 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 		u_int8_t const expected[] = {__VA_ARGS__}; \
 		u_int8_t data[] = {__VA_ARGS__}; \
 		size_t const length = sizeof(expected); \
-		if(![self readRequest:(request) value:0 index:(idx) length:length data:data]) return NO; \
+		if(![self readRequest:(request) value:0 index:(idx) length:length data:data]) return; \
 		if(memcmp(expected, data, length) != 0) ECVLog(ECVNotice, @"Read %04p: Expected %@, received %@", (idx), [NSData dataWithBytesNoCopy:(void *)expected length:length freeWhenDone:NO], [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO]); \
 	} while(0)
 #define SEND(request, idx, ...) \
 	do { \
 		u_int8_t data[] = {__VA_ARGS__}; \
-		if(![self writeRequest:(request) value:0 index:(idx) length:sizeof(data) data:data]) return NO; \
+		if(![self writeRequest:(request) value:0 index:(idx) length:sizeof(data) data:data]) return; \
 	} while(0)
 
 @implementation ECVEM2860Device
@@ -49,18 +50,10 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (void)setVideoSource:(ECVEM2860VideoSource const)source
 {
 	if(source == _videoSource) return;
-	ECVPauseWhile(self, { _videoSource = source; });
+	[self setPaused:YES];
+	_videoSource = source;
+	[self setPaused:NO];
 	[[self defaults] setInteger:source forKey:ECVEM2860VideoSourceKey];
-}
-- (ECVSAA711XVideoFormat)videoFormat
-{
-	return _videoFormat;
-}
-- (void)setVideoFormat:(ECVSAA711XVideoFormat const)format
-{
-	if(format == _videoFormat) return;
-	ECVPauseWhile(self, { _videoFormat = format; });
-	[[self defaults] setInteger:format forKey:ECVEM2860VideoFormatKey];
 }
 
 #pragma mark -
@@ -83,10 +76,10 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 		BTUserDefaults *const d = [self defaults];
 		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithUnsignedInteger:ECVEM2860CompositeInput], ECVEM2860VideoSourceKey,
-			[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCMFormat], ECVEM2860VideoFormatKey,
+//			[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCMFormat], ECVEM2860VideoFormatKey,
 			nil]];
 		[self setVideoSource:[d integerForKey:ECVEM2860VideoSourceKey]];
-		[self setVideoFormat:[d integerForKey:ECVEM2860VideoFormatKey]];
+//		[self setVideoFormat:[d integerForKey:ECVEM2860VideoFormatKey]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setBrightness:[[d objectForKey:ECVBrightnessKey] doubleValue]];
 		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
@@ -99,17 +92,13 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #pragma mark -ECVCaptureDevice(ECVAbstract)
 
-- (BOOL)requiresHighSpeed
+- (UInt32)maximumMicrosecondsInFrame
 {
-	return YES;
+	return kUSBHighSpeedMicrosecondsInFrame;
 }
-- (ECVIntegerSize)captureSize
+- (NSSet *)supportedVideoFormats
 {
-	return (ECVIntegerSize){704, [self is60HzFormat] ? 480 : 576};
-}
-- (QTTime)frameRate
-{
-	return [self is60HzFormat] ? QTMakeTime(1001, 60000) : QTMakeTime(1, 50); // FIXME: Figure out why the A/V sync goes bad over time.
+	return [_SAA711XChip supportedVideoFormats];
 }
 - (OSType)pixelFormat
 {
@@ -118,7 +107,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #pragma mark -
 
-- (BOOL)threaded_play
+- (void)read
 {
 	_offset = 0;
 
@@ -494,35 +483,23 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	//RESET_PIPE
 	//GET_CURRENT_FRAME_NUMBER
 
-	if(![_SAA711XChip initialize]) return NO;
-	return YES;
-}
-- (BOOL)threaded_pause
-{
+	if(![_SAA711XChip initialize]) return;
+	[super read];
 	(void)[self setAlternateInterface:0];
-	return YES;
 }
-- (BOOL)threaded_watchdog
-{
-	return YES;
-}
-- (void)threaded_nextFieldType:(ECVFieldType const)fieldType
-{
-	[super threaded_nextFieldType:fieldType];
-	_offset = 0;
-}
-- (void)threaded_readBytes:(UInt8 const *const)bytes length:(size_t const)length
+- (void)readBytes:(UInt8 const *const)bytes length:(NSUInteger const)length
 {
 	if(!length) return;
 	if(0x22 == bytes[0]) {
 		ECVFieldType field = ECVHighField;
 		if(length >= 3) field = bytes[2] & 0x01 ? ECVLowField : ECVHighField;
 		[self threaded_nextFieldType:field];
+		_offset = 0;
 	}
 	size_t const skip = 4;
 	if(length <= skip) return;
 	NSUInteger const realLength = length - skip;
-	ECVIntegerSize const inputSize = {720, [self is60HzFormat] ? 480 : 576};
+	ECVIntegerSize const inputSize = {720, [[self videoFormat] is60Hz] ? 480 : 576};
 	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
 	OSType const pixelFormat = [self pixelFormat];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
@@ -565,62 +542,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (NSInteger)indentationLevelForVideoSourceObject:(id)obj
 {
 	return 0;
-}
-
-#pragma mark -
-
-- (NSArray *)allVideoFormatObjects
-{
-	return [NSArray arrayWithObjects:
-		NSLocalizedString(@"60Hz", nil),
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCMFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XPAL60Format],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XPALMFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSC44360HzFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCJFormat],
-		NSLocalizedString(@"50Hz", nil),
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XPALBGDHIFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XPALNFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCNFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSC44350HzFormat],
-		[NSNumber numberWithUnsignedInteger:ECVSAA711XSECAMFormat],
-		nil];
-}
-- (id)videoFormatObject
-{
-	return [NSNumber numberWithUnsignedInteger:[self videoFormat]];
-}
-- (void)setVideoFormatObject:(id)obj
-{
-	[self setVideoFormat:[obj unsignedIntegerValue]];
-}
-- (NSString *)localizedStringForVideoFormatObject:(id)obj
-{
-	if(![obj isKindOfClass:[NSNumber class]]) return [obj description];
-	switch([obj unsignedIntegerValue]) {
-		case ECVSAA711XAuto60HzFormat   : return NSLocalizedString(@"Auto-detect", nil);
-		case ECVSAA711XNTSCMFormat      : return NSLocalizedString(@"NTSC", nil);
-		case ECVSAA711XPAL60Format      : return NSLocalizedString(@"PAL-60", nil);
-		case ECVSAA711XPALMFormat       : return NSLocalizedString(@"PAL-M", nil);
-		case ECVSAA711XNTSC44360HzFormat: return NSLocalizedString(@"NTSC 4.43", nil);
-		case ECVSAA711XNTSCJFormat      : return NSLocalizedString(@"NTSC-J", nil);
-
-		case ECVSAA711XAuto50HzFormat   : return NSLocalizedString(@"Auto-detect", nil);
-		case ECVSAA711XPALBGDHIFormat   : return NSLocalizedString(@"PAL", nil);
-		case ECVSAA711XPALNFormat       : return NSLocalizedString(@"PAL-N", nil);
-		case ECVSAA711XNTSC44350HzFormat: return NSLocalizedString(@"NTSC 4.43", nil);
-		case ECVSAA711XNTSCNFormat      : return NSLocalizedString(@"NTSC-N", nil);
-		case ECVSAA711XSECAMFormat      : return NSLocalizedString(@"SECAM", nil);
-		default: return nil;
-	}
-}
-- (BOOL)isValidVideoFormatObject:(id)obj
-{
-	return [obj isKindOfClass:[NSNumber class]];
-}
-- (NSInteger)indentationLevelForVideoFormatObject:(id)obj
-{
-	return [self isValidVideoFormatObject:obj] ? 1 : 0;
 }
 
 #pragma mark -
@@ -682,23 +603,25 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 }
 - (short)inputStandard
 {
-	switch([self videoFormat]) {
-		case ECVSAA711XNTSCMFormat: return ntscReallyIn;
-		case ECVSAA711XPALBGDHIFormat: return palIn;
-		case ECVSAA711XSECAMFormat: return secamIn;
-		default: return currentIn;
-	}
+	return currentIn; // TODO: Implement.
+//	switch([self videoFormat]) {
+//		case ECVSAA711XNTSCMFormat: return ntscReallyIn;
+//		case ECVSAA711XPALBGDHIFormat: return palIn;
+//		case ECVSAA711XSECAMFormat: return secamIn;
+//		default: return currentIn;
+//	}
 }
 - (void)setInputStandard:(short)standard
 {
-	ECVSAA711XVideoFormat format;
-	switch(standard) {
-		case ntscReallyIn: format = ECVSAA711XNTSCMFormat; break;
-		case palIn: format = ECVSAA711XPALBGDHIFormat; break;
-		case secamIn: format = ECVSAA711XSECAMFormat; break;
-		default: return;
-	}
-	[self setVideoFormat:format];
+	// TODO: Implement.
+//	ECVSAA711XVideoFormat format;
+//	switch(standard) {
+//		case ntscReallyIn: format = ECVSAA711XNTSCMFormat; break;
+//		case palIn: format = ECVSAA711XPALBGDHIFormat; break;
+//		case secamIn: format = ECVSAA711XSECAMFormat; break;
+//		default: return;
+//	}
+//	[self setVideoFormat:format];
 }
 
 #pragma mark -<SAA711XDevice>
@@ -715,43 +638,20 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 {
 	return NO; // TODO: Not sure how this works right now, and it's only used for reading the version number anyway.
 }
-- (SAA711XMODESource)SAA711XMODESource
-{
-	switch([self videoSource]) {
-		case ECVEM2860SVideoInput: return SAA711XMODESVideoAI12_YGain;
-		default: return SAA711XMODECompositeAI11;
-	}
-}
-- (BOOL)SVideo
-{
-	return ECVEM2860SVideoInput == [self videoSource];
-}
-- (SAA711XCSTDFormat)SAA711XCSTDFormat
-{
-	switch([self videoFormat]) {
-		case ECVSAA711XAuto60HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
-		case ECVSAA711XNTSCMFormat:       return SAA711XCSTDNTSCM;
-		case ECVSAA711XPAL60Format:       return SAA711XCSTDPAL60Hz;
-		case ECVSAA711XPALMFormat:        return SAA711XCSTDPALM;
-		case ECVSAA711XNTSC44360HzFormat: return SAA711XCSTDNTSC44360Hz;
-		case ECVSAA711XNTSCJFormat:       return SAA711XCSTDNTSCJ;
 
-		case ECVSAA711XAuto50HzFormat:    return SAA711XAUTO0AutomaticChrominanceStandardDetection;
-		case ECVSAA711XPALBGDHIFormat:    return SAA711XCSTDPAL_BGDHI;
-		case ECVSAA711XPALNFormat:        return SAA711XCSTDPALN;
-		case ECVSAA711XNTSC44350HzFormat: return SAA711XCSTDNTSC44350Hz;
-		case ECVSAA711XNTSCNFormat:       return SAA711XCSTDNTSCN;
-		case ECVSAA711XSECAMFormat:       return SAA711XCSTDSECAM;
-		default: return 0;
-	}
-}
-- (BOOL)is60HzFormat
+#pragma mark -
+
+- (ECVVideoFormat *)videoFormatForSAA711XChip:(SAA711XChip *const)chip
 {
-	return ECVSAA711XVideoFormatIs60Hz([self videoFormat]);
+	return [self videoFormat];
 }
-- (BOOL)SAA711XRTP0OutputPolarityInverted
+- (BOOL)polarityInvertedForSAA711XChip:(SAA711XChip *const)chip
 {
 	return YES;
+}
+- (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip
+{
+	return ECVEM2860SVideoInput == [self videoSource];
 }
 
 #pragma mark -NSObject

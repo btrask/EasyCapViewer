@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
+@class ECVVideoFormat;
 @class ECVVideoStorage;
 @class ECVPixelBuffer;
 @class ECVVideoFrame;
@@ -50,14 +51,6 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 
 extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
-#define ECVPauseWhile(obj, code) do {\
-	ECVCaptureDevice *const __obj = (obj);\
-	BOOL const __p = [__obj isPlaying];\
-	if(__p) [__obj setPlaying:NO];\
-	({code});\
-	if(__p) [__obj setPlaying:YES];\
-} while(NO)
-
 @interface ECVCaptureDevice : NSDocument <ECVCaptureDeviceConfiguring
 #if defined(ECV_ENABLE_AUDIO)
 , ECVAudioDeviceDelegate
@@ -75,8 +68,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	NSString *_productName;
 
 	io_object_t _deviceRemovedNotification;
-	IOUSBDeviceInterface320 **_deviceInterface;
-	IOUSBInterfaceInterface300 **_interfaceInterface;
+//	IOUSBDeviceInterface320 **_deviceInterface;
+//	IOUSBInterfaceInterface300 **_interfaceInterface;
 	UInt32 _frameTime;
 
 	Class _deinterlacingMode;
@@ -92,6 +85,18 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	CGFloat _volume;
 	BOOL _upconvertsFromMono;
 #endif
+
+// New ivars...
+
+	ECVVideoFormat *_videoFormat;
+	NSUInteger _pauseCount;
+	BOOL _pausedFromUI;
+
+	IOUSBDeviceInterface320 **_USBDevice;
+	IOUSBInterfaceInterface300 **_USBInterface;
+	NSLock *_readThreadLock;
+	NSLock *_readLock;
+	BOOL _read;
 }
 
 + (NSArray *)deviceClasses;
@@ -102,23 +107,17 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 + (NSDictionary *)matchingDictionary;
 + (NSArray *)devicesWithIterator:(io_iterator_t)iterator;
 
++ (IOUSBDeviceInterface320 **)USBDeviceWithService:(io_service_t)service;
++ (IOUSBInterfaceInterface300 **)USBInterfaceWithDevice:(IOUSBDeviceInterface320 **)device;
+
 - (id)initWithService:(io_service_t)service error:(out NSError **)outError;
 - (void)noteDeviceRemoved;
 - (void)workspaceWillSleep:(NSNotification *)aNotif;
 
-@property(assign, getter = isPlaying) BOOL playing;
-- (void)togglePlaying;
-@property(nonatomic, assign) Class deinterlacingMode;
-
-@property(readonly) BTUserDefaults *defaults;
-@property(readonly) ECVVideoStorage *videoStorage;
-@property(readonly) NSUInteger simultaneousTransfers;
-@property(readonly) NSUInteger microframesPerTransfer;
-
-- (void)startPlaying;
-- (void)threadMain_play;
-- (void)threaded_nextFieldType:(ECVFieldType)fieldType;
-- (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
+- (Class)deinterlacingMode;
+- (void)setDeinterlacingMode:(Class const)mode;
+- (BTUserDefaults *)defaults;
+- (ECVVideoStorage *)videoStorage;
 
 - (BOOL)setAlternateInterface:(u_int8_t)alternateSetting;
 - (BOOL)controlRequestWithType:(u_int8_t)type request:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(inout void *const)data;
@@ -133,18 +132,51 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (void)stopAudio;
 #endif
 
+
+
+- (void)threaded_nextFieldType:(ECVFieldType)fieldType;
+- (void)threaded_drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
+
+
+
+// Ongoing refactoring... This code is new, the above code is not.
+
+- (ECVVideoFormat *)videoFormat;
+- (void)setVideoFormat:(ECVVideoFormat *const)format;
+
+- (NSUInteger)pauseCount;
+- (BOOL)isPaused;
+- (void)setPaused:(BOOL const)flag;
+- (BOOL)pausedFromUI;
+- (void)setPausedFromUI:(BOOL const)flag;
+- (void)togglePausedFromUI;
+
+- (void)play;
+- (void)stop;
+
+- (NSString *)name;
+- (io_service_t)service;
+
+@end
+
+@interface ECVCaptureDevice(ECVRead_Thread)
+
+- (void)read;
+- (BOOL)keepReading;
+
+@end
+
+@interface ECVCaptureDevice(ECVReadAbstract_Thread)
+
+- (void)readBytes:(UInt8 const *const)bytes length:(NSUInteger const)length;
+
 @end
 
 @interface ECVCaptureDevice(ECVAbstract)
 
-@property(readonly) BOOL requiresHighSpeed;
-@property(readonly) ECVIntegerSize captureSize;
-@property(readonly) QTTime frameRate;
-@property(readonly) OSType pixelFormat;
-
-- (BOOL)threaded_play;
-- (BOOL)threaded_pause;
-- (BOOL)threaded_watchdog;
-- (void)threaded_readBytes:(UInt8 const *)bytes length:(size_t)length;
+- (UInt32)maximumMicrosecondsInFrame;
+//- (BOOL)requiresHighSpeed;
+- (NSSet *)supportedVideoFormats;
+- (OSType)pixelFormat;
 
 @end

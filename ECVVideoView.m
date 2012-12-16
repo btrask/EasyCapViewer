@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <OpenGL/glu.h>
 
 // Models
+#import "ECVVideoFormat.h"
 #import "ECVDependentVideoStorage.h"
 #import "ECVVideoFrame.h"
 
@@ -94,7 +95,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glGenTextures([_videoStorage numberOfBuffers], [_textureNames mutableBytes]));
 	_frames = [[NSMutableArray alloc] init];
 
-	ECVIntegerSize const s = [_videoStorage pixelSize];
+	ECVIntegerSize const s = [[_videoStorage videoFormat] frameSize];
 	GLenum const format = ECVPixelFormatToGLFormat([_videoStorage pixelFormat]);
 	GLenum const type = ECVPixelFormatToGLType([_videoStorage pixelFormat]);
 	NSUInteger i = 0;
@@ -236,7 +237,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 {
 	if(!frame) return;
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
-	ECVIntegerSize const s = [_videoStorage pixelSize];
+	ECVIntegerSize const s = [[_videoStorage videoFormat] frameSize];
 	OSType const f = [_videoStorage pixelFormat];
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
 	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatToGLFormat(f), ECVPixelFormatToGLType(f), [frame bytes]));

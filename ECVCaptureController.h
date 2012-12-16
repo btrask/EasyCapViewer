@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
+@class ECVVideoFormat;
 @class ECVVideoFrame;
 @class ECVMovieRecorder;
 
@@ -115,5 +116,15 @@ typedef NSInteger ECVCropBorder;
 - (void)stopPlaying;
 - (void)threaded_pushFrame:(ECVVideoFrame *)frame;
 - (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue;
+
+
+
+
+
+// Ongoing refactoring... This code is new, the above code is not.
+
+
+- (ECVVideoFormat *)videoFormat;
+
 
 @end

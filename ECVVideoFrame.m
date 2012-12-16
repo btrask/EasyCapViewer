@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
 
 // Models
+#import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 
 // Other Sources
@@ -45,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVIntegerSize)pixelSize
 {
-	return [_videoStorage pixelSize];
+	return [[_videoStorage videoFormat] frameSize];
 }
 - (size_t)bytesPerRow
 {

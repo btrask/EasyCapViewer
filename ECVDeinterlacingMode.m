@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDeinterlacingMode.h"
 
 // Models
+#import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 
@@ -80,7 +81,7 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 }
 - (ECVIntegerSize)pixelSize
 {
-	return [_videoStorage captureSize];
+	return [[_videoStorage videoFormat] frameSize];
 }
 - (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint)point
 {

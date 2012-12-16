@@ -22,16 +22,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
-#import "ECVVideoFrame.h"
+@class ECVVideoFormat;
 @class ECVDeinterlacingMode;
+@class ECVPixelBuffer;
+@class ECVMutablePixelBuffer;
+@class ECVVideoFrame;
 
 @interface ECVVideoStorage : NSObject <NSLocking>
 {
 	@private
+	ECVVideoFormat *_videoFormat;
 	ECVDeinterlacingMode *_deinterlacingMode;
-	ECVIntegerSize _captureSize;
 	OSType _pixelFormat;
-	QTTime _frameRate;
 	size_t _bytesPerRow;
 	size_t _bufferSize;
 	NSRecursiveLock *_lock;
@@ -39,15 +41,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (Class)preferredVideoStorageClass;
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormat frameRate:(QTTime)frameRate;
-@property(readonly) ECVIntegerSize captureSize;
-@property(readonly) ECVIntegerSize pixelSize;
-@property(readonly) OSType pixelFormat;
-@property(readonly) QTTime frameRate;
-@property(readonly) size_t bytesPerPixel;
-@property(readonly) size_t bytesPerRow;
-@property(readonly) size_t bufferSize;
-@property(readonly) NSUInteger frameGroupSize;
+- (id)initWithVideoFormat:(ECVVideoFormat *const)videoFormat deinterlacingMode:(Class const)mode pixelFormat:(OSType const)pixelFormat;
+- (ECVVideoFormat *)videoFormat;
+- (OSType)pixelFormat;
+- (size_t)bytesPerPixel;
+- (size_t)bytesPerRow;
+- (size_t)bufferSize;
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c;
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames;

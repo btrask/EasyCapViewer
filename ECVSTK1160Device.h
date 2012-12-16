@@ -37,35 +37,18 @@ enum {
 	ECVSTK1160Composite4Input = 4,
 };
 typedef NSUInteger ECVSTK1160VideoSource;
-enum {
-	ECVSTK1160Auto60HzFormat = 0,
-	ECVSTK1160NTSCMFormat = 8,
-	ECVSTK1160PAL60Format = 2,
-	ECVSTK1160NTSC44360HzFormat = 6,
-	ECVSTK1160PALMFormat = 3,
-	ECVSTK1160NTSCJFormat = 9,
-
-	ECVSTK1160Auto50HzFormat = 1,
-	ECVSTK1160PALBGDHIFormat = 10,
-	ECVSTK1160NTSC44350HzFormat = 7,
-	ECVSTK1160PALNFormat = 4,
-	ECVSTK1160NTSCNFormat = 5,
-	ECVSTK1160SECAMFormat = 11,
-};
-typedef NSUInteger ECVSTK1160VideoFormat;
 
 @interface ECVSTK1160Device : ECVCaptureDevice <ECVCaptureDeviceConfiguring, ECVComponentConfiguring, SAA711XDevice, VT1612ADevice>
 {
 	@private
 	ECVSTK1160VideoSource _videoSource;
-	ECVSTK1160VideoFormat _videoFormat;
 	SAA711XChip *_SAA711XChip;
 	VT1612AChip *_VT1612AChip;
 	NSUInteger _offset;
 }
 
-@property(nonatomic, assign) ECVSTK1160VideoSource videoSource;
-@property(nonatomic, assign) ECVSTK1160VideoFormat videoFormat;
+- (ECVSTK1160VideoSource)videoSource;
+- (void)setVideoSource:(ECVSTK1160VideoSource const)source;
 
 - (BOOL)readIndex:(UInt16 const)i value:(out UInt8 *const)outValue;
 - (BOOL)writeIndex:(UInt16 const)i value:(UInt8 const)v;

@@ -29,7 +29,9 @@ enum {
 };
 typedef NSUInteger ECVErrorLevel;
 
-extern void ECVLog(ECVErrorLevel level, NSString *format, ...) NS_FORMAT_FUNCTION(2, 3);
+void ECVLog(ECVErrorLevel level, NSString *format, ...) NS_FORMAT_FUNCTION(2, 3);
+#define ECVLOG(format, args...) ECVLog(ECVNotice, format, ##args)
+
 extern NSString *ECVOSStatusToString(OSStatus error);
 extern NSString *ECVIOKitErrorToString(IOReturn error);
 extern NSString *ECVCVReturnToString(CVReturn error);
@@ -56,6 +58,12 @@ extern NSString *ECVAudioStreamBasicDescriptionToString(AudioStreamBasicDescript
 	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
 	goto ECVGenericError;\
 } while(NO)
+
+#define ECVIOReturn2(x) ({\
+	IOReturn const __e = (x);\
+	if(kIOReturnSuccess != __e) ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
+	__e;\
+})
 
 #define ECVCVReturn(x) do {\
 	CVReturn const __e = (x);\

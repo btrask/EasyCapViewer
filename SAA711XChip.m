@@ -21,8 +21,38 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "SAA711XChip.h"
 
+// Models
+#import "ECVVideoFormat.h"
+
 // Other Sources
 #import "ECVDebug.h"
+
+enum {
+	SAA711XAUTO0AutomaticChrominanceStandardDetection = 1 << 1,
+	SAA711XCSTDPAL_BGDHI   = 0 << 4,
+	SAA711XCSTDNTSC44350Hz = 1 << 4,
+	SAA711XCSTDPALN        = 2 << 4,
+	SAA711XCSTDNTSCN       = 3 << 4,
+	SAA711XCSTDNTSCJ       = 4 << 4,
+	SAA711XCSTDSECAM       = 5 << 4,
+
+	SAA711XCSTDNTSCM       = SAA711XCSTDPAL_BGDHI,
+	SAA711XCSTDPAL60Hz     = SAA711XCSTDNTSC44350Hz,
+	SAA711XCSTDNTSC44360Hz = SAA711XCSTDPALN,
+	SAA711XCSTDPALM        = SAA711XCSTDNTSCN,
+};
+enum {
+	SAA711XMODECompositeAI11 = 0,
+	SAA711XMODECompositeAI12 = 1,
+	SAA711XMODECompositeAI21 = 2,
+	SAA711XMODECompositeAI22 = 3,
+	SAA711XMODECompositeAI23 = 4,
+	SAA711XMODECompositeAI24 = 5,
+	SAA711XMODESVideoAI11_GAI2 = 6,
+	SAA711XMODESVideoAI12_GAI2 = 7,
+	SAA711XMODESVideoAI11_YGain = 8,
+	SAA711XMODESVideoAI12_YGain = 9,
+};
 
 enum {
 	SAA711XFUSE0Antialias = 1 << 6,
@@ -77,9 +107,19 @@ enum {
 	SAA711XFCTCFastColorTimeConstant = 1 << 2,
 };
 
+@interface ECVVideoFormat(SAA711XChip)
+
+- (u_int8_t)SAA711XFSELManualFieldSelection;
+- (u_int8_t)SAA711XCSTDFormat;
+
+@end
+
 @interface SAA711XChip(Private)
 
-- (u_int8_t)SAA711XCHXENOutputControl;
+- (u_int8_t)_SAA711XMODESource;
+- (u_int8_t)_SAA711XCHXENOutputControl;
+- (u_int8_t)_SAA711XLuminanceControl;
+- (u_int8_t)_SAAA711XRTP0OutputPolarity;
 
 @end
 
@@ -87,12 +127,19 @@ enum {
 
 #pragma mark -SAA711XChip
 
-@synthesize device;
+- (id<SAA711XDevice>)device
+{
+	return device;
+}
+- (void)setDevice:(id<SAA711XDevice> const)obj
+{
+	device = obj;
+}
 - (CGFloat)brightness
 {
 	return _brightness;
 }
-- (void)setBrightness:(CGFloat)val
+- (void)setBrightness:(CGFloat const)val
 {
 	_brightness = val;
 	(void)[device writeSAA711XRegister:0x0a value:round(val * 0xff)];
@@ -101,7 +148,7 @@ enum {
 {
 	return _contrast;
 }
-- (void)setContrast:(CGFloat)val
+- (void)setContrast:(CGFloat const)val
 {
 	_contrast = val;
 	(void)[device writeSAA711XRegister:0x0b value:round(val * 0x7f)];
@@ -110,7 +157,7 @@ enum {
 {
 	return _saturation;
 }
-- (void)setSaturation:(CGFloat)val
+- (void)setSaturation:(CGFloat const)val
 {
 	_saturation = val;
 	(void)[device writeSAA711XRegister:0x0c value:round(val * 0x7f)];
@@ -119,7 +166,7 @@ enum {
 {
 	return _hue;
 }
-- (void)setHue:(CGFloat)val
+- (void)setHue:(CGFloat const)val
 {
 	_hue = val;
 	(void)[device writeSAA711XRegister:0x0d value:round((val - 0.5f) * 0xff)];
@@ -129,24 +176,25 @@ enum {
 
 - (BOOL)initialize
 {
+	ECVVideoFormat *const f = [[self device] videoFormatForSAA711XChip:self];
 	// Based on Table 184 in the datasheet.
 	struct {
 		u_int8_t reg;
 		int16_t val;
 	} const settings[] = {
 		{0x01, 0x08},
-		{0x02, SAA711XFUSE0Antialias | SAA711XFUSE1Amplifier | [device SAA711XMODESource]},
+		{0x02, SAA711XFUSE0Antialias | SAA711XFUSE1Amplifier | [self _SAA711XMODESource]},
 		{0x03, SAA711XHOLDGAutomaticGainControlEnabled | SAA711XVBSLLongVerticalBlanking},
 		{0x04, 0x90},
 		{0x05, 0x90},
 		{0x06, 0xeb},
 		{0x07, 0xe0},
-		{0x08, SAA711XVNOIVerticalNoiseReductionFast | SAA711XHTCHorizontalTimeConstantFastLocking | SAA711XFOETForcedOddEventToggle | ([device is60HzFormat] ? SAA711XFSELManualFieldSelection60Hz : SAA711XFSELManualFieldSelection50Hz)},
-		{0x09, [device SVideo] ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb},
-		{0x0e, SAA711XCCOMBAdaptiveChrominanceComb | SAA711XFCTCFastColorTimeConstant | [device SAA711XCSTDFormat]},
+		{0x08, SAA711XVNOIVerticalNoiseReductionFast | SAA711XHTCHorizontalTimeConstantFastLocking | SAA711XFOETForcedOddEventToggle | [f SAA711XFSELManualFieldSelection]},
+		{0x09, }, // Uh, what was this?
+		{0x0e, SAA711XCCOMBAdaptiveChrominanceComb | SAA711XFCTCFastColorTimeConstant | [f SAA711XCSTDFormat]},
 		{0x0f, SAA711XCGAINChromaGainValueNominal | SAA711XACGCAutomaticChromaGainControlEnabled},
 		{0x10, 0x06},
-		{0x11, [device SAA711XRTP0OutputPolarityInverted] ? SAA711XRTP0OutputPolarityInverted : kNilOptions},
+		{0x11, [self _SAAA711XRTP0OutputPolarity]},
 		{0x12, 0x00},
 		{0x13, 0x00},
 		{0x14, 0x01},
@@ -160,7 +208,7 @@ enum {
 		{0x1c, 0xa9},
 		{0x1d, 0x01},
 		{0x83, 0x31},
-		{0x88, SAA711XSLM1ScalerDisabled | SAA711XSLM3AudioClockGenerationDisabled | [self SAA711XCHXENOutputControl]},
+		{0x88, SAA711XSLM1ScalerDisabled | SAA711XSLM3AudioClockGenerationDisabled | [self _SAA711XCHXENOutputControl]},
 	};
 	NSUInteger i;
 	for(i = 0; i < numberof(settings); i++) if(![device writeSAA711XRegister:settings[i].reg value:settings[i].val]) return NO;
@@ -177,12 +225,32 @@ enum {
 	[device readSAA711XRegister:0x00 value:&version];
 	return version;
 }
+- (NSSet *)supportedVideoFormats
+{
+	return [NSSet setWithObjects:
+		[ECVVideoFormat_NTSC_M new],
+		[ECVVideoFormat_PAL_60 new],
+		[ECVVideoFormat_NTSC_443_60Hz new],
+		[ECVVideoFormat_PAL_M new],
+		[ECVVideoFormat_NTSC_J new],
+
+		[ECVVideoFormat_PAL_BGDHI new],
+		[ECVVideoFormat_NTSC_443_50Hz new],
+		[ECVVideoFormat_PAL_N new],
+		[ECVVideoFormat_NTSC_N new],
+		[ECVVideoFormat_SECAM new],
+		nil];
+}
 
 #pragma mark -SAA711XChip(Private)
 
-- (u_int8_t)SAA711XCHXENOutputControl
+- (u_int8_t)_SAA711XMODESource
 {
-	switch([[self device] SAA711XMODESource]) {
+	return [[self device] sVideoForSAA711XChip:self] ? SAA711XMODESVideoAI12_YGain : SAA711XMODECompositeAI11;
+}
+- (u_int8_t)_SAA711XCHXENOutputControl
+{
+	switch([self _SAA711XMODESource]) {
 		case SAA711XMODECompositeAI11:
 		case SAA711XMODECompositeAI12:
 			return SAA711XCH1ENAD1X;
@@ -200,6 +268,14 @@ enum {
 			return 0;
 	}
 }
+- (u_int8_t)_SAA711XLuminanceControl
+{
+	return [[self device] sVideoForSAA711XChip:self] ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb;
+}
+- (u_int8_t)_SAAA711XRTP0OutputPolarity
+{
+	return [[self device] polarityInvertedForSAA711XChip:self] ? SAA711XRTP0OutputPolarityInverted : 0;
+}
 
 #pragma mark -NSObject
 
@@ -214,4 +290,43 @@ enum {
 	return self;
 }
 
+@end
+
+@implementation ECVCommon60HzVideoFormat(SAA711XFSELManualFieldSelection)
+- (u_int8_t)SAA711XFSELManualFieldSelection { return SAA711XFSELManualFieldSelection60Hz; };
+@end
+@implementation ECVCommon50HzVideoFormat(SAA711XFSELManualFieldSelection)
+- (u_int8_t)SAA711XFSELManualFieldSelection { return SAA711XFSELManualFieldSelection50Hz; };
+@end
+
+@implementation ECVVideoFormat_NTSC_M(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDNTSCM; }
+@end
+@implementation ECVVideoFormat_PAL_60(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDPAL60Hz; }
+@end
+@implementation ECVVideoFormat_NTSC_443_60Hz(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDNTSC44360Hz; }
+@end
+@implementation ECVVideoFormat_PAL_M(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDPALM; }
+@end
+@implementation ECVVideoFormat_NTSC_J(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDNTSCJ; }
+@end
+
+@implementation ECVVideoFormat_PAL_BGDHI(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDPAL_BGDHI; }
+@end
+@implementation ECVVideoFormat_NTSC_443_50Hz(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDNTSC44350Hz; }
+@end
+@implementation ECVVideoFormat_PAL_N(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDPALN; }
+@end
+@implementation ECVVideoFormat_NTSC_N(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDNTSCN; }
+@end
+@implementation ECVVideoFormat_SECAM(SAA711XCSTDFormat)
+- (u_int8_t)SAA711XCSTDFormat { return SAA711XCSTDSECAM; }
 @end

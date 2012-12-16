@@ -22,7 +22,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoStorage.h"
 
 // Models
+#import "ECVVideoFormat.h"
 #import "ECVDeinterlacingMode.h"
+#import "ECVVideoFrame.h"
 
 // Other Sources
 #import "ECVPixelFormat.h"
@@ -43,37 +45,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormat frameRate:(QTTime)frameRate
+- (id)initWithVideoFormat:(ECVVideoFormat *const)videoFormat deinterlacingMode:(Class const)mode pixelFormat:(OSType const)pixelFormat
 {
+	NSParameterAssert(videoFormat);
 	NSAssert([mode isSubclassOfClass:[ECVDeinterlacingMode class]], @"Deinterlacing mode must be a subclass of ECVDeinterlacingMode.");
 	if((self = [super init])) {
+		ECVIntegerSize const s = [videoFormat frameSize];
+		_videoFormat = [videoFormat retain];
 		_deinterlacingMode = [[mode alloc] initWithVideoStorage:self];
-		_captureSize = captureSize;
 		_pixelFormat = pixelFormat;
-		_frameRate = frameRate;
-		_bytesPerRow = [self pixelSize].width * [self bytesPerPixel];
-		_bufferSize = [self pixelSize].height * [self bytesPerRow];
+		_bytesPerRow = s.width * [self bytesPerPixel];
+		_bufferSize = s.height * [self bytesPerRow];
 		_lock = [[NSRecursiveLock alloc] init];
 	}
 	return self;
 }
-@synthesize captureSize = _captureSize;
-- (ECVIntegerSize)pixelSize
-{
-	return [_deinterlacingMode pixelSize];
-}
-@synthesize pixelFormat = _pixelFormat;
-@synthesize frameRate = _frameRate;
-- (size_t)bytesPerPixel
-{
-	return ECVPixelFormatBytesPerPixel(_pixelFormat);
-}
-@synthesize bytesPerRow = _bytesPerRow;
-@synthesize bufferSize = _bufferSize;
-- (NSUInteger)frameGroupSize
-{
-	return [_deinterlacingMode frameGroupSize];
-}
+- (ECVVideoFormat *)videoFormat { return [[_videoFormat retain] autorelease]; }
+- (OSType)pixelFormat { return _pixelFormat; }
+- (size_t)bytesPerPixel { return ECVPixelFormatBytesPerPixel(_pixelFormat); }
+- (size_t)bytesPerRow { return _bytesPerRow; }
+- (size_t)bufferSize { return _bufferSize; }
 
 #pragma mark -
 
@@ -106,6 +97,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (void)dealloc
 {
+	[_videoFormat release];
 	[_deinterlacingMode release];
 	[_lock release];
 	[super dealloc];

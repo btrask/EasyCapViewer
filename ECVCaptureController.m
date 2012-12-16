@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVCaptureDevice.h"
+#import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 #import "ECVMovieRecorder.h"
@@ -66,22 +67,22 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVCaptureController *const controller = [[[[self class] alloc] init] autorelease];
 	[[self document] addWindowController:controller];
 	[controller showWindow:sender];
-	if([[self document] isPlaying]) [controller startPlaying];
+	if([(ECVCaptureDevice *)[self document] isPaused]) [controller startPlaying];
 }
 
 #pragma mark -
 
 - (IBAction)play:(id)sender
 {
-	[[self document] setPlaying:YES];
+	[[self document] setPausedFromUI:NO];
 }
 - (IBAction)pause:(id)sender
 {
-	[[self document] setPlaying:NO];
+	[[self document] setPausedFromUI:YES];
 }
 - (IBAction)togglePlaying:(id)sender
 {
-	[[self document] togglePlaying];
+	[[self document] togglePausedFromUI];
 }
 
 #pragma mark -
@@ -136,7 +137,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
 
 	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
-	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[options videoStorage] frameRate]]];
+	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[self videoFormat] frameRate]]];
 
 	NSError *error = nil;
 	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
@@ -323,7 +324,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (NSSize)outputSize
 {
 	NSSize const ratio = [videoView aspectRatio];
-	ECVIntegerSize const s = [[self document] captureSize];
+	ECVIntegerSize const s = [[self videoFormat] frameSize];
 	return NSMakeSize(s.height / ratio.height * ratio.width, s.height);
 }
 - (NSSize)outputSizeWithScale:(NSInteger)scale
@@ -430,7 +431,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		nil]];
 
 	NSWindow *const w = [self window];
-	ECVIntegerSize const s = [[self document] captureSize];
+	ECVIntegerSize const s = [[self videoFormat] frameSize];
 	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
 	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 
@@ -475,7 +476,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	SEL const action = [anItem action];
 	if(@selector(toggleFullScreen:) == action) [anItem setTitle:[self isFullScreen] ? NSLocalizedString(@"Exit Full Screen", nil) : NSLocalizedString(@"Enter Full Screen", nil)];
-	if(@selector(togglePlaying:) == action) [anItem setTitle:[[self document] isPlaying] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
+	if(@selector(togglePlaying:) == action) [anItem setTitle:![(ECVCaptureDevice *)[self document] isPaused] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([self windowContentSize], [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(changeAspectRatio:) == action) {
 		NSSize const s1 = [self sizeWithAspectRatio:[anItem tag]];
@@ -501,7 +502,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	} else {
 		if(@selector(stopRecording:) == action) return NO;
 	}
-	if(![[self document] isPlaying]) {
+	if([(ECVCaptureDevice *)[self document] isPaused]) {
 		if(@selector(startRecording:) == action) return NO;
 	}
 	return [self respondsToSelector:action];
@@ -582,5 +583,22 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	return proposedOptions;
 }
+
+
+
+
+
+// Ongoing refactoring... This code is new, the above code is not.
+
+
+
+- (ECVVideoFormat *)videoFormat
+{
+	NSLog(@"%@", [(ECVCaptureDevice *)[self document] videoFormat]);
+	return [(ECVCaptureDevice *)[self document] videoFormat];
+}
+
+
+
 
 @end

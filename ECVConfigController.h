@@ -72,12 +72,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)isValidVideoSourceObject:(id)obj;
 - (NSInteger)indentationLevelForVideoSourceObject:(id)obj;
 
-@property(readonly) NSArray *allVideoFormatObjects;
-@property(nonatomic, assign) id videoFormatObject;
-- (NSString *)localizedStringForVideoFormatObject:(id)obj;
-- (BOOL)isValidVideoFormatObject:(id)obj;
-- (NSInteger)indentationLevelForVideoFormatObject:(id)obj;
-
 @property(nonatomic, assign) CGFloat brightness;
 @property(nonatomic, assign) CGFloat contrast;
 @property(nonatomic, assign) CGFloat saturation;

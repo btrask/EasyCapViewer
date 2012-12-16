@@ -21,6 +21,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDependentVideoStorage.h"
 
+// Models
+#import "ECVVideoFormat.h"
+
 // Other Sources
 #import "ECVReadWriteLock.h"
 
@@ -89,9 +92,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoStorage
 
-- (id)initWithDeinterlacingMode:(Class)mode captureSize:(ECVIntegerSize)captureSize pixelFormat:(OSType)pixelFormat frameRate:(QTTime)frameRate
+- (id)initWithVideoFormat:(ECVVideoFormat *const)videoFormat deinterlacingMode:(Class const)mode pixelFormat:(OSType const)pixelFormat
 {
-	if((self = [super initWithDeinterlacingMode:mode captureSize:captureSize pixelFormat:pixelFormat frameRate:frameRate])) {
+	if((self = [super initWithVideoFormat:videoFormat deinterlacingMode:mode pixelFormat:pixelFormat])) {
 		_frames = [[NSMutableArray alloc] initWithCapacity:ECVDependentBufferCount];
 		_numberOfBuffers = ECVDependentBufferCount;
 		_allBufferData = [[NSMutableData alloc] initWithLength:_numberOfBuffers * [self bufferSize]];
@@ -117,7 +120,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSUInteger i = [_unusedBufferIndexes firstIndex];
 	if(NSNotFound == i) {
 		NSUInteger const frameCount = [_frames count];
-		NSUInteger const framesToKeep = ((frameCount - 1) % [self frameGroupSize]) + 1;
+		NSUInteger const frameGroupSize = [[self videoFormat] frameGroupSize];
+		NSUInteger const framesToKeep = ((frameCount - 1) % frameGroupSize) + 1;
 		[[_frames subarrayWithRange:NSMakeRange(0, frameCount - framesToKeep)] makeObjectsPerformSelector:@selector(removeFromStorageIfPossible)];
 		i = [_unusedBufferIndexes firstIndex];
 		if(NSNotFound == i) return nil;
@@ -172,7 +176,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVIntegerSize)pixelSize
 {
-	return [_videoStorage pixelSize];
+	return [[_videoStorage videoFormat] frameSize];
 }
 - (size_t)bytesPerRow
 {

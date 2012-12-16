@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVCaptureDevice.h"
+#import "ECVVideoFormat.h"
 #import "ECVDeinterlacingMode.h"
 
 // Other Sources
@@ -52,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (IBAction)changeFormat:(id)sender
 {
-	[_captureDevice setVideoFormatObject:[[sender selectedItem] representedObject]];
+	[_captureDevice setVideoFormat:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeSource:(id)sender
 {
@@ -126,20 +127,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[sourcePopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoSourceObject)]];
 	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[_captureDevice videoSourceObject]]];
 
-	[formatPopUp removeAllItems];
-	if([_captureDevice respondsToSelector:@selector(allVideoFormatObjects)]) for(id const videoFormatObject in [_captureDevice allVideoFormatObjects]) {
-		if([NSNull null] == videoFormatObject) {
-			[[formatPopUp menu] addItem:[NSMenuItem separatorItem]];
-			continue;
-		}
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureDevice localizedStringForVideoFormatObject:videoFormatObject] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:videoFormatObject];
-		[item setEnabled:[_captureDevice isValidVideoFormatObject:videoFormatObject]];
-		[item setIndentationLevel:[_captureDevice indentationLevelForVideoFormatObject:videoFormatObject]];
-		[[formatPopUp menu] addItem:item];
-	}
-	[formatPopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoFormatObject)]];
-	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:[_captureDevice videoFormatObject]]];
+	NSSet *const formats = [_captureDevice supportedVideoFormats];
+	[formatPopUp setMenu:[ECVVideoFormat menuWithVideoFormats:formats]];
+	[formatPopUp setEnabled:[formats count] > 0];
+	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:[_captureDevice videoFormat]]];
 
 	[deinterlacePopUp selectItemWithTag:[[_captureDevice deinterlacingMode] deinterlacingModeType]];
 	[deinterlacePopUp setEnabled:!!_captureDevice];

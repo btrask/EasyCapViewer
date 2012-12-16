@@ -28,13 +28,14 @@
 "No Input" = "No Input";
 "Capture Device" = "Capture Device";
 
-"Auto-detect" = "Auto-detect";
-"NTSC 4.43" = "NTSC 4.43";
 "NTSC" = "NTSC";
 "PAL-60" = "PAL-60";
+"NTSC 4.43 (60Hz)" = "NTSC 4.43 (60Hz)";
 "PAL-M" = "PAL-M";
 "NTSC-J" = "NTSC-J";
+
 "PAL" = "PAL";
+"NTSC 4.43 (50Hz)" = "NTSC 4.43 (50Hz)";
 "PAL-N" = "PAL-N";
 "NTSC-N" = "NTSC-N";
 "SECAM" = "SECAM";

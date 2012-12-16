@@ -20,6 +20,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVIndependentVideoStorage.h"
+#import "ECVVideoFrame.h"
+#import "ECVVideoFormat.h"
 
 @interface ECVIndependentVideoFrame : ECVVideoFrame
 {
@@ -48,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVMutablePixelBuffer *)nextBuffer
 {
 	NSMutableData *const data = [NSMutableData dataWithLength:[self bufferSize]];
-	ECVMutablePixelBuffer *const buffer = [[[ECVDataPixelBuffer alloc] initWithPixelSize:[self pixelSize] bytesPerRow:[self bytesPerRow] pixelFormat:[self pixelFormat] data:data offset:0] autorelease];
+	ECVMutablePixelBuffer *const buffer = [[[ECVDataPixelBuffer alloc] initWithPixelSize:[[self videoFormat] frameSize] bytesPerRow:[self bytesPerRow] pixelFormat:[self pixelFormat] data:data offset:0] autorelease];
 	return buffer;
 }
 - (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer

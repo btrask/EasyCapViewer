@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVMovieRecorder.h"
 
 // Models
+#import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 #import "ECVVideoFrame.h"
 #import "ECVFrameRateConverter.h"
@@ -86,7 +87,7 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 - (NSDictionary *)cleanAperatureDictionary
 {
 	NSRect const c = [self cropRect];
-	ECVIntegerSize const s1 = [_videoStorage pixelSize];
+	ECVIntegerSize const s1 = [[_videoStorage videoFormat] frameSize];
 	ECVIntegerSize const s2 = (ECVIntegerSize){round(NSWidth(c) * s1.width), round(NSHeight(c) * s1.height)};
 	return [NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithDouble:s2.width], kCVImageBufferCleanApertureWidthKey,
@@ -104,11 +105,11 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 
 - (ECVFrameRateConverter *)_frameRateConverter
 {
-	return [[[ECVFrameRateConverter alloc] initWithSourceFrameRate:[_videoStorage frameRate] targetFrameRate:_frameRate] autorelease];
+	return [[[ECVFrameRateConverter alloc] initWithSourceFrameRate:[[_videoStorage videoFormat] frameRate] targetFrameRate:_frameRate] autorelease];
 }
 - (ECVIntegerSize)_outputSize
 {
-	return _stretchOutput ? _outputSize : [_videoStorage pixelSize];
+	return _stretchOutput ? _outputSize : [[_videoStorage videoFormat] frameSize];
 }
 - (ICMCompressionSessionRef)_compressionSessionWithDelegate:(id<ECVCompressionDelegate> const)delegate
 {
@@ -128,10 +129,11 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 	callback.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVCompressionDelegateHandler;
 	callback.encodedFrameOutputRefCon = delegate;
 
+	ECVIntegerSize const frameSize = [[_videoStorage videoFormat] frameSize];
 	ICMCompressionSessionRef compressionSession = NULL;
 	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, _outputSize.width, _outputSize.height, [self videoCodec], _frameRate.timeScale, opts, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].width], kCVPixelBufferWidthKey,
-		[NSNumber numberWithUnsignedInteger:[_videoStorage pixelSize].height], kCVPixelBufferHeightKey,
+		[NSNumber numberWithUnsignedInteger:frameSize.width], kCVPixelBufferWidthKey,
+		[NSNumber numberWithUnsignedInteger:frameSize.height], kCVPixelBufferHeightKey,
 		[NSNumber numberWithUnsignedInt:[_videoStorage pixelFormat]], kCVPixelBufferPixelFormatTypeKey,
 		[NSDictionary dictionaryWithObjectsAndKeys:
 			[self cleanAperatureDictionary], kCVImageBufferCleanApertureKey,

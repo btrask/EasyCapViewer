@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <objc/objc-runtime.h>
 
 // Models
+#import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 #import "ECVDeinterlacingMode.h"
 #import "ECVVideoFrame.h"
@@ -122,7 +123,8 @@ static ICMCompressionSessionRef ECVCompressionSessionCreate(ECVCStorage *const s
 	ECVOSStatus(ICMCompressionSessionOptionsCreate(kCFAllocatorDefault, &opts));
 	ECVICMCSOSetProperty(opts, DurationsNeeded, (Boolean)true);
 	ECVICMCSOSetProperty(opts, AllowAsyncCompletion, (Boolean)true);
-	QTTime const frameRate = [vs frameRate];
+	ECVVideoFormat *const format = [vs videoFormat];
+	QTTime const frameRate = [format frameRate];
 	NSTimeInterval frameRateInterval = 0.0;
 	if(QTGetTimeInterval(frameRate, &frameRateInterval)) ECVICMCSOSetProperty(opts, ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
 	ECVICMCSOSetProperty(opts, CPUTimeBudget, (UInt32)QTMakeTimeScaled(frameRate, ECVMicrosecondsPerSecond).timeValue);
@@ -130,13 +132,13 @@ static ICMCompressionSessionRef ECVCompressionSessionCreate(ECVCStorage *const s
 	ECVICMCSOSetProperty(opts, Quality, (CodecQ)codecMaxQuality);
 	ECVICMCSOSetProperty(opts, Depth, [vs pixelFormat]);
 
-	ECVIntegerSize const s = [vs pixelSize];
+	ECVIntegerSize const s = [format frameSize];
 	ICMEncodedFrameOutputRecord cb = {
 		.encodedFrameOutputCallback = (ICMEncodedFrameOutputCallback)ECVICMEncodedFrameOutputCallback,
 		.encodedFrameOutputRefCon = self,
 	};
 	ICMCompressionSessionRef result = NULL;
-	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, s.width, s.height, ECVOutputPixelFormat(self), [self->device frameRate].timeScale, opts, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+	ECVOSStatus(ICMCompressionSessionCreate(kCFAllocatorDefault, s.width, s.height, ECVOutputPixelFormat(self), [format frameRate].timeScale, opts, (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithUnsignedInteger:s.width], kCVPixelBufferWidthKey,
 		[NSNumber numberWithUnsignedInteger:s.height], kCVPixelBufferHeightKey,
 		[NSNumber numberWithUnsignedInt:[vs pixelFormat]], kCVPixelBufferPixelFormatTypeKey,
@@ -200,7 +202,7 @@ ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVIntegerSize const s = [self->device captureSize];
+	ECVIntegerSize const s = [[self->device videoFormat] frameSize];
 	[pool drain];
 
 	*info = (DigitizerInfo){};
@@ -236,8 +238,7 @@ ECV_VDIG_FUNCTION(GetNumberOfInputs, short *inputs)
 	self->inputCombinations = [[NSMutableArray alloc] init];
 	for(id const source in [self->device allVideoSourceObjects]) {
 		if(![self->device isValidVideoSourceObject:source]) continue;
-		for(id const format in [self->device allVideoFormatObjects]) {
-			if(![self->device isValidVideoFormatObject:format]) continue;
+		for(id const format in [self->device supportedVideoFormats]) {
 			[self->inputCombinations addObject:[NSDictionary dictionaryWithObjectsAndKeys:
 				source, ECVVideoSourceObject,
 				format, ECVVideoFormatObject,
@@ -262,7 +263,7 @@ ECV_VDIG_FUNCTION(GetInputName, long videoInput, Str255 name)
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:videoInput];
 	NSString *const sourceLabel = [self->device localizedStringForVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
-	NSString *const formatLabel = [self->device localizedStringForVideoFormatObject:[inputCombination objectForKey:ECVVideoFormatObject]];
+	NSString *const formatLabel = [[inputCombination objectForKey:ECVVideoFormatObject] localizedName];
 	CFStringGetPascalString((CFStringRef)[NSString stringWithFormat:@"%@ - %@", sourceLabel, formatLabel], name, 256, kCFStringEncodingUTF8);
 	[pool drain];
 	return noErr;
@@ -273,7 +274,7 @@ ECV_VDIG_FUNCTION(GetInput, short *input)
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	NSDictionary *const inputCombination = [NSDictionary dictionaryWithObjectsAndKeys:
 		[self->device videoSourceObject], ECVVideoSourceObject,
-		[self->device videoFormatObject], ECVVideoFormatObject,
+		[self->device videoFormat], ECVVideoFormatObject,
 		nil];
 	NSUInteger i = [self->inputCombinations indexOfObject:inputCombination];
 	if(NSNotFound == i) i = 0;
@@ -287,7 +288,7 @@ ECV_VDIG_FUNCTION(SetInput, short input)
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:input];
 	[self->device setVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
-	[self->device setVideoFormatObject:[inputCombination objectForKey:ECVVideoFormatObject]];
+	[self->device setVideoFormat:[inputCombination objectForKey:ECVVideoFormatObject]];
 	[pool drain];
 	return noErr;
 }
@@ -346,7 +347,7 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[self->device setPlaying:!!state];
+	[self->device setPausedFromUI:!state];
 	ICMCompressionSessionRelease(self->compressionSession);
 	self->compressionSession = state ? ECVCompressionSessionCreate(self) : NULL;
 	[pool drain];
@@ -368,7 +369,7 @@ ECV_VDIG_FUNCTION(CompressOneFrameAsync)
 {
 //	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	if(![self->device isPlaying]) {
+	if([self->device isPaused]) {
 		[pool drain];
 		return badCallOrderErr;
 	}
@@ -386,7 +387,7 @@ ECV_VDIG_FUNCTION(CompressOneFrameAsync)
 			[buffer drawPixelBuffer:frame];
 			[buffer unlock];
 			[frame unlock];
-			ECVOSStatus(ICMCompressionSessionEncodeFrame(self->compressionSession, pixelBuffer, 0, [vs frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
+			ECVOSStatus(ICMCompressionSessionEncodeFrame(self->compressionSession, pixelBuffer, 0, [[vs videoFormat] frameRate].timeValue, kICMValidTime_DisplayDurationIsValid, NULL, NULL, NULL));
 			if(pixelBuffer) CVPixelBufferRelease(pixelBuffer);
 		} else if(frame) {
 			ECVICMEncodedFrameOutputCallback(self, self->compressionSession, noErr, NULL, NULL);
@@ -404,7 +405,7 @@ ECV_VDIG_FUNCTION(CompressDone, UInt8 *queuedFrameCount, Ptr *theData, long *dat
 		self->hasNewFrame = NO;
 
 		*queuedFrameCount = 1;
-		GetTimeBaseTime(self->timeBase, [self->device frameRate].timeScale, t);
+		GetTimeBaseTime(self->timeBase, [[self->device videoFormat] frameRate].timeScale, t);
 	} else {
 		*theData = NULL;
 		*dataSize = 0;
@@ -429,8 +430,7 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		[pool drain];
 		return badCallOrderErr;
 	}
-	ECVIntegerSize const captureSize = [videoStorage captureSize];
-	ECVIntegerSize const pixelSize = [videoStorage pixelSize];
+	ECVIntegerSize const frameSize = [[videoStorage videoFormat] frameSize];
 	size_t const bytesPerRow = [videoStorage bytesPerRow];
 	[pool drain];
 
@@ -441,8 +441,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 		.cType = ECVOutputPixelFormat(self),
 		.version = 2,
 		.spatialQuality = codecLosslessQuality,
-		.width = captureSize.width,
-		.height = captureSize.height,
+		.width = frameSize.width,
+		.height = frameSize.height,
 		.hRes = Long2Fix(72),
 		.vRes = Long2Fix(72),
 		.frameCount = 1,
@@ -454,14 +454,14 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	ECVICMIDSetProperty(desc, FieldInfo, fieldInfo);
 
 	CleanApertureImageDescriptionExtension const cleanAperture = {
-		pixelSize.width, 1,
-		pixelSize.height, 1,
+		frameSize.width, 1,
+		frameSize.height, 1,
 		0, 1,
 		0, 1,
 	};
 	ECVICMIDSetProperty(desc, CleanAperture, cleanAperture);
 
-	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {pixelSize.height, captureSize.height}; // FIXME: Pretty sure this isn't quite right.
+	PixelAspectRatioImageDescriptionExtension const pixelAspectRatio = {frameSize.height, frameSize.height}; // FIXME: Pretty sure this isn't quite right.
 	ECVICMIDSetProperty(desc, PixelAspectRatio, pixelAspectRatio);
 
 	NCLCColorInfoImageDescriptionExtension const colorInfo = {
@@ -472,8 +472,8 @@ ECV_VDIG_FUNCTION(GetImageDescription, ImageDescriptionHandle desc)
 	};
 	ECVICMIDSetProperty(desc, NCLCColorInfo, colorInfo);
 
-	ECVICMIDSetProperty(desc, EncodedWidth, (SInt32)pixelSize.width);
-	ECVICMIDSetProperty(desc, EncodedHeight, (SInt32)pixelSize.height);
+	ECVICMIDSetProperty(desc, EncodedWidth, (SInt32)frameSize.width);
+	ECVICMIDSetProperty(desc, EncodedHeight, (SInt32)frameSize.height);
 
 	return noErr;
 }
@@ -488,7 +488,7 @@ ECV_VDIG_FUNCTION(GetMaxSrcRect, short inputStd, Rect *maxSrcRect)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	ECVIntegerSize const s = [self->device captureSize];
+	ECVIntegerSize const s = [[self->device videoFormat] frameSize];
 	[pool drain];
 	if(!s.width || !s.height) return badCallOrderErr;
 	if(maxSrcRect) *maxSrcRect = ECVNSRectToRect((NSRect){NSZeroPoint, ECVIntegerSizeToNSSize(s)});
@@ -516,7 +516,7 @@ ECV_VDIG_FUNCTION(GetDataRate, long *milliSecPerFrame, Fixed *framesPerSecond, l
 	ECV_DEBUG_LOG();
 	*milliSecPerFrame = 0;
 	NSTimeInterval frameRate = 1.0f / 60.0f;
-	if(QTGetTimeInterval([self->device frameRate], &frameRate)) *framesPerSecond = X2Fix(frameRate);
+	if(QTGetTimeInterval([[self->device videoFormat] frameRate], &frameRate)) *framesPerSecond = X2Fix(frameRate);
 	else *framesPerSecond = 0;
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	*bytesPerSecond = (1.0f / frameRate) * [[self->device videoStorage] bufferSize];
@@ -527,7 +527,7 @@ ECV_VDIG_FUNCTION(GetDataRate, long *milliSecPerFrame, Fixed *framesPerSecond, l
 ECV_VDIG_FUNCTION(GetPreferredTimeScale, TimeScale *preferred)
 {
 	ECV_DEBUG_LOG();
-	*preferred = [self->device frameRate].timeScale;
+	*preferred = [[self->device videoFormat] frameRate].timeScale;
 	return noErr;
 }
 ECV_VDIG_FUNCTION(SetTimeBase, TimeBase t)
