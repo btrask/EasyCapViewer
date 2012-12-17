@@ -13,18 +13,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVEM2860Device.h"
-#import "SAA711XChip.h"
+#import "ECVVideoSource.h"
 #import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 #import "ECVPixelBuffer.h"
 #import "ECVPixelFormat.h"
 
+@interface ECVEM2860VideoSource_SVideo : ECVVideoSource
+@end
+@interface ECVEM2860VideoSource_Composite : ECVVideoSource
+@end
+
 static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	for(size_t i = 0; i < len / sizeof(uint16_t); ++i) bytes[i] = CFSwapInt16(bytes[i]);
 }
-
-static NSString *const ECVEM2860VideoSourceKey = @"ECVEM2860VideoSource";
-static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #define RECEIVE(request, idx, ...) \
 	do { \
@@ -44,21 +46,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #pragma mark -ECVEM2860Device
 
-- (ECVEM2860VideoSource)videoSource
-{
-	return _videoSource;
-}
-- (void)setVideoSource:(ECVEM2860VideoSource const)source
-{
-	if(source == _videoSource) return;
-	[self setPaused:YES];
-	_videoSource = source;
-	[self setPaused:NO];
-	[[self defaults] setInteger:source forKey:ECVEM2860VideoSourceKey];
-}
-
-#pragma mark -
-
 - (BOOL)modifyIndex:(UInt16 const)idx enable:(UInt8 const)enable disable:(UInt8 const)disable
 {
 	NSAssert(!(enable & disable), @"Can't enable and disable the same flag(s).");
@@ -74,13 +61,8 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (id)initWithService:(io_service_t)service
 {
 	if((self = [super initWithService:service])) {
-		NSUserDefaults *const d = [self defaults];
-		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSNumber numberWithUnsignedInteger:ECVEM2860CompositeInput], ECVEM2860VideoSourceKey,
-//			[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCMFormat], ECVEM2860VideoFormatKey,
-			nil]];
-		[self setVideoSource:[d integerForKey:ECVEM2860VideoSourceKey]];
-//		[self setVideoFormat:[d integerForKey:ECVEM2860VideoFormatKey]];
+		[self setVideoSource:[ECVEM2860VideoSource_SVideo new]];
+		[self setVideoFormat:[ECVVideoFormat_NTSC_M new]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setDevice:self];
 	}
@@ -92,6 +74,13 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (UInt32)maximumMicrosecondsInFrame
 {
 	return kUSBHighSpeedMicrosecondsInFrame;
+}
+- (NSArray *)supportedVideoSources
+{
+	return [NSArray arrayWithObjects:
+		[ECVEM2860VideoSource_SVideo new],
+		[ECVEM2860VideoSource_Composite new],
+		nil];
 }
 - (NSSet *)supportedVideoFormats
 {
@@ -509,40 +498,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #pragma mark -ECVCaptureDevice<ECVCaptureDeviceConfiguring>
 
-- (NSArray *)allVideoSourceObjects
-{
-	return [NSArray arrayWithObjects:
-		[NSNumber numberWithUnsignedInteger:ECVEM2860SVideoInput],
-		[NSNumber numberWithUnsignedInteger:ECVEM2860CompositeInput],
-		nil];
-}
-- (id)videoSourceObject
-{
-	return [NSNumber numberWithUnsignedInteger:[self videoSource]];
-}
-- (void)setVideoSourceObject:(id)obj
-{
-	[self setVideoSource:[obj unsignedIntegerValue]];
-}
-- (NSString *)localizedStringForVideoSourceObject:(id)obj
-{
-	switch([obj unsignedIntegerValue]) {
-		case ECVEM2860SVideoInput: return NSLocalizedString(@"S-Video", nil);
-		case ECVEM2860CompositeInput: return NSLocalizedString(@"Composite", nil);
-	}
-	return nil;
-}
-- (BOOL)isValidVideoSourceObject:(id)obj
-{
-	return YES;
-}
-- (NSInteger)indentationLevelForVideoSourceObject:(id)obj
-{
-	return 0;
-}
-
-#pragma mark -
-
 - (CGFloat)brightness
 {
 	return [_SAA711XChip brightness];
@@ -582,40 +537,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 {
 	return digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
 }
-- (short)inputFormatForVideoSourceObject:(id)obj
-{
-	switch([obj unsignedIntegerValue]) {
-		case ECVEM2860SVideoInput:
-			return sVideoIn;
-		case ECVEM2860CompositeInput:
-			return compositeIn;
-		default:
-			ECVAssertNotReached(@"Invalid video source %lu.", (unsigned long)[obj unsignedIntegerValue]);
-			return 0;
-	}
-}
-- (short)inputStandard
-{
-	return currentIn; // TODO: Implement.
-//	switch([self videoFormat]) {
-//		case ECVSAA711XNTSCMFormat: return ntscReallyIn;
-//		case ECVSAA711XPALBGDHIFormat: return palIn;
-//		case ECVSAA711XSECAMFormat: return secamIn;
-//		default: return currentIn;
-//	}
-}
-- (void)setInputStandard:(short)standard
-{
-	// TODO: Implement.
-//	ECVSAA711XVideoFormat format;
-//	switch(standard) {
-//		case ntscReallyIn: format = ECVSAA711XNTSCMFormat; break;
-//		case palIn: format = ECVSAA711XPALBGDHIFormat; break;
-//		case secamIn: format = ECVSAA711XSECAMFormat; break;
-//		default: return;
-//	}
-//	[self setVideoFormat:format];
-}
 
 #pragma mark -<SAA711XDevice>
 
@@ -632,13 +553,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	return NO; // TODO: Not sure how this works right now, and it's only used for reading the version number anyway.
 }
 
-#pragma mark -
-
-- (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip
-{
-	return ECVEM2860SVideoInput == [self videoSource];
-}
-
 #pragma mark -NSObject
 
 - (void)dealloc
@@ -648,4 +562,13 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	[super dealloc];
 }
 
+@end
+
+@implementation ECVEM2860VideoSource_SVideo
+- (NSString *)localizedName { return NSLocalizedString(@"S-Video", nil); }
+- (BOOL)SVideo { return YES; }
+@end
+@implementation ECVEM2860VideoSource_Composite
+- (NSString *)localizedName { return NSLocalizedString(@"Composite", nil); }
+- (BOOL)composite { return YES; }
 @end

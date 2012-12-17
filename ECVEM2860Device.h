@@ -14,24 +14,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVCaptureDevice.h"
 #import "SAA711XChip.h"
-#import "ECVComponentConfiguring.h"
-#import "ECVDebug.h"
 
-enum {
-	ECVEM2860SVideoInput = 0,
-	ECVEM2860CompositeInput = 1,
-};
-typedef NSUInteger ECVEM2860VideoSource;
-
-@interface ECVEM2860Device : ECVCaptureDevice <ECVCaptureDeviceConfiguring, ECVComponentConfiguring, SAA711XDevice>
+@interface ECVEM2860Device : ECVCaptureDevice <SAA711XDevice>
 {
 	@private
-	ECVEM2860VideoSource _videoSource;
 	SAA711XChip *_SAA711XChip;
 	NSUInteger _offset;
 }
 
-- (ECVEM2860VideoSource)videoSource;
-- (void)setVideoSource:(ECVEM2860VideoSource const)source;
+- (BOOL)modifyIndex:(UInt16 const)idx enable:(UInt8 const)enable disable:(UInt8 const)disable;
 
 @end

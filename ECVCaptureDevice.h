@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVConfigController.h"
 
 // Models
+@class ECVVideoSource;
 @class ECVVideoFormat;
 @class ECVVideoStorage;
 @class ECVPixelBuffer;
@@ -53,6 +54,7 @@ extern NSString *const ECVHueKey;
 
 	NSUInteger _pauseCount;
 
+	ECVVideoSource *_videoSource;
 	ECVVideoFormat *_videoFormat;
 
 	IOUSBDeviceInterface320 **_USBDevice;
@@ -95,6 +97,8 @@ extern NSString *const ECVHueKey;
 - (BOOL)isPaused;
 - (void)setPaused:(BOOL const)flag;
 
+- (ECVVideoSource *)videoSource;
+- (void)setVideoSource:(ECVVideoSource *const)source;
 - (ECVVideoFormat *)videoFormat;
 - (void)setVideoFormat:(ECVVideoFormat *const)format;
 
@@ -124,6 +128,7 @@ extern NSString *const ECVHueKey;
 @interface ECVCaptureDevice(ECVAbstract)
 
 - (UInt32)maximumMicrosecondsInFrame;
+- (NSArray *)supportedVideoSources;
 - (NSSet *)supportedVideoFormats;
 - (OSType)pixelFormat;
 

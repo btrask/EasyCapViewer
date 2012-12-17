@@ -40,20 +40,20 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 #pragma mark -ECVCaptureDocument
 
-- (ECVCaptureDevice *)videoSource
+- (ECVCaptureDevice *)videoDevice
 {
-	return [[_videoSource retain] autorelease];
+	return [[_videoDevice retain] autorelease];
 }
-- (void)setVideoSource:(ECVCaptureDevice *const)source
+- (void)setVideoDevice:(ECVCaptureDevice *const)source
 {
-	if(source == _videoSource) return;
-	[_videoSource release];
-	_videoSource = [source retain];
+	if(source == _videoDevice) return;
+	[_videoDevice release];
+	_videoDevice = [source retain];
 	// TODO: Set source's target to us.
 }
 - (NSUserDefaults *)defaults
 {
-	return [_videoSource defaults];
+	return [_videoDevice defaults];
 }
 
 #pragma mark -
@@ -76,13 +76,13 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 - (void)play
 {
 	[self startAudio];
-	[_videoSource play];
+	[_videoDevice play];
 	[[ECVController sharedController] noteCaptureDocumentStartedPlaying:self];
 	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
 }
 - (void)stop
 {
-	[_videoSource stop];
+	[_videoDevice stop];
 	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
 	[[ECVController sharedController] noteCaptureDocumentStoppedPlaying:self];
 	[self stopAudio];
@@ -105,7 +105,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
 		if(!BTEqualObjects(ECVAudioInputNone, UID)) {
 			if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
-			if(!_audioInput) _audioInput = [[[self videoSource] builtInAudioInput] retain];
+			if(!_audioInput) _audioInput = [[[self videoDevice] builtInAudioInput] retain];
 		}
 	}
 	return [[_audioInput retain] autorelease];
@@ -120,7 +120,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 		_audioPreviewingPipe = nil;
 		[self setPaused:NO];
 	}
-	if(BTEqualObjects([[self videoSource] builtInAudioInput], input)) {
+	if(BTEqualObjects([[self videoDevice] builtInAudioInput], input)) {
 		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
 	} else if(input) {
 		[[self defaults] setObject:[input UID] forKey:ECVAudioInputUIDKey];
@@ -267,7 +267,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 - (NSString *)displayName
 {
-	return [_videoSource name] ?: @"";
+	return [_videoDevice name] ?: @"";
 }
 - (void)close
 {
@@ -290,7 +290,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 		[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 
-		NSUserDefaults *const defaults = [_videoSource defaults];
+		NSUserDefaults *const defaults = [_videoDevice defaults];
 		[defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
 			[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,

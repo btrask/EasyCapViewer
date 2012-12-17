@@ -54,35 +54,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (IBAction)changeFormat:(id)sender
 {
-	[[_captureDocument videoSource] setVideoFormat:[[sender selectedItem] representedObject]];
+	[[_captureDocument videoDevice] setVideoFormat:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeSource:(id)sender
 {
-	[[_captureDocument videoSource] setVideoSourceObject:[[sender selectedItem] representedObject]];
+	[[_captureDocument videoDevice] setVideoSourceObject:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
-	[[_captureDocument videoSource] setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[sender selectedTag]]];
+	[[_captureDocument videoDevice] setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[sender selectedTag]]];
 }
 - (IBAction)changeBrightness:(id)sender
 {
 	[self _snapSlider:sender];
-	[[_captureDocument videoSource] setBrightness:[sender doubleValue]];
+	[[_captureDocument videoDevice] setBrightness:[sender doubleValue]];
 }
 - (IBAction)changeContrast:(id)sender
 {
 	[self _snapSlider:sender];
-	[[_captureDocument videoSource] setContrast:[sender doubleValue]];
+	[[_captureDocument videoDevice] setContrast:[sender doubleValue]];
 }
 - (IBAction)changeSaturation:(id)sender
 {
 	[self _snapSlider:sender];
-	[[_captureDocument videoSource] setSaturation:[sender doubleValue]];
+	[[_captureDocument videoDevice] setSaturation:[sender doubleValue]];
 }
 - (IBAction)changeHue:(id)sender
 {
 	[self _snapSlider:sender];
-	[[_captureDocument videoSource] setHue:[sender doubleValue]];
+	[[_captureDocument videoDevice] setHue:[sender doubleValue]];
 }
 
 #pragma mark -
@@ -116,7 +116,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 	if(![self isWindowLoaded]) return;
 
-	ECVCaptureDevice *const captureDevice = [_captureDocument videoSource];
+	ECVCaptureDevice *const captureDevice = [_captureDocument videoDevice];
 
 	[sourcePopUp removeAllItems];
 	if([captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [captureDevice allVideoSourceObjects]) {
@@ -168,7 +168,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[audioSourcePopUp removeAllItems];
 	NSMenuItem *const nilItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"No Input", nil) action:NULL keyEquivalent:@""] autorelease];
 	[[audioSourcePopUp menu] addItem:nilItem];
-	ECVAudioInput *const preferredInput = [[_captureDocument videoSource] builtInAudioInput];
+	ECVAudioInput *const preferredInput = [[_captureDocument videoDevice] builtInAudioInput];
 	if(preferredInput) {
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[preferredInput name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:preferredInput];

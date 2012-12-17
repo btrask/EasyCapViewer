@@ -123,7 +123,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
 	[options setURL:[savePanel URL]];
-	[options setVideoStorage:[[self videoSource] videoStorage]];
+	[options setVideoStorage:[[self videoDevice] videoStorage]];
 	[options setAudioInput:[[self captureDocument] audioInput]];
 
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
@@ -366,7 +366,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 - (void)startPlaying
 {
-	[videoView setVideoStorage:[[self videoSource] videoStorage]];
+	[videoView setVideoStorage:[[self videoDevice] videoStorage]];
 	[videoView startDrawing];
 }
 - (void)stopPlaying
@@ -591,14 +591,14 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	return [self document];
 }
-- (ECVCaptureDevice *)videoSource
+- (ECVCaptureDevice *)videoDevice
 {
-	return [[self captureDocument] videoSource];
+	return [[self captureDocument] videoDevice];
 }
 
 - (ECVVideoFormat *)videoFormat
 {
-	return [[self videoSource] videoFormat];
+	return [[self videoDevice] videoFormat];
 }
 
 

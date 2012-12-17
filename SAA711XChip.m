@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVCaptureDevice.h"
+#import "ECVVideoSource.h"
 #import "ECVVideoFormat.h"
 
 // Other Sources
@@ -280,7 +281,8 @@ enum {
 
 - (u_int8_t)_SAA711XMODESource
 {
-	return [[self device] sVideoForSAA711XChip:self] ? SAA711XMODESVideoAI12_YGain : SAA711XMODECompositeAI11;
+	ECVVideoSource *const s = [[self device] videoSource];
+	return [s SVideo] ? SAA711XMODESVideoAI12_YGain : SAA711XMODECompositeAI11;
 }
 - (u_int8_t)_SAA711XCHXENOutputControl
 {
@@ -304,7 +306,8 @@ enum {
 }
 - (u_int8_t)_SAA711XLuminanceControl
 {
-	return [[self device] sVideoForSAA711XChip:self] ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb;
+	ECVVideoSource *const s = [[self device] videoSource];
+	return [s SVideo] ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb;
 }
 - (u_int8_t)_SAAA711XRTP0OutputPolarity
 {

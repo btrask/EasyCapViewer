@@ -207,7 +207,7 @@ ECVNoDeviceError: (void)0;
 - (void)ECV_display
 {
 	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
-	[doc setVideoSource:self];
+	[doc setVideoDevice:self];
 	[[NSDocumentController sharedDocumentController] addDocument:doc];
 	[doc makeWindowControllers];
 	[doc showWindows];

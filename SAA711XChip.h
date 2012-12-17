@@ -62,6 +62,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)writeSAA711XRegister:(u_int8_t const)reg value:(int16_t const)val;
 - (BOOL)readSAA711XRegister:(u_int8_t const)reg value:(out u_int8_t *const)outVal;
 
-- (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip;
-
 @end

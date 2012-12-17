@@ -80,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @protocol ECVCaptureDocumentConfiguring<NSObject>
 
-- (ECVCaptureDevice<ECVCaptureDeviceConfiguring> *)videoSource;
+- (ECVCaptureDevice<ECVCaptureDeviceConfiguring> *)videoDevice;
 
 @optional
 

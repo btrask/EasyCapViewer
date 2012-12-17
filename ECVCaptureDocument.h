@@ -36,7 +36,7 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	@private
 	BOOL _paused;
 
-	ECVCaptureDevice *_videoSource;
+	ECVCaptureDevice *_videoDevice;
 
 	ECVReadWriteLock *_windowControllersLock;
 	NSMutableArray *_windowControllers2;
@@ -49,8 +49,8 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 	BOOL _upconvertsFromMono;
 }
 
-- (ECVCaptureDevice *)videoSource;
-- (void)setVideoSource:(ECVCaptureDevice *const)source;
+- (ECVCaptureDevice *)videoDevice;
+- (void)setVideoDevice:(ECVCaptureDevice *const)source;
 - (NSUserDefaults *)defaults;
 
 - (BOOL)isPaused;

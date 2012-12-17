@@ -23,9 +23,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "stk11xx.h"
 
 // Video
+#import "ECVVideoSource.h"
 #import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
-#import "ECVDeinterlacingMode.h"
 #import "ECVPixelBuffer.h"
 
 // Other Sources
@@ -37,14 +37,27 @@ enum {
 	ECVSTK1160NewImageFlag = 1 << 7,
 };
 
-static NSString *const ECVSTK1160VideoSourceKey = @"ECVSTK1160VideoSource";
-static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
+@interface ECVVideoSource(ECVSTK1160Device)
+- (BOOL)writeToDevice:(ECVSTK1160Device *const)device;
+- (u_int8_t)hardwareSource;
+@end
+@interface ECVSTK11X0VideoSource_SVideo : ECVVideoSource
+@end
+@interface ECVSTK11X0VideoSource_CompositeGeneric : ECVVideoSource
+@end
+@interface ECVSTK11X0VideoSource_Composite1 : ECVSTK11X0VideoSource_CompositeGeneric
+@end
+@interface ECVSTK11X0VideoSource_Composite2 : ECVSTK11X0VideoSource_CompositeGeneric
+@end
+@interface ECVSTK11X0VideoSource_Composite3 : ECVSTK11X0VideoSource_CompositeGeneric
+@end
+@interface ECVSTK11X0VideoSource_Composite4 : ECVSTK11X0VideoSource_CompositeGeneric
+@end
 
 @interface ECVSTK1160Device(Private)
 
 - (BOOL)_initializeAudio;
 - (BOOL)_initializeResolution;
-- (BOOL)_setVideoSource:(ECVSTK1160VideoSource)source;
 - (BOOL)_setStreaming:(BOOL)flag;
 - (BOOL)_SAA711XExpect:(u_int8_t)val;
 
@@ -53,21 +66,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 @implementation ECVSTK1160Device
 
 #pragma mark -ECVSTK1160Device
-
-- (ECVSTK1160VideoSource)videoSource
-{
-	return _videoSource;
-}
-- (void)setVideoSource:(ECVSTK1160VideoSource const)source
-{
-	if(source == _videoSource) return;
-	[self setPaused:YES];
-	_videoSource = source;
-	[self setPaused:NO];
-	[[self defaults] setInteger:source forKey:ECVSTK1160VideoSourceKey];
-}
-
-#pragma mark -
 
 - (BOOL)readIndex:(UInt16 const)i value:(out UInt8 *const)outValue
 {
@@ -147,22 +145,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	for(; i < numberof(settings); i++) if(![self writeIndex:settings[i].reg value:settings[i].val]) return NO;
 	return YES;
 }
-- (BOOL)_setVideoSource:(ECVSTK1160VideoSource)source
-{
-	UInt8 val = 0;
-	switch(source) {
-		case ECVSTK1160SVideoInput:
-			return YES;
-		case ECVSTK1160Composite1Input: val = 3; break;
-		case ECVSTK1160Composite2Input: val = 2; break;
-		case ECVSTK1160Composite3Input: val = 1; break;
-		case ECVSTK1160Composite4Input: val = 0; break;
-		default:
-			return NO;
-	}
-	if(dev_stk0408_write0(self, 1 << 7 | 0x3 << 3, 1 << 7 | val << 3)) return NO;
-	return YES;
-}
 - (BOOL)_setStreaming:(BOOL)flag
 {
 	u_int8_t value;
@@ -189,14 +171,8 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (id)initWithService:(io_service_t)service
 {
 	if((self = [super initWithService:service])) {
-		NSUserDefaults *const d = [self defaults];
-		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input], ECVSTK1160VideoSourceKey,
-//			[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat], ECVSTK1160VideoFormatKey,
-			nil]];
-		[self setVideoSource:[d integerForKey:ECVSTK1160VideoSourceKey]];
-//		[self setVideoFormat:[d integerForKey:ECVSTK1160VideoFormatKey]];
-		[self setVideoFormat:[[[ECVVideoFormat_NTSC_M alloc] init] autorelease]];
+		[self setVideoSource:[ECVSTK11X0VideoSource_SVideo new]]; // TODO: Serialization.
+		[self setVideoFormat:[ECVVideoFormat_NTSC_M new]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setDevice:self];
 		_VT1612AChip = [[VT1612AChip alloc] init];
@@ -210,6 +186,16 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (UInt32)maximumMicrosecondsInFrame
 {
 	return kUSBHighSpeedMicrosecondsInFrame;
+}
+- (NSArray *)supportedVideoSources
+{
+	return [NSArray arrayWithObjects:
+		[ECVSTK11X0VideoSource_SVideo new],
+		[ECVSTK11X0VideoSource_Composite1 new],
+		[ECVSTK11X0VideoSource_Composite2 new],
+		[ECVSTK11X0VideoSource_Composite3 new],
+		[ECVSTK11X0VideoSource_Composite4 new],
+		nil];
 }
 - (NSSet *)supportedVideoFormats
 {
@@ -229,7 +215,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	if(![_SAA711XChip initialize]) return;
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
 	if(![self _initializeAudio]) return;
-	if(![self _setVideoSource:[self videoSource]]) return;
+	if(![[self videoSource] writeToDevice:self]) return;
 	if(![self _initializeResolution]) return;
 	if(![self setAlternateInterface:5]) return;
 	if(![self _setStreaming:YES]) return;
@@ -283,46 +269,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 #pragma mark -ECVCaptureDevice<ECVCaptureDeviceConfiguring>
 
-- (NSArray *)allVideoSourceObjects
-{
-	return [NSArray arrayWithObjects:
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160SVideoInput],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite2Input],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite3Input],
-		[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite4Input],
-		nil];
-}
-- (id)videoSourceObject
-{
-	return [NSNumber numberWithUnsignedInteger:[self videoSource]];
-}
-- (void)setVideoSourceObject:(id)obj
-{
-	[self setVideoSource:[obj unsignedIntegerValue]];
-}
-- (NSString *)localizedStringForVideoSourceObject:(id)obj
-{
-	switch([obj unsignedIntegerValue]) {
-		case ECVSTK1160SVideoInput: return NSLocalizedString(@"S-Video", nil);
-		case ECVSTK1160Composite1Input: return NSLocalizedString(@"Composite 1", nil);
-		case ECVSTK1160Composite2Input: return NSLocalizedString(@"Composite 2", nil);
-		case ECVSTK1160Composite3Input: return NSLocalizedString(@"Composite 3", nil);
-		case ECVSTK1160Composite4Input: return NSLocalizedString(@"Composite 4", nil);
-	}
-	return nil;
-}
-- (BOOL)isValidVideoSourceObject:(id)obj
-{
-	return YES;
-}
-- (NSInteger)indentationLevelForVideoSourceObject:(id)obj
-{
-	return 0;
-}
-
-#pragma mark -
-
 - (CGFloat)brightness
 {
 	return [_SAA711XChip brightness];
@@ -362,29 +308,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 {
 	return digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
 }
-- (short)inputFormatForVideoSourceObject:(id)obj
-{
-	switch([obj unsignedIntegerValue]) {
-		case ECVSTK1160SVideoInput:
-			return sVideoIn;
-		case ECVSTK1160Composite1Input:
-		case ECVSTK1160Composite2Input:
-		case ECVSTK1160Composite3Input:
-		case ECVSTK1160Composite4Input:
-			return compositeIn;
-		default:
-			ECVAssertNotReached(@"Invalid video source %lu.", (unsigned long)[obj unsignedIntegerValue]);
-			return 0;
-	}
-}
-- (short)inputStandard
-{
-	return currentIn; // TODO: Implement.
-}
-- (void)setInputStandard:(short)standard
-{
-	// TODO: Implement.
-}
 
 #pragma mark -<SAA711XDevice>
 
@@ -408,13 +331,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 		return NO;
 	}
 	return [self readIndex:0x209 value:outVal];
-}
-
-#pragma mark -
-
-- (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip
-{
-	return ECVSTK1160SVideoInput == [self videoSource];
 }
 
 #pragma mark -<VT1612ADevice>
@@ -447,4 +363,33 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	return YES;
 }
 
+@end
+
+@implementation ECVSTK11X0VideoSource_SVideo
+- (NSString *)localizedName { return NSLocalizedString(@"S-Video", nil); }
+- (BOOL)SVideo { return YES; }
+- (BOOL)writeToDevice:(ECVSTK1160Device *const)device { return YES; }
+@end
+@implementation ECVSTK11X0VideoSource_CompositeGeneric
+- (BOOL)composite { return YES; }
+- (BOOL)writeToDevice:(ECVSTK1160Device *const)device
+{
+	return dev_stk0408_write0(device, 1 << 7 | 0x3 << 3, 1 << 7 | [self hardwareSource] << 3);
+}
+@end
+@implementation ECVSTK11X0VideoSource_Composite1
+- (NSString *)localizedName { return NSLocalizedString(@"Composite 1", nil); }
+- (u_int8_t)hardwareSource { return 3; }
+@end
+@implementation ECVSTK11X0VideoSource_Composite2
+- (NSString *)localizedName { return NSLocalizedString(@"Composite 2", nil); }
+- (u_int8_t)hardwareSource { return 2; }
+@end
+@implementation ECVSTK11X0VideoSource_Composite3
+- (NSString *)localizedName { return NSLocalizedString(@"Composite 3", nil); }
+- (u_int8_t)hardwareSource { return 1; }
+@end
+@implementation ECVSTK11X0VideoSource_Composite4
+- (NSString *)localizedName { return NSLocalizedString(@"Composite 4", nil); }
+- (u_int8_t)hardwareSource { return 0; }
 @end

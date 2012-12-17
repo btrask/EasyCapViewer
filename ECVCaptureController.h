@@ -130,7 +130,7 @@ typedef NSInteger ECVCropBorder;
 
 
 - (ECVCaptureDocument *)captureDocument;
-- (ECVCaptureDevice *)videoSource;
+- (ECVCaptureDevice *)videoDevice;
 - (ECVVideoFormat *)videoFormat;
 
 

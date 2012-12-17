@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Models
 #import "ECVUSBTransferList.h"
+#import "ECVVideoSource.h"
 #import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
 #import "ECVDeinterlacingMode.h"
@@ -482,6 +483,7 @@ ECVNoDeviceError:
 	[_productName release];
 
 	[_deinterlacingMode release];
+	[_videoSource release];
 	[_videoFormat release];
 
 	[super dealloc];
@@ -530,6 +532,19 @@ ECVNoDeviceError:
 }
 
 
+- (ECVVideoSource *)videoSource
+{
+	return [[_videoSource retain] autorelease];
+}
+- (void)setVideoSource:(ECVVideoSource *const)source
+{
+	if(BTEqualObjects(source, _videoSource)) return;
+	[self setPaused:YES];
+	[_videoSource release];
+	_videoSource = [source retain];
+	[self setPaused:NO];
+	// TODO: Serialize.
+}
 - (ECVVideoFormat *)videoFormat
 {
 	return [[_videoFormat retain] autorelease];
