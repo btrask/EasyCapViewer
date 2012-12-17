@@ -55,7 +55,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 - (BOOL)isPaused;
 - (void)setPaused:(BOOL const)flag;
-- (void)togglePaused;
 - (void)play;
 - (void)stop;
 

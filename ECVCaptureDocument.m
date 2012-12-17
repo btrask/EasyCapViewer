@@ -69,10 +69,6 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 	if(_paused) [self stop];
 	else [self play];
 }
-- (void)togglePaused
-{
-	[self setPaused:![self isPaused]];
-}
 - (void)play
 {
 	[self startAudio];

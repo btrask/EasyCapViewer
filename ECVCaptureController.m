@@ -80,7 +80,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 }
 - (IBAction)togglePlaying:(id)sender
 {
-	[[self captureDocument] togglePaused];
+	[[self captureDocument] setPaused:![[self captureDocument] isPaused]];
 }
 
 #pragma mark -
