@@ -32,11 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVDebug.h"
-#import "ECVComponentConfiguring.h"
 #import "ECVICM.h"
 
 typedef struct {
-	ECVCaptureDevice<ECVComponentConfiguring> *device;
+	ECVCaptureDevice *device;
 	ICMCompressionSessionRef compressionSession;
 	ICMEncodedFrameRef encodedFrame;
 	BOOL hasNewFrame;
@@ -158,10 +157,9 @@ ECV_CALLCOMPONENT_FUNCTION(Open, ComponentInstance instance)
 		NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 		self = calloc(1, sizeof(ECVCStorage));
 		for(Class const class in [ECVCaptureDevice deviceClasses]) {
-			if(![class conformsToProtocol:@protocol(ECVComponentConfiguring)]) continue;
 			io_service_t const service = IOServiceGetMatchingService(kIOMasterPortDefault, (CFDictionaryRef)[[class matchingDictionary] retain]);
 			if(!service) continue;
-			self->device = [[class alloc] initWithService:service error:NULL];
+			self->device = [[class alloc] initWithService:service];
 			if(!self->device) continue;
 			break;
 		}
@@ -207,9 +205,7 @@ ECV_VDIG_FUNCTION(GetDigitizerInfo, DigitizerInfo *info)
 
 	*info = (DigitizerInfo){};
 	info->vdigType = vdTypeBasic;
-	info->inputCapabilityFlags = kNilOptions;
-		// We lie because many applications don't respect these options, and NTSC/PAL/SECAM is more limited than what we actually support.
-		// digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo
+	info->inputCapabilityFlags = digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
 	info->outputCapabilityFlags = digiOutDoes32 | digiOutDoesCompress | digiOutDoesCompressOnly | digiOutDoesNotNeedCopyOfCompressData;
 	info->inputCurrentFlags = info->inputCapabilityFlags;
 	info->outputCurrentFlags = info->outputCapabilityFlags;
@@ -252,9 +248,7 @@ ECV_VDIG_FUNCTION(GetNumberOfInputs, short *inputs)
 ECV_VDIG_FUNCTION(GetInputFormat, short input, short *format)
 {
 	ECV_DEBUG_LOG();
-	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	*format = [self->device inputFormatForVideoSourceObject:[[self->inputCombinations objectAtIndex:input] objectForKey:ECVVideoSourceObject]];
-	[pool drain];
+	*format = compositeIn;
 	return noErr;
 }
 ECV_VDIG_FUNCTION(GetInputName, long videoInput, Str255 name)
@@ -295,9 +289,6 @@ ECV_VDIG_FUNCTION(SetInput, short input)
 ECV_VDIG_FUNCTION(SetInputStandard, short inputStandard)
 {
 	ECV_DEBUG_LOG();
-	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[self->device setInputStandard:inputStandard];
-	[pool drain];
 	return noErr;
 }
 
@@ -347,7 +338,7 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[self->device setPausedFromUI:!state];
+	[self->device setPaused:!state];
 	ICMCompressionSessionRelease(self->compressionSession);
 	self->compressionSession = state ? ECVCompressionSessionCreate(self) : NULL;
 	[pool drain];

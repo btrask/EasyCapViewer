@@ -91,8 +91,6 @@
 		0EC7D4AF1019B67600CFBDFF /* ECVAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */; };
 		0EC8BF901090A3F400ED9BB0 /* ECVRectEdgeMask.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */; };
 		0ECDB5D5111C693100D5899C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0E9F9B3510F679A400935C48 /* Localizable.strings */; };
-		0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */; };
-		0ECDB5DA111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */; };
 		0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */; };
 		0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */; };
 		0EDF46C20FCE1B4F006630E1 /* stk11xx-dev-0408.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E78CD4F0FC9F36000E9C148 /* stk11xx-dev-0408.m */; };
@@ -111,7 +109,6 @@
 		B5BC261B166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
 		B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */; };
 		B5BC2808167E75CF0036490F /* ECVUSBTransferList.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */; };
-		B5BC28DF167E904D0036490F /* ECVCaptureDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC28DE167E904D0036490F /* ECVCaptureDocument.m */; };
 		B5BC28E0167E904D0036490F /* ECVCaptureDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC28DE167E904D0036490F /* ECVCaptureDocument.m */; };
 		B5BC29D3167F68970036490F /* ECVVideoSource.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC29D2167F68970036490F /* ECVVideoSource.m */; };
 		B5BC29D4167F68970036490F /* ECVVideoSource.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC29D2167F68970036490F /* ECVVideoSource.m */; };
@@ -239,8 +236,6 @@
 		0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVAudioDevice.m; sourceTree = "<group>"; };
 		0EC8BF8E1090A3F400ED9BB0 /* ECVRectEdgeMask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVRectEdgeMask.h; sourceTree = "<group>"; };
 		0EC8BF8F1090A3F400ED9BB0 /* ECVRectEdgeMask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVRectEdgeMask.m; sourceTree = "<group>"; };
-		0ECDB5D7111C6A7100D5899C /* ECVComponentConfiguring.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVComponentConfiguring.h; sourceTree = "<group>"; };
-		0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVComponentConfiguring.m; sourceTree = "<group>"; };
 		0EDC66951129186A00AF1803 /* ECVHUDSwitchButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDSwitchButtonCell.h; sourceTree = "<group>"; };
 		0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDSwitchButtonCell.m; sourceTree = "<group>"; };
 		0EDF451A0FCD2167006630E1 /* stk11xx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stk11xx.h; sourceTree = "<group>"; };
@@ -462,8 +457,6 @@
 				0EC7D4AE1019B67600CFBDFF /* ECVAudioDevice.m */,
 				0EC7D4AA1019B60100CFBDFF /* ECVAudioPipe.h */,
 				0EC7D4AB1019B60100CFBDFF /* ECVAudioPipe.m */,
-				0ECDB5D7111C6A7100D5899C /* ECVComponentConfiguring.h */,
-				0ECDB5D8111C6A7100D5899C /* ECVComponentConfiguring.m */,
 				0E78CB960FC92D8300E9C148 /* ECVDebug.h */,
 				0E78CB970FC92D8300E9C148 /* ECVDebug.m */,
 				0E9F9B2010F6764500935C48 /* ECVFoundationAdditions.h */,
@@ -693,7 +686,6 @@
 				0E9FAABF1107B138005C55CE /* ECVVideoFrame.m in Sources */,
 				0E9FAAC81107B202005C55CE /* ECVReadWriteLock.m in Sources */,
 				0E9FABB31107B22A005C55CE /* ECVDebug.m in Sources */,
-				0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
 				0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 				0EAE4FB7112BD420004D93B3 /* VT1612AChip.m in Sources */,
 				B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */,
@@ -704,7 +696,6 @@
 				B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */,
 				B5BC261B166F78EC0036490F /* ECVVideoFormat.m in Sources */,
 				B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */,
-				B5BC28DF167E904D0036490F /* ECVCaptureDocument.m in Sources */,
 				B5BC29D3167F68970036490F /* ECVVideoSource.m in Sources */,
 				B5BC2A11167F6FAB0036490F /* ECVEM2860Device.m in Sources */,
 			);
@@ -743,7 +734,6 @@
 				0E9F9B1D10F6753C00935C48 /* ECVLocalizing.m in Sources */,
 				0E9F9B2210F6764500935C48 /* ECVFoundationAdditions.m in Sources */,
 				0E4D778711046F9E00FE3DDC /* EasyCapViewer.m in Sources */,
-				0ECDB5DA111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
 				0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 				0EAE4FB8112BD420004D93B3 /* VT1612AChip.m in Sources */,
 				B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */,

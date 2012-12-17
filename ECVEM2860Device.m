@@ -531,13 +531,6 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	[_SAA711XChip setHue:val];
 }
 
-#pragma mark -<ECVComponentConfiguring>
-
-- (long)inputCapabilityFlags
-{
-	return digiInDoesNTSC | digiInDoesPAL | digiInDoesSECAM | digiInDoesColor | digiInDoesComposite | digiInDoesSVideo;
-}
-
 #pragma mark -<SAA711XDevice>
 
 - (BOOL)writeSAA711XRegister:(u_int8_t)reg value:(int16_t)val

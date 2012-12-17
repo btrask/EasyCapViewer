@@ -65,11 +65,6 @@ typedef struct {
 - (BOOL)_parseTransfer:(inout ECVUSBTransfer *)transfer numberOfMicroframes:(NSUInteger)numberOfMicroframes frameRequestSize:(NSUInteger)frameRequestSize millisecondInterval:(UInt8)millisecondInterval;
 - (void)_parseFrame:(inout volatile IOUSBLowLatencyIsocFrame *)frame bytes:(void const *)bytes previousFrame:(IOUSBLowLatencyIsocFrame *)previous millisecondInterval:(UInt8)millisecondInterval;
 
-#if !defined(ECV_NO_CONTROLLERS)
-- (void)_startPlayingForControllers;
-- (void)_stopPlayingForControllers;
-#endif
-
 @end
 
 static NSMutableArray *ECVDeviceClasses = nil;
@@ -260,7 +255,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 		[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[[self defaults] integerForKey:ECVDeinterlacingModeKey]]];
 
-		(void)ECVIOReturn2(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
+		Class const controller = NSClassFromString(@"ECVController"); // FIXME: Kind of a hack.
+		if(controller) (void)ECVIOReturn2(IOServiceAddInterestNotification([[controller sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 	}
 	return self;
 }
