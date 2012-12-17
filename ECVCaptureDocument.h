@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVCaptureDevice;
 @class ECVReadWriteLock;
 
+extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
+
 @interface ECVCaptureDocument : NSDocument <ECVCaptureDocumentConfiguring, ECVAudioDeviceDelegate>
 {
 	@private

@@ -32,8 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVPixelFormat.h"
 
-#define ECVRotationFrameSkip 2 // This affects the framerate and video quality. '1' doesn't skip frames, but looks bad. '3' looks almost perfect but results in a low framerate. '2' is a balance between the two.
-
 enum {
 	ECVSTK1160HighFieldFlag = 1 << 6,
 	ECVSTK1160NewImageFlag = 1 << 7,
@@ -200,10 +198,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 //		[self setVideoFormat:[d integerForKey:ECVSTK1160VideoFormatKey]];
 		[self setVideoFormat:[[[ECVVideoFormat_NTSC_M alloc] init] autorelease]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
-		[_SAA711XChip setBrightness:[[d objectForKey:ECVBrightnessKey] doubleValue]];
-		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
-		[_SAA711XChip setSaturation:[[d objectForKey:ECVSaturationKey] doubleValue]];
-		[_SAA711XChip setHue:[[d objectForKey:ECVHueKey] doubleValue]];
 		[_SAA711XChip setDevice:self];
 		_VT1612AChip = [[VT1612AChip alloc] init];
 		[_VT1612AChip setDevice:self];
@@ -336,7 +330,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setBrightness:(CGFloat)val
 {
 	[_SAA711XChip setBrightness:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
@@ -345,7 +338,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setContrast:(CGFloat)val
 {
 	[_SAA711XChip setContrast:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
 {
@@ -354,7 +346,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setSaturation:(CGFloat)val
 {
 	[_SAA711XChip setSaturation:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
 {
@@ -363,7 +354,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 - (void)setHue:(CGFloat)val
 {
 	[_SAA711XChip setHue:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 #pragma mark -<ECVComponentConfiguring>
@@ -422,14 +412,6 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 #pragma mark -
 
-- (ECVVideoFormat *)videoFormatForSAA711XChip:(SAA711XChip *const)chip
-{
-	return [self videoFormat];
-}
-- (BOOL)polarityInvertedForSAA711XChip:(SAA711XChip *const)chip
-{
-	return YES;
-}
 - (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip
 {
 	return ECVSTK1160SVideoInput == [self videoSource];

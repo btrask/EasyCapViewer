@@ -41,12 +41,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #define ECVNanosecondsPerMillisecond 1e6
 
 NSString *const ECVDeinterlacingModeKey = @"ECVDeinterlacingMode";
+
 NSString *const ECVBrightnessKey = @"ECVBrightness";
 NSString *const ECVContrastKey = @"ECVContrast";
-NSString *const ECVHueKey = @"ECVHue";
 NSString *const ECVSaturationKey = @"ECVSaturation";
-
-NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
+NSString *const ECVHueKey = @"ECVHue";
 
 typedef struct {
 	IOUSBLowLatencyIsocFrame *list;

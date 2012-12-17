@@ -82,10 +82,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 		[self setVideoSource:[d integerForKey:ECVEM2860VideoSourceKey]];
 //		[self setVideoFormat:[d integerForKey:ECVEM2860VideoFormatKey]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
-		[_SAA711XChip setBrightness:[[d objectForKey:ECVBrightnessKey] doubleValue]];
-		[_SAA711XChip setContrast:[[d objectForKey:ECVContrastKey] doubleValue]];
-		[_SAA711XChip setSaturation:[[d objectForKey:ECVSaturationKey] doubleValue]];
-		[_SAA711XChip setHue:[[d objectForKey:ECVHueKey] doubleValue]];
 		[_SAA711XChip setDevice:self];
 	}
 	return self;
@@ -554,7 +550,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (void)setBrightness:(CGFloat)val
 {
 	[_SAA711XChip setBrightness:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
@@ -563,7 +558,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (void)setContrast:(CGFloat)val
 {
 	[_SAA711XChip setContrast:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
 {
@@ -572,7 +566,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (void)setSaturation:(CGFloat)val
 {
 	[_SAA711XChip setSaturation:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
 {
@@ -581,7 +574,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 - (void)setHue:(CGFloat)val
 {
 	[_SAA711XChip setHue:val];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 #pragma mark -<ECVComponentConfiguring>
@@ -642,14 +634,6 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #pragma mark -
 
-- (ECVVideoFormat *)videoFormatForSAA711XChip:(SAA711XChip *const)chip
-{
-	return [self videoFormat];
-}
-- (BOOL)polarityInvertedForSAA711XChip:(SAA711XChip *const)chip
-{
-	return YES;
-}
 - (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip
 {
 	return ECVEM2860SVideoInput == [self videoSource];

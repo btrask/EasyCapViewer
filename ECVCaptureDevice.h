@@ -30,14 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVVideoFrame;
 
 extern NSString *const ECVDeinterlacingModeKey;
+
 extern NSString *const ECVBrightnessKey;
 extern NSString *const ECVContrastKey;
-extern NSString *const ECVHueKey;
 extern NSString *const ECVSaturationKey;
-
-extern NSString *const ECVCaptureDeviceErrorDomain;
-
-extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
+extern NSString *const ECVHueKey;
 
 @interface ECVCaptureDevice : NSObject <ECVCaptureDeviceConfiguring>
 {

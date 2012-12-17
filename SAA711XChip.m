@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "SAA711XChip.h"
 
 // Models
+#import "ECVCaptureDevice.h"
 #import "ECVVideoFormat.h"
 
 // Other Sources
@@ -127,14 +128,43 @@ enum {
 
 #pragma mark -SAA711XChip
 
-- (id<SAA711XDevice>)device
+- (ECVCaptureDevice<SAA711XDevice> *)device
 {
 	return device;
 }
-- (void)setDevice:(id<SAA711XDevice> const)obj
+- (void)setDevice:(ECVCaptureDevice<SAA711XDevice> *const)obj
 {
 	device = obj;
+	NSUserDefaults *const d = [self defaults];
+	[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+		[NSNumber numberWithDouble:0.5], ECVBrightnessKey,
+		[NSNumber numberWithDouble:0.5], ECVContrastKey,
+		[NSNumber numberWithDouble:0.5], ECVSaturationKey,
+		[NSNumber numberWithDouble:0.5], ECVHueKey,
+		nil]];
+	_brightness = [[d objectForKey:ECVBrightnessKey] doubleValue];
+	_contrast = [[d objectForKey:ECVContrastKey] doubleValue];
+	_saturation = [[d objectForKey:ECVSaturationKey] doubleValue];
+	_hue = [[d objectForKey:ECVHueKey] doubleValue];
 }
+- (NSUserDefaults *)defaults
+{
+	return [[self device] defaults];
+}
+
+#pragma mark -
+
+- (BOOL)polarityInverted
+{
+	return _polarityInverted;
+}
+- (void)setPolarityInverted:(BOOL const)flag
+{
+	_polarityInverted = flag;
+}
+
+#pragma mark -
+
 - (CGFloat)brightness
 {
 	return _brightness;
@@ -143,6 +173,7 @@ enum {
 {
 	_brightness = val;
 	(void)[device writeSAA711XRegister:0x0a value:round(val * 0xff)];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
@@ -152,6 +183,7 @@ enum {
 {
 	_contrast = val;
 	(void)[device writeSAA711XRegister:0x0b value:round(val * 0x7f)];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
 {
@@ -161,6 +193,7 @@ enum {
 {
 	_saturation = val;
 	(void)[device writeSAA711XRegister:0x0c value:round(val * 0x7f)];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
 {
@@ -170,13 +203,14 @@ enum {
 {
 	_hue = val;
 	(void)[device writeSAA711XRegister:0x0d value:round((val - 0.5f) * 0xff)];
+	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 #pragma mark -
 
 - (BOOL)initialize
 {
-	ECVVideoFormat *const f = [[self device] videoFormatForSAA711XChip:self];
+	ECVVideoFormat *const f = [[self device] videoFormat];
 	// Based on Table 184 in the datasheet.
 	struct {
 		u_int8_t reg;
@@ -274,7 +308,7 @@ enum {
 }
 - (u_int8_t)_SAAA711XRTP0OutputPolarity
 {
-	return [[self device] polarityInvertedForSAA711XChip:self] ? SAA711XRTP0OutputPolarityInverted : 0;
+	return [self polarityInverted] ? SAA711XRTP0OutputPolarityInverted : 0;
 }
 
 #pragma mark -NSObject
@@ -282,6 +316,7 @@ enum {
 - (id)init
 {
 	if((self = [super init])) {
+		_polarityInverted = YES; // So far both devices are inverted, so...
 		_brightness = 0.5;
 		_contrast = 0.5;
 		_saturation = 0.5;

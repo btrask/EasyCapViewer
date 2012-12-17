@@ -19,24 +19,37 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+@class ECVCaptureDevice;
 @class ECVVideoFormat;
+
 @protocol SAA711XDevice;
 
 @interface SAA711XChip : NSObject
 {
 	@private
-	IBOutlet id<SAA711XDevice> device;
+	IBOutlet ECVCaptureDevice<SAA711XDevice> *device;
+	BOOL _polarityInverted;
 	CGFloat _brightness;
 	CGFloat _contrast;
 	CGFloat _saturation;
 	CGFloat _hue;
 }
 
-@property(assign) id<SAA711XDevice> device;
-@property(nonatomic, assign) CGFloat brightness;
-@property(nonatomic, assign) CGFloat contrast;
-@property(nonatomic, assign) CGFloat saturation;
-@property(nonatomic, assign) CGFloat hue;
+- (ECVCaptureDevice<SAA711XDevice> *)device;
+- (void)setDevice:(ECVCaptureDevice<SAA711XDevice> *const)d;
+- (NSUserDefaults *)defaults;
+
+- (BOOL)polarityInverted;
+- (void)setPolarityInverted:(BOOL const)flag;
+
+- (CGFloat)brightness;
+- (void)setBrightness:(CGFloat const)val;
+- (CGFloat)contrast;
+- (void)setContrast:(CGFloat const)val;
+- (CGFloat)saturation;
+- (void)setSaturation:(CGFloat const)val;
+- (CGFloat)hue;
+- (void)setHue:(CGFloat const)val;
 
 - (BOOL)initialize;
 - (NSUInteger)versionNumber;
@@ -49,8 +62,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)writeSAA711XRegister:(u_int8_t const)reg value:(int16_t const)val;
 - (BOOL)readSAA711XRegister:(u_int8_t const)reg value:(out u_int8_t *const)outVal;
 
-- (ECVVideoFormat *)videoFormatForSAA711XChip:(SAA711XChip *const)chip;
-- (BOOL)polarityInvertedForSAA711XChip:(SAA711XChip *const)chip;
 - (BOOL)sVideoForSAA711XChip:(SAA711XChip *const)chip;
 
 @end
