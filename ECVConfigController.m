@@ -52,13 +52,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVConfigController
 
+- (IBAction)changeSource:(id)sender
+{
+	[[_captureDocument videoDevice] setVideoSource:[[sender selectedItem] representedObject]];
+}
 - (IBAction)changeFormat:(id)sender
 {
 	[[_captureDocument videoDevice] setVideoFormat:[[sender selectedItem] representedObject]];
-}
-- (IBAction)changeSource:(id)sender
-{
-	[[_captureDocument videoDevice] setVideoSourceObject:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
@@ -119,19 +119,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVCaptureDevice *const captureDevice = [_captureDocument videoDevice];
 
 	[sourcePopUp removeAllItems];
-	if([captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [captureDevice allVideoSourceObjects]) {
-		if([NSNull null] == videoSourceObject) {
-			[[sourcePopUp menu] addItem:[NSMenuItem separatorItem]];
-			continue;
-		}
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[captureDevice localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
-		[item setRepresentedObject:videoSourceObject];
-		[item setEnabled:[captureDevice isValidVideoSourceObject:videoSourceObject]];
-		[item setIndentationLevel:[captureDevice indentationLevelForVideoSourceObject:videoSourceObject]];
+	for(ECVVideoSource *const source in [captureDevice supportedVideoSources]) {
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[source localizedName] action:NULL keyEquivalent:@""] autorelease];
+		[item setRepresentedObject:source];
 		[[sourcePopUp menu] addItem:item];
 	}
-	[sourcePopUp setEnabled:[captureDevice respondsToSelector:@selector(videoSourceObject)]];
-	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[captureDevice videoSourceObject]]];
+	[sourcePopUp setEnabled:[[sourcePopUp menu] numberOfItems] > 0];
+	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[captureDevice videoSource]]];
 
 	NSSet *const formats = [captureDevice supportedVideoFormats];
 	[formatPopUp setMenu:[ECVVideoFormat menuWithVideoFormats:formats]];

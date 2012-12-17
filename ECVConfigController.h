@@ -42,8 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 + (id)sharedConfigController;
 
-- (IBAction)changeFormat:(id)sender;
 - (IBAction)changeSource:(id)sender;
+- (IBAction)changeFormat:(id)sender;
 - (IBAction)changeDeinterlacing:(id)sender;
 - (IBAction)changeBrightness:(id)sender;
 - (IBAction)changeContrast:(id)sender;
@@ -54,7 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (IBAction)changeUpconvertsFromMono:(id)sender;
 - (IBAction)changeVolume:(id)sender;
 
-@property(nonatomic, assign) ECVCaptureDocument *captureDocument;
+- (ECVCaptureDocument *)captureDocument;
+- (void)setCaptureDocument:(ECVCaptureDocument *const)doc;
 
 - (void)audioHardwareDevicesDidChange:(NSNotification *)aNotif;
 - (void)volumeDidChange:(NSNotification *)aNotif;
@@ -64,17 +65,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @protocol ECVCaptureDeviceConfiguring<NSObject>
 @optional
 
-@property(readonly) NSArray *allVideoSourceObjects;
-@property(nonatomic, assign) id videoSourceObject;
-- (NSString *)localizedStringForVideoSourceObject:(id)obj;
-- (BOOL)isValidVideoSourceObject:(id)obj;
-- (NSInteger)indentationLevelForVideoSourceObject:(id)obj;
-
-@property(nonatomic, assign) CGFloat brightness;
-@property(nonatomic, assign) CGFloat contrast;
-@property(nonatomic, assign) CGFloat saturation;
-@property(nonatomic, assign) CGFloat hue;
-
+- (CGFloat)brightness;
+- (void)setBrightness:(CGFloat const)val;
+- (CGFloat)contrast;
+- (void)setContrast:(CGFloat const)val;
+- (CGFloat)saturation;
+- (void)setSaturation:(CGFloat const)val;
+- (CGFloat)hue;
+- (void)setHue:(CGFloat const)val;
 
 @end
 
@@ -84,8 +82,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @optional
 
-@property(nonatomic, assign, getter=isMuted) BOOL muted;
-@property(nonatomic, assign) CGFloat volume;
-@property(nonatomic, assign) BOOL upconvertsFromMono;
+- (BOOL)isMuted;
+- (void)setMuted:(BOOL const)flag;
+- (CGFloat)volume;
+- (void)setVolume:(CGFloat const)val;
+- (BOOL)upconvertsFromMono;
+- (void)setUpconvertsFromMono:(BOOL const)flag;
 
 @end
