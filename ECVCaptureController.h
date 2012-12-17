@@ -23,6 +23,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QTKit/QTKit.h>
 
 // Models
+@class ECVCaptureDocument;
+@class ECVCaptureDevice;
 @class ECVVideoFormat;
 @class ECVVideoFrame;
 @class ECVMovieRecorder;
@@ -101,16 +103,19 @@ typedef NSInteger ECVCropBorder;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
-@property(readonly) BTUserDefaults *defaults;
-@property(assign) NSSize aspectRatio;
-@property(readonly) NSRect cropRect;
-@property(nonatomic, assign, getter = isFullScreen) BOOL fullScreen;
-@property(nonatomic, assign) NSSize windowContentSize;
-@property(readonly) NSSize outputSize;
-- (NSSize)outputSizeWithScale:(NSInteger)scale;
-- (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio;
-- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)type;
-- (NSRect)cropRect:(NSRect)rect withBorder:(ECVCropBorder)border;
+- (NSUserDefaults *)defaults;
+- (NSSize)aspectRatio;
+- (void)setAspectRatio:(NSSize const)ratio;
+- (NSRect)cropRect;
+- (BOOL)isFullScreen;
+- (void)setFullScreen:(BOOL const)flag;
+- (NSSize)windowContentSize;
+- (void)setWindowContentSize:(NSSize const)size;
+- (NSSize)outputSize;
+- (NSSize)outputSizeWithScale:(NSInteger const)scale;
+- (NSSize)sizeWithAspectRatio:(ECVAspectRatio const)ratio;
+- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio const)type;
+- (NSRect)cropRect:(NSRect const)rect withBorder:(ECVCropBorder const)border;
 
 - (void)startPlaying;
 - (void)stopPlaying;
@@ -124,6 +129,8 @@ typedef NSInteger ECVCropBorder;
 // Ongoing refactoring... This code is new, the above code is not.
 
 
+- (ECVCaptureDocument *)captureDocument;
+- (ECVCaptureDevice *)videoSource;
 - (ECVVideoFormat *)videoFormat;
 
 

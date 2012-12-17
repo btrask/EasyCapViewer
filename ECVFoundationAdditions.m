@@ -22,17 +22,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVFoundationAdditions.h"
 #import <objc/runtime.h>
 
-static NSString *const ECVMainSuiteNameKey = @"ECVMainSuiteName";
-
-@implementation NSBundle(ECVFoundationAdditions)
-
-- (NSString *)ECV_mainSuiteName
-{
-	return [[self infoDictionary] objectForKey:ECVMainSuiteNameKey];
-}
-
-@end
-
 @implementation NSDate(ECVFoundationAdditions)
 
 + (NSTimeInterval)ECV_timeIntervalSinceReferenceDate

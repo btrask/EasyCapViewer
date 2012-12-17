@@ -105,8 +105,6 @@
 		B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */; };
 		B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
-		B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
-		B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = B5280FE7130C89E100FBE537 /* BTUserDefaults.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
 		B54758491507B29B006C0E44 /* ECVEM2860Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B54758481507B29B006C0E44 /* ECVEM2860Device.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
@@ -114,6 +112,8 @@
 		B5BC261B166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
 		B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */; };
 		B5BC2808167E75CF0036490F /* ECVUSBTransferList.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */; };
+		B5BC28DF167E904D0036490F /* ECVCaptureDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC28DE167E904D0036490F /* ECVCaptureDocument.m */; };
+		B5BC28E0167E904D0036490F /* ECVCaptureDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC28DE167E904D0036490F /* ECVCaptureDocument.m */; };
 		B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5CFB51315769D54004F3ED6 /* ECVEM2860Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B54758481507B29B006C0E44 /* ECVEM2860Device.m */; };
@@ -259,8 +259,6 @@
 		B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVIndependentVideoStorage.m; sourceTree = "<group>"; };
 		B506006F132794E400B2F202 /* ECVPixelBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelBuffer.h; sourceTree = "<group>"; };
 		B5060070132794E400B2F202 /* ECVPixelBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBuffer.m; sourceTree = "<group>"; };
-		B5280FE6130C89E100FBE537 /* BTUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTUserDefaults.h; sourceTree = "<group>"; };
-		B5280FE7130C89E100FBE537 /* BTUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUserDefaults.m; sourceTree = "<group>"; };
 		B54758471507B29B006C0E44 /* ECVEM2860Device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVEM2860Device.h; sourceTree = "<group>"; };
 		B54758481507B29B006C0E44 /* ECVEM2860Device.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVEM2860Device.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
@@ -271,6 +269,8 @@
 		B5BC2619166F78EC0036490F /* ECVVideoFormat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoFormat.m; sourceTree = "<group>"; };
 		B5BC2805167E75CF0036490F /* ECVUSBTransferList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVUSBTransferList.h; sourceTree = "<group>"; };
 		B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVUSBTransferList.m; sourceTree = "<group>"; };
+		B5BC28DD167E904D0036490F /* ECVCaptureDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVCaptureDocument.h; sourceTree = "<group>"; };
+		B5BC28DE167E904D0036490F /* ECVCaptureDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVCaptureDocument.m; sourceTree = "<group>"; };
 		B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = EasyCapViewer.icns; sourceTree = "<group>"; };
 		B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameRateConverter.h; sourceTree = "<group>"; };
 		B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameRateConverter.m; sourceTree = "<group>"; };
@@ -332,6 +332,8 @@
 		0E2C230810AF91BD001B40EF /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				B5BC28DD167E904D0036490F /* ECVCaptureDocument.h */,
+				B5BC28DE167E904D0036490F /* ECVCaptureDocument.m */,
 				0EB070DB10B0992400B9575B /* ECVCaptureDevice.h */,
 				0EB070DC10B0992400B9575B /* ECVCaptureDevice.m */,
 				B5BC2805167E75CF0036490F /* ECVUSBTransferList.h */,
@@ -437,7 +439,6 @@
 				0E78CE870FC9FA5F00E9C148 /* Views */,
 				080E96DDFE201D6D7F000001 /* Controllers */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
-				B5280FFD130CADD400FBE537 /* External */,
 				B5C268C61652D84D0015D032 /* Component */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -534,15 +535,6 @@
 				B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */,
 			);
 			name = Video;
-			sourceTree = "<group>";
-		};
-		B5280FFD130CADD400FBE537 /* External */ = {
-			isa = PBXGroup;
-			children = (
-				B5280FE6130C89E100FBE537 /* BTUserDefaults.h */,
-				B5280FE7130C89E100FBE537 /* BTUserDefaults.m */,
-			);
-			name = External;
 			sourceTree = "<group>";
 		};
 		B54758411507B270006C0E44 /* eMPIA EM2860 */ = {
@@ -698,7 +690,6 @@
 				0ECDB5D9111C6A7100D5899C /* ECVComponentConfiguring.m in Sources */,
 				0EDC66981129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 				0EAE4FB7112BD420004D93B3 /* VT1612AChip.m in Sources */,
-				B5280FE9130C89E100FBE537 /* BTUserDefaults.m in Sources */,
 				B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */,
 				B5F09995131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */,
 				B5F09999131CE0550066FEB5 /* ECVRational.m in Sources */,
@@ -708,6 +699,7 @@
 				B5CFB51315769D54004F3ED6 /* ECVEM2860Device.m in Sources */,
 				B5BC261B166F78EC0036490F /* ECVVideoFormat.m in Sources */,
 				B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */,
+				B5BC28DF167E904D0036490F /* ECVCaptureDocument.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -748,7 +740,6 @@
 				0EDC66971129186A00AF1803 /* ECVHUDSwitchButtonCell.m in Sources */,
 				0EAE4FB8112BD420004D93B3 /* VT1612AChip.m in Sources */,
 				B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */,
-				B5280FE8130C89E100FBE537 /* BTUserDefaults.m in Sources */,
 				B5F09994131CE00A0066FEB5 /* ECVFrameRateConverter.m in Sources */,
 				B5F09998131CE0550066FEB5 /* ECVRational.m in Sources */,
 				B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */,
@@ -756,6 +747,7 @@
 				B54758491507B29B006C0E44 /* ECVEM2860Device.m in Sources */,
 				B5BC261A166F78EC0036490F /* ECVVideoFormat.m in Sources */,
 				B5BC2808167E75CF0036490F /* ECVUSBTransferList.m in Sources */,
+				B5BC28E0167E904D0036490F /* ECVCaptureDocument.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -32,22 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
 
 // Controllers
-#if !defined(ECV_NO_CONTROLLERS)
 #import "ECVController.h"
-#import "ECVCaptureController.h"
-#endif
 
 // Other Sources
-#if defined(ECV_ENABLE_AUDIO)
-#import "ECVAudioDevice.h"
-#import "ECVAudioPipe.h"
-#endif
 #import "ECVDebug.h"
 #import "ECVFoundationAdditions.h"
-#import "ECVReadWriteLock.h"
-
-// External
-#import "BTUserDefaults.h"
 
 #define ECVNanosecondsPerMillisecond 1e6
 
@@ -58,14 +47,6 @@ NSString *const ECVHueKey = @"ECVHue";
 NSString *const ECVSaturationKey = @"ECVSaturation";
 
 NSString *const ECVCaptureDeviceErrorDomain = @"ECVCaptureDeviceError";
-
-NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
-
-static NSString *const ECVVolumeKey = @"ECVVolume";
-static NSString *const ECVAudioInputUIDKey = @"ECVAudioInputUID";
-static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
-
-static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 typedef struct {
 	IOUSBLowLatencyIsocFrame *list;
@@ -167,10 +148,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	NSMutableArray *const devices = [NSMutableArray array];
 	io_service_t service = IO_OBJECT_NULL;
 	while((service = IOIteratorNext(iterator))) {
-		NSError *error = nil;
-		ECVCaptureDevice *const device = [[[self alloc] initWithService:service error:&error] autorelease];
+		ECVCaptureDevice *const device = [[[self alloc] initWithService:service] autorelease];
 		if(device) [devices addObject:device];
-		else if(error) [devices addObject:error];
 		IOObjectRelease(service);
 	}
 	return devices;
@@ -242,77 +221,53 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 #pragma mark -ECVCaptureDevice
 
-- (id)initWithService:(io_service_t const)service error:(out NSError **const)outError
+- (id)initWithService:(io_service_t const)service
 {
-	if(outError) *outError = nil;
 	if(!service) {
 		[self release];
 		return nil;
 	}
-	if(!(self = [super init])) return nil;
-
-	_pauseCount = 1;
-	_pausedFromUI = YES;
-	_service = service;
-	IOObjectRetain(_service);
+	if((self = [super init])) {
+		_service = service;
+		IOObjectRetain(_service);
 
 
-	_readThreadLock = [[NSLock alloc] init];
-	_readLock = [[NSLock alloc] init];
+		_readThreadLock = [[NSLock alloc] init];
+		_readLock = [[NSLock alloc] init];
 
 
-	NSMutableDictionary *properties = nil;
-	ECVIOReturn(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
-	[properties autorelease];
-	_productName = [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] copy];
-	if(![_productName length]) _productName = [NSLocalizedString(@"Capture Device", nil) retain];
+		_pauseCount = 1;
 
-	NSString *const mainSuiteName = [[NSBundle bundleForClass:[self class]] ECV_mainSuiteName];
-	NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04x.%04x", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
-	_defaults = [[BTUserDefaults alloc] initWithSuites:[NSArray arrayWithObjects:deviceSuiteName, mainSuiteName, nil]]; // TODO: Use the Vendor and Product ID.
-	[_defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
-		[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
-		[NSNumber numberWithDouble:0.5f], ECVContrastKey,
-		[NSNumber numberWithDouble:0.5f], ECVHueKey,
-		[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
-		[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
-		[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,
-		nil]];
 
-#if !defined(ECV_NO_CONTROLLERS)
-	_windowControllersLock = [[ECVReadWriteLock alloc] init];
-	_windowControllers2 = [[NSMutableArray alloc] init];
-#endif
+		NSMutableDictionary *properties = nil;
+		(void)ECVIOReturn2(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
+		[properties autorelease];
+		_productName = [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] copy];
+		if(![_productName length]) _productName = [NSLocalizedString(@"Capture Device", nil) retain];
 
-	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
+		NSString *const mainSuiteName = [[[NSBundle bundleForClass:[self class]] infoDictionary] objectForKey:@"ECVMainSuiteName"];
+		NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04x.%04x", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
+		_defaults = [[NSUserDefaults alloc] init];
+		[_defaults addSuiteNamed:deviceSuiteName];
+		[_defaults addSuiteNamed:mainSuiteName];
+		[_defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+			[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
+			[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
+			[NSNumber numberWithDouble:0.5f], ECVContrastKey,
+			[NSNumber numberWithDouble:0.5f], ECVHueKey,
+			[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
+			nil]];
 
-#if defined(ECV_ENABLE_AUDIO)
-	[self setVolume:[[self defaults] doubleForKey:ECVVolumeKey]];
-	[self setUpconvertsFromMono:[[self defaults] boolForKey:ECVUpconvertsFromMonoKey]];
-#endif
+		[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[[self defaults] integerForKey:ECVDeinterlacingModeKey]]];
 
-#if !defined(ECV_NO_CONTROLLERS)
-	ECVIOReturn(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
-#endif
-
-	[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[[self defaults] integerForKey:ECVDeinterlacingModeKey]]];
-
+		(void)ECVIOReturn2(IOServiceAddInterestNotification([[ECVController sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
+	}
 	return self;
-
-ECVGenericError:
-ECVNoDeviceError:
-	[self release];
-	return nil;
 }
 - (void)noteDeviceRemoved
 {
-	[self close];
-}
-- (void)workspaceWillSleep:(NSNotification *const)aNotif
-{
-	[self setPausedFromUI:YES];
-	[self noteDeviceRemoved];
+//	[self close];
+	// TODO: Do something?
 }
 
 #pragma mark -
@@ -330,20 +285,13 @@ ECVNoDeviceError:
 	[self setPaused:NO];
 	[[self defaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
 }
-- (BTUserDefaults *)defaults { return _defaults; }
+- (NSUserDefaults *)defaults { return _defaults; }
 - (ECVVideoStorage *)videoStorage { return _videoStorage; }
 
 #pragma mark -
 
 - (void)read
 {
-#if defined(ECV_ENABLE_AUDIO)
-	[self performSelectorOnMainThread:@selector(startAudio) withObject:nil waitUntilDone:YES];
-#endif
-#if !defined(ECV_NO_CONTROLLERS)
-	[self performSelectorOnMainThread:@selector(_startPlayingForControllers) withObject:nil waitUntilDone:YES];
-#endif
-
 	UInt8 pipe = 0;
 	UInt8 direction = kUSBIn;
 	UInt8 transferType = kUSBIsoc;
@@ -370,13 +318,6 @@ ECVNoDeviceError:
 		if(![self keepReading]) read = NO;
 		[pool drain];
 	}
-
-#if defined(ECV_ENABLE_AUDIO)
-	[self performSelectorOnMainThread:@selector(stopAudio) withObject:nil waitUntilDone:NO];
-#endif
-#if !defined(ECV_NO_CONTROLLERS)
-	[self performSelectorOnMainThread:@selector(_stopPlayingForControllers) withObject:nil waitUntilDone:NO];
-#endif
 }
 - (BOOL)keepReading
 {
@@ -422,107 +363,6 @@ ECVNoDeviceError:
 	return [self controlRequestWithType:USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice) request:request value:v index:i length:length data:data];
 }
 
-#pragma mark -
-
-#if defined(ECV_ENABLE_AUDIO)
-- (ECVAudioInput *)audioInputOfCaptureHardware
-{
-	ECVAudioInput *const input = [ECVAudioInput deviceWithIODevice:_service];
-	[input setName:_productName];
-	return input;
-}
-- (ECVAudioInput *)audioInput
-{
-	if(!_audioInput) {
-		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
-		if(!BTEqualObjects(ECVAudioInputNone, UID)) {
-			if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
-			if(!_audioInput) _audioInput = [[self audioInputOfCaptureHardware] retain];
-		}
-	}
-	return [[_audioInput retain] autorelease];
-}
-- (void)setAudioInput:(ECVAudioInput *)input
-{
-	if(!BTEqualObjects(input, _audioInput)) {
-		[self setPaused:YES];
-		[_audioInput release];
-		_audioInput = [input retain];
-		[_audioPreviewingPipe release];
-		_audioPreviewingPipe = nil;
-		[self setPaused:NO];
-	}
-	if(BTEqualObjects([self audioInputOfCaptureHardware], input)) {
-		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
-	} else if(input) {
-		[[self defaults] setObject:[input UID] forKey:ECVAudioInputUIDKey];
-	} else {
-		[[self defaults] setObject:ECVAudioInputNone forKey:ECVAudioInputUIDKey];
-	}
-}
-- (ECVAudioOutput *)audioOutput
-{
-	if(!_audioOutput) return _audioOutput = [[ECVAudioOutput defaultDevice] retain];
-	return [[_audioOutput retain] autorelease];
-}
-- (void)setAudioOutput:(ECVAudioOutput *)output
-{
-	if(BTEqualObjects(output, _audioOutput)) return;
-	[self setPaused:YES];
-	[_audioOutput release];
-	_audioOutput = [output retain];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
-	[self setPaused:NO];
-}
-- (BOOL)startAudio
-{
-	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
-
-	ECVAudioInput *const input = [self audioInput];
-	ECVAudioOutput *const output = [self audioOutput];
-	if(input && output) {
-		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
-		if(!inputStream) {
-			ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
-			return NO;
-		}
-		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-		if(!outputStream) {
-			ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
-			return NO;
-		}
-
-		_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
-		[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-		[input setDelegate:self];
-		[output setDelegate:self];
-
-		if(![input start]) {
-			ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
-			return NO;
-		}
-		if(![output start]) {
-			[output stop];
-			ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
-			return NO;
-		}
-	}
-	return YES;
-}
-- (void)stopAudio
-{
-	ECVAudioInput *const input = [self audioInput];
-	ECVAudioOutput *const output = [self audioOutput];
-	[input stop];
-	[output stop];
-	[input setDelegate:nil];
-	[output setDelegate:nil];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
-}
-#endif
-
 #pragma mark -ECVCaptureDevice(Private)
 
 - (UInt32)_microsecondsInFrame
@@ -567,8 +407,6 @@ ECVNoDeviceError:
 		CFRunLoopSourceRef eventSource = NULL;
 		err = err ?: ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &eventSource));
 
-		_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithVideoFormat:[self videoFormat] deinterlacingMode:[self deinterlacingMode] pixelFormat:[self pixelFormat]];
-
 		if(err) {
 			// Do nothing.
 		} else if([self _microsecondsInFrame] > [self maximumMicrosecondsInFrame]) {
@@ -581,10 +419,8 @@ ECVNoDeviceError:
 		if(_USBInterface) (*_USBInterface)->Release(_USBInterface);
 		if(_USBDevice) (*_USBDevice)->USBDeviceClose(_USBDevice);
 		if(_USBDevice) (*_USBDevice)->Release(_USBDevice);
-		[_videoStorage release];
 		_USBInterface = NULL;
 		_USBDevice = NULL;
-		_videoStorage = nil;
 
 		ECVLog(ECVNotice, @"Stopping device %@.", [self name]);
 	}
@@ -636,143 +472,22 @@ ECVNoDeviceError:
 	frame->frStatus = kUSBLowLatencyIsochTransferKey;
 }
 
-#if !defined(ECV_NO_CONTROLLERS)
-- (void)_startPlayingForControllers
-{
-	[[ECVController sharedController] noteCaptureDeviceStartedPlaying:self];
-	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
-}
-- (void)_stopPlayingForControllers
-{
-	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
-	[[ECVController sharedController] noteCaptureDeviceStoppedPlaying:self];
-}
-#endif
-
-#pragma mark -NSDocument
-
-#if !defined(ECV_NO_CONTROLLERS)
-- (void)addWindowController:(NSWindowController *)windowController
-{
-	[super addWindowController:windowController];
-	[_windowControllersLock writeLock];
-	if(NSNotFound == [_windowControllers2 indexOfObjectIdenticalTo:windowController]) [_windowControllers2 addObject:windowController];
-	[_windowControllersLock unlock];
-}
-- (void)removeWindowController:(NSWindowController *)windowController
-{
-	[super removeWindowController:windowController];
-	[_windowControllersLock writeLock];
-	[_windowControllers2 removeObjectIdenticalTo:windowController];
-	[_windowControllersLock unlock];
-}
-#endif
-
-#pragma mark -
-
-- (void)makeWindowControllers
-{
-#if !defined(ECV_NO_CONTROLLERS)
-	[self addWindowController:[[[ECVCaptureController alloc] init] autorelease]];
-#endif
-}
-- (NSString *)displayName
-{
-	return _productName ? _productName : @"";
-}
-- (void)close
-{
-	[self setPausedFromUI:YES];
-	[super close];
-}
-
 #pragma mark -NSObject
 
 - (void)dealloc
 {
-	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
-#if !defined(ECV_NO_CONTROLLERS)
-	ECVConfigController *const config = [ECVConfigController sharedConfigController];
-	if([config captureDevice] == self) [config setCaptureDevice:nil];
-#endif
+	IOObjectRelease(_service);
+	IOObjectRelease(_deviceRemovedNotification);
 
 	[_defaults release];
-#if !defined(ECV_NO_CONTROLLERS)
-	[_windowControllersLock release];
-	[_windowControllers2 release];
-#endif
-	IOObjectRelease(_service);
 	[_productName release];
-	IOObjectRelease(_deviceRemovedNotification);
+
 	[_deinterlacingMode release];
-#if defined(ECV_ENABLE_AUDIO)
-	[_audioInput release];
-	[_audioOutput release];
-	[_audioPreviewingPipe release];
-#endif
-
-	// ...
 	[_videoFormat release];
-
 
 	[super dealloc];
 }
 
-#pragma mark -<ECVAudioDeviceDelegate>
-
-#if defined(ECV_ENABLE_AUDIO)
-- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
-{
-	if(sender != _audioInput) return;
-	[_audioPreviewingPipe receiveInputBufferList:bufferList];
-	[_windowControllersLock readLock];
-	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
-	[_windowControllersLock unlock];
-}
-- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
-{
-	if(sender != _audioOutput) return;
-	[_audioPreviewingPipe requestOutputBufferList:bufferList];
-}
-#endif
-
-#pragma mark -<ECVCaptureControllerConfiguring>
-
-#if defined(ECV_ENABLE_AUDIO)
-- (BOOL)isMuted
-{
-	return _muted;
-}
-- (void)setMuted:(BOOL)flag
-{
-	if(flag == _muted) return;
-	_muted = flag;
-	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
-}
-- (CGFloat)volume
-{
-	return _volume;
-}
-- (void)setVolume:(CGFloat)value
-{
-	_volume = CLAMP(0.0f, value, 1.0f);
-	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[[self defaults] setDouble:value forKey:ECVVolumeKey];
-	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
-}
-- (BOOL)upconvertsFromMono
-{
-	return _upconvertsFromMono;
-}
-- (void)setUpconvertsFromMono:(BOOL)flag
-{
-	[self setPaused:YES];
-	_upconvertsFromMono = flag;
-	[self setPaused:NO];
-	[[self defaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
-}
-#endif
 
 
 
@@ -780,20 +495,6 @@ ECVNoDeviceError:
 
 
 // Ongoing refactoring... This code is new, the above code is not.
-
-- (ECVVideoFormat *)videoFormat
-{
-	return [[_videoFormat retain] autorelease];
-}
-- (void)setVideoFormat:(ECVVideoFormat *const)format
-{
-	if(BTEqualObjects(format, _videoFormat)) return;
-	[self setPaused:YES];
-	[_videoFormat release];
-	_videoFormat = [format retain];
-	[self setPaused:NO];
-	// TODO: Save preference... Serialization?
-}
 
 - (NSUInteger)pauseCount
 {
@@ -812,26 +513,11 @@ ECVNoDeviceError:
 		if(0 == --_pauseCount) [self play];
 	}
 }
-- (BOOL)pausedFromUI
-{
-	return _pausedFromUI;
-}
-- (void)setPausedFromUI:(BOOL const)flag
-{
-	if(!!flag == _pausedFromUI) return;
-	_pausedFromUI = !!flag;
-	[self setPaused:_pausedFromUI];
-}
-- (void)togglePausedFromUI
-{
-	[self setPausedFromUI:![self pausedFromUI]];
-}
-
-
 - (void)play
 {
 	[_readLock lock];
 	_read = YES;
+	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithVideoFormat:[self videoFormat] deinterlacingMode:[self deinterlacingMode] pixelFormat:[self pixelFormat]];
 	[_readLock unlock];
 	[NSThread detachNewThreadSelector:@selector(_read) toTarget:self withObject:nil];
 }
@@ -839,8 +525,28 @@ ECVNoDeviceError:
 {
 	[_readLock lock];
 	_read = NO;
+	[_videoStorage release];
+	_videoStorage = nil;
 	[_readLock unlock];
 }
+
+
+- (ECVVideoFormat *)videoFormat
+{
+	return [[_videoFormat retain] autorelease];
+}
+- (void)setVideoFormat:(ECVVideoFormat *const)format
+{
+	if(BTEqualObjects(format, _videoFormat)) return;
+	[self setPaused:YES];
+	[_videoFormat release];
+	_videoFormat = [format retain];
+	[self setPaused:NO];
+	// TODO: Save preference... Serialization?
+}
+
+
+
 
 
 - (NSString *)name
@@ -855,11 +561,12 @@ ECVNoDeviceError:
 - (void)finishedFrame:(ECVVideoFrame *const)frame // TODO: Part of the gradual split into two separate objects.
 {
 	if(!frame) return;
-#if !defined(ECV_NO_CONTROLLERS)
-	[_windowControllersLock readLock];
-	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frame];
-	[_windowControllersLock unlock];
-#endif
+	// TODO: Notify document.
+//#if !defined(ECV_NO_CONTROLLERS)
+//	[_windowControllersLock readLock];
+//	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frame];
+//	[_windowControllersLock unlock];
+//#endif
 }
 
 @end

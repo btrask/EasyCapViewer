@@ -21,25 +21,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <IOKit/usb/IOUSBLib.h>
 #import <QTKit/QTKit.h>
+#import "ECVConfigController.h"
 
 // Models
 @class ECVVideoFormat;
 @class ECVVideoStorage;
 @class ECVPixelBuffer;
 @class ECVVideoFrame;
-
-// Controllers
-#import "ECVConfigController.h"
-
-// Other Sources
-#if defined(ECV_ENABLE_AUDIO)
-#import "ECVAudioDevice.h"
-@class ECVAudioPipe;
-#endif
-@class ECVReadWriteLock;
-
-// External
-@class BTUserDefaults;
 
 extern NSString *const ECVDeinterlacingModeKey;
 extern NSString *const ECVBrightnessKey;
@@ -51,41 +39,24 @@ extern NSString *const ECVCaptureDeviceErrorDomain;
 
 extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
-@interface ECVCaptureDevice : NSDocument <ECVCaptureDeviceConfiguring
-#if defined(ECV_ENABLE_AUDIO)
-, ECVAudioDeviceDelegate
-#endif
->
+@interface ECVCaptureDevice : NSObject <ECVCaptureDeviceConfiguring>
 {
 	@private
-	BTUserDefaults *_defaults;
-#if !defined(ECV_NO_CONTROLLERS)
-	ECVReadWriteLock *_windowControllersLock;
-	NSMutableArray *_windowControllers2;
-#endif
-
 	io_service_t _service;
-	NSString *_productName;
 	io_object_t _deviceRemovedNotification;
+
+	NSString *_productName;
+	NSUserDefaults *_defaults;
 
 	Class _deinterlacingMode;
 	ECVVideoStorage *_videoStorage;
 	NSTimeInterval _stopTime;
 
-#if defined(ECV_ENABLE_AUDIO)
-	ECVAudioInput *_audioInput;
-	ECVAudioOutput *_audioOutput;
-	ECVAudioPipe *_audioPreviewingPipe;
-	BOOL _muted;
-	CGFloat _volume;
-	BOOL _upconvertsFromMono;
-#endif
-
 // New ivars...
 
-	ECVVideoFormat *_videoFormat;
 	NSUInteger _pauseCount;
-	BOOL _pausedFromUI;
+
+	ECVVideoFormat *_videoFormat;
 
 	IOUSBDeviceInterface320 **_USBDevice;
 	IOUSBInterfaceInterface300 **_USBInterface;
@@ -105,13 +76,12 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 + (IOUSBDeviceInterface320 **)USBDeviceWithService:(io_service_t const)service;
 + (IOUSBInterfaceInterface300 **)USBInterfaceWithDevice:(IOUSBDeviceInterface320 **const)device;
 
-- (id)initWithService:(io_service_t const)service error:(out NSError **const)outError;
+- (id)initWithService:(io_service_t const)service;
 - (void)noteDeviceRemoved;
-- (void)workspaceWillSleep:(NSNotification *const)aNotif;
 
 - (Class)deinterlacingMode;
 - (void)setDeinterlacingMode:(Class const)mode;
-- (BTUserDefaults *)defaults;
+- (NSUserDefaults *)defaults;
 - (ECVVideoStorage *)videoStorage;
 
 - (BOOL)setAlternateInterface:(u_int8_t)alternateSetting;
@@ -119,28 +89,17 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 - (BOOL)readRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(out void *const)data;
 - (BOOL)writeRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(in void *const)data;
 
-#if defined(ECV_ENABLE_AUDIO)
-@property(readonly) ECVAudioInput *audioInputOfCaptureHardware;
-@property(nonatomic, retain) ECVAudioInput *audioInput;
-@property(nonatomic, retain) ECVAudioOutput *audioOutput;
-- (BOOL)startAudio;
-- (void)stopAudio;
-#endif
-
 
 
 
 // Ongoing refactoring... This code is new, the above code is not.
 
-- (ECVVideoFormat *)videoFormat;
-- (void)setVideoFormat:(ECVVideoFormat *const)format;
-
 - (NSUInteger)pauseCount;
 - (BOOL)isPaused;
 - (void)setPaused:(BOOL const)flag;
-- (BOOL)pausedFromUI;
-- (void)setPausedFromUI:(BOOL const)flag;
-- (void)togglePausedFromUI;
+
+- (ECVVideoFormat *)videoFormat;
+- (void)setVideoFormat:(ECVVideoFormat *const)format;
 
 - (void)play;
 - (void)stop;

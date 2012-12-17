@@ -32,9 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVPixelFormat.h"
 
-// External
-#import "BTUserDefaults.h"
-
 #define ECVRotationFrameSkip 2 // This affects the framerate and video quality. '1' doesn't skip frames, but looks bad. '3' looks almost perfect but results in a low framerate. '2' is a balance between the two.
 
 enum {
@@ -191,10 +188,10 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 
 #pragma mark -ECVCaptureDevice
 
-- (id)initWithService:(io_service_t)service error:(out NSError **)outError
+- (id)initWithService:(io_service_t)service
 {
-	if((self = [super initWithService:service error:outError])) {
-		BTUserDefaults *const d = [self defaults];
+	if((self = [super initWithService:service])) {
+		NSUserDefaults *const d = [self defaults];
 		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithUnsignedInteger:ECVSTK1160Composite1Input], ECVSTK1160VideoSourceKey,
 //			[NSNumber numberWithUnsignedInteger:ECVSTK1160NTSCMFormat], ECVSTK1160VideoFormatKey,
@@ -290,7 +287,7 @@ static NSString *const ECVSTK1160VideoFormatKey = @"ECVSTK1160VideoFormat";
 	[super dealloc];
 }
 
-#pragma mark -<ECVCaptureControllerConfiguring>
+#pragma mark -ECVCaptureDevice<ECVCaptureDeviceConfiguring>
 
 - (NSArray *)allVideoSourceObjects
 {

@@ -71,10 +71,10 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 
 #pragma mark -ECVCaptureDevice
 
-- (id)initWithService:(io_service_t)service error:(out NSError **)outError
+- (id)initWithService:(io_service_t)service
 {
-	if((self = [super initWithService:service error:outError])) {
-		BTUserDefaults *const d = [self defaults];
+	if((self = [super initWithService:service])) {
+		NSUserDefaults *const d = [self defaults];
 		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithUnsignedInteger:ECVEM2860CompositeInput], ECVEM2860VideoSourceKey,
 //			[NSNumber numberWithUnsignedInteger:ECVSAA711XNTSCMFormat], ECVEM2860VideoFormatKey,
@@ -511,7 +511,7 @@ static NSString *const ECVEM2860VideoFormatKey = @"ECVEM2860VideoFormat";
 	_offset += realLength;
 }
 
-#pragma mark -<ECVCaptureControllerConfiguring>
+#pragma mark -ECVCaptureDevice<ECVCaptureDeviceConfiguring>
 
 - (NSArray *)allVideoSourceObjects
 {

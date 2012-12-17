@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
 
 // Models
+#import "ECVCaptureDocument.h"
 #import "ECVCaptureDevice.h"
 #import "ECVVideoFormat.h"
 #import "ECVVideoStorage.h"
@@ -37,9 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Controllers
 #import "ECVConfigController.h"
-
-// External
-#import "BTUserDefaults.h"
 
 static NSString *const ECVAspectRatio2Key = @"ECVAspectRatio2";
 static NSString *const ECVVsyncKey = @"ECVVsync";
@@ -65,24 +63,24 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (IBAction)cloneViewer:(id)sender
 {
 	ECVCaptureController *const controller = [[[[self class] alloc] init] autorelease];
-	[[self document] addWindowController:controller];
+	[[self captureDocument] addWindowController:controller];
 	[controller showWindow:sender];
-	if([(ECVCaptureDevice *)[self document] isPaused]) [controller startPlaying];
+	if(![[self captureDocument] isPaused]) [controller startPlaying];
 }
 
 #pragma mark -
 
 - (IBAction)play:(id)sender
 {
-	[[self document] setPausedFromUI:NO];
+	[[self captureDocument] setPaused:NO];
 }
 - (IBAction)pause:(id)sender
 {
-	[[self document] setPausedFromUI:YES];
+	[[self captureDocument] setPaused:YES];
 }
 - (IBAction)togglePlaying:(id)sender
 {
-	[[self document] togglePausedFromUI];
+	[[self captureDocument] togglePaused];
 }
 
 #pragma mark -
@@ -125,15 +123,15 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
 	[options setURL:[savePanel URL]];
-	[options setVideoStorage:[(ECVCaptureDevice *)[self document] videoStorage]];
-	[options setAudioInput:[[self document] audioInput]];
+	[options setVideoStorage:[[self videoSource] videoStorage]];
+	[options setAudioInput:[[self captureDocument] audioInput]];
 
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[options setVideoQuality:[videoQualitySlider doubleValue]];
 	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
 	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
 	[options setCropRect:[self cropRect]];
-	[options setUpconvertsFromMono:[[self document] upconvertsFromMono]];
+	[options setUpconvertsFromMono:[[self captureDocument] upconvertsFromMono]];
 	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
 
 	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
@@ -248,15 +246,15 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 #pragma mark -
 
-- (BTUserDefaults *)defaults
+- (NSUserDefaults *)defaults
 {
-	return [(ECVCaptureDevice *)[self document] defaults];
+	return [[self captureDocument] defaults];
 }
 - (NSSize)aspectRatio
 {
 	return [videoView aspectRatio];
 }
-- (void)setAspectRatio:(NSSize)ratio
+- (void)setAspectRatio:(NSSize const)ratio
 {
 	[videoView setAspectRatio:ratio];
 	[[self window] setContentAspectRatio:ratio];
@@ -275,7 +273,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	return _fullScreen || !!([[self window] styleMask] & NSFullScreenWindowMask);
 }
-- (void)setFullScreen:(BOOL)flag
+- (void)setFullScreen:(BOOL const)flag
 {
 	if(flag == _fullScreen) return;
 	_fullScreen = flag;
@@ -312,7 +310,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	NSWindow *const w = [self window];
 	return [w contentRectForFrameRect:[w frame]].size;
 }
-- (void)setWindowContentSize:(NSSize)size
+- (void)setWindowContentSize:(NSSize const)size
 {
 	if([self isFullScreen] || ![self isWindowLoaded]) return;
 	NSWindow *const w = [self window];
@@ -327,13 +325,13 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVIntegerSize const s = [[self videoFormat] frameSize];
 	return NSMakeSize(s.height / ratio.height * ratio.width, s.height);
 }
-- (NSSize)outputSizeWithScale:(NSInteger)scale
+- (NSSize)outputSizeWithScale:(NSInteger const)scale
 {
 	NSSize const s = [self outputSize];
 	CGFloat const factor = powf(2, (CGFloat)scale);
 	return NSMakeSize(s.width * factor, s.height * factor);
 }
-- (NSSize)sizeWithAspectRatio:(ECVAspectRatio)ratio
+- (NSSize)sizeWithAspectRatio:(ECVAspectRatio const)ratio
 {
 	switch(ratio) {
 		case ECVAspectRatio1x1:   return NSMakeSize( 1.0f,  1.0f);
@@ -344,7 +342,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	}
 	return NSZeroSize;
 }
-- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio)type
+- (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio const)type
 {
 	if(ECVAspectRatioUnknown == type) return ECVUncroppedRect;
 	NSSize const src = [self sizeWithAspectRatio:type];
@@ -352,7 +350,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	CGFloat const correction = (dst.height / dst.width) / (src.height / src.width);
 	return correction < 1.0f ? NSMakeRect(0.0f, (1.0f - correction) / 2.0f, 1.0f, correction) : NSMakeRect((1.0f - (1.0f / correction)) / 2.0f, 0.0f, 1.0f / correction, 1.0f);
 }
-- (NSRect)cropRect:(NSRect)r withBorder:(ECVCropBorder)border
+- (NSRect)cropRect:(NSRect const)r withBorder:(ECVCropBorder const)border
 {
 	CGFloat b = 0.0f;
 	switch(border) {
@@ -368,7 +366,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 - (void)startPlaying
 {
-	[videoView setVideoStorage:[[self document] videoStorage]];
+	[videoView setVideoStorage:[[self videoSource] videoStorage]];
 	[videoView startDrawing];
 }
 - (void)stopPlaying
@@ -476,7 +474,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	SEL const action = [anItem action];
 	if(@selector(toggleFullScreen:) == action) [anItem setTitle:[self isFullScreen] ? NSLocalizedString(@"Exit Full Screen", nil) : NSLocalizedString(@"Enter Full Screen", nil)];
-	if(@selector(togglePlaying:) == action) [anItem setTitle:![(ECVCaptureDevice *)[self document] isPaused] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
+	if(@selector(togglePlaying:) == action) [anItem setTitle:![[self captureDocument] isPaused] ? NSLocalizedString(@"Pause", nil) : NSLocalizedString(@"Play", nil)];
 	if(@selector(changeScale:) == action) [anItem setState:!!NSEqualSizes([self windowContentSize], [self outputSizeWithScale:[anItem tag]])];
 	if(@selector(changeAspectRatio:) == action) {
 		NSSize const s1 = [self sizeWithAspectRatio:[anItem tag]];
@@ -502,7 +500,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	} else {
 		if(@selector(stopRecording:) == action) return NO;
 	}
-	if([(ECVCaptureDevice *)[self document] isPaused]) {
+	if([[self captureDocument] isPaused]) {
 		if(@selector(startRecording:) == action) return NO;
 	}
 	return [self respondsToSelector:action];
@@ -533,22 +531,20 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 			[self togglePlaying:self];
 			return YES;
 	}
-#if defined(ECV_ENABLE_AUDIO)
 	if(NSCommandKeyMask == modifiers) switch(character) {
 		case NSUpArrowFunctionKey:
-			[[self document] setVolume:[[self document] volume] + 0.05f];
+			[[self captureDocument] setVolume:[[self captureDocument] volume] + 0.05f];
 			return YES;
 		case NSDownArrowFunctionKey:
-			[[self document] setVolume:[[self document] volume] - 0.05f];
+			[[self captureDocument] setVolume:[[self captureDocument] volume] - 0.05f];
 			return YES;
 	}
 	if((NSCommandKeyMask | NSAlternateKeyMask) == modifiers) switch(character) {
 		case NSUpArrowFunctionKey:
 		case NSDownArrowFunctionKey:
-			[[self document] setMuted:![[self document] isMuted]];
+			[[self captureDocument] setMuted:![[self captureDocument] isMuted]];
 			return YES;
 	}
-#endif
 	return NO;
 }
 
@@ -557,7 +553,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 - (void)windowDidBecomeMain:(NSNotification *)aNotif
 {
 	if([self isFullScreen]) [self performSelector:@selector(_hideMenuBar) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]];
-	[[ECVConfigController sharedConfigController] setCaptureDevice:[self document]];
+	[[ECVConfigController sharedConfigController] setCaptureDocument:[self captureDocument]];
 }
 - (void)windowDidResignMain:(NSNotification *)aNotif
 {
@@ -591,11 +587,18 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 // Ongoing refactoring... This code is new, the above code is not.
 
 
+- (ECVCaptureDocument *)captureDocument
+{
+	return [self document];
+}
+- (ECVCaptureDevice *)videoSource
+{
+	return [[self captureDocument] videoSource];
+}
 
 - (ECVVideoFormat *)videoFormat
 {
-	NSLog(@"%@", [(ECVCaptureDevice *)[self document] videoFormat]);
-	return [(ECVCaptureDevice *)[self document] videoFormat];
+	return [[self videoSource] videoFormat];
 }
 
 

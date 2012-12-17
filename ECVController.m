@@ -23,7 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <IOKit/usb/IOUSBLib.h>
 
 // Models
-#import "ECVCaptureDevice.h"
+#import "ECVCaptureDocument.h"
 
 // Controllers
 #import "ECVConfigController.h"
@@ -126,11 +126,11 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 
 #pragma mark -
 
-- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device
+- (void)noteCaptureDocumentStartedPlaying:(ECVCaptureDocument *)document
 {
 	[self setPlaying:YES];
 }
-- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device
+- (void)noteCaptureDocumentStoppedPlaying:(ECVCaptureDocument *)document
 {
 	[self setPlaying:NO];
 }
@@ -206,9 +206,11 @@ ECVNoDeviceError: (void)0;
 
 - (void)ECV_display
 {
-	[[NSDocumentController sharedDocumentController] addDocument:self];
-	[self makeWindowControllers];
-	[self showWindows];
+	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
+	[doc setVideoSource:self];
+	[[NSDocumentController sharedDocumentController] addDocument:doc];
+	[doc makeWindowControllers];
+	[doc showWindows];
 }
 
 @end

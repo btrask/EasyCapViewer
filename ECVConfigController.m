@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVConfigController.h"
 
 // Models
+#import "ECVCaptureDocument.h"
 #import "ECVCaptureDevice.h"
 #import "ECVVideoFormat.h"
 #import "ECVDeinterlacingMode.h"
@@ -53,106 +54,111 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (IBAction)changeFormat:(id)sender
 {
-	[_captureDevice setVideoFormat:[[sender selectedItem] representedObject]];
+	[[_captureDocument videoSource] setVideoFormat:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeSource:(id)sender
 {
-	[_captureDevice setVideoSourceObject:[[sender selectedItem] representedObject]];
+	[[_captureDocument videoSource] setVideoSourceObject:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeDeinterlacing:(id)sender
 {
-	[_captureDevice setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[sender selectedTag]]];
+	[[_captureDocument videoSource] setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[sender selectedTag]]];
 }
 - (IBAction)changeBrightness:(id)sender
 {
 	[self _snapSlider:sender];
-	[_captureDevice setBrightness:[sender doubleValue]];
+	[[_captureDocument videoSource] setBrightness:[sender doubleValue]];
 }
 - (IBAction)changeContrast:(id)sender
 {
 	[self _snapSlider:sender];
-	[_captureDevice setContrast:[sender doubleValue]];
+	[[_captureDocument videoSource] setContrast:[sender doubleValue]];
 }
 - (IBAction)changeSaturation:(id)sender
 {
 	[self _snapSlider:sender];
-	[_captureDevice setSaturation:[sender doubleValue]];
+	[[_captureDocument videoSource] setSaturation:[sender doubleValue]];
 }
 - (IBAction)changeHue:(id)sender
 {
 	[self _snapSlider:sender];
-	[_captureDevice setHue:[sender doubleValue]];
+	[[_captureDocument videoSource] setHue:[sender doubleValue]];
 }
 
 #pragma mark -
 
 - (IBAction)changeAudioInput:(id)sender
 {
-	[_captureDevice setAudioInput:[[sender selectedItem] representedObject]];
+	[_captureDocument setAudioInput:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeUpconvertsFromMono:(id)sender
 {
-	[_captureDevice setUpconvertsFromMono:NSOnState == [sender state]];
+	[_captureDocument setUpconvertsFromMono:NSOnState == [sender state]];
 }
 - (IBAction)changeVolume:(id)sender
 {
-	[_captureDevice setVolume:[sender doubleValue]];
-	[_captureDevice setMuted:NO];
+	[_captureDocument setVolume:[sender doubleValue]];
+	[_captureDocument setMuted:NO];
 }
 
 #pragma mark -
 
-@synthesize captureDevice = _captureDevice;
-- (void)setCaptureDevice:(ECVCaptureDevice *)c
+- (ECVCaptureDocument *)captureDocument
 {
-	[_captureDevice ECV_removeObserver:self name:ECVCaptureDeviceVolumeDidChangeNotification];
-	_captureDevice = c;
-	[_captureDevice ECV_addObserver:self selector:@selector(volumeDidChange:) name:ECVCaptureDeviceVolumeDidChangeNotification];
+	return _captureDocument;
+}
+- (void)setCaptureDocument:(ECVCaptureDocument *const)c
+{
+	[_captureDocument ECV_removeObserver:self name:ECVCaptureDeviceVolumeDidChangeNotification];
+	_captureDocument = c;
+	[_captureDocument ECV_addObserver:self selector:@selector(volumeDidChange:) name:ECVCaptureDeviceVolumeDidChangeNotification];
 	[self volumeDidChange:nil];
 
 	if(![self isWindowLoaded]) return;
 
+	ECVCaptureDevice *const captureDevice = [_captureDocument videoSource];
+
 	[sourcePopUp removeAllItems];
-	if([_captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [_captureDevice allVideoSourceObjects]) {
+	if([captureDevice respondsToSelector:@selector(allVideoSourceObjects)]) for(id const videoSourceObject in [captureDevice allVideoSourceObjects]) {
 		if([NSNull null] == videoSourceObject) {
 			[[sourcePopUp menu] addItem:[NSMenuItem separatorItem]];
 			continue;
 		}
-		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[_captureDevice localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
+		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[captureDevice localizedStringForVideoSourceObject:videoSourceObject] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:videoSourceObject];
-		[item setEnabled:[_captureDevice isValidVideoSourceObject:videoSourceObject]];
-		[item setIndentationLevel:[_captureDevice indentationLevelForVideoSourceObject:videoSourceObject]];
+		[item setEnabled:[captureDevice isValidVideoSourceObject:videoSourceObject]];
+		[item setIndentationLevel:[captureDevice indentationLevelForVideoSourceObject:videoSourceObject]];
 		[[sourcePopUp menu] addItem:item];
 	}
-	[sourcePopUp setEnabled:[_captureDevice respondsToSelector:@selector(videoSourceObject)]];
-	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[_captureDevice videoSourceObject]]];
+	[sourcePopUp setEnabled:[captureDevice respondsToSelector:@selector(videoSourceObject)]];
+	if([sourcePopUp isEnabled]) [sourcePopUp selectItemAtIndex:[sourcePopUp indexOfItemWithRepresentedObject:[captureDevice videoSourceObject]]];
 
-	NSSet *const formats = [_captureDevice supportedVideoFormats];
+	NSSet *const formats = [captureDevice supportedVideoFormats];
 	[formatPopUp setMenu:[ECVVideoFormat menuWithVideoFormats:formats]];
 	[formatPopUp setEnabled:[formats count] > 0];
-	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:[_captureDevice videoFormat]]];
+	if([formatPopUp isEnabled]) [formatPopUp selectItemAtIndex:[formatPopUp indexOfItemWithRepresentedObject:[captureDevice videoFormat]]];
 
-	[deinterlacePopUp selectItemWithTag:[[_captureDevice deinterlacingMode] deinterlacingModeType]];
-	[deinterlacePopUp setEnabled:!!_captureDevice];
+	[deinterlacePopUp selectItemWithTag:[[captureDevice deinterlacingMode] deinterlacingModeType]];
+	[deinterlacePopUp setEnabled:!!captureDevice];
 
-	[brightnessSlider setEnabled:[_captureDevice respondsToSelector:@selector(brightness)]];
-	[contrastSlider setEnabled:[_captureDevice respondsToSelector:@selector(contrast)]];
-	[saturationSlider setEnabled:[_captureDevice respondsToSelector:@selector(saturation)]];
-	[hueSlider setEnabled:[_captureDevice respondsToSelector:@selector(hue)]];
-	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? [_captureDevice brightness] : 0.5f];
-	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? [_captureDevice contrast] : 0.5f];
-	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? [_captureDevice saturation] : 0.5f];
-	[hueSlider setDoubleValue:[hueSlider isEnabled] ? [_captureDevice hue] : 0.5f];
+	[brightnessSlider setEnabled:[captureDevice respondsToSelector:@selector(brightness)]];
+	[contrastSlider setEnabled:[captureDevice respondsToSelector:@selector(contrast)]];
+	[saturationSlider setEnabled:[captureDevice respondsToSelector:@selector(saturation)]];
+	[hueSlider setEnabled:[captureDevice respondsToSelector:@selector(hue)]];
+	[brightnessSlider setDoubleValue:[brightnessSlider isEnabled] ? [captureDevice brightness] : 0.5f];
+	[contrastSlider setDoubleValue:[contrastSlider isEnabled] ? [captureDevice contrast] : 0.5f];
+	[saturationSlider setDoubleValue:[saturationSlider isEnabled] ? [captureDevice saturation] : 0.5f];
+	[hueSlider setDoubleValue:[hueSlider isEnabled] ? [captureDevice hue] : 0.5f];
 	[self _snapSlider:brightnessSlider];
 	[self _snapSlider:contrastSlider];
 	[self _snapSlider:saturationSlider];
 	[self _snapSlider:hueSlider];
 
-	[upconvertsFromMonoSwitch setEnabled:[_captureDevice respondsToSelector:@selector(upconvertsFromMono)]];
-	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [_captureDevice upconvertsFromMono]];
+	[upconvertsFromMonoSwitch setEnabled:[_captureDocument respondsToSelector:@selector(upconvertsFromMono)]];
+	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [_captureDocument upconvertsFromMono]];
 
 	[self audioHardwareDevicesDidChange:nil];
-	[audioSourcePopUp setEnabled:!!_captureDevice];
+	[audioSourcePopUp setEnabled:!!_captureDocument];
 }
 
 #pragma mark -
@@ -162,7 +168,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[audioSourcePopUp removeAllItems];
 	NSMenuItem *const nilItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"No Input", nil) action:NULL keyEquivalent:@""] autorelease];
 	[[audioSourcePopUp menu] addItem:nilItem];
-	ECVAudioInput *const preferredInput = [_captureDevice audioInputOfCaptureHardware];
+	ECVAudioInput *const preferredInput = [[_captureDocument videoSource] builtInAudioInput];
 	if(preferredInput) {
 		NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[preferredInput name] action:NULL keyEquivalent:@""] autorelease];
 		[item setRepresentedObject:preferredInput];
@@ -179,15 +185,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		hasAdditionalItems = YES;
 	}
 	if(!hasAdditionalItems) [[audioSourcePopUp menu] removeItem:separator];
-	ECVAudioInput *const input = [_captureDevice audioInput];
+	ECVAudioInput *const input = [_captureDocument audioInput];
 	[audioSourcePopUp selectItemAtIndex:input ? [audioSourcePopUp indexOfItemWithRepresentedObject:input] : 0];
 }
 - (void)volumeDidChange:(NSNotification *)aNotif
 {
 	if(![self isWindowLoaded]) return;
-	BOOL const volumeSupported = [_captureDevice respondsToSelector:@selector(volume)];
+	BOOL const volumeSupported = [_captureDocument respondsToSelector:@selector(volume)];
 	[volumeSlider setEnabled:volumeSupported];
-	if(volumeSupported) [volumeSlider setDoubleValue:[_captureDevice isMuted] ? 0.0f : [_captureDevice volume]];
+	if(volumeSupported) [volumeSlider setDoubleValue:[_captureDocument isMuted] ? 0.0f : [_captureDocument volume]];
 	else [volumeSlider setDoubleValue:1.0f];
 }
 
@@ -207,7 +213,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[w setBecomesKeyOnlyIfNeeded:YES];
 	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenAuxiliary];
 	[[ECVAudioDevice class] ECV_addObserver:self selector:@selector(audioHardwareDevicesDidChange:) name:ECVAudioHardwareDevicesDidChangeNotification];
-	[self setCaptureDevice:_captureDevice];
+	[self setCaptureDocument:_captureDocument];
 }
 - (NSString *)windowFrameAutosaveName
 {

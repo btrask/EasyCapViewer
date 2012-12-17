@@ -20,7 +20,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Models
-@class ECVCaptureDevice;
+@class ECVCaptureDocument;
 
 @interface ECVController : NSDocumentController
 {
@@ -39,8 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(readonly) IONotificationPortRef notificationPort;
 @property(nonatomic, assign) BOOL playing;
 
-- (void)noteCaptureDeviceStartedPlaying:(ECVCaptureDevice *)device;
-- (void)noteCaptureDeviceStoppedPlaying:(ECVCaptureDevice *)device;
+- (void)noteCaptureDocumentStartedPlaying:(ECVCaptureDocument *)document;
+- (void)noteCaptureDocumentStoppedPlaying:(ECVCaptureDocument *)document;
 
 - (void)workspaceDidWake:(NSNotification *)aNotif;
 
