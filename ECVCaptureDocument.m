@@ -70,7 +70,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 	if(source == _videoDevice) return;
 	[_videoDevice release];
 	_videoDevice = [source retain];
-	// TODO: Set source's target to us.
+	[_videoDevice setCaptureDocument:self];
 }
 - (NSUserDefaults *)defaults
 {
