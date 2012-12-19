@@ -24,9 +24,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureDocument.h"
 #import "ECVDebug.h"
 
-#define ECVFramesPerPacket 1
-#define ECVChannelsPerFrame 2
-
 NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
 
 static NSString *const ECVVolumeKey = @"ECVVolume";
