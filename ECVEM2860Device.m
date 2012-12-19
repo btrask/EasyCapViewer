@@ -485,12 +485,12 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	size_t const skip = 4;
 	if(length <= skip) return;
 	NSUInteger const realLength = length - skip;
-	ECVIntegerSize const inputSize = {720, [[self videoFormat] is60Hz] ? 480 : 576};
-	ECVIntegerSize const pixelSize = (ECVIntegerSize){inputSize.width, inputSize.height / 2};
+	ECVIntegerSize const pixelSize = [[self videoFormat] frameSize];
+	ECVIntegerSize const inputSize = (ECVIntegerSize){720, pixelSize.height};
 	OSType const pixelFormat = [self pixelFormat];
-	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
+	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * inputSize.width;
 	ECVPixelFormatHack((void *)bytes + skip, realLength);
-	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
+	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:inputSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
 	[storage drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;

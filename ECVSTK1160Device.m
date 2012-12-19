@@ -97,6 +97,7 @@ enum {
 - (BOOL)_initializeResolution
 {
 	ECVIntegerSize inputSize = [[self videoFormat] frameSize]; // TODO: Clean up this whole method.
+	inputSize.width = 720;
 	inputSize.height *= 2;
 	ECVIntegerSize standardSize = inputSize;
 	switch(inputSize.width) {
@@ -247,10 +248,10 @@ enum {
 	if(length <= skip) return;
 	NSUInteger const realLength = length - skip;
 	ECVIntegerSize const pixelSize = [[self videoFormat] frameSize];
-	ECVIntegerSize const inputSize = (ECVIntegerSize){pixelSize.width, pixelSize.height * 2};
+	ECVIntegerSize const inputSize = (ECVIntegerSize){720, pixelSize.height};
 	OSType const pixelFormat = [self pixelFormat];
-	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * pixelSize.width;
-	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:pixelSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
+	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * inputSize.width;
+	ECVPointerPixelBuffer *const buffer = [[ECVPointerPixelBuffer alloc] initWithPixelSize:inputSize bytesPerRow:bytesPerRow pixelFormat:pixelFormat bytes:bytes + skip validRange:NSMakeRange(_offset, realLength)];
 	[storage drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;
