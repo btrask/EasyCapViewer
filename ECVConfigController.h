@@ -75,18 +75,3 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)setHue:(CGFloat const)val;
 
 @end
-
-@protocol ECVCaptureDocumentConfiguring<NSObject>
-
-- (ECVCaptureDevice<ECVCaptureDeviceConfiguring> *)videoDevice;
-
-@optional
-
-- (BOOL)isMuted;
-- (void)setMuted:(BOOL const)flag;
-- (CGFloat)volume;
-- (void)setVolume:(CGFloat const)val;
-- (BOOL)upconvertsFromMono;
-- (void)setUpconvertsFromMono:(BOOL const)flag;
-
-@end

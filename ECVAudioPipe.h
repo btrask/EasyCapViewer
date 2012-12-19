@@ -23,6 +23,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreAudio/CoreAudio.h>
 
+#define ECVFramesPerPacket 1
+#define ECVChannelsPerFrame 2
+static AudioStreamBasicDescription const ECVStandardAudioStreamBasicDescription = {
+	.mSampleRate = 48000.0f,
+	.mFormatID = kAudioFormatLinearPCM,
+	.mFormatFlags = kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsPacked,
+	.mBytesPerPacket = sizeof(Float32) * ECVChannelsPerFrame * ECVFramesPerPacket,
+	.mFramesPerPacket = ECVFramesPerPacket,
+	.mBytesPerFrame = sizeof(Float32) * ECVChannelsPerFrame,
+	.mChannelsPerFrame = ECVChannelsPerFrame,
+	.mBitsPerChannel = sizeof(Float32) * CHAR_BIT,
+	.mReserved = 0,
+};
+
 @interface ECVAudioPipe : NSObject
 {
 	@private

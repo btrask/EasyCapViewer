@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVVideoFrame.h"
 #import "ECVMovieRecorder.h"
 #import "ECVFrameRateConverter.h"
+#import "ECVAudioTarget.h"
 
 // Views
 #import "MPLWindow.h"
@@ -65,22 +66,22 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	ECVCaptureController *const controller = [[[[self class] alloc] init] autorelease];
 	[[self captureDocument] addWindowController:controller];
 	[controller showWindow:sender];
-	if(![[self captureDocument] isPaused]) [controller startPlaying];
+	if(![[self captureDocument] isPaused]) [controller play];
 }
 
 #pragma mark -
 
 - (IBAction)play:(id)sender
 {
-	[[self captureDocument] setPaused:NO];
+	[[self captureDocument] setPausedFromUI:NO];
 }
 - (IBAction)pause:(id)sender
 {
-	[[self captureDocument] setPaused:YES];
+	[[self captureDocument] setPausedFromUI:YES];
 }
 - (IBAction)togglePlaying:(id)sender
 {
-	[[self captureDocument] setPaused:![[self captureDocument] isPaused]];
+	[[self captureDocument] setPausedFromUI:![[self captureDocument] isPausedFromUI]];
 }
 
 #pragma mark -
@@ -123,15 +124,15 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	ECVMovieRecordingOptions *const options = [[[ECVMovieRecordingOptions alloc] init] autorelease];
 	[options setURL:[savePanel URL]];
-	[options setVideoStorage:[[self videoDevice] videoStorage]];
-	[options setAudioInput:[[self captureDocument] audioInput]];
+	[options setVideoStorage:[[[self captureDocument] videoDevice] videoStorage]];
+	[options setAudioInput:[[self captureDocument] audioDevice]];
 
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[options setVideoQuality:[videoQualitySlider doubleValue]];
 	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
 	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
 	[options setCropRect:[self cropRect]];
-	[options setUpconvertsFromMono:[[self captureDocument] upconvertsFromMono]];
+	[options setUpconvertsFromMono:[[[self captureDocument] audioTarget] upconvertsFromMono]];
 	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
 
 	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
@@ -362,32 +363,6 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	return NSMakeRect(NSMinX(r) + NSWidth(r) * b, NSMinY(r) + NSHeight(r) * b, NSWidth(r) * b2, NSHeight(r) * b2);
 }
 
-#pragma mark -
-
-- (void)startPlaying
-{
-	[videoView setVideoStorage:[[self videoDevice] videoStorage]];
-	[videoView startDrawing];
-}
-- (void)stopPlaying
-{
-	[videoView stopDrawing];
-	[self stopRecording:self];
-}
-- (void)threaded_pushFrame:(ECVVideoFrame *)frame
-{
-	[videoView pushFrame:frame];
-	if(_movieRecorder) @synchronized(self) {
-		[_movieRecorder addVideoFrame:frame];
-	}
-}
-- (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue
-{
-	if(_movieRecorder) @synchronized(self) {
-		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
-	}
-}
-
 #pragma mark -ECVCaptureController(Private)
 
 - (void)_hideMenuBar
@@ -468,6 +443,32 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[super dealloc];
 }
 
+#pragma mark -NSObject(ECVTarget)
+
+- (void)play
+{
+	[videoView setVideoStorage:[[self videoDevice] videoStorage]];
+	[videoView startDrawing];
+}
+- (void)stop
+{
+	[videoView stopDrawing];
+	[self stopRecording:self];
+}
+- (void)pushVideoFrame:(ECVVideoFrame *const)frame
+{
+	[videoView pushFrame:frame];
+	if(_movieRecorder) @synchronized(self) {
+		[_movieRecorder addVideoFrame:frame];
+	}
+}
+- (void)pushAudioBufferListValue:(NSValue *const)bufferListValue
+{
+	if(_movieRecorder) @synchronized(self) {
+		[_movieRecorder addAudioBufferList:[bufferListValue pointerValue]];
+	}
+}
+
 #pragma mark -NSObject(NSMenuValidation)
 
 - (BOOL)validateMenuItem:(NSMenuItem *)anItem
@@ -531,18 +532,19 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 			[self togglePlaying:self];
 			return YES;
 	}
+	ECVAudioTarget *const audioTarget = [[self captureDocument] audioTarget];
 	if(NSCommandKeyMask == modifiers) switch(character) {
 		case NSUpArrowFunctionKey:
-			[[self captureDocument] setVolume:[[self captureDocument] volume] + 0.05f];
+			[audioTarget setVolume:[audioTarget volume] + 0.05f];
 			return YES;
 		case NSDownArrowFunctionKey:
-			[[self captureDocument] setVolume:[[self captureDocument] volume] - 0.05f];
+			[audioTarget setVolume:[audioTarget volume] - 0.05f];
 			return YES;
 	}
 	if((NSCommandKeyMask | NSAlternateKeyMask) == modifiers) switch(character) {
 		case NSUpArrowFunctionKey:
 		case NSDownArrowFunctionKey:
-			[[self captureDocument] setMuted:![[self captureDocument] isMuted]];
+			[audioTarget setMuted:![audioTarget isMuted]];
 			return YES;
 	}
 	return NO;

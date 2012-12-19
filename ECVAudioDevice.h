@@ -23,6 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
+@class ECVAudioStream;
 @protocol ECVAudioDeviceDelegate;
 
 @interface ECVAudioDevice : NSObject
@@ -36,20 +37,21 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 
 + (NSArray *)allDevices;
 + (id)defaultDevice;
-+ (id)deviceWithUID:(NSString *)UID;
-+ (id)deviceWithIODevice:(io_service_t)device;
++ (id)deviceWithUID:(NSString *const)UID;
++ (id)deviceWithIODevice:(io_service_t const)device;
 
-- (id)initWithDeviceID:(AudioDeviceID)deviceID;
+- (id)initWithDeviceID:(AudioDeviceID const)deviceID;
 
 - (NSObject<ECVAudioDeviceDelegate> *)delegate;
-- (void)setDelegate:(NSObject<ECVAudioDeviceDelegate> *)obj;
+- (void)setDelegate:(NSObject<ECVAudioDeviceDelegate> *const)obj;
 - (AudioDeviceID)deviceID;
 - (BOOL)isInput;
 - (NSString *)UID;
 
 - (NSString *)name;
-- (void)setName:(NSString *)str;
+- (void)setName:(NSString *const)str;
 - (NSArray *)streams;
+- (ECVAudioStream *)stream;
 
 - (BOOL)start;
 - (void)stop;
@@ -70,8 +72,8 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 @protocol ECVAudioDeviceDelegate <NSObject>
 
 @optional
-- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t;
-- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t;
+- (void)audioInput:(ECVAudioInput *const)sender didReceiveBufferList:(AudioBufferList const *const)bufferList atTime:(AudioTimeStamp const *const)t;
+- (void)audioOutput:(ECVAudioOutput *const)sender didRequestBufferList:(inout AudioBufferList *const)bufferList forTime:(AudioTimeStamp const *const)t;
 
 @end
 
@@ -81,7 +83,7 @@ extern NSString *const ECVAudioHardwareDevicesDidChangeNotification;
 	AudioStreamID _streamID;
 }
 
-- (id)initWithStreamID:(AudioStreamID)streamID;
+- (id)initWithStreamID:(AudioStreamID const)streamID;
 - (AudioStreamID)streamID;
 
 - (AudioStreamBasicDescription)basicDescription;

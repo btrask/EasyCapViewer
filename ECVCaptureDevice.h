@@ -22,8 +22,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <IOKit/usb/IOUSBLib.h>
 #import <QTKit/QTKit.h>
 #import "ECVConfigController.h"
+#import "ECVAVTarget.h"
 
 // Models
+@class ECVCaptureDocument;
 @class ECVVideoSource;
 @class ECVVideoFormat;
 @class ECVVideoStorage;
@@ -37,7 +39,7 @@ extern NSString *const ECVContrastKey;
 extern NSString *const ECVSaturationKey;
 extern NSString *const ECVHueKey;
 
-@interface ECVCaptureDevice : NSObject <ECVCaptureDeviceConfiguring>
+@interface ECVCaptureDevice : NSObject <ECVAVTarget, ECVCaptureDeviceConfiguring>
 {
 	@private
 	io_service_t _service;
@@ -52,7 +54,7 @@ extern NSString *const ECVHueKey;
 
 // New ivars...
 
-	NSUInteger _pauseCount;
+	ECVCaptureDocument *_captureDocument;
 
 	ECVVideoSource *_videoSource;
 	ECVVideoFormat *_videoFormat;
@@ -93,22 +95,16 @@ extern NSString *const ECVHueKey;
 
 // Ongoing refactoring... This code is new, the above code is not.
 
-- (NSUInteger)pauseCount;
-- (BOOL)isPaused;
-- (void)setPaused:(BOOL const)flag;
+- (ECVCaptureDocument *)captureDocument;
+- (void)setCaptureDocument:(ECVCaptureDocument *const)doc;
 
 - (ECVVideoSource *)videoSource;
 - (void)setVideoSource:(ECVVideoSource *const)source;
 - (ECVVideoFormat *)videoFormat;
 - (void)setVideoFormat:(ECVVideoFormat *const)format;
 
-- (void)play;
-- (void)stop;
-
 - (NSString *)name;
 - (io_service_t)service;
-
-- (void)finishedFrame:(ECVVideoFrame *const)frame; // TODO: Part of the gradual split into two separate objects.
 
 @end
 

@@ -19,45 +19,14 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVAudioDevice.h"
-#import "ECVCaptureDevice.h"
-#import "ECVConfigController.h"
+@class ECVVideoFrame;
 
-@class ECVAudioTarget;
-@class ECVCaptureDevice;
-@class ECVReadWriteLock;
+@protocol ECVAVTarget
 
-@interface ECVCaptureDocument : NSDocument <ECVAVTarget, ECVAudioDeviceDelegate>
-{
-	@private
-	ECVCaptureDevice *_videoDevice;
-	ECVAudioInput *_audioDevice;
-	NSUInteger _pauseCount;
-	BOOL _pausedFromUI;
+- (void)play;
+- (void)stop;
 
-	ECVReadWriteLock *_targetsLock;
-	NSMutableArray *_targets;
-	ECVAudioTarget *_audioTarget;
-}
-
-- (NSArray *)targets;
-- (void)addTarget:(id<ECVAVTarget> const)target;
-- (void)removeTarget:(id<ECVAVTarget> const)target;
-- (ECVAudioTarget *)audioTarget;
-
-- (ECVCaptureDevice *)videoDevice;
-- (void)setVideoDevice:(ECVCaptureDevice *const)source;
-- (NSUserDefaults *)defaults;
-
-- (ECVAudioInput *)audioDevice;
-- (void)setAudioDevice:(ECVAudioInput *const)target;
-
-- (NSUInteger)pauseCount;
-- (BOOL)isPaused;
-- (void)setPaused:(BOOL const)flag;
-- (BOOL)isPausedFromUI;
-- (void)setPausedFromUI:(BOOL const)flag;
-
-- (void)workspaceWillSleep:(NSNotification *const)aNotif;
+- (void)pushVideoFrame:(ECVVideoFrame *const)frame;
+- (void)pushAudioBufferListValue:(NSValue *const)bufferListValue;
 
 @end

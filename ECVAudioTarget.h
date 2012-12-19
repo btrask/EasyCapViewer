@@ -19,45 +19,50 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#import "ECVAVTarget.h"
 #import "ECVAudioDevice.h"
 #import "ECVCaptureDevice.h"
-#import "ECVConfigController.h"
+@class ECVAudioPipe;
+@class ECVCaptureDocument;
 
-@class ECVAudioTarget;
-@class ECVCaptureDevice;
-@class ECVReadWriteLock;
+extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
-@interface ECVCaptureDocument : NSDocument <ECVAVTarget, ECVAudioDeviceDelegate>
+@interface ECVAudioTarget : NSObject <ECVAVTarget, ECVAudioDeviceDelegate>
 {
 	@private
-	ECVCaptureDevice *_videoDevice;
-	ECVAudioInput *_audioDevice;
-	NSUInteger _pauseCount;
-	BOOL _pausedFromUI;
+	ECVCaptureDocument *_captureDocument;
+	ECVAudioOutput *_audioOutput;
+	AudioStreamBasicDescription _inputDescription;
+	BOOL _muted;
+	CGFloat _volume;
+	BOOL _upconvertsFromMono;
 
-	ECVReadWriteLock *_targetsLock;
-	NSMutableArray *_targets;
-	ECVAudioTarget *_audioTarget;
+	ECVAudioPipe *_audioPipe;
 }
 
-- (NSArray *)targets;
-- (void)addTarget:(id<ECVAVTarget> const)target;
-- (void)removeTarget:(id<ECVAVTarget> const)target;
-- (ECVAudioTarget *)audioTarget;
-
-- (ECVCaptureDevice *)videoDevice;
-- (void)setVideoDevice:(ECVCaptureDevice *const)source;
+- (ECVCaptureDocument *)captureDocument;
+- (void)setCaptureDocument:(ECVCaptureDocument *const)doc;
 - (NSUserDefaults *)defaults;
 
-- (ECVAudioInput *)audioDevice;
-- (void)setAudioDevice:(ECVAudioInput *const)target;
+- (ECVAudioOutput *)audioOutput;
+- (void)setAudioOutput:(ECVAudioOutput *const)output;
+- (void)setInputBasicDescription:(AudioStreamBasicDescription const)desc;
+- (BOOL)isMuted;
+- (void)setMuted:(BOOL)flag;
+- (CGFloat)volume;
+- (void)setVolume:(CGFloat)value;
+- (BOOL)upconvertsFromMono;
+- (void)setUpconvertsFromMono:(BOOL)flag;
 
-- (NSUInteger)pauseCount;
-- (BOOL)isPaused;
-- (void)setPaused:(BOOL const)flag;
-- (BOOL)isPausedFromUI;
-- (void)setPausedFromUI:(BOOL const)flag;
+- (void)play;
+- (void)stop;
 
-- (void)workspaceWillSleep:(NSNotification *const)aNotif;
+- (void)pushAudioBufferListValue:(NSValue *const)bufferListValue;
+
+@end
+
+@interface ECVCaptureDevice(ECVAudio)
+
+- (ECVAudioInput *)builtInAudioInput;
 
 @end

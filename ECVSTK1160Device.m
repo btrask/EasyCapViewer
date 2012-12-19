@@ -240,7 +240,7 @@ enum {
 	size_t skip = 4;
 	if(ECVSTK1160NewImageFlag & bytes[0]) {
 		ECVFieldType const field = ECVSTK1160HighFieldFlag & bytes[0] ? ECVHighField : ECVLowField;
-		[self finishedFrame:[storage finishedFrameWithNextFieldType:field]];
+		[self pushVideoFrame:[storage finishedFrameWithNextFieldType:field]];
 		_offset = 0;
 		skip = 8;
 	}

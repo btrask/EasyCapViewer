@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 NSString *const ECVAudioHardwareDevicesDidChangeNotification = @"ECVAudioHardwareDevicesDidChange";
 
-static OSStatus ECVAudioObjectPropertyListenerProc(AudioObjectID inObjectID, UInt32 inNumberAddresses, AudioObjectPropertyAddress const inAddresses[], id obj)
+static OSStatus ECVAudioObjectPropertyListenerProc(AudioObjectID const inObjectID, UInt32 const inNumberAddresses, AudioObjectPropertyAddress const inAddresses[], id const obj)
 {
 	for(UInt32 i = 0; i < inNumberAddresses; ++i) {
 		if(kAudioHardwarePropertyDevices != inAddresses[i].mSelector) continue;
@@ -36,7 +36,7 @@ static OSStatus ECVAudioObjectPropertyListenerProc(AudioObjectID inObjectID, UIn
 	}
 	return noErr;
 }
-static OSStatus ECVAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, id device)
+static OSStatus ECVAudioDeviceIOProc(AudioDeviceID const inDevice, AudioTimeStamp const *const inNow, AudioBufferList const *const inInputData, AudioTimeStamp const *const inInputTime, AudioBufferList *const outOutputData, AudioTimeStamp const *const inOutputTime, id const device)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	if([device isInput]) [[device delegate] audioInput:device didReceiveBufferList:inInputData atTime:inInputTime];
@@ -252,6 +252,11 @@ ECVNoDeviceError:
 	free(streamIDs);
 	return streams;
 }
+- (ECVAudioStream *)stream
+{
+	NSArray *const streams = [self streams];
+	return [streams count] ? [streams objectAtIndex:0] : nil;
+}
 
 #pragma mark -
 
@@ -325,8 +330,8 @@ ECVNoDeviceError:
 
 @implementation NSObject(ECVAudioDeviceDelegate)
 
-- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t {}
-- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t {}
+- (void)audioInput:(ECVAudioInput *const)sender didReceiveBufferList:(AudioBufferList const *const)bufferList atTime:(AudioTimeStamp const *const)t {}
+- (void)audioOutput:(ECVAudioOutput *const)sender didRequestBufferList:(inout AudioBufferList *const)bufferList forTime:(AudioTimeStamp const *const)t {}
 
 @end
 

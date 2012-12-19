@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <mach/mach_time.h>
 
 // Models
+#import "ECVCaptureDocument.h"
 #import "ECVUSBTransferList.h"
 #import "ECVVideoSource.h"
 #import "ECVVideoFormat.h"
@@ -226,13 +227,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		_service = service;
 		IOObjectRetain(_service);
 
-
 		_readThreadLock = [[NSLock alloc] init];
 		_readLock = [[NSLock alloc] init];
-
-
-		_pauseCount = 1;
-
 
 		NSMutableDictionary *properties = nil;
 		(void)ECVIOReturn2(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
@@ -275,10 +271,10 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 - (void)setDeinterlacingMode:(Class const)mode
 {
 	if(mode == _deinterlacingMode) return;
-	[self setPaused:YES];
+	[_captureDocument setPaused:YES];
 	[_deinterlacingMode release];
 	_deinterlacingMode = [mode copy];
-	[self setPaused:NO];
+	[_captureDocument setPaused:NO];
 	[[self defaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
 }
 - (NSUserDefaults *)defaults { return _defaults; }
@@ -493,38 +489,13 @@ ECVNoDeviceError:
 
 // Ongoing refactoring... This code is new, the above code is not.
 
-- (NSUInteger)pauseCount
+- (ECVCaptureDocument *)captureDocument
 {
-	return _pauseCount;
+	return _captureDocument;
 }
-- (BOOL)isPaused
+- (void)setCaptureDocument:(ECVCaptureDocument *const)doc
 {
-	return !!_pauseCount;
-}
-- (void)setPaused:(BOOL const)flag
-{
-	NSParameterAssert(flag || 0 != _pauseCount);
-	if(flag) {
-		if(1 == ++_pauseCount) [self stop];
-	} else {
-		if(0 == --_pauseCount) [self play];
-	}
-}
-- (void)play
-{
-	[_readLock lock];
-	_read = YES;
-	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithVideoFormat:[self videoFormat] deinterlacingMode:[self deinterlacingMode] pixelFormat:[self pixelFormat]];
-	[_readLock unlock];
-	[NSThread detachNewThreadSelector:@selector(_read) toTarget:self withObject:nil];
-}
-- (void)stop
-{
-	[_readLock lock];
-	_read = NO;
-	[_videoStorage release];
-	_videoStorage = nil;
-	[_readLock unlock];
+	_captureDocument = doc;
 }
 
 
@@ -535,10 +506,10 @@ ECVNoDeviceError:
 - (void)setVideoSource:(ECVVideoSource *const)source
 {
 	if(BTEqualObjects(source, _videoSource)) return;
-	[self setPaused:YES];
+	[_captureDocument setPaused:YES];
 	[_videoSource release];
 	_videoSource = [source retain];
-	[self setPaused:NO];
+	[_captureDocument setPaused:NO];
 	// TODO: Serialize.
 }
 - (ECVVideoFormat *)videoFormat
@@ -548,10 +519,10 @@ ECVNoDeviceError:
 - (void)setVideoFormat:(ECVVideoFormat *const)format
 {
 	if(BTEqualObjects(format, _videoFormat)) return;
-	[self setPaused:YES];
+	[_captureDocument setPaused:YES];
 	[_videoFormat release];
 	_videoFormat = [format retain];
-	[self setPaused:NO];
+	[_captureDocument setPaused:NO];
 	// TODO: Save preference... Serialization?
 }
 
@@ -568,15 +539,28 @@ ECVNoDeviceError:
 	return _service;
 }
 
-- (void)finishedFrame:(ECVVideoFrame *const)frame // TODO: Part of the gradual split into two separate objects.
+#pragma mark -ECVCaptureDevice<ECVVideoTarget>
+
+- (void)play
 {
-	if(!frame) return;
-	// TODO: Notify document.
-//#if !defined(ECV_NO_CONTROLLERS)
-//	[_windowControllersLock readLock];
-//	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushFrame:) withObject:frame];
-//	[_windowControllersLock unlock];
-//#endif
+	[_readLock lock];
+	_read = YES;
+	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithVideoFormat:[self videoFormat] deinterlacingMode:[self deinterlacingMode] pixelFormat:[self pixelFormat]];
+	[_readLock unlock];
+	[NSThread detachNewThreadSelector:@selector(_read) toTarget:self withObject:nil];
 }
+- (void)stop
+{
+	[_readLock lock];
+	_read = NO;
+	[_videoStorage release];
+	_videoStorage = nil;
+	[_readLock unlock];
+}
+- (void)pushVideoFrame:(ECVVideoFrame *const)frame
+{
+	[_captureDocument pushVideoFrame:frame];
+}
+- (void)pushAudioBufferListValue:(NSValue *const)bufferListValue {}
 
 @end

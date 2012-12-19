@@ -36,20 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 #import "ECVICM.h"
 
-#define ECVFramesPerPacket 1
-#define ECVChannelsPerFrame 2
-static AudioStreamBasicDescription const ECVAudioRecordingOutputDescription = {
-	48000.0f,
-	kAudioFormatLinearPCM,
-	kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsPacked,
-	sizeof(Float32) * ECVChannelsPerFrame * ECVFramesPerPacket,
-	ECVFramesPerPacket,
-	sizeof(Float32) * ECVChannelsPerFrame,
-	ECVChannelsPerFrame,
-	sizeof(Float32) * CHAR_BIT,
-	0,
-};
-#define ECVAudioBufferBytesSize (ECVAudioRecordingOutputDescription.mBytesPerPacket * 1000) // Should be more than enough to keep up with the incoming data.
+#define ECVAudioBufferBytesSize (ECVStandardAudioStreamBasicDescription.mBytesPerPacket * 1000) // Should be more than enough to keep up with the incoming data.
 
 @protocol ECVCompressionDelegate
 
@@ -147,7 +134,7 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 {
 	ECVAudioStream *const inputStream = [[[_audioInput streams] objectEnumerator] nextObject];
 	if(!inputStream) return nil;
-	ECVAudioPipe *const pipe = [[[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVAudioRecordingOutputDescription upconvertFromMono:_upconvertsFromMono] autorelease];
+	ECVAudioPipe *const pipe = [[[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:ECVStandardAudioStreamBasicDescription upconvertFromMono:_upconvertsFromMono] autorelease];
 	[pipe setDropsBuffers:NO];
 	return pipe;
 }
@@ -340,12 +327,12 @@ enum {
 	ECVOSErr(BeginMediaEdits(videoMedia));
 
 	Track const audioTrack = _audioPipe ? NewMovieTrack(movie, 0, 0, (short)round([options volume] * kFullVolume)) : NULL;
-	Media const audioMedia = audioTrack ? NewTrackMedia(audioTrack, SoundMediaType, ECVAudioRecordingOutputDescription.mSampleRate, NULL, 0) : NULL;
+	Media const audioMedia = audioTrack ? NewTrackMedia(audioTrack, SoundMediaType, ECVStandardAudioStreamBasicDescription.mSampleRate, NULL, 0) : NULL;
 	SoundDescriptionHandle soundDescription = NULL;
 	void *const audioBuffer = audioMedia ? malloc(ECVAudioBufferBytesSize) : NULL;
 	if(audioMedia) {
 		ECVOSErr(BeginMediaEdits(audioMedia));
-		ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVAudioRecordingOutputDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &soundDescription));
+		ECVOSStatus(QTSoundDescriptionCreate((AudioStreamBasicDescription *)&ECVStandardAudioStreamBasicDescription, NULL, 0, NULL, 0, kQTSoundDescriptionKind_Movie_AnyVersion, &soundDescription));
 	}
 
 	for(;;) {
@@ -431,7 +418,7 @@ bail:
 	[audioPipe requestOutputBufferList:&outputBufferList];
 	ByteCount const size = outputBufferList.mBuffers[0].mDataByteSize;
 	if(!size || !outputBufferList.mBuffers[0].mData) return;
-	AddMediaSample2(media, outputBufferList.mBuffers[0].mData, size, 1, 0, (SampleDescriptionHandle)description, size / ECVAudioRecordingOutputDescription.mBytesPerFrame, 0, NULL);
+	AddMediaSample2(media, outputBufferList.mBuffers[0].mData, size, 1, 0, (SampleDescriptionHandle)description, size / ECVStandardAudioStreamBasicDescription.mBytesPerFrame, 0, NULL);
 }
 
 #pragma mark -ECVMovieRecorder(Private)<ECVCompressionDelegate>

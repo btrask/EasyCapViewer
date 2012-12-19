@@ -22,23 +22,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureDocument.h"
 
 #import "ECVAudioDevice.h"
-#import "ECVAudioPipe.h"
+#import "ECVAudioTarget.h"
 #import "ECVCaptureController.h"
 #import "ECVController.h"
 #import "ECVDebug.h"
 #import "ECVReadWriteLock.h"
 
-NSString *const ECVCaptureDeviceVolumeDidChangeNotification = @"ECVCaptureDeviceVolumeDidChange";
-
-static NSString *const ECVVolumeKey = @"ECVVolume";
 static NSString *const ECVAudioInputUIDKey = @"ECVAudioInputUID";
-static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
-
 static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 @implementation ECVCaptureDocument
 
 #pragma mark -ECVCaptureDocument
+
+- (NSArray *)targets
+{
+	[_targetsLock readLock];
+	NSArray *const targets = [[_targets copy] autorelease];
+	[_targetsLock unlock];
+	return targets;
+}
+- (void)addTarget:(id<ECVAVTarget> const)target
+{
+	[_targetsLock writeLock];
+	[_targets addObject:target];
+	[_targetsLock unlock];
+}
+- (void)removeTarget:(id<ECVAVTarget> const)target
+{
+	[_targetsLock writeLock];
+	[_targets removeObjectIdenticalTo:target];
+	[_targetsLock unlock];
+}
+- (ECVAudioTarget *)audioTarget
+{
+	return [[_audioTarget retain] autorelease];
+}
+
+#pragma mark -
 
 - (ECVCaptureDevice *)videoDevice
 {
@@ -58,30 +79,32 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 #pragma mark -
 
+- (NSUInteger)pauseCount
+{
+	return _pauseCount;
+}
 - (BOOL)isPaused
 {
-	return _paused;
+	return !!_pauseCount;
 }
 - (void)setPaused:(BOOL const)flag
 {
-	if(!!flag == _paused) return;
-	_paused = !!flag;
-	if(_paused) [self stop];
-	else [self play];
+	NSParameterAssert(flag || 0 != _pauseCount);
+	if(flag) {
+		if(1 == ++_pauseCount) [self stop];
+	} else {
+		if(0 == --_pauseCount) [self play];
+	}
 }
-- (void)play
+- (BOOL)isPausedFromUI
 {
-	[self startAudio];
-	[_videoDevice play];
-	[[ECVController sharedController] noteCaptureDocumentStartedPlaying:self];
-	[[self windowControllers] makeObjectsPerformSelector:@selector(startPlaying)];
+	return _pausedFromUI;
 }
-- (void)stop
+- (void)setPausedFromUI:(BOOL const)flag
 {
-	[_videoDevice stop];
-	[[self windowControllers] makeObjectsPerformSelector:@selector(stopPlaying)];
-	[[ECVController sharedController] noteCaptureDocumentStoppedPlaying:self];
-	[self stopAudio];
+	if(flag == _pausedFromUI) return;
+	_pausedFromUI = flag;
+	[self setPaused:_pausedFromUI];
 }
 
 #pragma mark -
@@ -95,164 +118,82 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 #pragma mark -
 
-- (ECVAudioInput *)audioInput
+- (ECVAudioInput *)audioDevice
 {
-	if(!_audioInput) {
+	if(!_audioDevice) {
 		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
 		if(!BTEqualObjects(ECVAudioInputNone, UID)) {
-			if(UID) _audioInput = [[ECVAudioInput deviceWithUID:UID] retain];
-			if(!_audioInput) _audioInput = [[[self videoDevice] builtInAudioInput] retain];
+			if(UID) _audioDevice = [[ECVAudioInput deviceWithUID:UID] retain];
+			if(!_audioDevice) _audioDevice = [[[self videoDevice] builtInAudioInput] retain];
+			
 		}
 	}
-	return [[_audioInput retain] autorelease];
+	return [[_audioDevice retain] autorelease];
 }
-- (void)setAudioInput:(ECVAudioInput *const)input
+- (void)setAudioDevice:(ECVAudioInput *const)device
 {
-	if(!BTEqualObjects(input, _audioInput)) {
+	if(!BTEqualObjects(device, _audioDevice)) {
 		[self setPaused:YES];
-		[_audioInput release];
-		_audioInput = [input retain];
-		[_audioPreviewingPipe release];
-		_audioPreviewingPipe = nil;
+		[_audioDevice release];
+		_audioDevice = [device retain];
+		[_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
 		[self setPaused:NO];
 	}
-	if(BTEqualObjects([[self videoDevice] builtInAudioInput], input)) {
+	if(BTEqualObjects([[self videoDevice] builtInAudioInput], device)) {
 		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
-	} else if(input) {
-		[[self defaults] setObject:[input UID] forKey:ECVAudioInputUIDKey];
+	} else if(device) {
+		[[self defaults] setObject:[device UID] forKey:ECVAudioInputUIDKey];
 	} else {
 		[[self defaults] setObject:ECVAudioInputNone forKey:ECVAudioInputUIDKey];
 	}
 }
-- (ECVAudioOutput *)audioOutput
-{
-	if(!_audioOutput) return _audioOutput = [[ECVAudioOutput defaultDevice] retain];
-	return [[_audioOutput retain] autorelease];
-}
-- (void)setAudioOutput:(ECVAudioOutput *const)output
-{
-	if(BTEqualObjects(output, _audioOutput)) return;
-	[self setPaused:YES];
-	[_audioOutput release];
-	_audioOutput = [output retain];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
-	[self setPaused:NO];
-}
-- (BOOL)startAudio
-{
-	NSAssert(!_audioPreviewingPipe, @"Audio pipe should be cleared before restarting audio.");
 
-	ECVAudioInput *const input = [self audioInput];
-	ECVAudioOutput *const output = [self audioOutput];
-	if(input && output) {
-		ECVAudioStream *const inputStream = [[[input streams] objectEnumerator] nextObject];
-		if(!inputStream) {
-			ECVLog(ECVNotice, @"This device may not support audio (input: %@; stream: %@).", input, inputStream);
-			return NO;
-		}
-		ECVAudioStream *const outputStream = [[[output streams] objectEnumerator] nextObject];
-		if(!outputStream) {
-			ECVLog(ECVWarning, @"Audio output could not be started (output: %@; stream: %@).", output, outputStream);
-			return NO;
-		}
+#pragma mark -ECVCaptureDocument<ECVVideoTarget>
 
-		_audioPreviewingPipe = [[ECVAudioPipe alloc] initWithInputDescription:[inputStream basicDescription] outputDescription:[outputStream basicDescription] upconvertFromMono:[self upconvertsFromMono]];
-		[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-		[input setDelegate:self];
-		[output setDelegate:self];
-
-		if(![input start]) {
-			ECVLog(ECVWarning, @"Audio input could not be restarted (input: %@).", input);
-			return NO;
-		}
-		if(![output start]) {
-			[output stop];
-			ECVLog(ECVWarning, @"Audio output could not be restarted (output: %@).", output);
-			return NO;
-		}
-	}
-	return YES;
-}
-- (void)stopAudio
+- (void)play
 {
-	ECVAudioInput *const input = [self audioInput];
-	ECVAudioOutput *const output = [self audioOutput];
-	[input stop];
-	[output stop];
-	[input setDelegate:nil];
-	[output setDelegate:nil];
-	[_audioPreviewingPipe release];
-	_audioPreviewingPipe = nil;
+	if(_audioDevice) [self addTarget:_audioTarget];
+	[_videoDevice play];
+	[_targets makeObjectsPerformSelector:@selector(play)];
+	[[ECVController sharedController] noteCaptureDocumentStartedPlaying:self];
 }
+- (void)stop
+{
+	[[ECVController sharedController] noteCaptureDocumentStoppedPlaying:self];
+	[_targets makeObjectsPerformSelector:@selector(stop)];
+	[_videoDevice stop];
+	[self removeTarget:_audioTarget];
+}
+- (void)pushVideoFrame:(ECVVideoFrame *const)frame
+{
+	if(!frame) return;
+	[_targetsLock readLock];
+	[_targets makeObjectsPerformSelector:@selector(pushVideoFrame:) withObject:frame];
+	[_targetsLock unlock];
+}
+- (void)pushAudioBufferListValue:(NSValue *const)bufferListValue {}
 
 #pragma mark -ECVCaptureDocument<ECVAudioDeviceDelegate>
 
-- (void)audioInput:(ECVAudioInput *)sender didReceiveBufferList:(AudioBufferList const *)bufferList atTime:(AudioTimeStamp const *)t
+- (void)audioInput:(ECVAudioInput *const)sender didReceiveBufferList:(AudioBufferList const *const)bufferList atTime:(AudioTimeStamp const *const)t
 {
-	if(sender != _audioInput) return;
-	[_audioPreviewingPipe receiveInputBufferList:bufferList];
-	[_windowControllersLock readLock];
-	[_windowControllers2 makeObjectsPerformSelector:@selector(threaded_pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
-	[_windowControllersLock unlock];
-}
-- (void)audioOutput:(ECVAudioOutput *)sender didRequestBufferList:(inout AudioBufferList *)bufferList forTime:(AudioTimeStamp const *)t
-{
-	if(sender != _audioOutput) return;
-	[_audioPreviewingPipe requestOutputBufferList:bufferList];
-}
-
-#pragma mark -ECVCaptureDocument<ECVCaptureDocumentConfiguring>
-
-- (BOOL)isMuted
-{
-	return _muted;
-}
-- (void)setMuted:(BOOL)flag
-{
-	if(flag == _muted) return;
-	_muted = flag;
-	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
-}
-- (CGFloat)volume
-{
-	return _volume;
-}
-- (void)setVolume:(CGFloat)value
-{
-	_volume = CLAMP(0.0f, value, 1.0f);
-	[_audioPreviewingPipe setVolume:_muted ? 0.0f : _volume];
-	[[self defaults] setDouble:value forKey:ECVVolumeKey];
-	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
-}
-- (BOOL)upconvertsFromMono
-{
-	return _upconvertsFromMono;
-}
-- (void)setUpconvertsFromMono:(BOOL)flag
-{
-	[self setPaused:YES];
-	_upconvertsFromMono = flag;
-	[self setPaused:NO];
-	[[self defaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
+	if(sender != _audioDevice) return;
+	[_targetsLock readLock];
+	[_targets makeObjectsPerformSelector:@selector(pushAudioBufferListValue:) withObject:[NSValue valueWithPointer:bufferList]];
+	[_targetsLock unlock];
 }
 
 #pragma mark -NSDocument
 
-- (void)addWindowController:(NSWindowController *)windowController
+- (void)addWindowController:(NSWindowController *const)windowController
 {
 	[super addWindowController:windowController];
-	[_windowControllersLock writeLock];
-	if(NSNotFound == [_windowControllers2 indexOfObjectIdenticalTo:windowController]) [_windowControllers2 addObject:windowController];
-	[_windowControllersLock unlock];
+	[self addTarget:(id<ECVAVTarget>)windowController];
 }
-- (void)removeWindowController:(NSWindowController *)windowController
+- (void)removeWindowController:(NSWindowController *const)windowController
 {
 	[super removeWindowController:windowController];
-	[_windowControllersLock writeLock];
-	[_windowControllers2 removeObjectIdenticalTo:windowController];
-	[_windowControllersLock unlock];
+	[self removeTarget:(id<ECVAVTarget>)windowController];
 }
 - (void)makeWindowControllers
 {
@@ -267,7 +208,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 }
 - (void)close
 {
-	[self setPaused:YES];
+	[self setPausedFromUI:YES];
 	[super close];
 }
 
@@ -276,21 +217,17 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 - (id)init
 {
 	if((self = [super init])) {
-		_paused = YES;
+		// FIXME: The video device is not set at this point, so we can't read the defaults yet.
 
-		_windowControllersLock = [[ECVReadWriteLock alloc] init];
-		_windowControllers2 = [[NSMutableArray alloc] init];
+		_pauseCount = 1;
+		_pausedFromUI = YES;
 
-		[self setVolume:[[self defaults] doubleForKey:ECVVolumeKey]];
-		[self setUpconvertsFromMono:[[self defaults] boolForKey:ECVUpconvertsFromMonoKey]];
+		_targetsLock = [[ECVReadWriteLock alloc] init];
+		_targets = [[NSMutableArray alloc] init];
+		_audioTarget = [[ECVAudioTarget alloc] init];
+		[_audioTarget setCaptureDocument:self];
 
 		[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
-
-		NSUserDefaults *const defaults = [_videoDevice defaults];
-		[defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
-			[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,
-			nil]];
 	}
 	return self;
 }
@@ -301,25 +238,14 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 	ECVConfigController *const config = [ECVConfigController sharedConfigController];
 	if([config captureDocument] == self) [config setCaptureDocument:nil];
 
-	[_windowControllersLock release];
-	[_windowControllers2 release];
+	[_targetsLock release];
+	[_targets release];
+	[_audioTarget release];
 
-	[_audioInput release];
-	[_audioOutput release];
-	[_audioPreviewingPipe release];
+	[_videoDevice release];
+	[_audioDevice release];
 
 	[super dealloc];
-}
-
-@end
-
-@implementation ECVCaptureDevice(ECVAudio)
-
-- (ECVAudioInput *)builtInAudioInput
-{
-	ECVAudioInput *const input = [ECVAudioInput deviceWithIODevice:[self service]];
-	[input setName:[self name]];
-	return input;
 }
 
 @end

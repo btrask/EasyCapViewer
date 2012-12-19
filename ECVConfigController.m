@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureDevice.h"
 #import "ECVVideoFormat.h"
 #import "ECVDeinterlacingMode.h"
+#import "ECVAudioTarget.h"
 
 // Other Sources
 #if defined(ECV_ENABLE_AUDIO)
@@ -89,16 +90,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (IBAction)changeAudioInput:(id)sender
 {
-	[_captureDocument setAudioInput:[[sender selectedItem] representedObject]];
+	[_captureDocument setAudioDevice:[[sender selectedItem] representedObject]];
 }
 - (IBAction)changeUpconvertsFromMono:(id)sender
 {
-	[_captureDocument setUpconvertsFromMono:NSOnState == [sender state]];
+	[[_captureDocument audioTarget] setUpconvertsFromMono:NSOnState == [sender state]];
 }
 - (IBAction)changeVolume:(id)sender
 {
-	[_captureDocument setVolume:[sender doubleValue]];
-	[_captureDocument setMuted:NO];
+	[[_captureDocument audioTarget] setVolume:[sender doubleValue]];
+	[[_captureDocument audioTarget] setMuted:NO];
 }
 
 #pragma mark -
@@ -149,7 +150,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:hueSlider];
 
 	[upconvertsFromMonoSwitch setEnabled:[_captureDocument respondsToSelector:@selector(upconvertsFromMono)]];
-	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [_captureDocument upconvertsFromMono]];
+	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [[_captureDocument audioTarget] upconvertsFromMono]];
 
 	[self audioHardwareDevicesDidChange:nil];
 	[audioSourcePopUp setEnabled:!!_captureDocument];
@@ -179,7 +180,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		hasAdditionalItems = YES;
 	}
 	if(!hasAdditionalItems) [[audioSourcePopUp menu] removeItem:separator];
-	ECVAudioInput *const input = [_captureDocument audioInput];
+	ECVAudioInput *const input = [_captureDocument audioDevice];
 	[audioSourcePopUp selectItemAtIndex:input ? [audioSourcePopUp indexOfItemWithRepresentedObject:input] : 0];
 }
 - (void)volumeDidChange:(NSNotification *)aNotif
@@ -187,7 +188,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	if(![self isWindowLoaded]) return;
 	BOOL const volumeSupported = [_captureDocument respondsToSelector:@selector(volume)];
 	[volumeSlider setEnabled:volumeSupported];
-	if(volumeSupported) [volumeSlider setDoubleValue:[_captureDocument isMuted] ? 0.0f : [_captureDocument volume]];
+	if(volumeSupported) [volumeSlider setDoubleValue:[[_captureDocument audioTarget] isMuted] ? 0.0f : [[_captureDocument audioTarget] volume]];
 	else [volumeSlider setDoubleValue:1.0f];
 }
 

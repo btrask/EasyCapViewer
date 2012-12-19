@@ -21,6 +21,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <QuartzCore/QuartzCore.h>
 #import <QTKit/QTKit.h>
+#import "ECVAVTarget.h"
 
 // Models
 @class ECVCaptureDocument;
@@ -55,7 +56,7 @@ enum {
 };
 typedef NSInteger ECVCropBorder;
 
-@interface ECVCaptureController : NSWindowController <ECVCropCellDelegate, ECVVideoViewDelegate
+@interface ECVCaptureController : NSWindowController <ECVAVTarget, ECVCropCellDelegate, ECVVideoViewDelegate
 #if defined(MAC_OS_X_VERSION_10_6)
 , NSWindowDelegate
 #endif
@@ -117,10 +118,6 @@ typedef NSInteger ECVCropBorder;
 - (NSRect)cropRectWithSourceAspectRatio:(ECVAspectRatio const)type;
 - (NSRect)cropRect:(NSRect const)rect withBorder:(ECVCropBorder const)border;
 
-- (void)startPlaying;
-- (void)stopPlaying;
-- (void)threaded_pushFrame:(ECVVideoFrame *)frame;
-- (void)threaded_pushAudioBufferListValue:(NSValue *)bufferListValue;
 
 
 

@@ -479,7 +479,7 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	if(0x22 == bytes[0]) {
 		ECVFieldType field = ECVHighField;
 		if(length >= 3) field = bytes[2] & 0x01 ? ECVLowField : ECVHighField;
-		[self finishedFrame:[storage finishedFrameWithNextFieldType:field]];
+		[self pushVideoFrame:[storage finishedFrameWithNextFieldType:field]];
 		_offset = 0;
 	}
 	size_t const skip = 4;
