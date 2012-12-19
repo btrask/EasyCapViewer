@@ -31,14 +31,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSMutableData *_allBufferData;
 }
 
-@property(readonly) NSUInteger numberOfBuffers;
-@property(readonly) void *allBufferBytes;
+- (NSUInteger)numberOfBuffers;
+- (void *)allBufferBytes;
 - (void *)bytesAtIndex:(NSUInteger)i;
 
 @end
 
 @interface ECVVideoFrame(ECVDependentVideoFrame)
 
-@property(readonly) NSUInteger bufferIndex;
+- (NSUInteger)bufferIndex;
 
 @end

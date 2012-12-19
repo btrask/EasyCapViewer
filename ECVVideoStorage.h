@@ -63,4 +63,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (ECVMutablePixelBuffer *)nextBuffer;
 - (ECVVideoFrame *)finishedFrameWithFinishedBuffer:(id)buffer;
 
+- (void)empty;
+
 @end

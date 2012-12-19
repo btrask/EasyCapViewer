@@ -50,9 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSParameterAssert(videoFormat);
 	NSAssert([mode isSubclassOfClass:[ECVDeinterlacingMode class]], @"Deinterlacing mode must be a subclass of ECVDeinterlacingMode.");
 	if((self = [super init])) {
-		ECVIntegerSize const s = [videoFormat frameSize];
-		_videoFormat = [videoFormat retain];
-		_deinterlacingMode = [[mode alloc] initWithVideoStorage:self];
+		_deinterlacingMode = [[mode alloc] initWithVideoStorage:self videoFormat:videoFormat];
+		ECVIntegerSize const s = [[_deinterlacingMode videoFormat] frameSize];
 		_pixelFormat = pixelFormat;
 		_bytesPerRow = s.width * [self bytesPerPixel];
 		_bufferSize = s.height * [self bytesPerRow];
@@ -60,7 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	}
 	return self;
 }
-- (ECVVideoFormat *)videoFormat { return [[_videoFormat retain] autorelease]; }
+- (ECVVideoFormat *)videoFormat { return [_deinterlacingMode videoFormat]; }
 - (OSType)pixelFormat { return _pixelFormat; }
 - (size_t)bytesPerPixel { return ECVPixelFormatBytesPerPixel(_pixelFormat); }
 - (size_t)bytesPerRow { return _bytesPerRow; }
@@ -70,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (NSUInteger)numberOfFramesToDropWithCount:(NSUInteger)c
 {
-	NSUInteger const g = [_deinterlacingMode frameGroupSize];
+	NSUInteger const g = [[self videoFormat] frameGroupSize];
 	return c < g ? 0 : c - c % g;
 }
 - (NSUInteger)dropFramesFromArray:(NSMutableArray *)frames

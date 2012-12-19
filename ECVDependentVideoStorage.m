@@ -63,7 +63,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVDependentVideoStorage
 
-@synthesize numberOfBuffers = _numberOfBuffers;
+- (NSUInteger)numberOfBuffers
+{
+	return _numberOfBuffers;
+}
 - (void *)allBufferBytes
 {
 	return [_allBufferData mutableBytes];
@@ -134,6 +137,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVVideoFrame *const frame = [[[ECVDependentVideoFrame alloc] initWithVideoStorage:self bufferIndex:[buffer bufferIndex]] autorelease];
 	[_frames addObject:frame];
 	return frame;
+}
+
+#pragma mark -
+
+- (void)empty
+{
+	// We probably don't need to worry about the frames themselves because this should only happen while paused.
+	[_unusedBufferIndexes release];
+	_unusedBufferIndexes = [[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(0, _numberOfBuffers)];
 }
 
 #pragma mark -NSObject

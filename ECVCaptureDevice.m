@@ -56,6 +56,8 @@ typedef struct {
 
 @interface ECVCaptureDevice(Private)
 
+- (void)_updateVideoStorage;
+
 - (UInt32)_microsecondsInFrame;
 - (UInt64)_currentFrameNumber;
 - (ECVUSBTransferList *)_transferListWithFrameRequestSize:(NSUInteger const)frameRequestSize;
@@ -274,11 +276,12 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	[_captureDocument setPaused:YES];
 	[_deinterlacingMode release];
 	_deinterlacingMode = [mode copy];
+	[self _updateVideoStorage];
 	[_captureDocument setPaused:NO];
 	[[self defaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
 }
 - (NSUserDefaults *)defaults { return _defaults; }
-- (ECVVideoStorage *)videoStorage { return _videoStorage; }
+- (ECVVideoStorage *)videoStorage { return [[_videoStorage retain] autorelease]; }
 
 #pragma mark -
 
@@ -356,6 +359,17 @@ ECVNoDeviceError:
 }
 
 #pragma mark -ECVCaptureDevice(Private)
+
+- (void)_updateVideoStorage
+{
+	[_captureDocument setPaused:YES];
+	[_videoStorage release];
+	_videoStorage = nil;
+	if([self videoFormat]) _videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithVideoFormat:[self videoFormat] deinterlacingMode:[self deinterlacingMode] pixelFormat:[self pixelFormat]];
+	[_captureDocument setPaused:NO];
+}
+
+#pragma mark -
 
 - (UInt32)_microsecondsInFrame
 {
@@ -478,6 +492,8 @@ ECVNoDeviceError:
 	[_videoSource release];
 	[_videoFormat release];
 
+	[_videoStorage release];
+
 	[super dealloc];
 }
 
@@ -522,10 +538,10 @@ ECVNoDeviceError:
 	[_captureDocument setPaused:YES];
 	[_videoFormat release];
 	_videoFormat = [format retain];
+	[self _updateVideoStorage];
 	[_captureDocument setPaused:NO];
 	// TODO: Save preference... Serialization?
 }
-
 
 
 
@@ -545,7 +561,7 @@ ECVNoDeviceError:
 {
 	[_readLock lock];
 	_read = YES;
-	_videoStorage = [[[ECVVideoStorage preferredVideoStorageClass] alloc] initWithVideoFormat:[self videoFormat] deinterlacingMode:[self deinterlacingMode] pixelFormat:[self pixelFormat]];
+	[_videoStorage empty];
 	[_readLock unlock];
 	[NSThread detachNewThreadSelector:@selector(_read) toTarget:self withObject:nil];
 }
@@ -553,8 +569,6 @@ ECVNoDeviceError:
 {
 	[_readLock lock];
 	_read = NO;
-	[_videoStorage release];
-	_videoStorage = nil;
 	[_readLock unlock];
 }
 - (void)pushVideoFrame:(ECVVideoFrame *const)frame

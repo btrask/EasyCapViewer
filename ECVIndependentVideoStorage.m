@@ -63,6 +63,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return frame;
 }
 
+#pragma mark -
+
+- (void)empty
+{
+	[_currentFrame release];
+	_currentFrame = nil;
+}
+
+#pragma mark -NSObject
+
+- (void)dealloc
+{
+	[_currentFrame release];
+	[super dealloc];
+}
+
 @end
 
 @implementation ECVIndependentVideoFrame

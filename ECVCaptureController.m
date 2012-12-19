@@ -600,7 +600,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 - (ECVVideoFormat *)videoFormat
 {
-	return [[self videoDevice] videoFormat];
+	return [[[self videoDevice] videoStorage] videoFormat];
 }
 
 

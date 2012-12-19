@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVDebug.h"
 
 // Models
+@class ECVVideoFormat;
 @class ECVVideoStorage;
 #import "ECVPixelBuffer.h"
 @class ECVVideoFrame;
@@ -41,20 +42,20 @@ typedef NSInteger ECVDeinterlacingModeType;
 {
 	@private
 	ECVVideoStorage *_videoStorage;
+	ECVVideoFormat *_videoFormat;
 	ECVMutablePixelBuffer *_pendingBuffer;
 }
 
 + (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type;
 
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage;
-@property(readonly) ECVVideoStorage *videoStorage;
-@property(readonly) ECVIntegerSize pixelSize;
-@property(readonly) NSUInteger frameGroupSize;
-@property(readonly) ECVMutablePixelBuffer *pendingBuffer;
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat;
+- (ECVVideoStorage *)videoStorage;
+- (ECVVideoFormat *)videoFormat;
+- (ECVMutablePixelBuffer *)pendingBuffer;
 
-- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType)fieldType;
-- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType;
-- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point;
+- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType const)fieldType;
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType const)fieldType;
+- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint const)point;
 - (ECVPixelBufferDrawingOptions)drawingOptions;
 - (void)clearPendingBuffer;
 

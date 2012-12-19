@@ -29,7 +29,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Other Sources
 #import "ECVFoundationAdditions.h"
 
-static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fieldType)
+@interface ECVDeinterlacedVideoFormat : ECVVideoFormat
+{
+	@protected
+	ECVVideoFormat *_nativeFormat;
+}
+
+- (id)initWithNativeFormat:(ECVVideoFormat *const)format;
+- (ECVVideoFormat *)nativeFormat;
+- (ECVIntegerSize)doubleNativeFrameSize;
+- (QTTime)halfNativeFrameRate;
+
+@end
+
+@interface ECVDeinterlacedVideoFormat_LineDoubleHQ : ECVDeinterlacedVideoFormat
+@end
+@interface ECVDeinterlacedVideoFormat_Weave : ECVDeinterlacedVideoFormat
+@end
+@interface ECVDeinterlacedVideoFormat_Alternate : ECVDeinterlacedVideoFormat
+@end
+@interface ECVDeinterlacedVideoFormat_Drop : ECVDeinterlacedVideoFormat
+@end
+@interface ECVDeinterlacedVideoFormat_LineDoubleLQ : ECVDeinterlacedVideoFormat
+@end
+@interface ECVDeinterlacedVideoFormat_Blur : ECVDeinterlacedVideoFormat
+@end
+
+static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType const fieldType)
 {
 	switch(fieldType) {
 		case ECVHighField: return ECVDrawToHighField;
@@ -44,7 +70,7 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark +ECVDeinterlacingMode
 
-+ (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType)type
++ (Class)deinterlacingModeWithType:(ECVDeinterlacingModeType const)type
 {
 	Class c = Nil;
 	switch(type) {
@@ -68,10 +94,11 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
-- (id)initWithVideoStorage:(ECVVideoStorage *)storage
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
 {
 	if((self = [super init])) {
 		_videoStorage = storage;
+		_videoFormat = [videoFormat retain];
 	}
 	return self;
 }
@@ -79,17 +106,13 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 {
 	return _videoStorage;
 }
-- (ECVIntegerSize)pixelSize
+- (ECVVideoFormat *)videoFormat
 {
-	return [[_videoStorage videoFormat] frameSize];
+	return [[_videoFormat retain] autorelease];
 }
-- (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint)point
+- (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint const)point
 {
 	return point;
-}
-- (NSUInteger)frameGroupSize
-{
-	return 2;
 }
 - (ECVMutablePixelBuffer *)pendingBuffer
 {
@@ -98,20 +121,20 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -
 
-- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType)fieldType
+- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType const)fieldType
 {
 	[_videoStorage lock];
 	ECVMutablePixelBuffer *const buffer = [_videoStorage nextBuffer];
 	[_videoStorage unlock];
 	return buffer;
 }
-- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType const)fieldType
 {
 	ECVMutablePixelBuffer *const finishedBuffer = [_pendingBuffer autorelease];
 	_pendingBuffer = [[self nextBufferWithFieldType:fieldType] retain];
 	return finishedBuffer;
 }
-- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
+- (void)drawPixelBuffer:(ECVPixelBuffer *const)buffer atPoint:(ECVIntegerPoint const)point
 {
 	[_pendingBuffer lock];
 	[_pendingBuffer drawPixelBuffer:buffer options:[self drawingOptions] atPoint:[self pixelPointForPoint:point]];
@@ -132,6 +155,7 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 - (void)dealloc
 {
+	[_videoFormat release];
 	[_pendingBuffer release];
 	[super dealloc];
 }
@@ -147,13 +171,6 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 	return ECVProgressiveScan;
 }
 
-#pragma mark -ECVDeinterlacingMode
-
-- (NSUInteger)frameGroupSize
-{
-	return 1;
-}
-
 @end
 
 @implementation ECVLineDoubleHQDeinterlacingMode
@@ -167,7 +184,11 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
+{
+	return [super initWithVideoStorage:storage videoFormat:[[[ECVDeinterlacedVideoFormat_LineDoubleHQ alloc] initWithNativeFormat:videoFormat] autorelease]];
+}
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType const)fieldType
 {
 	ECVMutablePixelBuffer *const finishedBuffer = [super finishedBufferWithNextFieldType:fieldType];
 	switch(fieldType) {
@@ -186,7 +207,7 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 	}
 	return finishedBuffer;
 }
-- (void)drawPixelBuffer:(ECVPixelBuffer *)buffer atPoint:(ECVIntegerPoint)point
+- (void)drawPixelBuffer:(ECVPixelBuffer *const)buffer atPoint:(ECVIntegerPoint const)point
 {
 	[super drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){point.x, point.y + _rowOffset}];
 }
@@ -208,7 +229,11 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
+{
+	return [super initWithVideoStorage:storage videoFormat:[[[ECVDeinterlacedVideoFormat_Weave alloc] initWithNativeFormat:videoFormat] autorelease]];
+}
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType const)fieldType
 {
 	_drawingOptions = ECVFieldTypeDrawingOptions(fieldType);
 	ECVMutablePixelBuffer *const finishedBuffer = [super finishedBufferWithNextFieldType:fieldType];
@@ -237,6 +262,10 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
+{
+	return [super initWithVideoStorage:storage videoFormat:[[[ECVDeinterlacedVideoFormat_Alternate alloc] initWithNativeFormat:videoFormat] autorelease]];
+}
 - (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
 {
 	ECVMutablePixelBuffer *const finishedBuffer = [super finishedBufferWithNextFieldType:fieldType];
@@ -255,12 +284,7 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVIntegerSize)pixelSize
-{
-	ECVIntegerSize const s = [super pixelSize];
-	return (ECVIntegerSize){s.width, s.height / 2};
-}
-- (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint)point
+- (ECVIntegerPoint)pixelPointForPoint:(ECVIntegerPoint const)point
 {
 	return (ECVIntegerPoint){point.x, point.y / 2};
 }
@@ -278,14 +302,14 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
-- (NSUInteger)frameGroupSize
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
 {
-	return 1;
+	return [super initWithVideoStorage:storage videoFormat:[[[ECVDeinterlacedVideoFormat_Drop alloc] initWithNativeFormat:videoFormat] autorelease]];
 }
 
 #pragma mark -
 
-- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType)fieldType
+- (ECVMutablePixelBuffer *)nextBufferWithFieldType:(ECVFieldType const)fieldType
 {
 	return ECVLowField == fieldType ? nil : [super nextBufferWithFieldType:fieldType];
 }
@@ -301,6 +325,13 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 	return ECVLineDoubleLQ;
 }
 
+#pragma mark -ECVDeinterlacingMode
+
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
+{
+	return [super initWithVideoStorage:storage videoFormat:[[[ECVDeinterlacedVideoFormat_LineDoubleLQ alloc] initWithNativeFormat:videoFormat] autorelease]];
+}
+
 @end
 
 @implementation ECVBlurDeinterlacingMode
@@ -314,7 +345,11 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 
 #pragma mark -ECVDeinterlacingMode
 
-- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType)fieldType
+- (id)initWithVideoStorage:(ECVVideoStorage *const)storage videoFormat:(ECVVideoFormat *const)videoFormat
+{
+	return [super initWithVideoStorage:storage videoFormat:[[[ECVDeinterlacedVideoFormat_Blur alloc] initWithNativeFormat:videoFormat] autorelease]];
+}
+- (ECVMutablePixelBuffer *)finishedBufferWithNextFieldType:(ECVFieldType const)fieldType
 {
 	[_blurBuffer lock];
 	[_blurBuffer drawPixelBuffer:[self pendingBuffer] options:ECVDrawBlended];
@@ -333,4 +368,80 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType fiel
 	[super dealloc];
 }
 
+@end
+
+@implementation ECVDeinterlacedVideoFormat
+
+#pragma mark -ECVDeinterlacedVideoFormat
+
+- (id)initWithNativeFormat:(ECVVideoFormat *const)format
+{
+	NSParameterAssert([format isInterlaced]);
+	if((self = [super init])) {
+		_nativeFormat = [format retain];
+	}
+	return self;
+}
+- (ECVVideoFormat *)nativeFormat
+{
+	return [[_nativeFormat retain] autorelease];
+}
+- (ECVIntegerSize)doubleNativeFrameSize
+{
+	ECVIntegerSize const s = [_nativeFormat frameSize];
+	return (ECVIntegerSize){s.width, s.height*2};
+}
+- (QTTime)halfNativeFrameRate
+{
+	QTTime f = [_nativeFormat frameRate];
+	f.timeScale *= 2;
+	return f;
+}
+
+#pragma mark -ECVVideoFormat(ECVAbstract)
+
+- (NSString *)localizedName { return [_nativeFormat localizedName]; }
+- (ECVIntegerSize)frameSize { return [_nativeFormat frameSize]; }
+- (BOOL)isInterlaced { return NO; }
+- (BOOL)isProgressive { return YES; }
+- (QTTime)frameRate { return [_nativeFormat frameRate]; }
+- (BOOL)is60Hz { return [_nativeFormat is60Hz]; }
+- (BOOL)is50Hz { return [_nativeFormat is50Hz]; }
+
+#pragma mark -NSObject<NSObject>
+
+- (NSUInteger)hash
+{
+	return (intptr_t)self >> 4;
+}
+- (BOOL)isEqual:(id const)obj
+{
+	return NO;
+}
+
+@end
+
+@implementation ECVDeinterlacedVideoFormat_LineDoubleHQ
+- (ECVIntegerSize)frameSize { return [self doubleNativeFrameSize]; }
+- (NSUInteger)frameGroupSize { return 2; }
+@end
+@implementation ECVDeinterlacedVideoFormat_Weave
+- (ECVIntegerSize)frameSize { return [self doubleNativeFrameSize]; }
+- (NSUInteger)frameGroupSize { return 1; }
+@end
+@implementation ECVDeinterlacedVideoFormat_Alternate
+- (ECVIntegerSize)frameSize { return [self doubleNativeFrameSize]; }
+- (NSUInteger)frameGroupSize { return 2; }
+@end
+@implementation ECVDeinterlacedVideoFormat_Drop
+- (NSUInteger)frameGroupSize { return 1; }
+- (QTTime)frameRate { return [self halfNativeFrameRate]; }
+- (BOOL)is60Hz { return NO; }
+- (BOOL)is50Hz { return NO; }
+@end
+@implementation ECVDeinterlacedVideoFormat_LineDoubleLQ
+- (NSUInteger)frameGroupSize { return 2; }
+@end
+@implementation ECVDeinterlacedVideoFormat_Blur
+- (NSUInteger)frameGroupSize { return 1; }
 @end
