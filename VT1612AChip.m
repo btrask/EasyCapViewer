@@ -70,7 +70,8 @@ static u_int8_t VT1612ARecordGain(CGFloat v)
 
 #pragma mark -VT1612AChip
 
-@synthesize device;
+- (id<VT1612ADevice>)device { return device; }
+- (void)setDevice:(id<VT1612ADevice> const)obj { device = obj; }
 
 #pragma mark -
 

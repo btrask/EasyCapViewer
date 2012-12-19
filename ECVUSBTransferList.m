@@ -58,9 +58,9 @@ bail:
 	[self release];
 	return nil;
 }
-@synthesize numberOfTransfers = _numberOfTransfers;
-@synthesize microframesPerTransfer = _microframesPerTransfer;
-@synthesize frameRequestSize = _frameRequestSize;
+- (NSUInteger)numberOfTransfers { return _numberOfTransfers; }
+- (NSUInteger)microframesPerTransfer { return _microframesPerTransfer; }
+- (NSUInteger)frameRequestSize { return _frameRequestSize; }
 
 #pragma mark -
 

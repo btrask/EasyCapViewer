@@ -27,10 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet id<VT1612ADevice> device;
 }
 
-@property(assign) id<VT1612ADevice> device;
+- (id<VT1612ADevice>)device;
+- (void)setDevice:(id<VT1612ADevice> const)obj;
 
 - (BOOL)initialize;
-@property(readonly) NSString *vendorAndRevisionString;
+- (NSString *)vendorAndRevisionString;
 
 @end
 

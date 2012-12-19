@@ -37,9 +37,9 @@ typedef struct {
 }
 
 - (id)initWithInterface:(IOUSBInterfaceInterface300 **)interface numberOfTransfers:(NSUInteger)numberOfTransfers microframesPerTransfer:(NSUInteger)microframesPerTransfer frameRequestSize:(NSUInteger)frameRequestSize;
-@property(readonly) NSUInteger numberOfTransfers;
-@property(readonly) NSUInteger microframesPerTransfer;
-@property(readonly) NSUInteger frameRequestSize;
+- (NSUInteger)numberOfTransfers;
+- (NSUInteger)microframesPerTransfer;
+- (NSUInteger)frameRequestSize;
 
 - (ECVUSBTransfer *)transfers;
 - (ECVUSBTransfer *)transferAtIndex:(NSUInteger)i;
