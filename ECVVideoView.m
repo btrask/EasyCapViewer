@@ -223,14 +223,14 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	}
 
 	[self _drawFrame:frame];
-	if(frame) _frameDropStrength *= 0.75f;
-	else _frameDropStrength = 1.0f;
-	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
-	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
 
 	// hacks on hacks on hacks
 	for(ECVOverlay *const o in [self overlays]) [o drawWithFrame:_outputRect inVideoView:self playing:YES];
 
+	if(frame) _frameDropStrength *= 0.75f;
+	else _frameDropStrength = 1.0f;
+	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
+	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
 	[self _drawResizeHandle];
 	glFinish();
 	[frame unlock];
@@ -352,12 +352,11 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(![frame lockIfHasBytes]) frame = nil;
 	[self _drawFrame:frame];
 	BOOL const playing = CVDisplayLinkIsRunning(_displayLink);
-	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:playing];
 
 	// hacks on hacks on hacks
 	for(ECVOverlay *const o in [self overlays]) [o drawWithFrame:_outputRect inVideoView:self playing:playing];
 
-
+	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:playing];
 	[self _drawResizeHandle];
 	glFinish();
 	[frame unlock];
