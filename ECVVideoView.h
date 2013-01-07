@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVVideoFrame;
 
 @protocol ECVVideoViewCell, ECVVideoViewDelegate;
+@class ECVOverlay;
 
 @interface ECVVideoView : NSOpenGLView
 #if defined(MAC_OS_X_VERSION_10_6)
@@ -49,6 +50,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSMutableData *_textureNames;
 	NSMutableArray *_frames;
 	CGFloat _frameDropStrength;
+
+	NSMutableArray *_overlays;
 }
 
 // These methods must be called from the main thread.
@@ -67,6 +70,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(nonatomic, retain) NSCell<ECVVideoViewCell> *cell;
 - (void)pushFrame:(ECVVideoFrame *)frame;
 
+- (NSArray *)overlays;
+- (void)addOverlay:(ECVOverlay *const)overlay;
+- (void)removeOverlay:(ECVOverlay *const)overlay;
+
 @end
 
 @protocol ECVVideoViewCell <NSObject>
@@ -77,4 +84,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @protocol ECVVideoViewDelegate <NSObject>
 @optional
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent;
+@end
+
+@interface ECVOverlay : NSObject <ECVVideoViewCell>
+{
+	@private
+	NSOpenGLContext *_context;
+	NSRect _frame;
+	NSImage *_image;
+	GLuint _textureName;
+	NSString *_name;
+	NSUInteger _tag;
+	CGFloat _opacity;
+}
+
+- (id)initWithOpenGLContext:(NSOpenGLContext *const)context;
+
+- (NSRect)frame;
+- (void)setFrame:(NSRect const)frame;
+- (NSImage *)image;
+- (void)setImage:(NSImage *const)image;
+- (NSString *)name;
+- (void)setName:(NSString *const)str;
+- (NSUInteger)tag;
+- (void)setTag:(NSUInteger const)tag;
+- (CGFloat)opacity;
+- (void)setOpacity:(CGFloat const)val;
+
 @end

@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Controllers
 #import "ECVConfigController.h"
+#import "ECVOverlayController.h"
 
 static NSString *const ECVAspectRatio2Key = @"ECVAspectRatio2";
 static NSString *const ECVVsyncKey = @"ECVVsync";
@@ -438,6 +439,9 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 }
 - (void)dealloc
 {
+	ECVOverlayController *const overlay = [ECVOverlayController sharedOverlayController];
+	if([overlay captureController] == self) [overlay setCaptureController:nil];
+
 	[_playButtonCell release];
 	[_movieRecorder release];
 	[super dealloc];
@@ -556,6 +560,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 {
 	if([self isFullScreen]) [self performSelector:@selector(_hideMenuBar) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]];
 	[[ECVConfigController sharedConfigController] setCaptureDocument:[self captureDocument]];
+	[[ECVOverlayController sharedOverlayController] setCaptureController:self];
 }
 - (void)windowDidResignMain:(NSNotification *)aNotif
 {
@@ -604,6 +609,11 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 }
 
 
+// Hack
 
+- (ECVVideoView *)videoView
+{
+	return videoView;
+}
 
 @end

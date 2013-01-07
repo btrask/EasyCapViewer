@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 // Controllers
 #import "ECVConfigController.h"
 #import "ECVErrorLogController.h"
+#import "ECVOverlayController.h"
 
 // Other Sources
 #import "ECVAppKitAdditions.h"
@@ -96,6 +97,10 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 - (IBAction)configureDevice:(id)sender
 {
 	[[ECVConfigController sharedConfigController] ECV_toggleWindow:sender];
+}
+- (IBAction)showOverlayPanel:(id)sender
+{
+	[[ECVOverlayController sharedOverlayController] ECV_toggleWindow:sender];
 }
 - (IBAction)showErrorLog:(id)sender
 {

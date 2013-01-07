@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 + (id)sharedController;
 
 - (IBAction)configureDevice:(id)sender;
+- (IBAction)showOverlayPanel:(id)sender;
 - (IBAction)showErrorLog:(id)sender;
 
 @property(readonly) IONotificationPortRef notificationPort;

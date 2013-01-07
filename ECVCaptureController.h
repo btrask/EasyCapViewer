@@ -131,4 +131,8 @@ typedef NSInteger ECVCropBorder;
 - (ECVVideoFormat *)videoFormat;
 
 
+// Hack
+
+- (ECVVideoView *)videoView;
+
 @end

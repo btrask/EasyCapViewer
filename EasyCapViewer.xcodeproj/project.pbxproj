@@ -104,7 +104,10 @@
 		B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
+		B568CA53169A5C9F00CA274D /* ECVHUDButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B568CA52169A5C9F00CA274D /* ECVHUDButtonCell.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
+		B593731A16980ED400AC9BA6 /* ECVOverlayController.m in Sources */ = {isa = PBXBuildFile; fileRef = B593731916980ED400AC9BA6 /* ECVOverlayController.m */; };
+		B593731C16980F6800AC9BA6 /* ECVOverlay.xib in Resources */ = {isa = PBXBuildFile; fileRef = B593731B16980F6800AC9BA6 /* ECVOverlay.xib */; };
 		B5BC261A166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
 		B5BC261B166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
 		B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */; };
@@ -259,8 +262,13 @@
 		B5060070132794E400B2F202 /* ECVPixelBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBuffer.m; sourceTree = "<group>"; };
 		B54758471507B29B006C0E44 /* ECVEM2860Device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVEM2860Device.h; sourceTree = "<group>"; };
 		B54758481507B29B006C0E44 /* ECVEM2860Device.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVEM2860Device.m; sourceTree = "<group>"; };
+		B568CA51169A5C9F00CA274D /* ECVHUDButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDButtonCell.h; sourceTree = "<group>"; };
+		B568CA52169A5C9F00CA274D /* ECVHUDButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDButtonCell.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
+		B593731816980ED400AC9BA6 /* ECVOverlayController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVOverlayController.h; sourceTree = "<group>"; };
+		B593731916980ED400AC9BA6 /* ECVOverlayController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVOverlayController.m; sourceTree = "<group>"; };
+		B593731B16980F6800AC9BA6 /* ECVOverlay.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVOverlay.xib; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacingMode.m; sourceTree = "<group>"; };
 		B5BC2618166F78EC0036490F /* ECVVideoFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoFormat.h; sourceTree = "<group>"; };
@@ -328,6 +336,8 @@
 				0E26A998100314E6002FF95A /* ECVConfigController.m */,
 				0E984D69108C65D100CB469C /* ECVErrorLogController.h */,
 				0E984D6A108C65D100CB469C /* ECVErrorLogController.m */,
+				B593731816980ED400AC9BA6 /* ECVOverlayController.h */,
+				B593731916980ED400AC9BA6 /* ECVOverlayController.m */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -386,6 +396,8 @@
 				0E7FFD1A1089CEE0000C8217 /* ECVPlayButtonCell.m */,
 				0E7FFD1C1089D60A000C8217 /* ECVCropCell.h */,
 				0E7FFD1D1089D60A000C8217 /* ECVCropCell.m */,
+				B568CA51169A5C9F00CA274D /* ECVHUDButtonCell.h */,
+				B568CA52169A5C9F00CA274D /* ECVHUDButtonCell.m */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -494,6 +506,7 @@
 				0E9F9B3E10F679B800935C48 /* ECVCapture.xib */,
 				0E9F9B3F10F679B800935C48 /* ECVConfig.xib */,
 				0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */,
+				B593731B16980F6800AC9BA6 /* ECVOverlay.xib */,
 				0E9F9B3310F679A400935C48 /* InfoPlist.strings */,
 				0E9F9B2910F679A400935C48 /* Credits.rtf */,
 				0E9F9B3110F679A400935C48 /* ECVMenu.strings */,
@@ -663,6 +676,7 @@
 				0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */,
 				0E9FAA861107A5A7005C55CE /* ECVDevices.plist in Resources */,
 				B5E3760E14928D2F00ED097A /* EasyCapViewer.icns in Resources */,
+				B593731C16980F6800AC9BA6 /* ECVOverlay.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -754,6 +768,8 @@
 				B5BC29D4167F68970036490F /* ECVVideoSource.m in Sources */,
 				B5BC2A10167F6FAB0036490F /* ECVEM2860Device.m in Sources */,
 				B5BC2A6A168132100036490F /* ECVAudioTarget.m in Sources */,
+				B593731A16980ED400AC9BA6 /* ECVOverlayController.m in Sources */,
+				B568CA53169A5C9F00CA274D /* ECVHUDButtonCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -227,6 +227,10 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	else _frameDropStrength = 1.0f;
 	[self _drawFrameDropIndicatorWithStrength:_frameDropStrength];
 	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:YES];
+
+	// hacks on hacks on hacks
+	for(ECVOverlay *const o in [self overlays]) [o drawWithFrame:_outputRect inVideoView:self playing:YES];
+
 	[self _drawResizeHandle];
 	glFinish();
 	[frame unlock];
@@ -347,7 +351,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVVideoFrame *frame = [_videoStorage currentFrame];
 	if(![frame lockIfHasBytes]) frame = nil;
 	[self _drawFrame:frame];
-	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:CVDisplayLinkIsRunning(_displayLink)];
+	BOOL const playing = CVDisplayLinkIsRunning(_displayLink);
+	[[self cell] drawWithFrame:_outputRect inVideoView:self playing:playing];
+
+	// hacks on hacks on hacks
+	for(ECVOverlay *const o in [self overlays]) [o drawWithFrame:_outputRect inVideoView:self playing:playing];
+
+
 	[self _drawResizeHandle];
 	glFinish();
 	[frame unlock];
@@ -423,6 +433,9 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	[_frames release];
 	CVDisplayLinkRelease(_displayLink);
 	[_cell release];
+
+	[_overlays release];
+
 	[super dealloc];
 }
 
@@ -435,6 +448,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
 	ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
 	[self windowDidChangeScreenProfile:nil];
+	_overlays = [[NSMutableArray alloc] init];
 }
 
 #pragma mark -<NSWindowDelegate>
@@ -452,6 +466,24 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(drawing) [self startDrawing];
 }
 
+
+// hacks
+
+- (NSArray *)overlays
+{
+	return [[_overlays copy] autorelease];
+}
+- (void)addOverlay:(ECVOverlay *const)overlay
+{
+	[_overlays addObject:overlay];
+	[self setNeedsDisplay:YES];
+}
+- (void)removeOverlay:(ECVOverlay *const)overlay
+{
+	[_overlays removeObjectIdenticalTo:overlay];
+	[self setNeedsDisplay:YES];
+}
+
 @end
 
 @implementation NSObject(ECVVideoViewDelegate)
@@ -459,6 +491,92 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 - (BOOL)videoView:(ECVVideoView *)sender handleKeyDown:(NSEvent *)anEvent
 {
 	return NO;
+}
+
+@end
+
+@implementation ECVOverlay
+
+- (id)initWithOpenGLContext:(NSOpenGLContext *const)context
+{
+	if((self = [super init])) {
+		_context = [context retain];
+		_name = [@"" copy];
+		_opacity = 0.5;
+	}
+	return self;
+}
+
+- (NSRect)frame
+{
+	return _frame;
+}
+- (void)setFrame:(NSRect const)frame
+{
+	_frame = frame;
+}
+- (NSImage *)image
+{
+	return [[_image retain] autorelease];
+}
+- (void)setImage:(NSImage *const)image
+{
+	if(BTEqualObjects(image, _image)) return;
+	[_image release];
+	_image = [image retain];
+
+	CGLContextObj const contextObj = ECVLockContext(_context);
+	ECVGLError(glDeleteTextures(1, &_textureName));
+	NSBitmapImageRep *const rep = (NSBitmapImageRep *)[image bestRepresentationForDevice:nil];
+	if(rep) {
+		_textureName = [rep ECV_textureName];
+	}
+	ECVUnlockContext(contextObj);
+}
+- (NSString *)name
+{
+	return [[_name retain] autorelease];
+}
+- (void)setName:(NSString *const)str
+{
+	[_name autorelease];
+	_name = [str copy];
+}
+- (NSUInteger)tag
+{
+	return _tag;
+}
+- (void)setTag:(NSUInteger const)tag
+{
+	_tag = tag;
+}
+- (CGFloat)opacity
+{
+	return _opacity;
+}
+- (void)setOpacity:(CGFloat const)val
+{
+	_opacity = val;
+}
+
+- (void)dealloc
+{
+	ECVGLError(glDeleteTextures(1, &_textureName));
+	[_context release];
+	[_image release];
+	[_name release];
+	[super dealloc];
+}
+
+- (void)drawWithFrame:(NSRect)r inVideoView:(ECVVideoView *)v playing:(BOOL)flag
+{
+	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
+	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, _textureName));
+	GLfloat const c = 1.0f;
+	glColor4f(c, c, c, _opacity);
+	NSRect const f = [self frame];
+	ECVGLDrawTextureInRectWithBounds(NSMakeRect(NSMinX(r) + NSWidth(r)*NSMinX(f), NSMinY(r) + NSHeight(r)*NSMinY(f), NSWidth(r)*NSWidth(f), NSHeight(r)*NSHeight(f)), (NSRect){{0, 0}, [_image size]});
+	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 
 @end
