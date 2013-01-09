@@ -38,6 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)is60Hz;
 - (BOOL)is50Hz;
 
+- (void)addToMenu:(NSMenu *const)menu;
+- (NSComparisonResult)compare:(ECVVideoFormat *const)obj;
+
 @end
 
 @interface ECVCommon60HzVideoFormat : ECVVideoFormat

@@ -33,20 +33,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	NSMenu *const menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
 	NSMutableSet *const set = [[formats mutableCopy] autorelease];
-	NSMenuItem *const label60Hz = [menu addItemWithTitle:@"60Hz" action:NULL keyEquivalent:@""];
+	NSMenuItem *const label60Hz = [menu addItemWithTitle:NSLocalizedString(@"60Hz", nil) action:@selector(ECVDisabledMenuItemSelector) keyEquivalent:@""];
 	[ECVVideoFormat_NTSC_M _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_PAL_60 _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_NTSC_443_60Hz _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_PAL_M _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_NTSC_J _addFromSet:set toMenu:menu];
-	NSMenuItem *const label50Hz = [menu addItemWithTitle:@"50Hz" action:NULL keyEquivalent:@""];
+	NSMenuItem *const label50Hz = [menu addItemWithTitle:NSLocalizedString(@"50Hz", nil) action:@selector(ECVDisabledMenuItemSelector) keyEquivalent:@""];
 	[ECVVideoFormat_PAL_BGDHI _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_NTSC_443_50Hz _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_PAL_N _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_NTSC_N _addFromSet:set toMenu:menu];
 	[ECVVideoFormat_SECAM _addFromSet:set toMenu:menu];
-	[label60Hz setEnabled:NO];
-	[label50Hz setEnabled:NO];
+	if([set count]) {
+		[menu addItemWithTitle:NSLocalizedString(@"Other", nil) action:@selector(ECVDisabledMenuItemSelector) keyEquivalent:@""];
+		NSArray *const remaining = [[set allObjects] sortedArrayUsingSelector:@selector(compare:)];
+		for(ECVVideoFormat *const f in remaining) [f addToMenu:menu];
+	}
 	return menu;
 }
 
@@ -56,10 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	ECVVideoFormat *const format = [set member:self];
 	if(!format) return;
-	NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[format localizedName] action:NULL keyEquivalent:@""] autorelease];
-	[item setIndentationLevel:1];
-	[item setRepresentedObject:format];
-	[menu addItem:item];
+	[format addToMenu:menu];
 	[set removeObject:format];
 }
 
@@ -76,6 +76,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	QTTime const r = [self frameRate];
 	if(NSOrderedSame == QTTimeCompare(r, QTMakeTime(1, 50))) return YES;
 	return NO;
+}
+
+#pragma mark -
+
+- (void)addToMenu:(NSMenu *const)menu
+{
+	NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[self localizedName] action:NULL keyEquivalent:@""] autorelease];
+	[item setIndentationLevel:1];
+	[item setRepresentedObject:self];
+	[menu addItem:item];
+}
+- (NSComparisonResult)compare:(ECVVideoFormat *const)obj
+{
+	return [[self localizedName] compare:[obj localizedName]];
 }
 
 #pragma mark -NSObject<NSObject>
