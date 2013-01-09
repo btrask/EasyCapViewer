@@ -55,6 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 + (void)_addFromSet:(NSMutableSet *const)set toMenu:(NSMenu *const)menu
 {
 	ECVVideoFormat *const format = [set member:self];
+	if(!format) return;
 	NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[format localizedName] action:NULL keyEquivalent:@""] autorelease];
 	[item setIndentationLevel:1];
 	[item setRepresentedObject:format];
