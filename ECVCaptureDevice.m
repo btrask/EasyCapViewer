@@ -323,30 +323,24 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 - (BOOL)setAlternateInterface:(UInt8)alternateSetting
 {
-	IOReturn const error = (*_USBInterface)->SetAlternateInterface(_USBInterface, alternateSetting);
+	IOReturn const error = ECVIOReturn2((*_USBInterface)->SetAlternateInterface(_USBInterface, alternateSetting));
 	switch(error) {
 		case kIOReturnSuccess: return YES;
 		case kIOReturnNoDevice:
 		case kIOReturnNotResponding: return NO;
 	}
-	ECVIOReturn(error);
-ECVGenericError:
-ECVNoDeviceError:
 	return NO;
 }
 - (BOOL)controlRequestWithType:(u_int8_t)type request:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(inout void *const)data
 {
 	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
-	IOReturn const error = (*_USBInterface)->ControlRequest(_USBInterface, 0, &r);
+	IOReturn const error = ECVIOReturn2((*_USBInterface)->ControlRequest(_USBInterface, 0, &r));
 	if(r.wLenDone != r.wLength) return NO;
 	switch(error) {
 		case kIOReturnSuccess: return YES;
-		case kIOUSBPipeStalled: ECVIOReturn((*_USBInterface)->ClearPipeStall(_USBInterface, 0)); return YES;
+		case kIOUSBPipeStalled: (void)ECVIOReturn2((*_USBInterface)->ClearPipeStall(_USBInterface, 0)); return YES;
 		case kIOReturnNotResponding: return NO;
 	}
-	ECVIOReturn(error);
-ECVGenericError:
-ECVNoDeviceError:
 	return NO;
 }
 - (BOOL)readRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(out void *const)data
