@@ -235,7 +235,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		NSMutableDictionary *properties = nil;
 		(void)ECVIOReturn2(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
 		[properties autorelease];
-		_productName = [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] copy];
+		_productName = [[[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] copy];
 		if(![_productName length]) _productName = [NSLocalizedString(@"Capture Device", nil) retain];
 
 		NSString *const mainSuiteName = [[[NSBundle bundleForClass:[self class]] infoDictionary] objectForKey:@"ECVMainSuiteName"];
