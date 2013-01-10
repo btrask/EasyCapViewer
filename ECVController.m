@@ -58,18 +58,6 @@ ECVGenericError:
 
 static ECVController *ECVSharedController;
 
-@interface ECVCaptureDevice(ECVDisplaying)
-
-- (void)ECV_display;
-
-@end
-
-@interface NSError(ECVDisplaying)
-
-- (void)ECV_display;
-
-@end
-
 @interface ECVController(Private)
 
 - (void)_userActivity;

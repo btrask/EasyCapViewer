@@ -350,7 +350,7 @@ enum {
 }
 - (OSType)pixelFormat
 {
-	return k2vuyPixelFormat; // Native format is kYVYU422PixelFormat, but we convert because QuickTime can't handle it (surprisingly).
+	return k2vuyPixelFormat;
 }
 
 @end
