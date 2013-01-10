@@ -23,6 +23,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @implementation ECVVideoSource
 
+#pragma mark +ECVVideoSource
+
++ (id)source
+{
+	return [[[self alloc] init] autorelease];
+}
+
 #pragma mark -ECVVideoSource
 
 - (BOOL)SVideo { return NO; }

@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @interface ECVVideoFormat : NSObject
 
 + (NSMenu *)menuWithVideoFormats:(NSSet *const)formats;
++ (id)format;
 
 @end
 

@@ -172,8 +172,8 @@ enum {
 - (id)initWithService:(io_service_t)service
 {
 	if((self = [super initWithService:service])) {
-		[self setVideoSource:[ECVSTK11X0VideoSource_SVideo new]]; // TODO: Serialization.
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M new]];
+		[self setVideoSource:[ECVSTK11X0VideoSource_SVideo source]]; // TODO: Serialization.
+		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setDevice:self];
 		_VT1612AChip = [[VT1612AChip alloc] init];
@@ -191,11 +191,11 @@ enum {
 - (NSArray *)supportedVideoSources
 {
 	return [NSArray arrayWithObjects:
-		[ECVSTK11X0VideoSource_SVideo new],
-		[ECVSTK11X0VideoSource_Composite1 new],
-		[ECVSTK11X0VideoSource_Composite2 new],
-		[ECVSTK11X0VideoSource_Composite3 new],
-		[ECVSTK11X0VideoSource_Composite4 new],
+		[ECVSTK11X0VideoSource_SVideo source],
+		[ECVSTK11X0VideoSource_Composite1 source],
+		[ECVSTK11X0VideoSource_Composite2 source],
+		[ECVSTK11X0VideoSource_Composite3 source],
+		[ECVSTK11X0VideoSource_Composite4 source],
 		nil];
 }
 - (NSSet *)supportedVideoFormats

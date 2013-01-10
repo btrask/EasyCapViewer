@@ -133,8 +133,8 @@ enum {
 - (id)initWithService:(io_service_t)service
 {
 	if((self = [super initWithService:service])) {
-		[self setVideoSource:[ECVSomagicVideoSource_Generic new]];
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M new]];
+		[self setVideoSource:[ECVSomagicVideoSource_Generic source]];
+		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
 	}
 	return self;
 }
@@ -339,13 +339,13 @@ enum {
 - (NSArray *)supportedVideoSources
 {
 	return [NSArray arrayWithObjects:
-		[ECVSomagicVideoSource_Generic new],
+		[ECVSomagicVideoSource_Generic source],
 		nil];
 }
 - (NSSet *)supportedVideoFormats
 {
 	return [NSSet setWithObjects:
-		[ECVVideoFormat_NTSC_M new],
+		[ECVVideoFormat_NTSC_M format],
 		nil];
 }
 - (OSType)pixelFormat

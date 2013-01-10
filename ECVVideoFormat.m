@@ -52,6 +52,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	}
 	return menu;
 }
++ (id)format
+{
+	return [[[self alloc] init] autorelease];
+}
 
 #pragma mark +ECVVideoFormat(Private)
 
