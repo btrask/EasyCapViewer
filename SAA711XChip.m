@@ -150,7 +150,7 @@ enum {
 }
 - (NSUserDefaults *)defaults
 {
-	return [[self device] defaults];
+	return [(ECVCaptureDevice *)[self device] defaults];
 }
 
 #pragma mark -
@@ -211,7 +211,7 @@ enum {
 
 - (BOOL)initialize
 {
-	ECVVideoFormat *const f = [[self device] videoFormat];
+	ECVVideoFormat *const f = [(ECVCaptureDevice *)[self device] videoFormat];
 	// Based on Table 184 in the datasheet.
 	struct {
 		u_int8_t reg;
@@ -281,7 +281,7 @@ enum {
 
 - (u_int8_t)_SAA711XMODESource
 {
-	ECVVideoSource *const s = [[self device] videoSource];
+	ECVVideoSource *const s = [(ECVCaptureDevice *)[self device] videoSource];
 	return [s SVideo] ? SAA711XMODESVideoAI12_YGain : SAA711XMODECompositeAI11;
 }
 - (u_int8_t)_SAA711XCHXENOutputControl
@@ -306,7 +306,7 @@ enum {
 }
 - (u_int8_t)_SAA711XLuminanceControl
 {
-	ECVVideoSource *const s = [[self device] videoSource];
+	ECVVideoSource *const s = [(ECVCaptureDevice *)[self device] videoSource];
 	return [s SVideo] ? SAA711XBYPSChrominanceTrapCombBypass : SAA711XYCOMBAdaptiveLuminanceComb;
 }
 - (u_int8_t)_SAAA711XRTP0OutputPolarity
