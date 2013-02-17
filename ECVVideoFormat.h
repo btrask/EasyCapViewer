@@ -26,6 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 + (NSMenu *)menuWithVideoFormats:(NSSet *const)formats;
 + (id)format;
 
+- (NSSize)displaySizeWithAspectRatio:(NSSize const)ratio;
+
+- (void)addToMenu:(NSMenu *const)menu;
+- (NSComparisonResult)compare:(ECVVideoFormat *const)obj;
+
 @end
 
 @interface ECVVideoFormat(ECVAbstract)
@@ -38,11 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (QTTime)frameRate;
 - (BOOL)is60Hz;
 - (BOOL)is50Hz;
-
-- (NSSize)displaySizeWithAspectRatio:(NSSize const)ratio;
-
-- (void)addToMenu:(NSMenu *const)menu;
-- (NSComparisonResult)compare:(ECVVideoFormat *const)obj;
 
 @end
 

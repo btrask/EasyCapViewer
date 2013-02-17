@@ -69,21 +69,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -ECVVideoFormat
 
-- (BOOL)is60Hz
-{
-	QTTime const r = [self frameRate];
-	if(NSOrderedSame == QTTimeCompare(r, QTMakeTime(1001, 60000))) return YES;
-	return NO;
-}
-- (BOOL)is50Hz
-{
-	QTTime const r = [self frameRate];
-	if(NSOrderedSame == QTTimeCompare(r, QTMakeTime(1, 50))) return YES;
-	return NO;
-}
-
-#pragma mark -
-
 - (NSSize)displaySizeWithAspectRatio:(NSSize const)ratio
 {
 	ECVIntegerSize const s = [self frameSize];
