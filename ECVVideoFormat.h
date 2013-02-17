@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)is60Hz;
 - (BOOL)is50Hz;
 
+- (NSSize)displaySizeWithAspectRatio:(NSSize const)ratio;
+
 - (void)addToMenu:(NSMenu *const)menu;
 - (NSComparisonResult)compare:(ECVVideoFormat *const)obj;
 

@@ -84,6 +84,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #pragma mark -
 
+- (NSSize)displaySizeWithAspectRatio:(NSSize const)ratio
+{
+	ECVIntegerSize const s = [self frameSize];
+	return NSMakeSize(s.height / ratio.height * ratio.width, s.height);
+}
+
+#pragma mark -
+
 - (void)addToMenu:(NSMenu *const)menu
 {
 	NSMenuItem *const item = [[[NSMenuItem alloc] initWithTitle:[self localizedName] action:NULL keyEquivalent:@""] autorelease];

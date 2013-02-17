@@ -72,3 +72,7 @@ static NSInteger ECVRationalToNSInteger(ECVRational r)
 	NSCParameterAssert(1 == r.denom);
 	return r.numer;
 }
+static BOOL ECVRationalIsOne(ECVRational const r)
+{
+	return r.numer == r.denom && r.denom;
+}

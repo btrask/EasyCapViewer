@@ -318,9 +318,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 }
 - (NSSize)outputSize
 {
-	NSSize const ratio = [videoView aspectRatio];
-	ECVIntegerSize const s = [[self videoFormat] frameSize];
-	return NSMakeSize(s.height / ratio.height * ratio.width, s.height);
+	return [[self videoFormat] displaySizeWithAspectRatio:[videoView aspectRatio]];
 }
 - (NSSize)outputSizeWithScale:(NSInteger const)scale
 {
