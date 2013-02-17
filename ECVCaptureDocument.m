@@ -125,7 +125,8 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 		if(!BTEqualObjects(ECVAudioInputNone, UID)) {
 			if(UID) _audioDevice = [[ECVAudioInput deviceWithUID:UID] retain];
 			if(!_audioDevice) _audioDevice = [[[self videoDevice] builtInAudioInput] retain];
-			
+			[_audioDevice setDelegate:self];
+			[_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
 		}
 	}
 	return [[_audioDevice retain] autorelease];
@@ -136,6 +137,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 		[self setPaused:YES];
 		[_audioDevice release];
 		_audioDevice = [device retain];
+		[_audioDevice setDelegate:self];
 		[_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
 		[self setPaused:NO];
 	}
@@ -154,6 +156,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 {
 	if(_audioDevice) [self addTarget:_audioTarget];
 	[_videoDevice play];
+	[_audioDevice start];
 	[_targets makeObjectsPerformSelector:@selector(play)];
 	[[ECVController sharedController] noteCaptureDocumentStartedPlaying:self];
 }
@@ -162,6 +165,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 	[[ECVController sharedController] noteCaptureDocumentStoppedPlaying:self];
 	[_targets makeObjectsPerformSelector:@selector(stop)];
 	[_videoDevice stop];
+	[_audioDevice stop];
 	[self removeTarget:_audioTarget];
 }
 - (void)pushVideoFrame:(ECVVideoFrame *const)frame
@@ -226,6 +230,7 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 		_targets = [[NSMutableArray alloc] init];
 		_audioTarget = [[ECVAudioTarget alloc] init];
 		[_audioTarget setCaptureDocument:self];
+		[_audioTarget setAudioOutput:[ECVAudioOutput defaultDevice]];
 
 		[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 	}
