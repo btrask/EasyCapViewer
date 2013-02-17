@@ -50,13 +50,6 @@
 			<key>ECVConfigurableQuality</key>
 			<true/>
 		</dict>
-		<key>'yuv2'</key>
-		<dict>
-			<key>ECVCodecLabel</key>
-			<string>Raw Y'CbCr</string>
-			<key>ECVConfigurableQuality</key>
-			<false/>
-		</dict>
 	</dict>
 </dict>
 </plist>
