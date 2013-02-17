@@ -397,17 +397,17 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		[NSNumber numberWithInteger:ECVCropBorderNone], ECVCropBorderKey,
 		nil]];
 
-	NSWindow *const w = [self window];
-	ECVIntegerSize const s = [[self videoFormat] frameSize];
-	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
-	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-
 	_cropSourceAspectRatio = [[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
 	_cropBorder = [[self defaults] integerForKey:ECVCropBorderKey];
 	[videoView setCropRect:NSRectFromString([[self defaults] objectForKey:ECVCropRectKey])];
 	[self _updateCropRect];
 
 	[self setAspectRatio:[self sizeWithAspectRatio:[[[self defaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
+
+	NSWindow *const w = [self window];
+	NSSize const s = [self outputSize];
+	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
+	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 
 	[videoView setVsync:[[self defaults] boolForKey:ECVVsyncKey]];
 	[videoView setShowDroppedFrames:[[self defaults] boolForKey:ECVShowDroppedFramesKey]];
