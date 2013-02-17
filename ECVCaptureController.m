@@ -129,14 +129,10 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[options setVideoQuality:[videoQualitySlider doubleValue]];
-	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
 	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
 	[options setCropRect:[self cropRect]];
 	[options setUpconvertsFromMono:[[[self captureDocument] audioTarget] upconvertsFromMono]];
-	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
-
-	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
-	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[self videoFormat] frameRate]]];
+	[options setFrameRate:[[self videoFormat] frameRate]];
 
 	NSError *error = nil;
 	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
