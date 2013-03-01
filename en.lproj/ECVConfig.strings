@@ -1,18 +1,24 @@
 "Configure Device" = "Configure Device";
+
+"Video" = "Video";
+"Format:" = "Format:";
+"Deinterlace:" = "Deinterlace:";
 "Source:" = "Source:";
+
+"Full Resolution" = "Full Resolution";
+"Line Double" = "Line Double";
+"Weave" = "Weave";
+"Alternate (LQ)" = "Alternate (LQ)";
+
+"Half Resolution" = "Half Resolution";
+"Drop" = "Drop";
+"Blur" = "Blur";
+
 "Brightness:" = "Brightness:";
 "Contrast:" = "Contrast:";
-"Tint:" = "Tint:";
 "Color:" = "Color:";
-"Deinterlace:" = "Deinterlace:";
-"Weave" = "Weave";
-"Alternate" = "Alternate";
-"None" = "None";
-"Blur" = "Blur";
-"Drop" = "Drop";
-"Format:" = "Format:";
-"Volume:" = "Volume:";
-"Video" = "Video";
+"Tint:" = "Tint:";
+
 "Audio" = "Audio";
-"Line Double" = "Line Double";
 "Upconvert from mono" = "Upconvert from mono";
+"Volume:" = "Volume:";

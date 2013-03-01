@@ -61,8 +61,8 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 - (id)initWithService:(io_service_t)service
 {
 	if((self = [super initWithService:service])) {
-		[self setVideoSource:[ECVEM2860VideoSource_SVideo new]];
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M new]];
+		[self setVideoSource:[ECVEM2860VideoSource_SVideo source]];
+		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setDevice:self];
 	}
@@ -78,8 +78,8 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 - (NSArray *)supportedVideoSources
 {
 	return [NSArray arrayWithObjects:
-		[ECVEM2860VideoSource_SVideo new],
-		[ECVEM2860VideoSource_Composite new],
+		[ECVEM2860VideoSource_SVideo source],
+		[ECVEM2860VideoSource_Composite source],
 		nil];
 }
 - (NSSet *)supportedVideoFormats

@@ -16,5 +16,19 @@
 		<key>ECVProductID</key>
 		<integer>10337</integer>
 	</dict>
+	<key>ECVSomagicDevice</key>
+	<dict>
+		<key>ECVVendorID</key>
+		<integer>7304</integer>
+		<key>ECVProductID</key>
+		<integer>63</integer>
+	</dict>
+	<key>ECVSomagicDevice_Unloaded</key>
+	<dict>
+		<key>ECVVendorID</key>
+		<integer>7304</integer>
+		<key>ECVProductID</key>
+		<integer>7</integer>
+	</dict>
 </dict>
 </plist>

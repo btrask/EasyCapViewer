@@ -263,17 +263,17 @@ enum {
 - (NSSet *)supportedVideoFormats
 {
 	return [NSSet setWithObjects:
-		[ECVVideoFormat_NTSC_M new],
-		[ECVVideoFormat_PAL_60 new],
-		[ECVVideoFormat_NTSC_443_60Hz new],
-		[ECVVideoFormat_PAL_M new],
-		[ECVVideoFormat_NTSC_J new],
+		[ECVVideoFormat_NTSC_M format],
+		[ECVVideoFormat_PAL_60 format],
+		[ECVVideoFormat_NTSC_443_60Hz format],
+		[ECVVideoFormat_PAL_M format],
+		[ECVVideoFormat_NTSC_J format],
 
-		[ECVVideoFormat_PAL_BGDHI new],
-		[ECVVideoFormat_NTSC_443_50Hz new],
-		[ECVVideoFormat_PAL_N new],
-		[ECVVideoFormat_NTSC_N new],
-		[ECVVideoFormat_SECAM new],
+		[ECVVideoFormat_PAL_BGDHI format],
+		[ECVVideoFormat_NTSC_443_50Hz format],
+		[ECVVideoFormat_PAL_N format],
+		[ECVVideoFormat_NTSC_N format],
+		[ECVVideoFormat_SECAM format],
 		nil];
 }
 

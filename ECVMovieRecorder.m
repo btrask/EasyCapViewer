@@ -66,7 +66,6 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 @synthesize outputSize = _outputSize;
 @synthesize cropRect = _cropRect;
 @synthesize upconvertsFromMono = _upconvertsFromMono;
-@synthesize recordsToRAM = _recordsToRAM;
 @synthesize frameRate = _frameRate;
 
 #pragma mark -
@@ -305,13 +304,8 @@ enum {
 
 	Movie movie = NULL;
 	DataHandler dataHandler = NULL;
-	if([options recordsToRAM]) {
-		ECVLog(ECVError, @"Record to RAM option is temporarily not supported.");
-		// I've spent too many hours trying to figure this out.
-	} else {
-		ECVOSErr(QTNewDataReferenceFromCFURL((CFURLRef)[options URL], kNilOptions, &dataRef, &dataRefType));
-		ECVOSErr(CreateMovieStorage(dataRef, dataRefType, 'TVOD', smSystemScript, createMovieFileDeleteCurFile, &dataHandler, &movie));
-	}
+	ECVOSErr(QTNewDataReferenceFromCFURL((CFURLRef)[options URL], kNilOptions, &dataRef, &dataRefType));
+	ECVOSErr(CreateMovieStorage(dataRef, dataRefType, 'TVOD', smSystemScript, createMovieFileDeleteCurFile, &dataHandler, &movie));
 
 	if(!movie) {
 		ECVLog(ECVError, @"Movie could not be created.");
@@ -364,12 +358,8 @@ enum {
 	if(videoMedia) ECVOSErr(EndMediaEdits(videoMedia));
 	if(audioMedia) ECVOSErr(EndMediaEdits(audioMedia));
 
-	if([options recordsToRAM]) {
-		// TODO: Implement.
-	} else {
-		UpdateMovieInStorage(movie, dataHandler);
-		CloseMovieStorage(dataHandler);
-	}
+	UpdateMovieInStorage(movie, dataHandler);
+	CloseMovieStorage(dataHandler);
 
 	if(soundDescription) DisposeHandle((Handle)soundDescription);
 	if(audioBuffer) free(audioBuffer);

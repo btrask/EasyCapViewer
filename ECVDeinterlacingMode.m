@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 // Other Sources
 #import "ECVFoundationAdditions.h"
+#import "ECVRational.h"
 
 @interface ECVDeinterlacedVideoFormat : ECVVideoFormat
 {
@@ -37,8 +38,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (id)initWithNativeFormat:(ECVVideoFormat *const)format;
 - (ECVVideoFormat *)nativeFormat;
-- (ECVIntegerSize)doubleNativeFrameSize;
-- (QTTime)halfNativeFrameRate;
+
+@end
+
+@interface ECVDeinterlacedVideoFormat(ECVAbstract)
+
+- (ECVRational)spatialResolution;
+- (ECVRational)temporalResolution;
 
 @end
 
@@ -386,27 +392,37 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType cons
 {
 	return [[_nativeFormat retain] autorelease];
 }
-- (ECVIntegerSize)doubleNativeFrameSize
+
+#pragma mark -ECVVideoFormat
+
+- (NSSize)displaySizeWithAspectRatio:(NSSize const)ratio
 {
 	ECVIntegerSize const s = [_nativeFormat frameSize];
-	return (ECVIntegerSize){s.width, s.height*2};
-}
-- (QTTime)halfNativeFrameRate
-{
-	QTTime f = [_nativeFormat frameRate];
-	f.timeScale *= 2;
-	return f;
+	return NSMakeSize(s.height / ratio.height * ratio.width * 2, s.height * 2);
 }
 
 #pragma mark -ECVVideoFormat(ECVAbstract)
 
 - (NSString *)localizedName { return [_nativeFormat localizedName]; }
-- (ECVIntegerSize)frameSize { return [_nativeFormat frameSize]; }
+- (ECVIntegerSize)frameSize
+{
+	ECVIntegerSize r = [_nativeFormat frameSize];
+	ECVRational const s = [self spatialResolution];
+	r.height = r.height * 2 * s.numer / s.denom;
+	return r;
+}
 - (BOOL)isInterlaced { return NO; }
 - (BOOL)isProgressive { return YES; }
-- (QTTime)frameRate { return [_nativeFormat frameRate]; }
-- (BOOL)is60Hz { return [_nativeFormat is60Hz]; }
-- (BOOL)is50Hz { return [_nativeFormat is50Hz]; }
+- (QTTime)frameRate
+{
+	QTTime r = [_nativeFormat frameRate];
+	ECVRational const s = [self temporalResolution];
+	r.timeValue *= s.denom;
+	r.timeScale *= s.numer;
+	return r;
+}
+- (BOOL)is60Hz { return ECVRationalIsOne([self temporalResolution]) && [_nativeFormat is60Hz]; }
+- (BOOL)is50Hz { return ECVRationalIsOne([self temporalResolution]) && [_nativeFormat is50Hz]; }
 
 #pragma mark -NSObject<NSObject>
 
@@ -422,26 +438,32 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType cons
 @end
 
 @implementation ECVDeinterlacedVideoFormat_LineDoubleHQ
-- (ECVIntegerSize)frameSize { return [self doubleNativeFrameSize]; }
+- (ECVRational)spatialResolution { return ECVMakeRational(1, 1); }
+- (ECVRational)temporalResolution { return ECVMakeRational(1, 1); }
 - (NSUInteger)frameGroupSize { return 2; }
 @end
 @implementation ECVDeinterlacedVideoFormat_Weave
-- (ECVIntegerSize)frameSize { return [self doubleNativeFrameSize]; }
+- (ECVRational)spatialResolution { return ECVMakeRational(1, 1); }
+- (ECVRational)temporalResolution { return ECVMakeRational(1, 1); }
 - (NSUInteger)frameGroupSize { return 1; }
 @end
 @implementation ECVDeinterlacedVideoFormat_Alternate
-- (ECVIntegerSize)frameSize { return [self doubleNativeFrameSize]; }
+- (ECVRational)spatialResolution { return ECVMakeRational(1, 1); }
+- (ECVRational)temporalResolution { return ECVMakeRational(1, 1); }
 - (NSUInteger)frameGroupSize { return 2; }
 @end
 @implementation ECVDeinterlacedVideoFormat_Drop
+- (ECVRational)spatialResolution { return ECVMakeRational(1, 2); }
+- (ECVRational)temporalResolution { return ECVMakeRational(1, 2); }
 - (NSUInteger)frameGroupSize { return 1; }
-- (QTTime)frameRate { return [self halfNativeFrameRate]; }
-- (BOOL)is60Hz { return NO; }
-- (BOOL)is50Hz { return NO; }
 @end
 @implementation ECVDeinterlacedVideoFormat_LineDoubleLQ
+- (ECVRational)spatialResolution { return ECVMakeRational(1, 2); }
+- (ECVRational)temporalResolution { return ECVMakeRational(1, 1); }
 - (NSUInteger)frameGroupSize { return 2; }
 @end
 @implementation ECVDeinterlacedVideoFormat_Blur
+- (ECVRational)spatialResolution { return ECVMakeRational(1, 2); }
+- (ECVRational)temporalResolution { return ECVMakeRational(1, 1); }
 - (NSUInteger)frameGroupSize { return 1; }
 @end

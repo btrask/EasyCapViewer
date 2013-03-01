@@ -103,11 +103,13 @@
 		B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */; };
 		B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
+		B516D80716E149D6006E6031 /* ECVOverlay.xib in Resources */ = {isa = PBXBuildFile; fileRef = B516D80416E149D6006E6031 /* ECVOverlay.xib */; };
+		B516D80816E149D6006E6031 /* ECVOverlayController.m in Sources */ = {isa = PBXBuildFile; fileRef = B516D80616E149D6006E6031 /* ECVOverlayController.m */; };
+		B516D81516E14A92006E6031 /* ECVHUDButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B516D81416E14A92006E6031 /* ECVHUDButtonCell.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
-		B568CA53169A5C9F00CA274D /* ECVHUDButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B568CA52169A5C9F00CA274D /* ECVHUDButtonCell.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
-		B593731A16980ED400AC9BA6 /* ECVOverlayController.m in Sources */ = {isa = PBXBuildFile; fileRef = B593731916980ED400AC9BA6 /* ECVOverlayController.m */; };
-		B593731C16980F6800AC9BA6 /* ECVOverlay.xib in Resources */ = {isa = PBXBuildFile; fileRef = B593731B16980F6800AC9BA6 /* ECVOverlay.xib */; };
+		B5B4F5D8169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */ = {isa = PBXBuildFile; fileRef = B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */; };
+		B5B4F5D9169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */ = {isa = PBXBuildFile; fileRef = B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */; };
 		B5BC261A166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
 		B5BC261B166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
 		B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */; };
@@ -118,6 +120,7 @@
 		B5BC2A10167F6FAB0036490F /* ECVEM2860Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B54758481507B29B006C0E44 /* ECVEM2860Device.m */; };
 		B5BC2A11167F6FAB0036490F /* ECVEM2860Device.m in Sources */ = {isa = PBXBuildFile; fileRef = B54758481507B29B006C0E44 /* ECVEM2860Device.m */; };
 		B5BC2A6A168132100036490F /* ECVAudioTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2A68168132100036490F /* ECVAudioTarget.m */; };
+		B5C0606D169C6A6700E35266 /* ECVSomagicDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = B5C0606C169C6A6700E35266 /* ECVSomagicDevice.m */; };
 		B5C5BF3B1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5C5BF3C1323AE0300B1E2FE /* ECVDeinterlacingMode.m in Sources */ = {isa = PBXBuildFile; fileRef = B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */; };
 		B5E3760E14928D2F00ED097A /* EasyCapViewer.icns in Resources */ = {isa = PBXBuildFile; fileRef = B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */; };
@@ -260,17 +263,19 @@
 		B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVIndependentVideoStorage.m; sourceTree = "<group>"; };
 		B506006F132794E400B2F202 /* ECVPixelBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelBuffer.h; sourceTree = "<group>"; };
 		B5060070132794E400B2F202 /* ECVPixelBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBuffer.m; sourceTree = "<group>"; };
+		B516D80416E149D6006E6031 /* ECVOverlay.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVOverlay.xib; sourceTree = "<group>"; };
+		B516D80516E149D6006E6031 /* ECVOverlayController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVOverlayController.h; sourceTree = "<group>"; };
+		B516D80616E149D6006E6031 /* ECVOverlayController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVOverlayController.m; sourceTree = "<group>"; };
+		B516D81316E14A92006E6031 /* ECVHUDButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDButtonCell.h; sourceTree = "<group>"; };
+		B516D81416E14A92006E6031 /* ECVHUDButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDButtonCell.m; sourceTree = "<group>"; };
 		B54758471507B29B006C0E44 /* ECVEM2860Device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVEM2860Device.h; sourceTree = "<group>"; };
 		B54758481507B29B006C0E44 /* ECVEM2860Device.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVEM2860Device.m; sourceTree = "<group>"; };
-		B568CA51169A5C9F00CA274D /* ECVHUDButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDButtonCell.h; sourceTree = "<group>"; };
-		B568CA52169A5C9F00CA274D /* ECVHUDButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDButtonCell.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
-		B593731816980ED400AC9BA6 /* ECVOverlayController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVOverlayController.h; sourceTree = "<group>"; };
-		B593731916980ED400AC9BA6 /* ECVOverlayController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVOverlayController.m; sourceTree = "<group>"; };
-		B593731B16980F6800AC9BA6 /* ECVOverlay.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ECVOverlay.xib; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacingMode.m; sourceTree = "<group>"; };
+		B5B4F5D6169E506200B14376 /* ECVSomagicDevice_Unloaded.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVSomagicDevice_Unloaded.h; sourceTree = "<group>"; };
+		B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVSomagicDevice_Unloaded.m; sourceTree = "<group>"; };
 		B5BC2618166F78EC0036490F /* ECVVideoFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoFormat.h; sourceTree = "<group>"; };
 		B5BC2619166F78EC0036490F /* ECVVideoFormat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVVideoFormat.m; sourceTree = "<group>"; };
 		B5BC2805167E75CF0036490F /* ECVUSBTransferList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVUSBTransferList.h; sourceTree = "<group>"; };
@@ -282,6 +287,8 @@
 		B5BC2A67168132100036490F /* ECVAudioTarget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAudioTarget.h; sourceTree = "<group>"; };
 		B5BC2A68168132100036490F /* ECVAudioTarget.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVAudioTarget.m; sourceTree = "<group>"; };
 		B5BC2ABE16813C740036490F /* ECVAVTarget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVAVTarget.h; sourceTree = "<group>"; };
+		B5C0606B169C6A6700E35266 /* ECVSomagicDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVSomagicDevice.h; sourceTree = "<group>"; };
+		B5C0606C169C6A6700E35266 /* ECVSomagicDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVSomagicDevice.m; sourceTree = "<group>"; };
 		B5E3760D14928D2F00ED097A /* EasyCapViewer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = EasyCapViewer.icns; sourceTree = "<group>"; };
 		B5F09992131CE00A0066FEB5 /* ECVFrameRateConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFrameRateConverter.h; sourceTree = "<group>"; };
 		B5F09993131CE00A0066FEB5 /* ECVFrameRateConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFrameRateConverter.m; sourceTree = "<group>"; };
@@ -336,8 +343,8 @@
 				0E26A998100314E6002FF95A /* ECVConfigController.m */,
 				0E984D69108C65D100CB469C /* ECVErrorLogController.h */,
 				0E984D6A108C65D100CB469C /* ECVErrorLogController.m */,
-				B593731816980ED400AC9BA6 /* ECVOverlayController.h */,
-				B593731916980ED400AC9BA6 /* ECVOverlayController.m */,
+				B516D80516E149D6006E6031 /* ECVOverlayController.h */,
+				B516D80616E149D6006E6031 /* ECVOverlayController.m */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -354,6 +361,7 @@
 				B5BC2806167E75CF0036490F /* ECVUSBTransferList.m */,
 				0E78CD500FC9F8E500E9C148 /* STK1160 */,
 				B54758411507B270006C0E44 /* eMPIA EM2860 */,
+				B5C0606F169C6A6C00E35266 /* Somagic */,
 				0EB0723410B0D89D00B9575B /* Chipsets */,
 				B50600D31327BC2F00B2F202 /* Video */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
@@ -388,6 +396,8 @@
 				0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */,
 				0EDC66951129186A00AF1803 /* ECVHUDSwitchButtonCell.h */,
 				0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */,
+				B516D81316E14A92006E6031 /* ECVHUDButtonCell.h */,
+				B516D81416E14A92006E6031 /* ECVHUDButtonCell.m */,
 				0E8CE216107BF845004F05A7 /* ECVTickMarkView.h */,
 				0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */,
 				0E7FFC4310899D4B000C8217 /* ECVDividerView.h */,
@@ -396,8 +406,6 @@
 				0E7FFD1A1089CEE0000C8217 /* ECVPlayButtonCell.m */,
 				0E7FFD1C1089D60A000C8217 /* ECVCropCell.h */,
 				0E7FFD1D1089D60A000C8217 /* ECVCropCell.m */,
-				B568CA51169A5C9F00CA274D /* ECVHUDButtonCell.h */,
-				B568CA52169A5C9F00CA274D /* ECVHUDButtonCell.m */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -506,7 +514,7 @@
 				0E9F9B3E10F679B800935C48 /* ECVCapture.xib */,
 				0E9F9B3F10F679B800935C48 /* ECVConfig.xib */,
 				0E9F9B4010F679B800935C48 /* ECVErrorLog.xib */,
-				B593731B16980F6800AC9BA6 /* ECVOverlay.xib */,
+				B516D80416E149D6006E6031 /* ECVOverlay.xib */,
 				0E9F9B3310F679A400935C48 /* InfoPlist.strings */,
 				0E9F9B2910F679A400935C48 /* Credits.rtf */,
 				0E9F9B3110F679A400935C48 /* ECVMenu.strings */,
@@ -563,6 +571,17 @@
 				B54758481507B29B006C0E44 /* ECVEM2860Device.m */,
 			);
 			name = "eMPIA EM2860";
+			sourceTree = "<group>";
+		};
+		B5C0606F169C6A6C00E35266 /* Somagic */ = {
+			isa = PBXGroup;
+			children = (
+				B5C0606B169C6A6700E35266 /* ECVSomagicDevice.h */,
+				B5C0606C169C6A6700E35266 /* ECVSomagicDevice.m */,
+				B5B4F5D6169E506200B14376 /* ECVSomagicDevice_Unloaded.h */,
+				B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */,
+			);
+			name = Somagic;
 			sourceTree = "<group>";
 		};
 		B5C268C61652D84D0015D032 /* Component */ = {
@@ -676,7 +695,7 @@
 				0E9F9B4510F679B800935C48 /* ECVMenu.xib in Resources */,
 				0E9FAA861107A5A7005C55CE /* ECVDevices.plist in Resources */,
 				B5E3760E14928D2F00ED097A /* EasyCapViewer.icns in Resources */,
-				B593731C16980F6800AC9BA6 /* ECVOverlay.xib in Resources */,
+				B516D80716E149D6006E6031 /* ECVOverlay.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -719,6 +738,7 @@
 				B5BC2807167E75CF0036490F /* ECVUSBTransferList.m in Sources */,
 				B5BC29D3167F68970036490F /* ECVVideoSource.m in Sources */,
 				B5BC2A11167F6FAB0036490F /* ECVEM2860Device.m in Sources */,
+				B5B4F5D9169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -768,8 +788,10 @@
 				B5BC29D4167F68970036490F /* ECVVideoSource.m in Sources */,
 				B5BC2A10167F6FAB0036490F /* ECVEM2860Device.m in Sources */,
 				B5BC2A6A168132100036490F /* ECVAudioTarget.m in Sources */,
-				B593731A16980ED400AC9BA6 /* ECVOverlayController.m in Sources */,
-				B568CA53169A5C9F00CA274D /* ECVHUDButtonCell.m in Sources */,
+				B5C0606D169C6A6700E35266 /* ECVSomagicDevice.m in Sources */,
+				B5B4F5D8169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */,
+				B516D80816E149D6006E6031 /* ECVOverlayController.m in Sources */,
+				B516D81516E14A92006E6031 /* ECVHUDButtonCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -960,7 +982,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				ONLY_ACTIVE_ARCH = YES;
@@ -988,7 +1009,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_REZFLAGS = "-d ppc_$(ppc) -d i386_$(i386)";

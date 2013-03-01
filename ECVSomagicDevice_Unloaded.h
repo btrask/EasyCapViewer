@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Ben Trask
+/* Copyright (c) 2013, Ben Trask
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -19,31 +19,8 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import "ECVVideoSource.h"
+#import "ECVCaptureDevice.h"
 
-@implementation ECVVideoSource
-
-#pragma mark +ECVVideoSource
-
-+ (id)source
-{
-	return [[[self alloc] init] autorelease];
-}
-
-#pragma mark -ECVVideoSource
-
-- (BOOL)SVideo { return NO; }
-- (BOOL)composite { return NO; }
-
-#pragma mark -NSObject<NSObject>
-
-- (NSUInteger)hash
-{
-	return [[self class] hash];
-}
-- (BOOL)isEqual:(id const)obj
-{
-	return [[self class] isEqual:[obj class]];
-}
+@interface ECVSomagicDevice_Unloaded : ECVCaptureDevice
 
 @end

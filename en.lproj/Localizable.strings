@@ -28,6 +28,10 @@
 "No Input" = "No Input";
 "Capture Device" = "Capture Device";
 
+"60Hz" = "60Hz";
+"50Hz" = "50Hz";
+"Other" = "Other";
+
 "NTSC" = "NTSC";
 "PAL-60" = "PAL-60";
 "NTSC 4.43 (60Hz)" = "NTSC 4.43 (60Hz)";
@@ -39,3 +43,4 @@
 "PAL-N" = "PAL-N";
 "NTSC-N" = "NTSC-N";
 "SECAM" = "SECAM";
+

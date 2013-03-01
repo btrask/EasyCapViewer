@@ -130,14 +130,10 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	[options setVideoCodec:(OSType)[videoCodecPopUp selectedTag]];
 	[options setVideoQuality:[videoQualitySlider doubleValue]];
-	[options setStretchOutput:NSOnState == [stretchTotAspectRatio state]];
 	[options setOutputSize:ECVIntegerSizeFromNSSize([self outputSize])];
 	[options setCropRect:[self cropRect]];
 	[options setUpconvertsFromMono:[[[self captureDocument] audioTarget] upconvertsFromMono]];
-	[options setRecordsToRAM:NSOnState == [recordToRAMButton state]];
-
-	ECVRational const frameRateRatio = ECVMakeRational(1, NSOnState == [halfFrameRate state] ? 2 : 1);
-	[options setFrameRate:[ECVFrameRateConverter frameRateWithRatio:frameRateRatio ofFrameRate:[[self videoFormat] frameRate]]];
+	[options setFrameRate:[[self videoFormat] frameRate]];
 
 	NSError *error = nil;
 	ECVMovieRecorder *const recorder = [[[ECVMovieRecorder alloc] initWithOptions:options error:&error] autorelease];
@@ -323,9 +319,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 }
 - (NSSize)outputSize
 {
-	NSSize const ratio = [videoView aspectRatio];
-	ECVIntegerSize const s = [[self videoFormat] frameSize];
-	return NSMakeSize(s.height / ratio.height * ratio.width, s.height);
+	return [[self videoFormat] displaySizeWithAspectRatio:[videoView aspectRatio]];
 }
 - (NSSize)outputSizeWithScale:(NSInteger const)scale
 {
@@ -404,17 +398,17 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		[NSNumber numberWithInteger:ECVCropBorderNone], ECVCropBorderKey,
 		nil]];
 
-	NSWindow *const w = [self window];
-	ECVIntegerSize const s = [[self videoFormat] frameSize];
-	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
-	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-
 	_cropSourceAspectRatio = [[self defaults] integerForKey:ECVCropSourceAspectRatioKey];
 	_cropBorder = [[self defaults] integerForKey:ECVCropBorderKey];
 	[videoView setCropRect:NSRectFromString([[self defaults] objectForKey:ECVCropRectKey])];
 	[self _updateCropRect];
 
 	[self setAspectRatio:[self sizeWithAspectRatio:[[[self defaults] objectForKey:ECVAspectRatio2Key] unsignedIntegerValue]]];
+
+	NSWindow *const w = [self window];
+	NSSize const s = [self outputSize];
+	[w setFrame:[w frameRectForContentRect:NSMakeRect(0.0f, 0.0f, s.width, s.height)] display:NO];
+	[w setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 
 	[videoView setVsync:[[self defaults] boolForKey:ECVVsyncKey]];
 	[videoView setShowDroppedFrames:[[self defaults] boolForKey:ECVShowDroppedFramesKey]];
