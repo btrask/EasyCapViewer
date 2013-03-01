@@ -22,6 +22,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVOverlayController.h"
 #import "ECVCaptureController.h"
 #import "ECVVideoView.h"
+#import "ECVDebug.h"
 
 enum {
 	ECVDisplayFullScreen = 0,
@@ -30,10 +31,23 @@ enum {
 	ECVDisplayBottomLeft = 3,
 	ECVDisplayBottomRight = 4,
 };
+static NSRect ECVFrameFromPosition(NSInteger const x)
+{
+	switch(x) {
+		case ECVDisplayFullScreen: return NSMakeRect(0, 0, 1, 1);
+		case ECVDisplayTopLeft: return NSMakeRect(0, 0, 0.5, 0.5);
+		case ECVDisplayTopRight: return NSMakeRect(0.5, 0, 0.5, 0.5);
+		case ECVDisplayBottomLeft: return NSMakeRect(0, 0.5, 0.5, 0.5);
+		case ECVDisplayBottomRight: return NSMakeRect(0.5, 0.5, 0.5, 0.5);
+	}
+	ECVCAssertNotReached(@"Invalid position");
+	return NSZeroRect;
+}
 
 @interface ECVOverlayController(Private)
 
 - (void)_update;
+- (NSInteger)_unoccupiedCorner;
 
 @end
 
@@ -56,10 +70,12 @@ enum {
 	if(NSOKButton == [p runModal]) {
 		ECVVideoView *const v = [[self captureController] videoView];
 		ECVOverlay *const o = [[[ECVOverlay alloc] initWithOpenGLContext:[v openGLContext]] autorelease];
-		[o setFrame:NSMakeRect(0, 0, 0.5, 0.5)];
-		[o setTag:ECVDisplayTopLeft];
+		NSInteger const corner = ((_lastCorner++) % 4) + ECVDisplayTopLeft;
+		[o setFrame:ECVFrameFromPosition(corner)];
+		[o setTag:corner];
 		[o setImage:[[[NSImage alloc] initWithContentsOfURL:[p URL]] autorelease]];
 		[o setName:[[[p URL] path] lastPathComponent]];
+		[o setOpacity:[opacitySlider doubleValue]];
 		[v addOverlay:o];
 		[self _update];
 		[overlayPopup selectItemAtIndex:[[overlayPopup menu] indexOfItemWithRepresentedObject:o]];
@@ -83,15 +99,7 @@ enum {
 - (IBAction)changeOverlayFrame:(id)sender
 {
 	ECVOverlay *const o = [[overlayPopup selectedItem] representedObject];
-	NSRect f = NSZeroRect;
-	switch([sender selectedTag]) {
-		case ECVDisplayFullScreen: f = NSMakeRect(0, 0, 1, 1); break;
-		case ECVDisplayTopLeft: f = NSMakeRect(0, 0, 0.5, 0.5); break;
-		case ECVDisplayTopRight: f = NSMakeRect(0.5, 0, 0.5, 0.5); break;
-		case ECVDisplayBottomLeft: f = NSMakeRect(0, 0.5, 0.5, 0.5); break;
-		case ECVDisplayBottomRight: f = NSMakeRect(0.5, 0.5, 0.5, 0.5); break;
-		default: return;
-	}
+	NSRect f = ECVFrameFromPosition([sender selectedTag]);
 	[o setFrame:f];
 	[o setTag:[sender selectedTag]];
 	ECVCaptureController *const c = [self captureController];

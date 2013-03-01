@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	IBOutlet NSPopUpButton *displayPopup;
 	IBOutlet NSSlider *opacitySlider;
 	ECVCaptureController *_captureController;
+	NSInteger _lastCorner;
 }
 
 + (id)sharedOverlayController;
