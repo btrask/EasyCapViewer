@@ -415,6 +415,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[videoView setMagFilter:[[self defaults] integerForKey:ECVMagFilterKey]];
 
 	[self setFullScreen:YES];
+	[[ECVOverlayController sharedOverlayController] showWindow:self];
 	[super windowDidLoad];
 
 	[self performSelector:@selector(play:) withObject:nil afterDelay:1.0];
