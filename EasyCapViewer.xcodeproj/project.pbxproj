@@ -103,6 +103,7 @@
 		B50600661327948000B2F202 /* ECVIndependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */; };
 		B5060071132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
 		B5060072132794E400B2F202 /* ECVPixelBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = B5060070132794E400B2F202 /* ECVPixelBuffer.m */; };
+		B516D83316E14B5C006E6031 /* ECVHUDButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B516D83216E14B5C006E6031 /* ECVHUDButtonCell.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
 		B5B4F5D8169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */ = {isa = PBXBuildFile; fileRef = B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */; };
@@ -260,6 +261,8 @@
 		B50600651327948000B2F202 /* ECVIndependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVIndependentVideoStorage.m; sourceTree = "<group>"; };
 		B506006F132794E400B2F202 /* ECVPixelBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVPixelBuffer.h; sourceTree = "<group>"; };
 		B5060070132794E400B2F202 /* ECVPixelBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVPixelBuffer.m; sourceTree = "<group>"; };
+		B516D83116E14B5C006E6031 /* ECVHUDButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVHUDButtonCell.h; sourceTree = "<group>"; };
+		B516D83216E14B5C006E6031 /* ECVHUDButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVHUDButtonCell.m; sourceTree = "<group>"; };
 		B54758471507B29B006C0E44 /* ECVEM2860Device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVEM2860Device.h; sourceTree = "<group>"; };
 		B54758481507B29B006C0E44 /* ECVEM2860Device.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVEM2860Device.m; sourceTree = "<group>"; };
 		B58A144E1309C96700487B2D /* ECVDependentVideoStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDependentVideoStorage.h; sourceTree = "<group>"; };
@@ -386,6 +389,8 @@
 				0E8CE1D0107BE953004F05A7 /* ECVHUDSliderCell.m */,
 				0EDC66951129186A00AF1803 /* ECVHUDSwitchButtonCell.h */,
 				0EDC66961129186A00AF1803 /* ECVHUDSwitchButtonCell.m */,
+				B516D83116E14B5C006E6031 /* ECVHUDButtonCell.h */,
+				B516D83216E14B5C006E6031 /* ECVHUDButtonCell.m */,
 				0E8CE216107BF845004F05A7 /* ECVTickMarkView.h */,
 				0E8CE217107BF845004F05A7 /* ECVTickMarkView.m */,
 				0E7FFC4310899D4B000C8217 /* ECVDividerView.h */,
@@ -776,6 +781,7 @@
 				B5BC2A6A168132100036490F /* ECVAudioTarget.m in Sources */,
 				B5C0606D169C6A6700E35266 /* ECVSomagicDevice.m in Sources */,
 				B5B4F5D8169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */,
+				B516D83316E14B5C006E6031 /* ECVHUDButtonCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
