@@ -420,7 +420,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[_playButtonCell setAction:@selector(togglePlaying:)];
 	[videoView setCell:_playButtonCell];
 
-	[w center];
+	[self setFullScreen:YES];
 	[super windowDidLoad];
 }
 - (void)setDocumentEdited:(BOOL)flag {} // We keep track of recording, not the document.
