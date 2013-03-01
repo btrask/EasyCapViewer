@@ -416,6 +416,8 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	[self setFullScreen:YES];
 	[super windowDidLoad];
+
+	[self performSelector:@selector(play:) withObject:nil afterDelay:1.0];
 }
 - (void)setDocumentEdited:(BOOL)flag {} // We keep track of recording, not the document.
 
