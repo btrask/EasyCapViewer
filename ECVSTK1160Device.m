@@ -173,7 +173,7 @@ enum {
 {
 	if((self = [super initWithService:service])) {
 		[self setVideoSource:[ECVSTK11X0VideoSource_SVideo source]]; // TODO: Serialization.
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
+		[self setVideoFormat:[ECVVideoFormat_PAL_BGDHI format]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setDevice:self];
 		_VT1612AChip = [[VT1612AChip alloc] init];

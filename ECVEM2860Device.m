@@ -62,7 +62,7 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 {
 	if((self = [super initWithService:service])) {
 		[self setVideoSource:[ECVEM2860VideoSource_SVideo source]];
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
+		[self setVideoFormat:[ECVVideoFormat_PAL_BGDHI format]];
 		_SAA711XChip = [[SAA711XChip alloc] init];
 		[_SAA711XChip setDevice:self];
 	}
