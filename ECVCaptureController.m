@@ -414,12 +414,6 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 	[videoView setShowDroppedFrames:[[self defaults] boolForKey:ECVShowDroppedFramesKey]];
 	[videoView setMagFilter:[[self defaults] integerForKey:ECVMagFilterKey]];
 
-	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
-	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];
-	[_playButtonCell setTarget:self];
-	[_playButtonCell setAction:@selector(togglePlaying:)];
-	[videoView setCell:_playButtonCell];
-
 	[self setFullScreen:YES];
 	[super windowDidLoad];
 }
