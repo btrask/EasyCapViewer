@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 @end
 
-@interface NSImageRep(ECVAppKitAdditions)
+@interface NSBitmapImageRep(ECVAppKitAdditions)
 
 - (GLuint)ECV_textureName;
 
