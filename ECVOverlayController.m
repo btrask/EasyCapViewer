@@ -70,7 +70,7 @@ static NSRect ECVFrameFromPosition(NSInteger const x)
 	if(NSOKButton == [p runModal]) {
 		ECVVideoView *const v = [[self captureController] videoView];
 		ECVOverlay *const o = [[[ECVOverlay alloc] initWithOpenGLContext:[v openGLContext]] autorelease];
-		NSInteger const corner = ((_lastCorner++) % 4) + ECVDisplayTopLeft;
+		NSInteger const corner = [self _unoccupiedCorner];
 		[o setFrame:ECVFrameFromPosition(corner)];
 		[o setTag:corner];
 		[o setImage:[[[NSImage alloc] initWithContentsOfURL:[p URL]] autorelease]];
@@ -150,6 +150,13 @@ static NSRect ECVFrameFromPosition(NSInteger const x)
 	[removeButton setEnabled:hasSelection];
 	[displayPopup setEnabled:hasSelection];
 	[opacitySlider setEnabled:hasSelection];
+}
+- (NSInteger)_unoccupiedCorner
+{
+	NSMutableIndexSet *const corners = [[[NSMutableIndexSet alloc] initWithIndexesInRange:NSMakeRange(1, 4)] autorelease];
+	for(ECVOverlay *const o in [[[self captureController] videoView] overlays]) if([o opacity] > 0.001) [corners removeIndex:[o tag]];
+	NSInteger const r = [corners firstIndex];
+	return NSNotFound == r ? ECVDisplayTopLeft : r;
 }
 
 #pragma mark -NSWindowController
