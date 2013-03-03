@@ -77,21 +77,19 @@ static void ECVGradientCallback(CGFloat colors[2][ECVNumberOfColorSpaceComponent
 
 @end
 
-@implementation NSImageRep(ECVAppKitAdditions)
+@implementation NSBitmapImageRep(ECVAppKitAdditions)
 
 - (GLuint)ECV_textureName
 {
-	NSBitmapImageRep *const rep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:[self pixelsWide] pixelsHigh:[self pixelsHigh] bitsPerSample:CHAR_BIT samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace bitmapFormat:kNilOptions bytesPerRow:[self pixelsWide] * 4 bitsPerPixel:0] autorelease];
-	[NSGraphicsContext saveGraphicsState];
-	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:rep]];
-	[self draw];
-	[NSGraphicsContext restoreGraphicsState];
-
+	NSParameterAssert([self hasAlpha]);
+	NSParameterAssert([self bitsPerSample] == CHAR_BIT);
+	NSParameterAssert([self samplesPerPixel] == 4);
+	NSParameterAssert([self bytesPerRow] == [self pixelsWide] * [self samplesPerPixel]);
 	GLuint textureName = 0;
 	ECVGLError(glGenTextures(1, &textureName));
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, textureName));
-	ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, [rep pixelsWide], [rep pixelsHigh], 0, GL_RGBA, GL_UNSIGNED_BYTE, [rep bitmapData]));
+	ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, [self pixelsWide], [self pixelsHigh], 0, GL_RGBA, GL_UNSIGNED_BYTE, [self bitmapData]));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 	return textureName;
 }
