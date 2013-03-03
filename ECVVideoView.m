@@ -526,10 +526,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 
 	CGLContextObj const contextObj = ECVLockContext(_context);
 	ECVGLError(glDeleteTextures(1, &_textureName));
-	NSBitmapImageRep *const rep = (NSBitmapImageRep *)[image bestRepresentationForDevice:nil];
-	if(rep) {
-		_textureName = [rep ECV_textureName];
-	}
+
+	NSImageRep *const bad = [image bestRepresentationForDevice:nil];
+	[_rep release];
+	_rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:[bad pixelsWide] pixelsHigh:[bad pixelsHigh] bitsPerSample:CHAR_BIT samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace bitmapFormat:kNilOptions bytesPerRow:[bad pixelsWide] * 4 bitsPerPixel:0];
+	[NSGraphicsContext saveGraphicsState];
+	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:_rep]];
+	[bad draw];
+	[NSGraphicsContext restoreGraphicsState];
+
+	_textureName = [_rep ECV_textureName];
 	ECVUnlockContext(contextObj);
 }
 - (NSString *)name
@@ -563,6 +569,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVGLError(glDeleteTextures(1, &_textureName));
 	[_context release];
 	[_image release];
+	[_rep release];
 	[_name release];
 	[super dealloc];
 }

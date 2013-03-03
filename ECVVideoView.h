@@ -92,6 +92,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	NSOpenGLContext *_context;
 	NSRect _frame;
 	NSImage *_image;
+	NSBitmapImageRep *_rep;
 	GLuint _textureName;
 	NSString *_name;
 	NSUInteger _tag;
