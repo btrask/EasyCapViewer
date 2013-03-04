@@ -75,7 +75,7 @@ static NSRect ECVFrameFromPosition(NSInteger const x)
 		[o setTag:corner];
 		[o setImage:[[[NSImage alloc] initWithContentsOfURL:[p URL]] autorelease]];
 		[o setName:[[[p URL] path] lastPathComponent]];
-		[o setOpacity:[opacitySlider doubleValue]];
+		[o setOpacity:0.75];
 		[v addOverlay:o];
 		[self _update];
 		[overlayPopup selectItemAtIndex:[[overlayPopup menu] indexOfItemWithRepresentedObject:o]];
