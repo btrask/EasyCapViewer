@@ -532,7 +532,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:[bad pixelsWide] pixelsHigh:[bad pixelsHigh] bitsPerSample:CHAR_BIT samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace bitmapFormat:kNilOptions bytesPerRow:[bad pixelsWide] * 4 bitsPerPixel:0];
 	[NSGraphicsContext saveGraphicsState];
 	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:_rep]];
-	[bad draw];
+	[bad drawInRect:NSMakeRect(0, 0, [bad pixelsWide], [bad pixelsHigh])];
 	[NSGraphicsContext restoreGraphicsState];
 
 	_textureName = [_rep ECV_textureName];
@@ -581,7 +581,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	GLfloat const c = 1.0f;
 	glColor4f(c, c, c, _opacity);
 	NSRect const f = [self frame];
-	ECVGLDrawTextureInRectWithBounds(NSMakeRect(NSMinX(r) + NSWidth(r)*NSMinX(f), NSMinY(r) + NSHeight(r)*NSMinY(f), NSWidth(r)*NSWidth(f), NSHeight(r)*NSHeight(f)), (NSRect){{0, 0}, [_image size]});
+	ECVGLDrawTextureInRectWithBounds(NSMakeRect(NSMinX(r) + NSWidth(r)*NSMinX(f), NSMinY(r) + NSHeight(r)*NSMinY(f), NSWidth(r)*NSWidth(f), NSHeight(r)*NSHeight(f)), (NSRect){0, 0, [_rep pixelsWide], [_rep pixelsHigh]});
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
 }
 
