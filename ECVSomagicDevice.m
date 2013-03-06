@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		u_int8_t data[] = {__VA_ARGS__}; \
 		size_t const length = sizeof(expected); \
 		if(![self readRequest:(request) value:(val) index:(idx) length:length data:data]) return; \
-		if(memcmp(expected, data, length) != 0) ECVLog(ECVNotice, @"Line %d, read %04p: Expected %@, received %@", __LINE__, (idx), [NSData dataWithBytesNoCopy:(void *)expected length:length freeWhenDone:NO], [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO]); \
+		if(memcmp(expected, data, length) != 0) ECVLog(ECVNotice, @"Line %d, read %04x: Expected %@, received %@", __LINE__, (idx), [NSData dataWithBytesNoCopy:(void *)expected length:length freeWhenDone:NO], [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO]); \
 	} while(0)
 #define SEND(request, idx, val, ...) \
 	do { \

@@ -79,7 +79,7 @@ extern NSString *ECVAudioStreamBasicDescriptionToString(AudioStreamBasicDescript
 
 #define ECVErrno(x) do {\
 	int const __e = (x);\
-	if(__e) ECVLog(ECVError, @"%s:%d: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVErrnoToString(__e));\
+	if(__e) ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVErrnoToString(__e));\
 } while(NO)
 
 #define ECVAssertNotReached(desc, args...) [[NSAssertionHandler currentHandler] handleFailureInMethod:_cmd object:self file:[NSString stringWithUTF8String:__FILE__] lineNumber:__LINE__ description:(desc), ##args]

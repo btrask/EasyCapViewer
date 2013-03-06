@@ -34,7 +34,7 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 		u_int8_t data[] = {__VA_ARGS__}; \
 		size_t const length = sizeof(expected); \
 		if(![self readRequest:(request) value:0 index:(idx) length:length data:data]) return; \
-		if(memcmp(expected, data, length) != 0) ECVLog(ECVNotice, @"Read %04p: Expected %@, received %@", (idx), [NSData dataWithBytesNoCopy:(void *)expected length:length freeWhenDone:NO], [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO]); \
+		if(memcmp(expected, data, length) != 0) ECVLog(ECVNotice, @"Read %04x: Expected %@, received %@", (idx), [NSData dataWithBytesNoCopy:(void *)expected length:length freeWhenDone:NO], [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO]); \
 	} while(0)
 #define SEND(request, idx, ...) \
 	do { \

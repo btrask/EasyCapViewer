@@ -208,7 +208,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(kAudioDevicePermissionsError)
 #endif
 	}
-	return [NSString stringWithFormat:@"Unknown error %d (%@)", error, [(NSString *)UTCreateStringForOSType((OSType)error) autorelease]];
+	return [NSString stringWithFormat:@"Unknown error %ld (%@)", (long)error, [(NSString *)UTCreateStringForOSType((OSType)error) autorelease]];
 }
 NSString *ECVIOKitErrorToString(IOReturn error)
 {
