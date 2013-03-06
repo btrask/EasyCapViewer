@@ -403,9 +403,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		err = err ?: ((_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
 
 		err = err ?: ECVIOReturn2((*_USBInterface)->USBInterfaceOpenSeize(_USBInterface));
-
-		CFRunLoopSourceRef eventSource = NULL;
-		err = err ?: ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &eventSource));
+		err = err ?: ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &_ignoredEventSource));
+		CFRunLoopAddSource(CFRunLoopGetCurrent(), _ignoredEventSource, kCFRunLoopCommonModes);
 
 		if(err) {
 			// Do nothing.
@@ -415,7 +414,10 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 			[self read];
 		}
 
-		if(eventSource) CFRelease(eventSource);
+		if(_ignoredEventSource) {
+			CFRunLoopSourceInvalidate(_ignoredEventSource);
+			CFRelease(_ignoredEventSource);
+		}
 		if(_USBInterface) (*_USBInterface)->Release(_USBInterface);
 		if(_USBDevice) (*_USBDevice)->USBDeviceClose(_USBDevice);
 		if(_USBDevice) (*_USBDevice)->Release(_USBDevice);
@@ -436,6 +438,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 }
 - (BOOL)_readTransfer:(inout ECVUSBTransfer *)transfer numberOfMicroframes:(NSUInteger)numberOfMicroframes pipeRef:(UInt8)pipe frameNumber:(inout UInt64 *)frameNumber microsecondsInFrame:(UInt64)microsecondsInFrame millisecondInterval:(UInt8)millisecondInterval
 {
+	while(kCFRunLoopRunHandledSource == CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true)); // Clean up the event loop. Prevents the kernel from filling up its buffer and logging error messages. It'd be nice to turn this off entirely, since we don't use it.
 	if(!*frameNumber) *frameNumber = [self _currentFrameNumber] + 10;
 	switch(ECVIOReturn2((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) {
 		case kIOReturnSuccess:

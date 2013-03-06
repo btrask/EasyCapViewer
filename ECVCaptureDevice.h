@@ -64,6 +64,7 @@ extern NSString *const ECVHueKey;
 	NSLock *_readThreadLock;
 	NSLock *_readLock;
 	BOOL _read;
+	CFRunLoopSourceRef _ignoredEventSource;
 }
 
 + (NSArray *)deviceClasses;
