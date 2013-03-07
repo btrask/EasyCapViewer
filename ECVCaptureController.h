@@ -35,9 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @class ECVPlayButtonCell;
 #import "ECVCropCell.h"
 
-// External
-@class BTUserDefaults;
-
 enum {
 	ECVAspectRatioUnknown = -1,
 	ECVAspectRatio1x1 = 3,
@@ -101,7 +98,6 @@ typedef NSInteger ECVCropBorder;
 - (IBAction)toggleSmoothing:(id)sender;
 - (IBAction)toggleShowDroppedFrames:(id)sender;
 
-- (NSUserDefaults *)defaults;
 - (NSSize)aspectRatio;
 - (void)setAspectRatio:(NSSize const)ratio;
 - (NSRect)cropRect;

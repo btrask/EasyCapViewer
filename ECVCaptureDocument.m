@@ -72,20 +72,6 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 	[_videoDevice release];
 	_videoDevice = [source retain];
 	[_videoDevice setCaptureDocument:self];
-
-	// TODO: Move this to -init once we stop using the video device's defaults.
-	NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
-	if(BTEqualObjects(ECVAudioInputNone, UID)) {
-		[self setAudioDevice:nil];
-	} else if(BTEqualObjects(ECVAudioInputVideoDevice, UID) || !UID) {
-		[self setAudioDevice:[[self videoDevice] builtInAudioInput]];
-	} else {
-		[self setAudioDevice:[ECVAudioInput deviceWithUID:UID]];
-	}
-}
-- (NSUserDefaults *)defaults
-{
-	return [_videoDevice defaults];
 }
 
 #pragma mark -
@@ -143,12 +129,13 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 		if(_audioDevice) [_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
 		[self setPaused:NO];
 	}
+	NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
 	if(BTEqualObjects([[self videoDevice] builtInAudioInput], device)) {
-		[[self defaults] setObject:ECVAudioInputVideoDevice forKey:ECVAudioInputUIDKey];
+		[d setObject:ECVAudioInputVideoDevice forKey:ECVAudioInputUIDKey];
 	} else if(device) {
-		[[self defaults] setObject:[device UID] forKey:ECVAudioInputUIDKey];
+		[d setObject:[device UID] forKey:ECVAudioInputUIDKey];
 	} else {
-		[[self defaults] setObject:ECVAudioInputNone forKey:ECVAudioInputUIDKey];
+		[d setObject:ECVAudioInputNone forKey:ECVAudioInputUIDKey];
 	}
 }
 
@@ -223,8 +210,6 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 - (id)init
 {
 	if((self = [super init])) {
-		// FIXME: The video device is not set at this point, so we can't read the defaults yet.
-
 		_pauseCount = 1;
 		_pausedFromUI = YES;
 
@@ -233,6 +218,15 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 		_audioTarget = [[ECVAudioTarget alloc] init];
 		[_audioTarget setCaptureDocument:self];
 		[_audioTarget setAudioOutput:[ECVAudioOutput defaultDevice]];
+
+		NSString *const UID = [[NSUserDefaults standardUserDefaults] objectForKey:ECVAudioInputUIDKey];
+		if(BTEqualObjects(ECVAudioInputNone, UID)) {
+			[self setAudioDevice:nil];
+		} else if(BTEqualObjects(ECVAudioInputVideoDevice, UID) || !UID) {
+			[self setAudioDevice:[[self videoDevice] builtInAudioInput]];
+		} else {
+			[self setAudioDevice:[ECVAudioInput deviceWithUID:UID]];
+		}
 
 		[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 	}

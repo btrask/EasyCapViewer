@@ -47,7 +47,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVCaptureDevice *)videoDevice;
 - (void)setVideoDevice:(ECVCaptureDevice *const)source;
-- (NSUserDefaults *)defaults;
 
 - (ECVAudioInput *)audioDevice;
 - (void)setAudioDevice:(ECVAudioInput *const)target;

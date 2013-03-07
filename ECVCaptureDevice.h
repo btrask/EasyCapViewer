@@ -46,7 +46,6 @@ extern NSString *const ECVHueKey;
 	io_object_t _deviceRemovedNotification;
 
 	NSString *_productName;
-	NSUserDefaults *_defaults;
 
 	Class _deinterlacingMode;
 	ECVVideoStorage *_videoStorage;
@@ -83,7 +82,6 @@ extern NSString *const ECVHueKey;
 
 - (Class)deinterlacingMode;
 - (void)setDeinterlacingMode:(Class const)mode;
-- (NSUserDefaults *)defaults;
 - (ECVVideoStorage *)videoStorage;
 
 - (BOOL)setAlternateInterface:(u_int8_t)alternateSetting;

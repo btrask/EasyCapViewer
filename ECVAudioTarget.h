@@ -42,7 +42,6 @@ extern NSString *const ECVCaptureDeviceVolumeDidChangeNotification;
 
 - (ECVCaptureDocument *)captureDocument;
 - (void)setCaptureDocument:(ECVCaptureDocument *const)doc;
-- (NSUserDefaults *)defaults;
 
 - (ECVAudioOutput *)audioOutput;
 - (void)setAudioOutput:(ECVAudioOutput *const)output;

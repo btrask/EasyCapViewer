@@ -136,7 +136,7 @@ enum {
 - (void)setDevice:(ECVCaptureDevice<SAA711XDevice> *const)obj
 {
 	device = obj;
-	NSUserDefaults *const d = [self defaults];
+	NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
 	[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithDouble:0.5], ECVBrightnessKey,
 		[NSNumber numberWithDouble:0.5], ECVContrastKey,
@@ -147,10 +147,6 @@ enum {
 	_contrast = [[d objectForKey:ECVContrastKey] doubleValue];
 	_saturation = [[d objectForKey:ECVSaturationKey] doubleValue];
 	_hue = [[d objectForKey:ECVHueKey] doubleValue];
-}
-- (NSUserDefaults *)defaults
-{
-	return [(ECVCaptureDevice *)[self device] defaults];
 }
 
 #pragma mark -
@@ -174,7 +170,7 @@ enum {
 {
 	_brightness = val;
 	(void)[device writeSAA711XRegister:0x0a value:round(val * 0xff)];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
 }
 - (CGFloat)contrast
 {
@@ -184,7 +180,7 @@ enum {
 {
 	_contrast = val;
 	(void)[device writeSAA711XRegister:0x0b value:round(val * 0x7f)];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
 }
 - (CGFloat)saturation
 {
@@ -194,7 +190,7 @@ enum {
 {
 	_saturation = val;
 	(void)[device writeSAA711XRegister:0x0c value:round(val * 0x7f)];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
 }
 - (CGFloat)hue
 {
@@ -204,7 +200,7 @@ enum {
 {
 	_hue = val;
 	(void)[device writeSAA711XRegister:0x0d value:round((val - 0.5f) * 0xff)];
-	[[self defaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 #pragma mark -

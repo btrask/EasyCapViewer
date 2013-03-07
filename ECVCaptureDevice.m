@@ -240,10 +240,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 		NSString *const mainSuiteName = [[[NSBundle bundleForClass:[self class]] infoDictionary] objectForKey:@"ECVMainSuiteName"];
 		NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04x.%04x", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
-		_defaults = [[NSUserDefaults alloc] init];
-		[_defaults addSuiteNamed:deviceSuiteName];
-		[_defaults addSuiteNamed:mainSuiteName];
-		[_defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
+		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
 			[NSNumber numberWithDouble:0.5f], ECVBrightnessKey,
 			[NSNumber numberWithDouble:0.5f], ECVContrastKey,
@@ -251,7 +249,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 			[NSNumber numberWithDouble:0.5f], ECVSaturationKey,
 			nil]];
 
-		[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[[self defaults] integerForKey:ECVDeinterlacingModeKey]]];
+		[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[d integerForKey:ECVDeinterlacingModeKey]]];
 
 		Class const controller = NSClassFromString(@"ECVController"); // FIXME: Kind of a hack.
 		if(controller) (void)ECVIOReturn2(IOServiceAddInterestNotification([[controller sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
@@ -278,9 +276,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	_deinterlacingMode = [mode copy];
 	[self _updateVideoStorage];
 	[_captureDocument setPaused:NO];
-	[[self defaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
+	[[NSUserDefaults standardUserDefaults] setInteger:[mode deinterlacingModeType] forKey:ECVDeinterlacingModeKey];
 }
-- (NSUserDefaults *)defaults { return _defaults; }
 - (ECVVideoStorage *)videoStorage { return [[_videoStorage retain] autorelease]; }
 
 #pragma mark -
@@ -482,7 +479,6 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	IOObjectRelease(_service);
 	IOObjectRelease(_deviceRemovedNotification);
 
-	[_defaults release];
 	[_productName release];
 
 	[_deinterlacingMode release];

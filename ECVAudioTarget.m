@@ -39,10 +39,6 @@ static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 {
 	_captureDocument = doc;
 }
-- (NSUserDefaults *)defaults
-{
-	return [_captureDocument defaults];
-}
 
 #pragma mark -
 
@@ -84,7 +80,7 @@ static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 {
 	_volume = CLAMP(0.0f, value, 1.0f);
 	[_audioPipe setVolume:_muted ? 0.0f : _volume];
-	[[self defaults] setDouble:value forKey:ECVVolumeKey];
+	[[NSUserDefaults standardUserDefaults] setDouble:value forKey:ECVVolumeKey];
 	[[NSNotificationCenter defaultCenter] postNotificationName:ECVCaptureDeviceVolumeDidChangeNotification object:self];
 }
 - (BOOL)upconvertsFromMono
@@ -96,7 +92,7 @@ static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 	[_captureDocument setPaused:YES];
 	_upconvertsFromMono = flag;
 	[_captureDocument setPaused:NO];
-	[[self defaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
+	[[NSUserDefaults standardUserDefaults] setBool:flag forKey:ECVUpconvertsFromMonoKey];
 }
 
 #pragma mark -ECVAudioTarget<ECVAudioDeviceDelegate>
@@ -112,8 +108,7 @@ static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 - (id)init
 {
 	if((self = [super init])) {
-		// FIXME: The defaults object is not set yet at this point.
-		NSUserDefaults *const d = [self defaults];
+		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
 		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithDouble:1.0f], ECVVolumeKey,
 			[NSNumber numberWithBool:NO], ECVUpconvertsFromMonoKey,

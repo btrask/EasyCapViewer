@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 - (ECVCaptureDevice<SAA711XDevice> *)device;
 - (void)setDevice:(ECVCaptureDevice<SAA711XDevice> *const)d;
-- (NSUserDefaults *)defaults;
 
 - (BOOL)polarityInverted;
 - (void)setPolarityInverted:(BOOL const)flag;
