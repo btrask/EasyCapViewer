@@ -44,5 +44,5 @@ ECVRational ECVRationalLCM(ECVRational a, ECVRational b)
 }
 NSString *ECVRationalToString(ECVRational r)
 {
-	return [NSString stringWithFormat:@"{%ld / %ld}", r.numer, r.denom];
+	return [NSString stringWithFormat:@"{%ld / %ld}", (unsigned long)r.numer, (unsigned long)r.denom];
 }

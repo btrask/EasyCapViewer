@@ -301,7 +301,7 @@ ECVNoDeviceError:
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %@ (%d, %@)>", [self class], self, [self name], [self deviceID], [self isInput] ? @"In" : @"Out"];
+	return [NSString stringWithFormat:@"<%@ %p: %@ (%ld, %@)>", [self class], self, [self name], [self deviceID], [self isInput] ? @"In" : @"Out"];
 }
 
 @end
@@ -370,7 +370,7 @@ ECVNoDeviceError:
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %d>", [self class], self, [self streamID]];
+	return [NSString stringWithFormat:@"<%@ %p: %ld>", [self class], self, [self streamID]];
 }
 
 @end

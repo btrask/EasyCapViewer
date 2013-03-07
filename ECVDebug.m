@@ -24,6 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	#import <AudioToolbox/AudioToolbox.h>
 #endif
 #import <IOKit/usb/IOUSBLib.h>
+#import <IOKit/IOMessage.h>
 #import <mach/mach_port.h>
 #import <Foundation/NSDebug.h>
 #import <string.h>
@@ -208,7 +209,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(kAudioDevicePermissionsError)
 #endif
 	}
-	return [NSString stringWithFormat:@"Unknown error %d (%@)", error, [(NSString *)UTCreateStringForOSType((OSType)error) autorelease]];
+	return [NSString stringWithFormat:@"Unknown error %ld (%@)", (long)error, [(NSString *)UTCreateStringForOSType((OSType)error) autorelease]];
 }
 NSString *ECVIOKitErrorToString(IOReturn error)
 {
@@ -295,6 +296,31 @@ NSString *ECVIOKitErrorToString(IOReturn error)
 		ERROR_CASE(kIOUSBDataToggleErr)
 		ERROR_CASE(kIOUSBBitstufErr)
 		ERROR_CASE(kIOUSBCRCErr)
+
+		ERROR_CASE(kIOMessageServiceIsTerminated)
+		ERROR_CASE(kIOMessageServiceIsSuspended)
+		ERROR_CASE(kIOMessageServiceIsResumed)
+		ERROR_CASE(kIOMessageServiceIsRequestingClose)
+		ERROR_CASE(kIOMessageServiceIsAttemptingOpen)
+		ERROR_CASE(kIOMessageServiceWasClosed)
+		ERROR_CASE(kIOMessageServiceBusyStateChange)
+		ERROR_CASE(kIOMessageServicePropertyChange)
+		ERROR_CASE(kIOMessageCanDevicePowerOff)
+		ERROR_CASE(kIOMessageDeviceWillPowerOff)
+		ERROR_CASE(kIOMessageDeviceWillNotPowerOff)
+		ERROR_CASE(kIOMessageDeviceHasPoweredOn)
+		ERROR_CASE(kIOMessageDeviceWillPowerOn)
+		ERROR_CASE(kIOMessageDeviceHasPoweredOff)
+		ERROR_CASE(kIOMessageCanSystemPowerOff)
+		ERROR_CASE(kIOMessageSystemWillPowerOff)
+		ERROR_CASE(kIOMessageSystemWillNotPowerOff)
+		ERROR_CASE(kIOMessageCanSystemSleep)
+		ERROR_CASE(kIOMessageSystemWillSleep)
+		ERROR_CASE(kIOMessageSystemWillNotSleep)
+		ERROR_CASE(kIOMessageSystemHasPoweredOn)
+		ERROR_CASE(kIOMessageSystemWillRestart)
+		ERROR_CASE(kIOMessageSystemWillPowerOn)
+		ERROR_CASE(kIOMessageCopyClientID)
 	}
 	return [NSString stringWithFormat:@"Unknown IOReturn %d (Code: 0x%x; Sub: 0x%x; System: 0x%x)", error, err_get_code(error), err_get_sub(error), err_get_system(error)];
 }
