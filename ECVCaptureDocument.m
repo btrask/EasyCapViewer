@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 static NSString *const ECVAudioInputUIDKey = @"ECVAudioInputUID";
 static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
+static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 
 @implementation ECVCaptureDocument
 
@@ -71,6 +72,16 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 	[_videoDevice release];
 	_videoDevice = [source retain];
 	[_videoDevice setCaptureDocument:self];
+
+	// TODO: Move this to -init once we stop using the video device's defaults.
+	NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
+	if(BTEqualObjects(ECVAudioInputNone, UID)) {
+		[self setAudioDevice:nil];
+	} else if(BTEqualObjects(ECVAudioInputVideoDevice, UID) || !UID) {
+		[self setAudioDevice:[[self videoDevice] builtInAudioInput]];
+	} else {
+		[self setAudioDevice:[ECVAudioInput deviceWithUID:UID]];
+	}
 }
 - (NSUserDefaults *)defaults
 {
@@ -120,15 +131,6 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 
 - (ECVAudioInput *)audioDevice
 {
-	if(!_audioDevice) {
-		NSString *const UID = [[self defaults] objectForKey:ECVAudioInputUIDKey];
-		if(!BTEqualObjects(ECVAudioInputNone, UID)) {
-			if(UID) _audioDevice = [[ECVAudioInput deviceWithUID:UID] retain];
-			if(!_audioDevice) _audioDevice = [[[self videoDevice] builtInAudioInput] retain];
-			[_audioDevice setDelegate:self];
-			[_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
-		}
-	}
 	return [[_audioDevice retain] autorelease];
 }
 - (void)setAudioDevice:(ECVAudioInput *const)device
@@ -138,11 +140,11 @@ static NSString *const ECVAudioInputNone = @"ECVAudioInputNone";
 		[_audioDevice release];
 		_audioDevice = [device retain];
 		[_audioDevice setDelegate:self];
-		[_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
+		if(_audioDevice) [_audioTarget setInputBasicDescription:[[_audioDevice stream] basicDescription]];
 		[self setPaused:NO];
 	}
 	if(BTEqualObjects([[self videoDevice] builtInAudioInput], device)) {
-		[[self defaults] removeObjectForKey:ECVAudioInputUIDKey];
+		[[self defaults] setObject:ECVAudioInputVideoDevice forKey:ECVAudioInputUIDKey];
 	} else if(device) {
 		[[self defaults] setObject:[device UID] forKey:ECVAudioInputUIDKey];
 	} else {
