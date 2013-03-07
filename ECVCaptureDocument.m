@@ -72,6 +72,16 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 	[_videoDevice release];
 	_videoDevice = [source retain];
 	[_videoDevice setCaptureDocument:self];
+
+	// Yes, the audio input really is dependent on the video device.
+	NSString *const UID = [[NSUserDefaults standardUserDefaults] objectForKey:ECVAudioInputUIDKey];
+	if(BTEqualObjects(ECVAudioInputVideoDevice, UID) || !UID) {
+		[self setAudioDevice:[[self videoDevice] builtInAudioInput]];
+	} else if(BTEqualObjects(ECVAudioInputNone, UID)) {
+		[self setAudioDevice:nil];
+	} else {
+		[self setAudioDevice:[ECVAudioInput deviceWithUID:UID]];
+	}
 }
 
 #pragma mark -
@@ -218,15 +228,6 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 		_audioTarget = [[ECVAudioTarget alloc] init];
 		[_audioTarget setCaptureDocument:self];
 		[_audioTarget setAudioOutput:[ECVAudioOutput defaultDevice]];
-
-		NSString *const UID = [[NSUserDefaults standardUserDefaults] objectForKey:ECVAudioInputUIDKey];
-		if(BTEqualObjects(ECVAudioInputNone, UID)) {
-			[self setAudioDevice:nil];
-		} else if(BTEqualObjects(ECVAudioInputVideoDevice, UID) || !UID) {
-			[self setAudioDevice:[[self videoDevice] builtInAudioInput]];
-		} else {
-			[self setAudioDevice:[ECVAudioInput deviceWithUID:UID]];
-		}
 
 		[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(workspaceWillSleep:) name:NSWorkspaceWillSleepNotification object:[NSWorkspace sharedWorkspace]];
 	}
