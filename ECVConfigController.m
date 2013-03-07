@@ -149,8 +149,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	[self _snapSlider:saturationSlider];
 	[self _snapSlider:hueSlider];
 
-	[upconvertsFromMonoSwitch setEnabled:[_captureDocument respondsToSelector:@selector(upconvertsFromMono)]];
-	[upconvertsFromMonoSwitch setState:[upconvertsFromMonoSwitch isEnabled] && [[_captureDocument audioTarget] upconvertsFromMono]];
+	ECVAudioTarget *const audioTarget = [_captureDocument audioTarget];
+	[upconvertsFromMonoSwitch setEnabled:!!audioTarget];
+	[upconvertsFromMonoSwitch setState:audioTarget && [audioTarget upconvertsFromMono]];
 
 	[self audioHardwareDevicesDidChange:nil];
 	[audioSourcePopUp setEnabled:!!_captureDocument];
@@ -186,10 +187,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)volumeDidChange:(NSNotification *)aNotif
 {
 	if(![self isWindowLoaded]) return;
-	BOOL const volumeSupported = [_captureDocument respondsToSelector:@selector(volume)];
-	[volumeSlider setEnabled:volumeSupported];
-	if(volumeSupported) [volumeSlider setDoubleValue:[[_captureDocument audioTarget] isMuted] ? 0.0f : [[_captureDocument audioTarget] volume]];
-	else [volumeSlider setDoubleValue:1.0f];
+	ECVAudioTarget *const audioTarget = [_captureDocument audioTarget];
+	[volumeSlider setEnabled:!!audioTarget];
+	if(audioTarget) [volumeSlider setDoubleValue:[audioTarget isMuted] ? 0.0f : [audioTarget volume]];
+	else [volumeSlider setDoubleValue:0.5f];
 }
 
 #pragma mark -ECVConfigController(Private)
