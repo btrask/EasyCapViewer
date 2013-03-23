@@ -167,9 +167,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	return [NSArray arrayWithObjects:nil];
 }
+- (ECVVideoSource *)defaultVideoSource
+{
+	return nil;
+}
 - (NSSet *)supportedVideoFormats
 {
 	return [NSSet setWithObjects:nil];
+}
+- (ECVVideoFormat *)defaultVideoFormat
+{
+	return nil;
 }
 - (OSType)pixelFormat
 {
