@@ -194,6 +194,10 @@ ECVNoDeviceError: (void)0;
 
 - (void)ECV_display
 {
+	[self performSelector:@selector(ECV_createDocument) withObject:nil afterDelay:1.0 inModes:[NSArray arrayWithObject:(NSString *)kCFRunLoopCommonModes]]; // This is the easiest and most sensible way to ensure that the device is entirely reset before we start using it. In particular, calling SetConfiguration() causes any audio devices associated with the hardware to be lost, and we don't know if there are any or when they will be found.
+}
+- (void)ECV_createDocument
+{
 	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
 	[doc setVideoDevice:self];
 	[[NSDocumentController sharedDocumentController] addDocument:doc];
