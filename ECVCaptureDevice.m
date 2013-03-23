@@ -160,9 +160,11 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 + (IOUSBDeviceInterface320 **)USBDeviceWithService:(io_service_t const)service
 {
-	uint32_t busy;
-	(void)ECVIOReturn2(IOServiceGetBusyState(service, &busy));
-	if(busy) {
+	mach_timespec_t delay = {
+		.tv_sec = 1,
+		.tv_nsec = 0,
+	};
+	if(kIOReturnTimeout == IOServiceWaitQuiet(service, &delay)) {
 		ECVLog(ECVError, @"Device busy and cannot be accessed. (Try restarting.)");
 		return NULL; // We can't solve it, so just bail.
 	}
@@ -413,7 +415,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		IOReturn err = kIOReturnSuccess;
 		err = err ?: ((_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
 
-		err = err ?: ECVIOReturn2((*_USBInterface)->USBInterfaceOpenSeize(_USBInterface));
+		err = err ?: ECVIOReturn2((*_USBInterface)->USBInterfaceOpen(_USBInterface));
 		err = err ?: ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &_ignoredEventSource));
 		CFRunLoopAddSource(CFRunLoopGetCurrent(), _ignoredEventSource, kCFRunLoopCommonModes);
 
