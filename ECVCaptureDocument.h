@@ -38,6 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVReadWriteLock *_targetsLock;
 	NSMutableArray *_targets;
 	ECVAudioTarget *_audioTarget;
+
+	NSTimeInterval _lastStopTime;
 }
 
 - (NSArray *)targets;

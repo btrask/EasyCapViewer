@@ -153,6 +153,7 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 
 - (void)play
 {
+	[NSThread sleepUntilDate:[NSDate dateWithTimeIntervalSinceReferenceDate:_lastStopTime + 0.75]];
 	if(_audioDevice) [self addTarget:_audioTarget];
 	[_videoDevice play];
 	[_audioDevice start];
@@ -166,6 +167,7 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 	[_videoDevice stop];
 	[_audioDevice stop];
 	[self removeTarget:_audioTarget];
+	_lastStopTime = [NSDate timeIntervalSinceReferenceDate];
 }
 - (void)pushVideoFrame:(ECVVideoFrame *const)frame
 {
