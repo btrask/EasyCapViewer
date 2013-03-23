@@ -134,11 +134,8 @@ enum {
 
 - (id)initWithService:(io_service_t)service
 {
-	if((self = [super initWithService:service])) {
-		[self setVideoSource:[ECVSomagicVideoSource_Composite source]];
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
-	}
-	return self;
+	// Do nothing.
+	return [super initWithService:service];
 }
 
 - (void)read
@@ -514,11 +511,19 @@ enum {
 		[ECVSomagicVideoSource_Composite source],
 		nil];
 }
+- (ECVVideoSource *)defaultVideoSource
+{
+	return [ECVSomagicVideoSource_Composite source];
+}
 - (NSSet *)supportedVideoFormats
 {
 	return [NSSet setWithObjects:
 		[ECVVideoFormat_NTSC_M format],
 		nil];
+}
+- (ECVVideoFormat *)defaultVideoFormat
+{
+	return [ECVVideoFormat_NTSC_M format];
 }
 - (OSType)pixelFormat
 {

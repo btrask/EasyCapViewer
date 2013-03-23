@@ -171,15 +171,11 @@ enum {
 
 - (id)initWithService:(io_service_t)service
 {
-	if((self = [super initWithService:service])) {
-		[self setVideoSource:[ECVSTK11X0VideoSource_SVideo source]]; // TODO: Serialization.
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
-		_SAA711XChip = [[SAA711XChip alloc] init];
-		[_SAA711XChip setDevice:self];
-		_VT1612AChip = [[VT1612AChip alloc] init];
-		[_VT1612AChip setDevice:self];
-	}
-	return self;
+	_SAA711XChip = [[SAA711XChip alloc] init];
+	[_SAA711XChip setDevice:self];
+	_VT1612AChip = [[VT1612AChip alloc] init];
+	[_VT1612AChip setDevice:self];
+	return [super initWithService:service];
 }
 
 #pragma mark -ECVCaptureController(ECVAbstract)
@@ -198,9 +194,17 @@ enum {
 		[ECVSTK11X0VideoSource_Composite4 source],
 		nil];
 }
+- (ECVVideoSource *)defaultVideoSource
+{
+	return [ECVSTK11X0VideoSource_Composite1 source];
+}
 - (NSSet *)supportedVideoFormats
 {
 	return [_SAA711XChip supportedVideoFormats];
+}
+- (ECVVideoFormat *)defaultVideoFormat
+{
+	return [_SAA711XChip defaultVideoFormat];
 }
 - (OSType)pixelFormat
 {

@@ -272,6 +272,10 @@ enum {
 		[ECVVideoFormat_SECAM format],
 		nil];
 }
+- (ECVVideoFormat *)defaultVideoFormat
+{
+	return [ECVVideoFormat_NTSC_M format];
+}
 
 #pragma mark -SAA711XChip(Private)
 

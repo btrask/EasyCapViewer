@@ -53,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)initialize;
 - (NSUInteger)versionNumber;
 - (NSSet *)supportedVideoFormats;
+- (ECVVideoFormat *)defaultVideoFormat;
 
 @end
 

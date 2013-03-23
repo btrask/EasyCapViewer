@@ -60,13 +60,9 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 
 - (id)initWithService:(io_service_t)service
 {
-	if((self = [super initWithService:service])) {
-		[self setVideoSource:[ECVEM2860VideoSource_SVideo source]];
-		[self setVideoFormat:[ECVVideoFormat_NTSC_M format]];
-		_SAA711XChip = [[SAA711XChip alloc] init];
-		[_SAA711XChip setDevice:self];
-	}
-	return self;
+	_SAA711XChip = [[SAA711XChip alloc] init];
+	[_SAA711XChip setDevice:self];
+	return [super initWithService:service];
 }
 
 #pragma mark -ECVCaptureDevice(ECVAbstract)
@@ -82,9 +78,17 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 		[ECVEM2860VideoSource_Composite source],
 		nil];
 }
+- (ECVVideoSource *)defaultVideoSource
+{
+	return [ECVEM2860VideoSource_Composite source];
+}
 - (NSSet *)supportedVideoFormats
 {
 	return [_SAA711XChip supportedVideoFormats];
+}
+- (ECVVideoFormat *)defaultVideoFormat
+{
+	return [_SAA711XChip defaultVideoFormat];
 }
 - (OSType)pixelFormat
 {

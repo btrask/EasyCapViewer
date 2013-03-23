@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)SVideo;
 - (BOOL)composite;
 
+- (id)serializedValue;
+- (BOOL)matchesSerializedValue:(id const)obj;
+
 @end
 
 @interface ECVVideoSource(ECVAbstract)

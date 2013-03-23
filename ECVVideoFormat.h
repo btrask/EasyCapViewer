@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (void)addToMenu:(NSMenu *const)menu;
 - (NSComparisonResult)compare:(ECVVideoFormat *const)obj;
 
+- (id)serializedValue;
+- (BOOL)matchesSerializedValue:(id const)obj;
+
 @end
 
 @interface ECVVideoFormat(ECVAbstract)

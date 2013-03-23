@@ -89,6 +89,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	return [[self localizedName] compare:[obj localizedName]];
 }
 
+#pragma mark -
+
+- (id)serializedValue
+{
+	return NSStringFromClass([self class]);
+}
+- (BOOL)matchesSerializedValue:(id const)obj
+{
+	return BTEqualObjects(obj, [self serializedValue]);
+}
+
 #pragma mark -NSObject<NSObject>
 
 - (NSUInteger)hash

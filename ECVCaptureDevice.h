@@ -99,8 +99,10 @@ extern NSString *const ECVHueKey;
 
 - (ECVVideoSource *)videoSource;
 - (void)setVideoSource:(ECVVideoSource *const)source;
+- (void)loadPreferredVideoSource;
 - (ECVVideoFormat *)videoFormat;
 - (void)setVideoFormat:(ECVVideoFormat *const)format;
+- (void)loadPreferredVideoFormat;
 
 - (NSString *)name;
 - (io_service_t)service;
@@ -124,7 +126,9 @@ extern NSString *const ECVHueKey;
 
 - (UInt32)maximumMicrosecondsInFrame;
 - (NSArray *)supportedVideoSources;
+- (ECVVideoSource *)defaultVideoSource;
 - (NSSet *)supportedVideoFormats;
+- (ECVVideoFormat *)defaultVideoFormat;
 - (OSType)pixelFormat;
 
 @end

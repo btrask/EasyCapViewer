@@ -49,6 +49,9 @@ NSString *const ECVContrastKey = @"ECVContrast";
 NSString *const ECVSaturationKey = @"ECVSaturation";
 NSString *const ECVHueKey = @"ECVHue";
 
+static NSString *const ECVVideoSourceKey = @"ECVVideoSource";
+static NSString *const ECVVideoFormatKey = @"ECVVideoFormat";
+
 typedef struct {
 	IOUSBLowLatencyIsocFrame *list;
 	UInt8 *data;
@@ -250,6 +253,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 			nil]];
 
 		[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[d integerForKey:ECVDeinterlacingModeKey]]];
+		[self loadPreferredVideoSource];
+		[self loadPreferredVideoFormat]; // FIXME: Devices that use SAA711XChip must load it before they invoke [super initWithSerivce:], which is a bit ugly/nonstandard. Maybe they shouldn't override -initWithService: at all, but instead override a custom method.
 
 		IOReturn err = kIOReturnSuccess;
 		err = err ?: ((_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
@@ -529,7 +534,15 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	[_videoSource release];
 	_videoSource = [source retain];
 	[_captureDocument setPaused:NO];
-	// TODO: Serialize.
+	NSString *const key = [NSString stringWithFormat:@"%@.%@", ECVVideoSourceKey, NSStringFromClass([self class])];
+	[[NSUserDefaults standardUserDefaults] setObject:[_videoSource serializedValue] forKey:key];
+}
+- (void)loadPreferredVideoSource
+{
+	NSString *const key = [NSString stringWithFormat:@"%@.%@", ECVVideoSourceKey, NSStringFromClass([self class])];
+	id const val = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+	for(ECVVideoSource *const s in [self supportedVideoSources]) if([s matchesSerializedValue:val]) return [self setVideoSource:s];
+	[self setVideoSource:[self defaultVideoSource]];
 }
 - (ECVVideoFormat *)videoFormat
 {
@@ -543,9 +556,16 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	_videoFormat = [format retain];
 	[self _updateVideoStorage];
 	[_captureDocument setPaused:NO];
-	// TODO: Save preference... Serialization?
+	NSString *const key = [NSString stringWithFormat:@"%@.%@", ECVVideoFormatKey, NSStringFromClass([self class])];
+	[[NSUserDefaults standardUserDefaults] setObject:[_videoFormat serializedValue] forKey:key];
 }
-
+- (void)loadPreferredVideoFormat
+{
+	NSString *const key = [NSString stringWithFormat:@"%@.%@", ECVVideoFormatKey, NSStringFromClass([self class])];
+	id const val = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+	for(ECVVideoFormat *const f in [self supportedVideoFormats]) if([f matchesSerializedValue:val]) return [self setVideoFormat:f];
+	[self setVideoFormat:[self defaultVideoFormat]];
+}
 
 
 
