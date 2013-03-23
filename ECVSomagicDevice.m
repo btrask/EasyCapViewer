@@ -519,6 +519,7 @@ enum {
 {
 	return [NSSet setWithObjects:
 		[ECVVideoFormat_NTSC_M format],
+		[ECVVideoFormat_PAL_BGDHI format], // TODO: This is completely untested and a hell of an assumption, but from the report I received, this device does not need any special callibration for the video format.
 		nil];
 }
 - (ECVVideoFormat *)defaultVideoFormat
