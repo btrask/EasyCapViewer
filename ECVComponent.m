@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVICM.h"
 
 typedef struct {
+	BOOL playing;
 	ECVCaptureDevice *device;
 	ICMCompressionSessionRef compressionSession;
 	ICMEncodedFrameRef encodedFrame;
@@ -232,8 +233,7 @@ ECV_VDIG_FUNCTION(GetNumberOfInputs, short *inputs)
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	[self->inputCombinations release];
 	self->inputCombinations = [[NSMutableArray alloc] init];
-	for(id const source in [self->device allVideoSourceObjects]) {
-		if(![self->device isValidVideoSourceObject:source]) continue;
+	for(id const source in [self->device supportedVideoSources]) {
 		for(id const format in [self->device supportedVideoFormats]) {
 			[self->inputCombinations addObject:[NSDictionary dictionaryWithObjectsAndKeys:
 				source, ECVVideoSourceObject,
@@ -256,7 +256,7 @@ ECV_VDIG_FUNCTION(GetInputName, long videoInput, Str255 name)
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:videoInput];
-	NSString *const sourceLabel = [self->device localizedStringForVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
+	NSString *const sourceLabel = [[inputCombination objectForKey:ECVVideoSourceObject] localizedName];
 	NSString *const formatLabel = [[inputCombination objectForKey:ECVVideoFormatObject] localizedName];
 	CFStringGetPascalString((CFStringRef)[NSString stringWithFormat:@"%@ - %@", sourceLabel, formatLabel], name, 256, kCFStringEncodingUTF8);
 	[pool drain];
@@ -267,7 +267,7 @@ ECV_VDIG_FUNCTION(GetInput, short *input)
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	NSDictionary *const inputCombination = [NSDictionary dictionaryWithObjectsAndKeys:
-		[self->device videoSourceObject], ECVVideoSourceObject,
+		[self->device videoSource], ECVVideoSourceObject,
 		[self->device videoFormat], ECVVideoFormatObject,
 		nil];
 	NSUInteger i = [self->inputCombinations indexOfObject:inputCombination];
@@ -281,7 +281,7 @@ ECV_VDIG_FUNCTION(SetInput, short input)
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
 	NSDictionary *const inputCombination = [self->inputCombinations objectAtIndex:input];
-	[self->device setVideoSourceObject:[inputCombination objectForKey:ECVVideoSourceObject]];
+	[self->device setVideoSource:[inputCombination objectForKey:ECVVideoSourceObject]];
 	[self->device setVideoFormat:[inputCombination objectForKey:ECVVideoFormatObject]];
 	[pool drain];
 	return noErr;
@@ -338,7 +338,9 @@ ECV_VDIG_FUNCTION(SetCompressionOnOff, Boolean state)
 {
 	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	[self->device setPaused:!state];
+	if(state) [self->device play];
+	else [self->device stop];
+	self->playing = !!state;
 	ICMCompressionSessionRelease(self->compressionSession);
 	self->compressionSession = state ? ECVCompressionSessionCreate(self) : NULL;
 	[pool drain];
@@ -360,7 +362,7 @@ ECV_VDIG_FUNCTION(CompressOneFrameAsync)
 {
 //	ECV_DEBUG_LOG();
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	if([self->device isPaused]) {
+	if(!self->playing) {
 		[pool drain];
 		return badCallOrderErr;
 	}
