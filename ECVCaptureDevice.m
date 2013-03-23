@@ -251,6 +251,22 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 		[self setDeinterlacingMode:[ECVDeinterlacingMode deinterlacingModeWithType:[d integerForKey:ECVDeinterlacingModeKey]]];
 
+		IOReturn err = kIOReturnSuccess;
+		err = err ?: ((_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
+
+		err = err ?: ECVIOReturn2((*_USBDevice)->USBDeviceOpen(_USBDevice));
+		err = err ?: ECVIOReturn2((*_USBDevice)->ResetDevice(_USBDevice));
+
+		IOUSBConfigurationDescriptorPtr configurationDescription = NULL;
+		err = err ?: ECVIOReturn2((*_USBDevice)->GetConfigurationDescriptorPtr(_USBDevice, 0, &configurationDescription));
+		err = err ?: ECVIOReturn2((*_USBDevice)->SetConfiguration(_USBDevice, configurationDescription->bConfigurationValue));
+
+		if(kIOReturnSuccess != err) {
+			ECVLog(ECVError, @"Device %@ failed to open", self);
+			[self release];
+			return nil;
+		}
+
 		Class const controller = NSClassFromString(@"ECVController"); // FIXME: Kind of a hack.
 		if(controller) (void)ECVIOReturn2(IOServiceAddInterestNotification([[controller sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 	}
@@ -388,15 +404,6 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		ECVLog(ECVNotice, @"Starting device %@.", [self name]);
 
 		IOReturn err = kIOReturnSuccess;
-		err = err ?: ((_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
-
-		err = err ?: ECVIOReturn2((*_USBDevice)->USBDeviceOpen(_USBDevice));
-		err = err ?: ECVIOReturn2((*_USBDevice)->ResetDevice(_USBDevice));
-
-		IOUSBConfigurationDescriptorPtr configurationDescription = NULL;
-		err = err ?: ECVIOReturn2((*_USBDevice)->GetConfigurationDescriptorPtr(_USBDevice, 0, &configurationDescription));
-		err = err ?: ECVIOReturn2((*_USBDevice)->SetConfiguration(_USBDevice, configurationDescription->bConfigurationValue));
-
 		err = err ?: ((_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
 
 		err = err ?: ECVIOReturn2((*_USBInterface)->USBInterfaceOpenSeize(_USBInterface));
@@ -416,10 +423,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 			CFRelease(_ignoredEventSource);
 		}
 		if(_USBInterface) (*_USBInterface)->Release(_USBInterface);
-		if(_USBDevice) (*_USBDevice)->USBDeviceClose(_USBDevice);
-		if(_USBDevice) (*_USBDevice)->Release(_USBDevice);
 		_USBInterface = NULL;
-		_USBDevice = NULL;
 
 		ECVLog(ECVNotice, @"Stopping device %@.", [self name]);
 	}
@@ -476,6 +480,10 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 - (void)dealloc
 {
+	if(_USBDevice) (*_USBDevice)->USBDeviceClose(_USBDevice);
+	if(_USBDevice) (*_USBDevice)->Release(_USBDevice);
+	_USBDevice = NULL;
+
 	IOObjectRelease(_service);
 	IOObjectRelease(_deviceRemovedNotification);
 
