@@ -217,13 +217,13 @@ enum {
 {
 	_offset = 0;
 	dev_stk0408_initialize_device(self);
-	if(![_SAA711XChip initialize]) return;
+	if(![_SAA711XChip initialize]) return ECVLog(ECVError, @"SAA711X initialization failed.");
 	ECVLog(ECVNotice, @"Device video version: %lx", (unsigned long)[_SAA711XChip versionNumber]);
-	if(![self _initializeAudio]) return;
-	if(![[self videoSource] writeToDevice:self]) return;
-	if(![self _initializeResolution]) return;
-	if(![self setAlternateInterface:5]) return;
-	if(![self _setStreaming:YES]) return;
+	if(![self _initializeAudio]) return ECVLog(ECVError, @"Audio initialization failed.");
+	if(![[self videoSource] writeToDevice:self]) return ECVLog(ECVError, @"Video source selection failed.");
+	if(![self _initializeResolution]) return ECVLog(ECVError, @"Resolution selection failed.");
+	if(![self setAlternateInterface:5]) return ECVLog(ECVError, @"Interface selection failed.");
+	if(![self _setStreaming:YES]) return ECVLog(ECVError, @"Streaming initialization failed.");
 	[super read];
 	(void)[self _setStreaming:NO];
 	(void)[self setAlternateInterface:0];

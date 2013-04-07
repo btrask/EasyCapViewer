@@ -473,7 +473,7 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	//RESET_PIPE
 	//GET_CURRENT_FRAME_NUMBER
 
-	if(![_SAA711XChip initialize]) return;
+	if(![_SAA711XChip initialize]) return ECVLog(ECVError, @"SAA711X initialization failed.");
 	[super read];
 	(void)[self setAlternateInterface:0];
 }
