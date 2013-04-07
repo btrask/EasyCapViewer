@@ -51,15 +51,7 @@ extern NSString *ECVAudioStreamBasicDescriptionToString(AudioStreamBasicDescript
 #define ECVOSErr(x) ECVOSStatus((OSStatus)(x))
 #define ECVComponentResult(x) ECVOSStatus((OSStatus)(x))
 
-#define ECVIOReturn(x) do {\
-	IOReturn const __e = (x);\
-	if(kIOReturnSuccess == __e) break;\
-	ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
-	if(kIOReturnNoDevice == __e) goto ECVNoDeviceError;\
-	goto ECVGenericError;\
-} while(NO)
-
-#define ECVIOReturn2(x) ({\
+#define ECVIOReturn(x) ({\
 	IOReturn const __e = (x);\
 	if(kIOReturnSuccess != __e) ECVLog(ECVError, @"%s:%d %s: %@", __PRETTY_FUNCTION__, __LINE__, #x, ECVIOKitErrorToString(__e));\
 	__e;\

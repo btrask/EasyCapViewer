@@ -37,11 +37,11 @@ static NSArray *ECVUSBDevices(void) // TODO: Put this somewhere better.
 {
 	NSMutableArray *const devices = [NSMutableArray array];
 	io_iterator_t iterator = IO_OBJECT_NULL;
-	ECVIOReturn(IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching(kIOUSBDeviceClassName), &iterator));
+	if(kIOReturnSuccess != ECVIOReturn(IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching(kIOUSBDeviceClassName), &iterator))) return devices;
 	io_service_t service = IO_OBJECT_NULL;
 	while((service = IOIteratorNext(iterator))) {
 		NSMutableDictionary *properties = nil;
-		ECVIOReturn(IORegistryEntryCreateCFProperties(service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
+		if(kIOReturnSuccess != ECVIOReturn(IORegistryEntryCreateCFProperties(service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions))) break;
 		[properties autorelease];
 		[devices addObject:[NSString stringWithFormat:@"(%04x:%04x) %@ - %@",
 			[[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntValue],
@@ -51,8 +51,6 @@ static NSArray *ECVUSBDevices(void) // TODO: Put this somewhere better.
 			]];
 		IOObjectRelease(service);
 	}
-ECVNoDeviceError:
-ECVGenericError:
 	return devices;
 }
 
@@ -134,11 +132,9 @@ static void ECVDeviceAdded(Class deviceClass, io_iterator_t iterator)
 	for(Class const class in [ECVCaptureDevice deviceClasses]) {
 		NSDictionary *const matchingDict = [class matchingDictionary];
 		io_iterator_t iterator = IO_OBJECT_NULL;
-		ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchingDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator));
+		if(kIOReturnSuccess != ECVIOReturn(IOServiceAddMatchingNotification(_notificationPort, kIOFirstMatchNotification, (CFDictionaryRef)[matchingDict retain], (IOServiceMatchingCallback)ECVDeviceAdded, class, &iterator))) continue;
 		[devices addObjectsFromArray:[class devicesWithIterator:iterator]];
 		[_notifications addObject:[NSNumber numberWithUnsignedInt:iterator]];
-ECVGenericError:
-ECVNoDeviceError: (void)0;
 	}
 	ECVLog(ECVNotice, @"USB Devices: %@", ECVUSBDevices());
 	if([devices count]) return [devices makeObjectsPerformSelector:@selector(ECV_display)];

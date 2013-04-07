@@ -171,7 +171,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 
 	SInt32 ignored = 0;
 	IOCFPlugInInterface **devicePlugInInterface = NULL;
-	if(kIOReturnSuccess != ECVIOReturn2(IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored))) {
+	if(kIOReturnSuccess != ECVIOReturn(IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &devicePlugInInterface, &ignored))) {
 		return NULL;
 	}
 
@@ -191,13 +191,13 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		kIOUSBFindInterfaceDontCare,
 	};
 	io_iterator_t interfaceIterator = IO_OBJECT_NULL;
-	(void)ECVIOReturn2((*device)->CreateInterfaceIterator(device, &interfaceRequest, &interfaceIterator));
+	(void)ECVIOReturn((*device)->CreateInterfaceIterator(device, &interfaceRequest, &interfaceIterator));
 	io_service_t const service = IOIteratorNext(interfaceIterator);
 	NSParameterAssert(service);
 
 	SInt32 ignored = 0;
 	IOCFPlugInInterface **interfacePlugInInterface = NULL;
-	if(kIOReturnSuccess != ECVIOReturn2(IOCreatePlugInInterfaceForService(service, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored))) {
+	if(kIOReturnSuccess != ECVIOReturn(IOCreatePlugInInterfaceForService(service, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID, &interfacePlugInInterface, &ignored))) {
 		IOObjectRelease(service);
 		return NULL;
 	}
@@ -238,7 +238,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		_readLock = [[NSLock alloc] init];
 
 		NSMutableDictionary *properties = nil;
-		(void)ECVIOReturn2(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
+		(void)ECVIOReturn(IORegistryEntryCreateCFProperties(_service, (CFMutableDictionaryRef *)&properties, kCFAllocatorDefault, kNilOptions));
 		[properties autorelease];
 		_productName = [[[properties objectForKey:[NSString stringWithUTF8String:kUSBProductString]] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] copy];
 		if(![_productName length]) _productName = [NSLocalizedString(@"Capture Device", nil) retain];
@@ -261,12 +261,12 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		IOReturn err = kIOReturnSuccess;
 		err = err ?: ((_USBDevice = [[self class] USBDeviceWithService:[self service]]) ? kIOReturnSuccess : kIOReturnError);
 
-		err = err ?: ECVIOReturn2((*_USBDevice)->USBDeviceOpen(_USBDevice));
-		err = err ?: ECVIOReturn2((*_USBDevice)->ResetDevice(_USBDevice));
+		err = err ?: ECVIOReturn((*_USBDevice)->USBDeviceOpen(_USBDevice));
+		err = err ?: ECVIOReturn((*_USBDevice)->ResetDevice(_USBDevice));
 
 		IOUSBConfigurationDescriptorPtr configurationDescription = NULL;
-		err = err ?: ECVIOReturn2((*_USBDevice)->GetConfigurationDescriptorPtr(_USBDevice, 0, &configurationDescription));
-		err = err ?: ECVIOReturn2((*_USBDevice)->SetConfiguration(_USBDevice, configurationDescription->bConfigurationValue));
+		err = err ?: ECVIOReturn((*_USBDevice)->GetConfigurationDescriptorPtr(_USBDevice, 0, &configurationDescription));
+		err = err ?: ECVIOReturn((*_USBDevice)->SetConfiguration(_USBDevice, configurationDescription->bConfigurationValue));
 
 		if(kIOReturnSuccess != err) {
 			ECVLog(ECVError, @"Device %@ failed to open", self);
@@ -277,7 +277,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		_valid = YES;
 
 		Class const controller = NSClassFromString(@"ECVController"); // FIXME: Kind of a hack.
-		if(controller) (void)ECVIOReturn2(IOServiceAddInterestNotification([[controller sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
+		if(controller) (void)ECVIOReturn(IOServiceAddInterestNotification([[controller sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 	}
 	return self;
 }
@@ -318,7 +318,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	UInt8 transferType = kUSBIsoc;
 	UInt16 frameRequestSize = 1;
 	UInt8 millisecondInterval = 0;
-	(void)ECVIOReturn2(ECVGetPipeWithProperties((void *)_USBInterface, &pipe, &direction, &transferType, &frameRequestSize, &millisecondInterval));
+	(void)ECVIOReturn(ECVGetPipeWithProperties((void *)_USBInterface, &pipe, &direction, &transferType, &frameRequestSize, &millisecondInterval));
 
 	UInt32 const microsecondsInFrame = [self _microsecondsInFrame];
 	ECVUSBTransferList *const transferList = [self _transferListWithFrameRequestSize:frameRequestSize];
@@ -350,7 +350,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 - (BOOL)setAlternateInterface:(UInt8)alternateSetting
 {
 	if(!_USBInterface) return NO;
-	IOReturn const error = ECVIOReturn2((*_USBInterface)->SetAlternateInterface(_USBInterface, alternateSetting));
+	IOReturn const error = ECVIOReturn((*_USBInterface)->SetAlternateInterface(_USBInterface, alternateSetting));
 	switch(error) {
 		case kIOReturnSuccess: return YES;
 		case kIOReturnNoDevice:
@@ -362,11 +362,11 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 {
 	if(!_USBInterface) return NO;
 	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
-	IOReturn const error = ECVIOReturn2((*_USBInterface)->ControlRequest(_USBInterface, 0, &r));
+	IOReturn const error = ECVIOReturn((*_USBInterface)->ControlRequest(_USBInterface, 0, &r));
 	if(r.wLenDone != r.wLength) return NO;
 	switch(error) {
 		case kIOReturnSuccess: return YES;
-		case kIOUSBPipeStalled: (void)ECVIOReturn2((*_USBInterface)->ClearPipeStall(_USBInterface, 0)); return YES;
+		case kIOUSBPipeStalled: (void)ECVIOReturn((*_USBInterface)->ClearPipeStall(_USBInterface, 0)); return YES;
 		case kIOReturnNotResponding: return NO;
 	}
 	return NO;
@@ -396,14 +396,14 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 - (UInt32)_microsecondsInFrame
 {
 	UInt32 microsecondsInFrame = 0;
-	(void)ECVIOReturn2((*_USBInterface)->GetFrameListTime(_USBInterface, &microsecondsInFrame));
+	(void)ECVIOReturn((*_USBInterface)->GetFrameListTime(_USBInterface, &microsecondsInFrame));
 	return microsecondsInFrame;
 }
 - (UInt64)_currentFrameNumber
 {
 	UInt64 currentFrameNumber = 0;
 	AbsoluteTime atTimeIgnored;
-	(void)ECVIOReturn2((*_USBInterface)->GetBusFrameNumber(_USBInterface, &currentFrameNumber, &atTimeIgnored));
+	(void)ECVIOReturn((*_USBInterface)->GetBusFrameNumber(_USBInterface, &currentFrameNumber, &atTimeIgnored));
 	return currentFrameNumber;
 }
 - (ECVUSBTransferList *)_transferListWithFrameRequestSize:(NSUInteger const)frameRequestSize
@@ -421,8 +421,8 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		IOReturn err = kIOReturnSuccess;
 		err = err ?: ((_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
 
-		err = err ?: ECVIOReturn2((*_USBInterface)->USBInterfaceOpen(_USBInterface));
-		err = err ?: ECVIOReturn2((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &_ignoredEventSource));
+		err = err ?: ECVIOReturn((*_USBInterface)->USBInterfaceOpen(_USBInterface));
+		err = err ?: ECVIOReturn((*_USBInterface)->CreateInterfaceAsyncEventSource(_USBInterface, &_ignoredEventSource));
 		CFRunLoopAddSource(CFRunLoopGetCurrent(), _ignoredEventSource, kCFRunLoopCommonModes);
 
 		if(err) {
@@ -456,7 +456,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 {
 	while(kCFRunLoopRunHandledSource == CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true)); // Clean up the event loop. Prevents the kernel from filling up its buffer and logging error messages. It'd be nice to turn this off entirely, since we don't use it.
 	if(!*frameNumber) *frameNumber = [self _currentFrameNumber] + 10;
-	switch(ECVIOReturn2((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) {
+	switch(ECVIOReturn((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) {
 		case kIOReturnSuccess:
 			*frameNumber += numberOfMicroframes / (kUSBFullSpeedMicrosecondsInFrame / microsecondsInFrame);
 			return YES;

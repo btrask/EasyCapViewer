@@ -124,13 +124,11 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID const inDevice, AudioTimeStam
 {
 	io_iterator_t iterator = IO_OBJECT_NULL;
 	io_service_t subservice = IO_OBJECT_NULL;
-	ECVIOReturn(IORegistryEntryCreateIterator(device, kIOServicePlane, kIORegistryIterateRecursively, &iterator));
+	if(kIOReturnSuccess != ECVIOReturn(IORegistryEntryCreateIterator(device, kIOServicePlane, kIORegistryIterateRecursively, &iterator))) return nil;
 	while((subservice = IOIteratorNext(iterator))) if(IOObjectConformsTo(subservice, kIOAudioEngineClassName)) {
 		NSString *const UID = [(NSString *)IORegistryEntryCreateCFProperty(subservice, CFSTR(kIOAudioEngineGlobalUniqueIDKey), kCFAllocatorDefault, 0) autorelease];
 		return UID ? [self deviceWithUID:UID] : nil;
 	}
-ECVGenericError:
-ECVNoDeviceError:
 	return nil;
 }
 
