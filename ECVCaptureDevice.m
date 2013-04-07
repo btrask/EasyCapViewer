@@ -362,14 +362,21 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 {
 	if(!_USBInterface) return NO;
 	IOUSBDevRequest r = { type, request, v, i, length, data, 0 };
-	IOReturn const error = ECVIOReturn((*_USBInterface)->ControlRequest(_USBInterface, 0, &r));
-	if(r.wLenDone != r.wLength) return NO;
+	IOReturn const error = (*_USBInterface)->ControlRequest(_USBInterface, 0, &r);
 	switch(error) {
-		case kIOReturnSuccess: return YES;
-		case kIOUSBPipeStalled: (void)ECVIOReturn((*_USBInterface)->ClearPipeStall(_USBInterface, 0)); return YES;
-		case kIOReturnNotResponding: return NO;
+		case kIOReturnSuccess:
+			if(r.wLenDone != r.wLength) {
+				ECVLog(ECVError, @"Incomplete transfer, %u of %u", r.wLenDone, r.wLength);
+				return NO;
+			}
+			return YES;
+		case kIOUSBPipeStalled:
+			(void)ECVIOReturn((*_USBInterface)->ClearPipeStall(_USBInterface, 0));
+			return YES;
+		default:
+			(void)ECVIOReturn(error);
+			return NO;
 	}
-	return NO;
 }
 - (BOOL)readRequest:(UInt8 const)request value:(UInt16 const)v index:(UInt16 const)i length:(UInt16 const)length data:(out void *const)data
 {
