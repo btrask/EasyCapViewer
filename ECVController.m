@@ -198,6 +198,7 @@ ECVNoDeviceError: (void)0;
 }
 - (void)ECV_createDocument
 {
+	if(![self isValid]) return;
 	ECVCaptureDocument *const doc = [[[ECVCaptureDocument alloc] init] autorelease];
 	[doc setVideoDevice:self];
 	[[NSDocumentController sharedDocumentController] addDocument:doc];

@@ -118,9 +118,7 @@ static NSString *const ECVAudioInputVideoDevice = @"ECVAudioInputVideoDevice";
 
 - (void)workspaceWillSleep:(NSNotification *const)aNotif
 {
-	// TODO: Do something.
-//	[self setPausedFromUI:YES];
-//	[self noteDeviceRemoved];
+	[self setPausedFromUI:YES];
 }
 
 #pragma mark -

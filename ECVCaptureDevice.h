@@ -43,6 +43,7 @@ extern NSString *const ECVHueKey;
 {
 	@private
 	io_service_t _service;
+	BOOL _valid;
 	io_object_t _deviceRemovedNotification;
 
 	NSString *_productName;
@@ -78,7 +79,8 @@ extern NSString *const ECVHueKey;
 + (IOUSBInterfaceInterface300 **)USBInterfaceWithDevice:(IOUSBDeviceInterface320 **const)device;
 
 - (id)initWithService:(io_service_t const)service;
-- (void)noteDeviceRemoved;
+- (BOOL)isValid;
+- (void)invalidate;
 
 - (Class)deinterlacingMode;
 - (void)setDeinterlacingMode:(Class const)mode;

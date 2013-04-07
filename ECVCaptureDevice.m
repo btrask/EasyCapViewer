@@ -78,7 +78,7 @@ static NSDictionary *ECVDevicesDictionary = nil;
 
 static void ECVDeviceRemoved(ECVCaptureDevice *device, io_service_t service, uint32_t messageType, void *messageArgument)
 {
-	if(kIOMessageServiceIsTerminated == messageType) [device performSelector:@selector(noteDeviceRemoved) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]]; // Make sure we don't do anything during a special run loop mode (eg. NSModalPanelRunLoopMode).
+	if(kIOMessageServiceIsTerminated == messageType) [device performSelector:@selector(invalidate) withObject:nil afterDelay:0.0f inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]]; // Make sure we don't do anything during a special run loop mode (eg. NSModalPanelRunLoopMode).
 }
 static void ECVDoNothing(void *refcon, IOReturn result, void *arg0) {}
 
@@ -274,15 +274,21 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 			return nil;
 		}
 
+		_valid = YES;
+
 		Class const controller = NSClassFromString(@"ECVController"); // FIXME: Kind of a hack.
 		if(controller) (void)ECVIOReturn2(IOServiceAddInterestNotification([[controller sharedController] notificationPort], service, kIOGeneralInterest, (IOServiceInterestCallback)ECVDeviceRemoved, self, &_deviceRemovedNotification));
 	}
 	return self;
 }
-- (void)noteDeviceRemoved
+- (BOOL)isValid
 {
-//	[self close];
-	// TODO: Do something?
+	return _valid;
+}
+- (void)invalidate
+{
+	_valid = NO;
+	[[self captureDocument] close];
 }
 
 #pragma mark -
