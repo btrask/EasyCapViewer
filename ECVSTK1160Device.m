@@ -372,7 +372,8 @@ enum {
 - (BOOL)composite { return YES; }
 - (BOOL)writeToDevice:(ECVSTK1160Device *const)device
 {
-	return dev_stk0408_write0(device, 1 << 7 | 0x3 << 3, 1 << 7 | [self hardwareSource] << 3);
+	dev_stk0408_write0(device, 1 << 7 | 0x3 << 3, 1 << 7 | [self hardwareSource] << 3);
+	return YES;
 }
 @end
 @implementation ECVSTK11X0VideoSource_Composite1
