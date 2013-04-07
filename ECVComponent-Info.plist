@@ -15,7 +15,7 @@
 	<key>CFBundleSignature</key>
 	<string>RNST</string>
 	<key>CFBundleVersion</key>
-	<string>${CURRENT_PROJECT_VERSION}</string>
+	<string>0.6.1a</string>
 	<key>ECVMainSuiteName</key>
 	<string>${ECV_BUNDLE_IDENTIFIER}</string>
 </dict>
