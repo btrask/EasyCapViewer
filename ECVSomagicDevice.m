@@ -101,7 +101,7 @@ enum {
 		_offset = 0;
 	}
 
-	ECVIntegerSize const s = {720, 240};
+	ECVIntegerSize const s = {720, [[self videoFormat] frameSize].height};
 	OSType const pixelFormat = [self pixelFormat];
 	NSUInteger const bytesPerRow = ECVPixelFormatBytesPerPixel(pixelFormat) * s.width + 8;
 	NSUInteger const fieldLength = bytesPerRow * s.height;
