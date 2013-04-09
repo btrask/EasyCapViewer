@@ -115,7 +115,7 @@ static NSString *const ECVUpconvertsFromMonoKey = @"ECVUpconvertsFromMono";
 			nil]];
 		_inputDescription = ECVStandardAudioStreamBasicDescription;
 		_muted = NO;
-		_volume = 1.0;
+		_volume = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVVolumeKey];
 	}
 	return self;
 }
