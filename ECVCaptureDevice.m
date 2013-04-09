@@ -424,6 +424,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	[_readThreadLock lock];
 	if([self _keepReading]) {
 		ECVLog(ECVNotice, @"Starting device %@.", [self name]);
+		(void)[_captureDocument retain]; // We need it for -pushVideoFrame:. Is this the best solution?
 
 		IOReturn err = kIOReturnSuccess;
 		err = err ?: ((_USBInterface = [[self class] USBInterfaceWithDevice:_USBDevice]) ? kIOReturnSuccess : kIOReturnError);
@@ -447,6 +448,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		if(_USBInterface) (*_USBInterface)->Release(_USBInterface);
 		_USBInterface = NULL;
 
+		[_captureDocument release];
 		ECVLog(ECVNotice, @"Stopping device %@.", [self name]);
 	}
 	[_readThreadLock unlock];
