@@ -47,11 +47,6 @@ enum {
 	ECVSomagicLowField = 1 << 6,
 };
 
-@interface ECVSomagicVideoSource_SVideo : ECVVideoSource
-@end
-@interface ECVSomagicVideoSource_Composite : ECVVideoSource
-@end
-
 @implementation ECVSomagicDevice
 
 #pragma mark -ECVSomagicDevice
@@ -507,13 +502,13 @@ enum {
 - (NSArray *)supportedVideoSources
 {
 	return [NSArray arrayWithObjects:
-		[ECVSomagicVideoSource_SVideo source],
-		[ECVSomagicVideoSource_Composite source],
+		[ECVGenericVideoSource_SVideo source],
+		[ECVGenericVideoSource_Composite source],
 		nil];
 }
 - (ECVVideoSource *)defaultVideoSource
 {
-	return [ECVSomagicVideoSource_Composite source];
+	return [ECVGenericVideoSource_Composite source];
 }
 - (NSSet *)supportedVideoFormats
 {
@@ -531,15 +526,4 @@ enum {
 	return k2vuyPixelFormat;
 }
 
-@end
-
-@implementation ECVSomagicVideoSource_SVideo
-- (NSString *)localizedName { return NSLocalizedString(@"S-Video", nil); }
-- (BOOL)SVideo { return YES; }
-- (BOOL)composite { return NO; }
-@end
-@implementation ECVSomagicVideoSource_Composite
-- (NSString *)localizedName { return NSLocalizedString(@"Composite", nil); }
-- (BOOL)SVideo { return NO; }
-- (BOOL)composite { return YES; }
 @end

@@ -36,3 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (NSString *)localizedName;
 
 @end
+
+@interface ECVGenericVideoSource_SVideo : ECVVideoSource
+@end
+@interface ECVGenericVideoSource_Composite : ECVVideoSource
+@end

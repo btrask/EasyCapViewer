@@ -19,11 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVPixelBuffer.h"
 #import "ECVPixelFormat.h"
 
-@interface ECVEM2860VideoSource_SVideo : ECVVideoSource
-@end
-@interface ECVEM2860VideoSource_Composite : ECVVideoSource
-@end
-
 static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	for(size_t i = 0; i < len / sizeof(uint16_t); ++i) bytes[i] = CFSwapInt16(bytes[i]);
 }
@@ -74,13 +69,13 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 - (NSArray *)supportedVideoSources
 {
 	return [NSArray arrayWithObjects:
-		[ECVEM2860VideoSource_SVideo source],
-		[ECVEM2860VideoSource_Composite source],
+		[ECVGenericVideoSource_SVideo source],
+		[ECVGenericVideoSource_Composite source],
 		nil];
 }
 - (ECVVideoSource *)defaultVideoSource
 {
-	return [ECVEM2860VideoSource_Composite source];
+	return [ECVGenericVideoSource_Composite source];
 }
 - (NSSet *)supportedVideoFormats
 {
@@ -559,13 +554,4 @@ static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	[super dealloc];
 }
 
-@end
-
-@implementation ECVEM2860VideoSource_SVideo
-- (NSString *)localizedName { return NSLocalizedString(@"S-Video", nil); }
-- (BOOL)SVideo { return YES; }
-@end
-@implementation ECVEM2860VideoSource_Composite
-- (NSString *)localizedName { return NSLocalizedString(@"Composite", nil); }
-- (BOOL)composite { return YES; }
 @end
