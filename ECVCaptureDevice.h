@@ -24,12 +24,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVConfigController.h"
 #import "ECVAVTarget.h"
 
+// For subclassers
+#import "ECVVideoSource.h"
+#import "ECVVideoFormat.h"
+#import "ECVVideoStorage.h"
+#import "ECVPixelBuffer.h"
+#import "ECVPixelFormat.h"
+
 // Models
 @class ECVCaptureDocument;
-@class ECVVideoSource;
-@class ECVVideoFormat;
-@class ECVVideoStorage;
-@class ECVPixelBuffer;
 @class ECVVideoFrame;
 
 extern NSString *const ECVDeinterlacingModeKey;

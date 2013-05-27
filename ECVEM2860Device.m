@@ -13,11 +13,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #import "ECVEM2860Device.h"
-#import "ECVVideoSource.h"
-#import "ECVVideoFormat.h"
-#import "ECVVideoStorage.h"
-#import "ECVPixelBuffer.h"
-#import "ECVPixelFormat.h"
 
 static void ECVPixelFormatHack(uint16_t *const bytes, size_t const len) {
 	for(size_t i = 0; i < len / sizeof(uint16_t); ++i) bytes[i] = CFSwapInt16(bytes[i]);

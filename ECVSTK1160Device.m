@@ -21,16 +21,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVSTK1160Device.h"
 #import "stk11xx.h"
-
-// Video
-#import "ECVVideoSource.h"
-#import "ECVVideoFormat.h"
-#import "ECVVideoStorage.h"
-#import "ECVPixelBuffer.h"
-
-// Other Sources
 #import "ECVDebug.h"
-#import "ECVPixelFormat.h"
 
 enum {
 	ECVSTK1160HighFieldFlag = 1 << 6,

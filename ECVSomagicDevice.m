@@ -20,12 +20,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVSomagicDevice.h"
-#import "ECVVideoSource.h"
-#import "ECVVideoFormat.h"
 #import "ECVDebug.h"
-#import "ECVPixelBuffer.h"
-#import "ECVVideoStorage.h"
-#import "ECVPixelFormat.h"
 
 #define RECV(request, idx, val, ...) \
 	do { \
