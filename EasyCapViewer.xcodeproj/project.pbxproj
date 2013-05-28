@@ -106,6 +106,8 @@
 		B516D83316E14B5C006E6031 /* ECVHUDButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = B516D83216E14B5C006E6031 /* ECVHUDButtonCell.m */; };
 		B5281144130D7BB400FBE537 /* ECVFoundationAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9B2110F6764500935C48 /* ECVFoundationAdditions.m */; };
 		B58A14501309C96800487B2D /* ECVDependentVideoStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */; };
+		B5A89D1317513C8400995E10 /* ECVFushicaiDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A89D1217513C8400995E10 /* ECVFushicaiDevice.m */; };
+		B5A89D1417513C8400995E10 /* ECVFushicaiDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = B5A89D1217513C8400995E10 /* ECVFushicaiDevice.m */; };
 		B5B4F5D8169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */ = {isa = PBXBuildFile; fileRef = B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */; };
 		B5B4F5D9169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */ = {isa = PBXBuildFile; fileRef = B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */; };
 		B5BC261A166F78EC0036490F /* ECVVideoFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = B5BC2619166F78EC0036490F /* ECVVideoFormat.m */; };
@@ -269,6 +271,8 @@
 		B58A144F1309C96700487B2D /* ECVDependentVideoStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDependentVideoStorage.m; sourceTree = "<group>"; };
 		B594FCEF1252644D009E583F /* ECVDeinterlacingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVDeinterlacingMode.h; sourceTree = "<group>"; };
 		B594FCF11252648A009E583F /* ECVDeinterlacingMode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVDeinterlacingMode.m; sourceTree = "<group>"; };
+		B5A89D1117513C8400995E10 /* ECVFushicaiDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVFushicaiDevice.h; sourceTree = "<group>"; };
+		B5A89D1217513C8400995E10 /* ECVFushicaiDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVFushicaiDevice.m; sourceTree = "<group>"; };
 		B5B4F5D6169E506200B14376 /* ECVSomagicDevice_Unloaded.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVSomagicDevice_Unloaded.h; sourceTree = "<group>"; };
 		B5B4F5D7169E506200B14376 /* ECVSomagicDevice_Unloaded.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ECVSomagicDevice_Unloaded.m; sourceTree = "<group>"; };
 		B5BC2618166F78EC0036490F /* ECVVideoFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ECVVideoFormat.h; sourceTree = "<group>"; };
@@ -355,6 +359,7 @@
 				0E78CD500FC9F8E500E9C148 /* STK1160 */,
 				B54758411507B270006C0E44 /* eMPIA EM2860 */,
 				B5C0606F169C6A6C00E35266 /* Somagic */,
+				B5A89D1017513C2C00995E10 /* Fushicai */,
 				0EB0723410B0D89D00B9575B /* Chipsets */,
 				B50600D31327BC2F00B2F202 /* Video */,
 				0E0C489B10B91DC2008731F2 /* ECVMovieRecorder.h */,
@@ -565,6 +570,15 @@
 			name = "eMPIA EM2860";
 			sourceTree = "<group>";
 		};
+		B5A89D1017513C2C00995E10 /* Fushicai */ = {
+			isa = PBXGroup;
+			children = (
+				B5A89D1117513C8400995E10 /* ECVFushicaiDevice.h */,
+				B5A89D1217513C8400995E10 /* ECVFushicaiDevice.m */,
+			);
+			name = Fushicai;
+			sourceTree = "<group>";
+		};
 		B5C0606F169C6A6C00E35266 /* Somagic */ = {
 			isa = PBXGroup;
 			children = (
@@ -730,6 +744,7 @@
 				B5BC29D3167F68970036490F /* ECVVideoSource.m in Sources */,
 				B5BC2A11167F6FAB0036490F /* ECVEM2860Device.m in Sources */,
 				B5B4F5D9169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */,
+				B5A89D1417513C8400995E10 /* ECVFushicaiDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -782,6 +797,7 @@
 				B5C0606D169C6A6700E35266 /* ECVSomagicDevice.m in Sources */,
 				B5B4F5D8169E506200B14376 /* ECVSomagicDevice_Unloaded.m in Sources */,
 				B516D83316E14B5C006E6031 /* ECVHUDButtonCell.m in Sources */,
+				B5A89D1317513C8400995E10 /* ECVFushicaiDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

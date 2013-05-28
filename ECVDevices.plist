@@ -30,5 +30,12 @@
 		<key>ECVProductID</key>
 		<integer>7</integer>
 	</dict>
+	<key>ECVFushicaiDevice</key>
+	<dict>
+		<key>ECVVendorID</key>
+		<integer>7025</integer>
+		<key>ECVProductID</key>
+		<integer>12290</integer>
+	</dict>
 </dict>
 </plist>
