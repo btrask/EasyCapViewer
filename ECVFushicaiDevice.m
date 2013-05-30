@@ -30,15 +30,39 @@ enum {
 	ECVFushicaiHighFieldFlag = 1 << 3,
 };
 
-#define CTRL(pipe, type, req, idx, val, ext) \
+#define CTRL(pipe, type, req, idx, val) \
 ({ \
 	[self controlRequestWithType:type request:req value:val index:idx length:0 data:NULL];\
 })
+
+#define VND_RD(request, idx, val, ...) \
+({ \
+	u_int8_t const expected[] = {__VA_ARGS__}; \
+	u_int8_t data[] = {__VA_ARGS__}; \
+	size_t const length = sizeof(expected); \
+	if(![self readRequest:(request) value:(val) index:(idx) length:length data:data]) return; \
+	if(memcmp(expected, data, length) != 0) ECVLog(ECVNotice, @"Line %d, read %04x: Expected %@, received %@", __LINE__, (idx), [NSData dataWithBytesNoCopy:(void *)expected length:length freeWhenDone:NO], [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO]); \
+})
+#define VND_WR(request, idx, val, ...) \
+({ \
+	u_int8_t data[] = {__VA_ARGS__}; \
+	if(![self writeRequest:(request) value:(val) index:(idx) length:sizeof(data) data:data]) return; \
+})
+
 
 @implementation ECVFushicaiDevice
 
 #pragma mark -ECVFushicaiDevice
 
+- (BOOL)modifyIndex:(UInt16 const)idx enable:(UInt8 const)enable disable:(UInt8 const)disable
+{
+	NSAssert(!(enable & disable), @"Can't enable and disable the same flag(s).");
+	UInt8 old = 0;
+	if(![self readRequest:11 value:0 index:idx length:sizeof(old) data:&old]) return NO;
+	UInt8 new = (old | enable) & ~disable;
+	if(![self writeRequest:12 value:new index:idx length:0 data:NULL]) return NO;
+	return YES;
+}
 - (void)writePacket:(UInt8 const *const)bytes length:(NSUInteger const)length toStorage:(ECVVideoStorage *const)storage
 {
 	NSUInteger const headerLength = 4;
@@ -79,239 +103,247 @@ enum {
 - (void)read
 {
 [self setAlternateInterface:0];
-//CTRL(0, USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBInterface), kUSBRqSetInterface, 0, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 2, 0x0000, 0x00a0, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x003a, 0x00a0, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x0000, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x0020, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x0040, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x0060, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x0080, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x00a0, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x00c0, 0x00a2, 33);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 7, 0x00e0, 0x00a2, 33);
-// 4, kUSBIn, kUSBInterrupt
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc008, 0x0001, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1d0, 0x00ff, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1d9, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1da, 0x0013, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1db, 0x0012, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1e9, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1ec, 0x006c, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc25b, 0x0030, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc254, 0x0073, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc294, 0x0020, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc255, 0x00cf, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc256, 0x0020, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1eb, 0x0030, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc105, 0x0060, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc11f, 0x00f2, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc127, 0x0060, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0ae, 0x0010, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc284, 0x00aa, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc003, 0x0004, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc01a, 0x0068, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc100, 0x00d3, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc10e, 0x0072, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc10f, 0x00a2, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc112, 0x00b0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc115, 0x0015, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc117, 0x0001, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc118, 0x002c, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc12d, 0x0010, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc12f, 0x0020, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc220, 0x002e, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc225, 0x0008, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24e, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24f, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc254, 0x0059, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc25a, 0x0016, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc25b, 0x0035, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc263, 0x0017, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc266, 0x0016, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc267, 0x0036, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24e, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24f, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc239, 0x0040, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc240, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc241, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc242, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc243, 0x0080, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc244, 0x0012, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc245, 0x0090, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc246, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc278, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc278, 0x0009, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc278, 0x000d, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc278, 0x002d, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc279, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc279, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc279, 0x000a, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc27a, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27a, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27a, 0x0010, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27a, 0x0012, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27a, 0x0032, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xf890, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xf890, 0x000c, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xf894, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xf894, 0x0086, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0ac, 0x00c0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0ad, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0a2, 0x0012, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0a3, 0x00e0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0a4, 0x0028, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0a5, 0x0082, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0a7, 0x0080, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc000, 0x0014, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc006, 0x0003, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc090, 0x0099, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc091, 0x0090, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc094, 0x0068, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc095, 0x0070, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc09c, 0x0030, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc09d, 0x00c0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc09e, 0x00e0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc019, 0x0006, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc08c, 0x00ba, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc101, 0x00ff, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc10c, 0x00b3, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1b2, 0x0080, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc1b4, 0x00a0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc14c, 0x00ff, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc14d, 0x00ca, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc113, 0x0053, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc119, 0x008a, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc13c, 0x0003, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc150, 0x009c, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc151, 0x0071, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc152, 0x00c6, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc153, 0x0084, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc154, 0x00bc, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc155, 0x00a0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc156, 0x00a0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc157, 0x009c, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc158, 0x001f, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc159, 0x0006, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc15d, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc27d, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27d, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27d, 0x0006, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27d, 0x0026, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27d, 0x0026, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc27d, 0x00a6, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc280, 0x0011, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc281, 0x0040, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc282, 0x0011, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc283, 0x0040, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xf891, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xf891, 0x0010, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc0ae, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc284, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc105, 0x0060, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc11f, 0x00f2, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc127, 0x0060, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0ae, 0x0010, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc0ae, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc284, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc284, 0x0088, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc003, 0x0004, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc01a, 0x0079, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc100, 0x00d3, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc10e, 0x0068, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc10f, 0x009c, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc112, 0x00f0, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc115, 0x0015, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc117, 0x0000, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc118, 0x00fc, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc12d, 0x0004, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc12f, 0x0008, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc220, 0x002e, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc225, 0x0008, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24e, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24f, 0x0001, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc254, 0x005f, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc25a, 0x0012, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc25b, 0x0001, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc263, 0x001c, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc266, 0x0011, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc267, 0x0005, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24e, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc24f, 0x0002, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc16f, 0x00b8, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc0ae, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc246, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc245, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc242, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc243, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc240, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc241, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc239, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc246, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc245, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 3);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc245, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc242, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc243, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc242, 0x0000, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc240, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc241, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc240, 0x0000, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc239, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc239, 0x0060, 0);
-//CTRL(0, USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBInterface), kUSBRqSetInterface, 1, 0);
+VND_RD(2, 0x0000, 0x00a0, 0x01, 0x3a);
+VND_RD(7, 0x003a, 0x00a0, 0x00, 0x6f);
+VND_RD(7, 0x0000, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x0020, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x0040, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x0060, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x0080, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x00a0, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x00c0, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_RD(7, 0x00e0, 0x00a2, 0x01, 0x6f, 0xd0, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c);
+VND_WR(12, 0xc008, 0x0001);
+VND_WR(12, 0xc1d0, 0x00ff);
+VND_WR(12, 0xc1d9, 0x0002);
+VND_WR(12, 0xc1da, 0x0013);
+VND_WR(12, 0xc1db, 0x0012);
+VND_WR(12, 0xc1e9, 0x0002);
+VND_WR(12, 0xc1ec, 0x006c);
+VND_WR(12, 0xc25b, 0x0030);
+VND_WR(12, 0xc254, 0x0073);
+VND_WR(12, 0xc294, 0x0020);
+VND_WR(12, 0xc255, 0x00cf);
+VND_WR(12, 0xc256, 0x0020);
+VND_WR(12, 0xc1eb, 0x0030);
+VND_WR(12, 0xc105, 0x0060);
+VND_WR(12, 0xc11f, 0x00f2);
+VND_WR(12, 0xc127, 0x0060);
+VND_WR(12, 0xc0ae, 0x0010);
+VND_WR(12, 0xc284, 0x00aa);
+VND_WR(12, 0xc003, 0x0004);
+VND_WR(12, 0xc01a, 0x0068);
+VND_WR(12, 0xc100, 0x00d3);
+VND_WR(12, 0xc10e, 0x0072);
+VND_WR(12, 0xc10f, 0x00a2);
+VND_WR(12, 0xc112, 0x00b0);
+VND_WR(12, 0xc115, 0x0015);
+VND_WR(12, 0xc117, 0x0001);
+VND_WR(12, 0xc118, 0x002c);
+VND_WR(12, 0xc12d, 0x0010);
+VND_WR(12, 0xc12f, 0x0020);
+VND_WR(12, 0xc220, 0x002e);
+VND_WR(12, 0xc225, 0x0008);
+VND_WR(12, 0xc24e, 0x0002);
+VND_WR(12, 0xc24f, 0x0002);
+VND_WR(12, 0xc254, 0x0059);
+VND_WR(12, 0xc25a, 0x0016);
+VND_WR(12, 0xc25b, 0x0035);
+VND_WR(12, 0xc263, 0x0017);
+VND_WR(12, 0xc266, 0x0016);
+VND_WR(12, 0xc267, 0x0036);
+VND_WR(12, 0xc24e, 0x0002);
+VND_WR(12, 0xc24f, 0x0002);
+VND_WR(12, 0xc239, 0x0040);
+VND_WR(12, 0xc240, 0x0000);
+VND_WR(12, 0xc241, 0x0000);
+VND_WR(12, 0xc242, 0x0002);
+VND_WR(12, 0xc243, 0x0080);
+VND_WR(12, 0xc244, 0x0012);
+VND_WR(12, 0xc245, 0x0090);
+VND_WR(12, 0xc246, 0x0000);
+//VND_RD(11, 0xc278, 0x0000, 0x08);
+//VND_WR(12, 0xc278, 0x0009);
+//VND_WR(12, 0xc278, 0x000d);
+//VND_WR(12, 0xc278, 0x002d);
+[self modifyIndex:0xc278 enable:1 << 0 | 1 << 2 | 1 << 5 disable:0];
+//VND_RD(11, 0xc279, 0x0000, 0x00);
+//VND_WR(12, 0xc279, 0x0002);
+//VND_WR(12, 0xc279, 0x000a);
+[self modifyIndex:0xc279 enable:1 << 1 | 1 << 3 disable:0];
+//VND_RD(11, 0xc27a, 0x0000, 0x30);
+//VND_WR(12, 0xc27a, 0x0030);
+//VND_WR(12, 0xc27a, 0x0030);
+//VND_WR(12, 0xc27a, 0x0032);
+//VND_WR(12, 0xc27a, 0x0032);
+[self modifyIndex:0xc27a enable:1 << 1 | 1 << 4 | 1 << 5 disable:0];
+//VND_RD(11, 0xf890, 0x0000, 0x0c);
+//VND_WR(12, 0xf890, 0x000c);
+[self modifyIndex:0xf890 enable:0 disable:1 << 7];
+//VND_RD(11, 0xf894, 0x0000, 0x87);
+//VND_WR(12, 0xf894, 0x0086);
+[self modifyIndex:0xf894 enable:1 << 7 | 1 << 1 disable:1 << 0];
+VND_WR(12, 0xc0ac, 0x00c0);
+VND_WR(12, 0xc0ad, 0x0000);
+VND_WR(12, 0xc0a2, 0x0012);
+VND_WR(12, 0xc0a3, 0x00e0);
+VND_WR(12, 0xc0a4, 0x0028);
+VND_WR(12, 0xc0a5, 0x0082);
+VND_WR(12, 0xc0a7, 0x0080);
+VND_WR(12, 0xc000, 0x0014);
+VND_WR(12, 0xc006, 0x0003);
+VND_WR(12, 0xc090, 0x0099);
+VND_WR(12, 0xc091, 0x0090);
+VND_WR(12, 0xc094, 0x0068);
+VND_WR(12, 0xc095, 0x0070);
+VND_WR(12, 0xc09c, 0x0030);
+VND_WR(12, 0xc09d, 0x00c0);
+VND_WR(12, 0xc09e, 0x00e0);
+VND_WR(12, 0xc019, 0x0006);
+VND_WR(12, 0xc08c, 0x00ba);
+VND_WR(12, 0xc101, 0x00ff);
+VND_WR(12, 0xc10c, 0x00b3);
+VND_WR(12, 0xc1b2, 0x0080);
+VND_WR(12, 0xc1b4, 0x00a0);
+VND_WR(12, 0xc14c, 0x00ff);
+VND_WR(12, 0xc14d, 0x00ca);
+VND_WR(12, 0xc113, 0x0053);
+VND_WR(12, 0xc119, 0x008a);
+VND_WR(12, 0xc13c, 0x0003);
+VND_WR(12, 0xc150, 0x009c);
+VND_WR(12, 0xc151, 0x0071);
+VND_WR(12, 0xc152, 0x00c6);
+VND_WR(12, 0xc153, 0x0084);
+VND_WR(12, 0xc154, 0x00bc);
+VND_WR(12, 0xc155, 0x00a0);
+VND_WR(12, 0xc156, 0x00a0);
+VND_WR(12, 0xc157, 0x009c);
+VND_WR(12, 0xc158, 0x001f);
+VND_WR(12, 0xc159, 0x0006);
+VND_WR(12, 0xc15d, 0x0000);
+//VND_RD(11, 0xc27d, 0x0000, 0x00);
+//VND_WR(12, 0xc27d, 0x0002);
+//VND_WR(12, 0xc27d, 0x0006);
+//VND_WR(12, 0xc27d, 0x0026);
+//VND_WR(12, 0xc27d, 0x0026);
+//VND_WR(12, 0xc27d, 0x00a6);
+[self modifyIndex:0xc27d enable:1 << 1 | 1 << 2 | 1 << 5 | 1 << 7 disable:0];
+VND_WR(12, 0xc280, 0x0011);
+VND_WR(12, 0xc281, 0x0040);
+VND_WR(12, 0xc282, 0x0011);
+VND_WR(12, 0xc283, 0x0040);
+//VND_RD(11, 0xf891, 0x0000, 0x10);
+//VND_WR(12, 0xf891, 0x0010);
+[self modifyIndex:0xf891 enable:0 disable:1 << 5];
+VND_RD(11, 0xc0ae, 0x0000, 0x10);
+VND_RD(11, 0xc284, 0x0000, 0xaa);
+VND_WR(12, 0xc105, 0x0060);
+VND_WR(12, 0xc11f, 0x00f2);
+VND_WR(12, 0xc127, 0x0060);
+VND_WR(12, 0xc0ae, 0x0010);
+VND_RD(11, 0xc0ae, 0x0000, 0x10);
+//VND_RD(11, 0xc284, 0x0000, 0xaa);
+//VND_WR(12, 0xc284, 0x0088);
+[self modifyIndex:0xc284 enable:0 disable:1 << 5 | 1 << 1];
+VND_WR(12, 0xc003, 0x0004);
+VND_WR(12, 0xc01a, 0x0079);
+VND_WR(12, 0xc100, 0x00d3);
+VND_WR(12, 0xc10e, 0x0068);
+VND_WR(12, 0xc10f, 0x009c);
+VND_WR(12, 0xc112, 0x00f0);
+VND_WR(12, 0xc115, 0x0015);
+VND_WR(12, 0xc117, 0x0000);
+VND_WR(12, 0xc118, 0x00fc);
+VND_WR(12, 0xc12d, 0x0004);
+VND_WR(12, 0xc12f, 0x0008);
+VND_WR(12, 0xc220, 0x002e);
+VND_WR(12, 0xc225, 0x0008);
+VND_WR(12, 0xc24e, 0x0002);
+VND_WR(12, 0xc24f, 0x0001);
+VND_WR(12, 0xc254, 0x005f);
+VND_WR(12, 0xc25a, 0x0012);
+VND_WR(12, 0xc25b, 0x0001);
+VND_WR(12, 0xc263, 0x001c);
+VND_WR(12, 0xc266, 0x0011);
+VND_WR(12, 0xc267, 0x0005);
+VND_WR(12, 0xc24e, 0x0002);
+VND_WR(12, 0xc24f, 0x0002);
+VND_WR(12, 0xc16f, 0x00b8);
+VND_RD(11, 0xc0ae, 0x0000, 0x10);
+VND_RD(11, 0xc244, 0x0000, 0x12);
+VND_RD(11, 0xc246, 0x0000, 0x00);
+VND_RD(11, 0xc244, 0x0000, 0x12);
+VND_RD(11, 0xc245, 0x0000, 0x90);
+VND_RD(11, 0xc242, 0x0000, 0x02);
+VND_RD(11, 0xc243, 0x0000, 0x80);
+VND_RD(11, 0xc240, 0x0000, 0x00);
+VND_RD(11, 0xc241, 0x0000, 0x00);
+VND_RD(11, 0xc239, 0x0000, 0x40);
+VND_RD(11, 0xc244, 0x0000, 0x12);
+VND_RD(11, 0xc246, 0x0000, 0x00);
+VND_RD(11, 0xc244, 0x0000, 0x12);
+VND_RD(11, 0xc245, 0x0000, 0x90);
+VND_WR(11, 0xc244, 0x0000);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_RD(11, 0xc245, 0x0000, 0x90);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_WR(11, 0xc244, 0x0000);
+VND_RD(11, 0xc242, 0x0000, 0x02);
+VND_RD(11, 0xc243, 0x0000, 0x80);
+VND_WR(11, 0xc242, 0x0000);
+VND_RD(11, 0xc240, 0x0000, 0x00);
+VND_RD(11, 0xc241, 0x0000, 0x00);
+VND_WR(11, 0xc240, 0x0000);
+//VND_RD(11, 0xc239, 0x0000, 0x40);
+//VND_WR(12, 0xc239, 0x0060);
+[self modifyIndex:0xc239 enable:1 << 1 disable:0];
 [self setAlternateInterface:1];
-// 4, kUSBIn, kUSBInterrupt
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBEndpoint), kUSBRqClearFeature, 0, 0, 0);
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-// 3, kUSBIn, kUSBBulk
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc105, 0x0010, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc11f, 0x00ff, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc127, 0x0060, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc0ae, 0x0030, 0);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc284, 0x0088, 0);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc246, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc245, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc242, 0x0000, 1);
-// 3, kUSBIn, kUSBBulk
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc243, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc240, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc241, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc239, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-// 3, kUSBIn, kUSBBulk
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc246, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc245, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 3);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc245, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc244, 0x0000, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc242, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc243, 0x0000, 1);
-// 3, kUSBIn, kUSBBulk
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc242, 0x0000, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc240, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc241, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 11, 0xc240, 0x0000, 2);
-CTRL(0, USBmakebmRequestType(kUSBIn, kUSBVendor, kUSBDevice), 11, 0xc239, 0x0000, 1);
-CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc239, 0x0060, 0);
+CTRL(0, USBmakebmRequestType(kUSBOut, kUSBStandard, kUSBEndpoint), kUSBRqClearFeature, 0, 0);
+if([[self videoSource] SVideo]) {
+	VND_WR(12, 0xc105, 0x0010);
+	VND_WR(12, 0xc11f, 0x00ff);
+	VND_WR(12, 0xc127, 0x0060);
+	VND_WR(12, 0xc0ae, 0x0030);
+	VND_WR(12, 0xc284, 0x0088);
+} else { // Composite
+	VND_WR(12, 0xc105, 0x0060);
+	VND_WR(12, 0xc11f, 0x00f2);
+	VND_WR(12, 0xc127, 0x0060);
+	VND_WR(12, 0xc0ae, 0x0010);
+	VND_WR(12, 0xc284, 0x00aa);
+	VND_WR(12, 0xc105, 0x0060);
+	VND_WR(12, 0xc11f, 0x00f2);
+	VND_WR(12, 0xc127, 0x0060);
+	VND_WR(12, 0xc0ae, 0x0010);
+	VND_WR(12, 0xc284, 0x00aa);
+}
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_RD(11, 0xc246, 0x0000, 0xd0);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_RD(11, 0xc245, 0x0000, 0xc0);
+VND_RD(11, 0xc242, 0x0000, 0x02);
+VND_RD(11, 0xc243, 0x0000, 0x00);
+VND_RD(11, 0xc240, 0x0000, 0x82);
+VND_RD(11, 0xc241, 0x0000, 0x00);
+VND_RD(11, 0xc239, 0x0000, 0x60);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_RD(11, 0xc246, 0x0000, 0xd0);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_RD(11, 0xc245, 0x0000, 0xc0);
+VND_WR(11, 0xc244, 0x0000);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_RD(11, 0xc245, 0x0000, 0xc0);
+VND_RD(11, 0xc244, 0x0000, 0x11);
+VND_WR(11, 0xc244, 0x0000);
+VND_RD(11, 0xc242, 0x0000, 0x02);
+VND_RD(11, 0xc243, 0x0000, 0x00);
+VND_WR(11, 0xc242, 0x0000);
+VND_RD(11, 0xc240, 0x0000, 0x82);
+VND_RD(11, 0xc241, 0x0000, 0x00);
+VND_WR(11, 0xc240, 0x0000);
+//VND_RD(11, 0xc239, 0x0000, 0x60);
+//VND_WR(12, 0xc239, 0x0060);
+[self modifyIndex:0xc239 enable:1 << 1 disable:0];
 
 [super read];
 [self setAlternateInterface:0];
@@ -342,12 +374,12 @@ CTRL(0, USBmakebmRequestType(kUSBOut, kUSBVendor, kUSBDevice), 12, 0xc239, 0x006
 {
 	return [NSArray arrayWithObjects:
 		[ECVGenericVideoSource_SVideo source],
-//		[ECVGenericVideoSource_Composite source], // TODO: Not supported yet.
+		[ECVGenericVideoSource_Composite source],
 		nil];
 }
 - (ECVVideoSource *)defaultVideoSource
 {
-	return [ECVGenericVideoSource_SVideo source]; // TODO: Default to composite.
+	return [ECVGenericVideoSource_Composite source];
 }
 - (NSSet *)supportedVideoFormats
 {
