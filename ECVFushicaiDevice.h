@@ -25,9 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	@private
 	NSUInteger _offset;
+	CGFloat _brightness;
+	CGFloat _contrast;
+	CGFloat _saturation;
+	CGFloat _hue;
 }
 
 - (BOOL)modifyIndex:(UInt16 const)idx enable:(UInt8 const)enable disable:(UInt8 const)disable;
 - (void)writePacket:(UInt8 const *const)bytes length:(NSUInteger const)length toStorage:(ECVVideoStorage *const)storage;
+- (void)writeBrightnessAndContrast;
 
 @end

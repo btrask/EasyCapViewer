@@ -70,7 +70,7 @@ enum {
 	if(length < headerLength + trailerLength) return;
 	if(0x00 == bytes[0]) return; // Empty packet.
 	if(0x88 != bytes[0]) {
-		ECVLog(ECVError, @"Unexpected device packet header %x\n", CFSwapInt32(*(unsigned int *)bytes));
+		ECVLog(ECVError, @"Unexpected device packet header %x\n", CFSwapInt32BigToHost(*(unsigned int *)bytes));
 		// TODO: Just checking our assumptions.
 	}
 
@@ -95,6 +95,28 @@ enum {
 	[storage drawPixelBuffer:buffer atPoint:(ECVIntegerPoint){-8, 0}];
 	[buffer release];
 	_offset += realLength;
+}
+- (void)writeBrightnessAndContrast
+{
+	uint16_t const b = round(_brightness * 0x3ff);
+	uint16_t const c = round(_contrast * 0x3ff);
+	uint8_t data[] = {
+		((c >> 4) & 0xf0) | ((b >> 8) & 0x0f),
+		c & 0xff,
+		b & 0xff,
+	};
+	[self writeRequest:11 value:0 index:0xc244 length:sizeof(data) data:&data];
+}
+
+#pragma mark -ECVCaptureDevice
+
+- (id)initWithService:(io_service_t const)service
+{
+	_brightness = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVBrightnessKey];
+	_contrast = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVContrastKey];
+	_saturation = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVSaturationKey];
+	_hue = [[NSUserDefaults standardUserDefaults] doubleForKey:ECVHueKey];
+	return [super initWithService:service];
 }
 
 #pragma mark -ECVCaptureDevice(ECVRead_Thread)
@@ -372,6 +394,11 @@ VND_WR(11, 0xc240, 0x0000);
 //VND_WR(12, 0xc239, 0x0060);
 [self modifyIndex:0xc239 enable:1 << 1 disable:0 << 1];
 
+[self setBrightness:_brightness];
+[self setContrast:_contrast];
+[self setSaturation:_saturation];
+[self setHue:_hue];
+
 [super read];
 [self setAlternateInterface:0];
 }
@@ -422,6 +449,54 @@ VND_WR(11, 0xc240, 0x0000);
 - (OSType)pixelFormat
 {
 	return k2vuyPixelFormat;
+}
+
+#pragma mark -ECVCaptureDevice<ECVCaptureDeviceConfiguring>
+
+- (CGFloat)brightness
+{
+	return _brightness;
+}
+- (void)setBrightness:(CGFloat const)val
+{
+	_brightness = val;
+	[self writeBrightnessAndContrast];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVBrightnessKey];
+}
+- (CGFloat)contrast
+{
+	return _contrast;
+}
+- (void)setContrast:(CGFloat const)val
+{
+	_contrast = val;
+	[self writeBrightnessAndContrast];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVContrastKey];
+}
+- (CGFloat)saturation
+{
+	return _saturation;
+}
+- (void)setSaturation:(CGFloat const)val
+{
+	_saturation = val;
+	uint16_t x = CFSwapInt16HostToBig(round(val * 0x3ff));
+	[self writeRequest:11 value:0 index:0xc242 length:sizeof(x) data:&x];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVSaturationKey];
+}
+- (CGFloat)hue
+{
+	return _hue;
+}
+- (void)setHue:(CGFloat const)val
+{
+	_hue = val;
+	uint16_t x = round(val * (0xdff*2));
+	if(x <= 0xdff) x = 0x8fff - x;
+	else x = 0x9200 - 0xdff + x;
+	x = CFSwapInt16HostToBig(x);
+	[self writeRequest:11 value:0 index:0xc240 length:sizeof(x) data:&x];
+	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithDouble:val] forKey:ECVHueKey];
 }
 
 @end
