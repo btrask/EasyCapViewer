@@ -83,16 +83,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	CGLContextObj const contextObj = ECVLockContext([self openGLContext]);
 	ECVGLError(glEnable(GL_TEXTURE_RECTANGLE_EXT));
 
-	if(_textureNames) ECVGLError(glDeleteTextures([_videoStorage numberOfBuffers], [_textureNames bytes]));
+	if(_textureNames) ECVGLError(glDeleteTextures((GLint)[_videoStorage numberOfBuffers], [_textureNames bytes]));
 	[_textureNames release];
 	[_frames release];
 
 	[_videoStorage release];
 	_videoStorage = [storage retain];
 
-	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, [_videoStorage bufferSize] * [_videoStorage numberOfBuffers], [_videoStorage allBufferBytes]));
+	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, (GLint)[_videoStorage bufferSize] * (GLint)[_videoStorage numberOfBuffers], [_videoStorage allBufferBytes]));
 	_textureNames = [[NSMutableData alloc] initWithLength:[_videoStorage numberOfBuffers] * sizeof(GLuint)];
-	ECVGLError(glGenTextures([_videoStorage numberOfBuffers], [_textureNames mutableBytes]));
+	ECVGLError(glGenTextures((GLint)[_videoStorage numberOfBuffers], [_textureNames mutableBytes]));
 	_frames = [[NSMutableArray alloc] init];
 
 	ECVIntegerSize const s = [[_videoStorage videoFormat] frameSize];
@@ -104,7 +104,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE, GL_STORAGE_CACHED_APPLE));
 		ECVGLError(glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE));
 		ECVGLError(glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, [self magFilter]));
-		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, s.width, s.height, 0, format, type, [_videoStorage bytesAtIndex:i]));
+		ECVGLError(glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGB, (GLint)s.width, (GLint)s.height, 0, format, type, [_videoStorage bytesAtIndex:i]));
 	}
 
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
@@ -240,7 +240,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	ECVIntegerSize const s = [[_videoStorage videoFormat] frameSize];
 	OSType const f = [_videoStorage pixelFormat];
 	ECVGLError(glBindTexture(GL_TEXTURE_RECTANGLE_EXT, [self _textureNameAtIndex:[frame bufferIndex]]));
-	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, s.width, s.height, ECVPixelFormatToGLFormat(f), ECVPixelFormatToGLType(f), [frame bytes]));
+	ECVGLError(glTexSubImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, (GLint)s.width, (GLint)s.height, ECVPixelFormatToGLFormat(f), ECVPixelFormatToGLType(f), [frame bytes]));
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	ECVGLDrawTextureInRectWithBounds(_outputRect, ECVScaledRect(_cropRect, ECVIntegerSizeToNSSize(s)));
 	ECVGLError(glDisable(GL_TEXTURE_RECTANGLE_EXT));
@@ -365,13 +365,13 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowDidChangeScreenProfileNotification object:[self window]];
 	}
 	if(aWindow) {
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidChangeScreen:) name:NSWindowDidChangeScreenNotification object:aWindow];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidChangeScreenProfile:) name:NSWindowDidChangeScreenProfileNotification object:aWindow];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidChangeScreen) name:NSWindowDidChangeScreenNotification object:aWindow];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidChangeScreenProfile) name:NSWindowDidChangeScreenProfileNotification object:aWindow];
 	}
 }
 - (void)viewDidMoveToWindow
 {
-	[self windowDidChangeScreenProfile:nil];
+	[self windowDidChangeScreenProfile];
 }
 
 #pragma mark -NSResponder
@@ -416,7 +416,7 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	if(_displayLink && CVDisplayLinkIsRunning(_displayLink)) ECVCVReturn(CVDisplayLinkStop(_displayLink));
 
 	ECVGLError(glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, 0, NULL));
-	ECVGLError(glDeleteTextures([[self videoStorage] numberOfBuffers], [_textureNames bytes]));
+	ECVGLError(glDeleteTextures((GLint)[[self videoStorage] numberOfBuffers], [_textureNames bytes]));
 
 	[_videoStorage release];
 	[_textureNames release];
@@ -434,16 +434,16 @@ static CVReturn ECVDisplayLinkOutputCallback(CVDisplayLinkRef displayLink, const
 	_magFilter = GL_LINEAR;
 	ECVCVReturn(CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink));
 	ECVCVReturn(CVDisplayLinkSetOutputCallback(_displayLink, (CVDisplayLinkOutputCallback)ECVDisplayLinkOutputCallback, self));
-	[self windowDidChangeScreenProfile:nil];
+	[self windowDidChangeScreenProfile];
 }
 
 #pragma mark -<NSWindowDelegate>
 
-- (void)windowDidChangeScreen:(NSNotification *)aNotif
+- (void)windowDidChangeScreen
 {
-	[self windowDidChangeScreenProfile:nil];
+	[self windowDidChangeScreenProfile];
 }
-- (void)windowDidChangeScreenProfile:(NSNotification *)aNotif
+- (void)windowDidChangeScreenProfile
 {
 	if(!_displayLink) return;
 	BOOL const drawing = CVDisplayLinkIsRunning(_displayLink);

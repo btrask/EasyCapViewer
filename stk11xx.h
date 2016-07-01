@@ -44,6 +44,7 @@ static void usb_stk11xx_write_registry(ECVSTK1160Device *dev, u_int16_t i, u_int
 {
 	(void)[dev writeIndex:i value:v];
 }
+
 static void usb_stk11xx_read_registry(ECVSTK1160Device *dev, u_int16_t i, u_int8_t *v)
 {
 	(void)[dev readIndex:i value:v];

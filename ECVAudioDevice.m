@@ -39,8 +39,14 @@ static OSStatus ECVAudioObjectPropertyListenerProc(AudioObjectID const inObjectI
 static OSStatus ECVAudioDeviceIOProc(AudioDeviceID const inDevice, AudioTimeStamp const *const inNow, AudioBufferList const *const inInputData, AudioTimeStamp const *const inInputTime, AudioBufferList *const outOutputData, AudioTimeStamp const *const inOutputTime, id const device)
 {
 	NSAutoreleasePool *const pool = [[NSAutoreleasePool alloc] init];
-	if([device isInput]) [[device delegate] audioInput:device didReceiveBufferList:inInputData atTime:inInputTime];
-	else [[device delegate] audioOutput:device didRequestBufferList:outOutputData forTime:inOutputTime];
+    if ([device isInput]) {
+        id tmp = [device delegate];
+        [tmp audioInput:device didReceiveBufferList:inInputData atTime:inInputTime];
+    } else {
+        id tmp = [device delegate];
+        [tmp audioOutput:device didRequestBufferList:outOutputData forTime:inOutputTime];
+    }
+    
 	[pool drain];
 	return noErr;
 }
@@ -299,7 +305,7 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID const inDevice, AudioTimeStam
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %@ (%ld, %@)>", [self class], self, [self name], [self deviceID], [self isInput] ? @"In" : @"Out"];
+	return [NSString stringWithFormat:@"<%@ %p: %@ (%u, %@)>", [self class], self, [self name], (unsigned int)[self deviceID], [self isInput] ? @"In" : @"Out"];
 }
 
 @end
@@ -368,7 +374,7 @@ static OSStatus ECVAudioDeviceIOProc(AudioDeviceID const inDevice, AudioTimeStam
 
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ %p: %ld>", [self class], self, [self streamID]];
+	return [NSString stringWithFormat:@"<%@ %p: %u>", [self class], self, (unsigned int)[self streamID]];
 }
 
 @end

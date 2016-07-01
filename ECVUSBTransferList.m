@@ -39,11 +39,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 		_transfers = calloc(_numberOfTransfers, sizeof(ECVUSBTransfer));
 		if(!_transfers) goto bail;
 
+        IOByteCount microframesPerTransferIOByteCount = (IOByteCount)_microframesPerTransfer;
+        IOByteCount frameRequestSizeIOByteCount = (IOByteCount)_frameRequestSize;
+        
 		NSUInteger i;
 		for(i = 0; i < _numberOfTransfers; ++i) {
 			ECVUSBTransfer *const transfer = _transfers + i;
-			if(kIOReturnSuccess != ECVIOReturn((*_interface)->LowLatencyCreateBuffer(_interface, (void **)&transfer->frames, sizeof(IOUSBLowLatencyIsocFrame) * _microframesPerTransfer, kUSBLowLatencyFrameListBuffer))) goto bail;
-			if(kIOReturnSuccess != ECVIOReturn((*_interface)->LowLatencyCreateBuffer(_interface, (void **)&transfer->data, _frameRequestSize * _microframesPerTransfer, kUSBLowLatencyReadBuffer))) goto bail;
+			if(kIOReturnSuccess != ECVIOReturn((*_interface)->LowLatencyCreateBuffer(_interface, (void **)&transfer->frames, sizeof(IOUSBLowLatencyIsocFrame) * microframesPerTransferIOByteCount, kUSBLowLatencyFrameListBuffer))) goto bail;
+			if(kIOReturnSuccess != ECVIOReturn((*_interface)->LowLatencyCreateBuffer(_interface, (void **)&transfer->data, frameRequestSizeIOByteCount * microframesPerTransferIOByteCount, kUSBLowLatencyReadBuffer))) goto bail;
 			NSUInteger j;
 			for(j = 0; j < _microframesPerTransfer; ++j) {
 				IOUSBLowLatencyIsocFrame *const frame = transfer->frames + j;

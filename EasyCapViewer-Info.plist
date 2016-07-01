@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>EasyCapViewer</string>
 	<key>CFBundleIdentifier</key>
-	<string>${ECV_BUNDLE_IDENTIFIER}</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -20,20 +20,6 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>0.6.3a</string>
-	<key>NSMainNibFile</key>
-	<string>ECVMenu</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>LSMinimumSystemVersion</key>
-	<string>10.5.8</string>
-	<key>ECVMainSuiteName</key>
-	<string>${ECV_BUNDLE_IDENTIFIER}</string>
-	<key>ECVVideoCodecs</key>
-	<array>
-		<string>'jpeg'</string>
-		<string>'mp4v'</string>
-		<string>'yuv2'</string>
-	</array>
 	<key>ECVInfoByVideoCodec</key>
 	<dict>
 		<key>'jpeg'</key>
@@ -51,5 +37,19 @@
 			<true/>
 		</dict>
 	</dict>
+	<key>ECVMainSuiteName</key>
+	<string>${ECV_BUNDLE_IDENTIFIER}</string>
+	<key>ECVVideoCodecs</key>
+	<array>
+		<string>'jpeg'</string>
+		<string>'mp4v'</string>
+		<string>'yuv2'</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.5.8</string>
+	<key>NSMainNibFile</key>
+	<string>ECVMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>
