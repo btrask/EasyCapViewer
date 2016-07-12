@@ -244,7 +244,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 		if(![_productName length]) _productName = [NSLocalizedString(@"Capture Device", nil) retain];
 
 		NSString *const mainSuiteName = [[[NSBundle bundleForClass:[self class]] infoDictionary] objectForKey:@"ECVMainSuiteName"];
-		NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04x.%04x", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
+		NSString *const deviceSuiteName = [NSString stringWithFormat:@"%@.%04lx.%04lx", mainSuiteName, [[properties objectForKey:[NSString stringWithUTF8String:kUSBVendorID]] unsignedIntegerValue], [[properties objectForKey:[NSString stringWithUTF8String:kUSBProductID]] unsignedIntegerValue]];
 		NSUserDefaults *const d = [NSUserDefaults standardUserDefaults];
 		[d registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
 			[NSNumber numberWithInteger:ECVLineDoubleHQ], ECVDeinterlacingModeKey,
@@ -366,7 +366,7 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 	switch(error) {
 		case kIOReturnSuccess:
 			if(r.wLenDone != r.wLength) {
-				ECVLog(ECVError, @"Incomplete transfer, %u of %u", r.wLenDone, r.wLength);
+				ECVLog(ECVError, @"Incomplete transfer, %u of %u", (unsigned int)r.wLenDone, r.wLength);
 				return NO;
 			}
 			return YES;
@@ -463,9 +463,10 @@ static IOReturn ECVGetPipeWithProperties(IOUSBInterfaceInterface **const interfa
 }
 - (BOOL)_readTransfer:(inout ECVUSBTransfer *)transfer numberOfMicroframes:(NSUInteger)numberOfMicroframes pipeRef:(UInt8)pipe frameNumber:(inout UInt64 *)frameNumber microsecondsInFrame:(UInt64)microsecondsInFrame millisecondInterval:(UInt8)millisecondInterval
 {
+    
 	while(kCFRunLoopRunHandledSource == CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true)); // Clean up the event loop. Prevents the kernel from filling up its buffer and logging error messages. It'd be nice to turn this off entirely, since we don't use it.
 	if(!*frameNumber) *frameNumber = [self _currentFrameNumber] + 10;
-	switch(ECVIOReturn((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) {
+	switch(ECVIOReturn((*_USBInterface)->LowLatencyReadIsochPipeAsync(_USBInterface, pipe, transfer->data, *frameNumber, (UInt32)numberOfMicroframes, millisecondInterval, transfer->frames, ECVDoNothing, NULL))) {
 		case kIOReturnSuccess:
 			*frameNumber += numberOfMicroframes / (kUSBFullSpeedMicrosecondsInFrame / microsecondsInFrame);
 			return YES;

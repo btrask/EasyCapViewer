@@ -19,7 +19,12 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+#pragma GCC diagnostic ignored "-Wobjc-method-access"
+
 #import "ECVCaptureController.h"
+
+#import <Foundation/NSHFSFileTypes.h>
+#import <QuickTime/QuickTime.h>
 
 // Models
 #import "ECVCaptureDocument.h"
@@ -410,7 +415,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 
 	[videoView setVsync:[d boolForKey:ECVVsyncKey]];
 	[videoView setShowDroppedFrames:[d boolForKey:ECVShowDroppedFramesKey]];
-	[videoView setMagFilter:[d integerForKey:ECVMagFilterKey]];
+	[videoView setMagFilter:(GLint)[d integerForKey:ECVMagFilterKey]];
 
 	_playButtonCell = [[ECVPlayButtonCell alloc] initWithOpenGLContext:[videoView openGLContext]];
 	[_playButtonCell setImage:[ECVPlayButtonCell playButtonImage]];

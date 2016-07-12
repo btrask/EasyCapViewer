@@ -439,7 +439,7 @@ VND_WR(11, 0xc240, 0x0000);
 {
 	return [NSSet setWithObjects:
 		[ECVVideoFormat_NTSC_M format],
-//		[ECVVideoFormat_PAL_BGDHI format], // TODO: Not supported yet.
+		[ECVVideoFormat_PAL_BGDHI format],
 		nil];
 }
 - (ECVVideoFormat *)defaultVideoFormat

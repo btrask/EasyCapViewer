@@ -165,7 +165,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (NSArray *)supportedVideoSources
 {
-	return [NSArray arrayWithObjects:nil];
+    return [NSArray array];
 }
 - (ECVVideoSource *)defaultVideoSource
 {
@@ -173,7 +173,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 }
 - (NSSet *)supportedVideoFormats
 {
-	return [NSSet setWithObjects:nil];
+	return [NSSet set];
 }
 - (ECVVideoFormat *)defaultVideoFormat
 {
