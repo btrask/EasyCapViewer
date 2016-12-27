@@ -45,6 +45,8 @@
 		<string>'mp4v'</string>
 		<string>'yuv2'</string>
 	</array>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.5.8</string>
 	<key>NSMainNibFile</key>

@@ -19,25 +19,25 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-#import <QTKit/QTKit.h>
 
 // Other Sources
 #import "ECVRational.h"
+#import <AVFoundation/AVFoundation.h>
 
 @interface ECVFrameRateConverter : NSObject
 {
-	QTTime _sourceFrameRate;
-	QTTime _targetFrameRate;
+	CMTime _sourceFrameRate;
+	CMTime _targetFrameRate;
 	NSData *_frameRepeatData;
 	NSUInteger _count;
 	NSUInteger _index;
 }
 
-+ (QTTime)frameRateWithRatio:(ECVRational)ratio ofFrameRate:(QTTime)rate;
++ (CMTime)frameRateWithRatio:(ECVRational)ratio ofFrameRate:(CMTime)rate;
 
-- (id)initWithSourceFrameRate:(QTTime)sourceFrameRate targetFrameRate:(QTTime)targetFrameRate;
-@property(readonly, assign) QTTime sourceFrameRate;
-@property(readonly, assign) QTTime targetFrameRate;
+- (id)initWithSourceFrameRate:(CMTime)sourceFrameRate targetFrameRate:(CMTime)targetFrameRate;
+@property(readonly, assign) CMTime sourceFrameRate;
+@property(readonly, assign) CMTime targetFrameRate;
 
 - (NSUInteger)currentFrameRepeatCount;
 - (NSUInteger)nextFrameRepeatCount;

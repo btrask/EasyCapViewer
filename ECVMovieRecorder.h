@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 	ECVIntegerSize _outputSize;
 	NSRect _cropRect;
 	BOOL _upconvertsFromMono;
-	QTTime _frameRate;
+	CMTime _frameRate;
 
 	CGFloat _volume;
 }
@@ -61,7 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 @property(assign) ECVIntegerSize outputSize;
 @property(assign) NSRect cropRect;
 @property(assign) BOOL upconvertsFromMono;
-@property(assign) QTTime frameRate;
+@property(assign) CMTime frameRate;
 
 @property(readonly) NSDictionary *cleanAperatureDictionary;
 

@@ -77,7 +77,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 {
 	CGLContextObj const contextObj = ECVLockContext(_context);
 	ECVGLError(glDeleteTextures(1, &_textureName));
-	NSBitmapImageRep *const rep = (NSBitmapImageRep *)[image bestRepresentationForDevice:nil];
+	NSBitmapImageRep *const rep = (NSBitmapImageRep *)[NSBitmapImageRep imageRepWithData:[image TIFFRepresentation]];;
 	if(rep) _textureName = [rep ECV_textureName];
 	ECVUnlockContext(contextObj);
 	[super setImage:image];

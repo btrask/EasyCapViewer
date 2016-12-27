@@ -20,19 +20,21 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVFrameRateConverter.h"
+#import <AVFoundation/AVFoundation.h>
 
-static ECVRational ECVRationalFromQTTime(QTTime t)
+
+static ECVRational ECVRationalFromCMTime(CMTime t)
 {
-	return ECVMakeRational(t.timeValue, t.timeScale);
+	return ECVMakeRational(t.value, t.timescale);
 }
-static QTTime ECVRationalToQTTime(ECVRational r)
+static CMTime ECVRationalToCMTime(ECVRational r)
 {
-	return QTMakeTime(r.numer, r.denom);
+	return CMTimeMake(r.numer,(int32_t)r.denom);
 }
 
 @interface ECVFrameRateConverter(Private)
 
-+ (NSData *)_frameRepeatDataWithSourceFrameRate:(QTTime)sourceFrameRate targetFrameRate:(QTTime)targetFrameRate;
++ (NSData *)_frameRepeatDataWithSourceFrameRate:(CMTime)sourceFrameRate targetFrameRate:(CMTime)targetFrameRate;
 
 - (NSUInteger)_repeatCountForFrame:(NSUInteger)i;
 
@@ -42,17 +44,17 @@ static QTTime ECVRationalToQTTime(ECVRational r)
 
 #pragma mark +ECVFrameRateConverter
 
-+ (QTTime)frameRateWithRatio:(ECVRational)ratio ofFrameRate:(QTTime)rate
++ (CMTime)frameRateWithRatio:(ECVRational)ratio ofFrameRate:(CMTime)rate
 {
-	return ECVRationalToQTTime(ECVRationalDivide(ECVRationalFromQTTime(rate), ratio));
+	return ECVRationalToCMTime(ECVRationalDivide(ECVRationalFromCMTime(rate), ratio));
 }
 
 #pragma mark +ECVFrameRateConverter(Private)
 
-+ (NSData *)_frameRepeatDataWithSourceFrameRate:(QTTime)sourceFrameRate targetFrameRate:(QTTime)targetFrameRate
++ (NSData *)_frameRepeatDataWithSourceFrameRate:(CMTime)sourceFrameRate targetFrameRate:(CMTime)targetFrameRate
 {
-	ECVRational const s = ECVRationalFromQTTime(sourceFrameRate);
-	ECVRational const t = ECVRationalFromQTTime(targetFrameRate);
+	ECVRational const s = ECVRationalFromCMTime(sourceFrameRate);
+	ECVRational const t = ECVRationalFromCMTime(targetFrameRate);
 	ECVRational const ratio = ECVRationalDivide(s, t);
 	ECVRational const one = ECVMakeRational(1, 1);
 
@@ -80,7 +82,7 @@ static QTTime ECVRationalToQTTime(ECVRational r)
 
 #pragma -ECVFrameRateConverter
 
-- (id)initWithSourceFrameRate:(QTTime)sourceFrameRate targetFrameRate:(QTTime)targetFrameRate
+- (id)initWithSourceFrameRate:(CMTime)sourceFrameRate targetFrameRate:(CMTime)targetFrameRate
 {
 	if((self = [super init])) {
 		_sourceFrameRate = sourceFrameRate;
