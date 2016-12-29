@@ -119,7 +119,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)isInterlaced { return YES; }
 - (BOOL)isProgressive { return NO; }
 - (NSUInteger)frameGroupSize { return 2; }
-- (QTTime)frameRate { return QTMakeTime(1001, 60000); }
+- (CMTime)frameRate { return CMTimeMake(1001, 60000); }
 - (BOOL)is60Hz { return YES; }
 - (BOOL)is50Hz { return NO; }
 @end
@@ -128,7 +128,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 - (BOOL)isInterlaced { return YES; }
 - (BOOL)isProgressive { return NO; }
 - (NSUInteger)frameGroupSize { return 2; }
-- (QTTime)frameRate { return QTMakeTime(1, 50); }
+- (CMTime)frameRate { return CMTimeMake(1, 50); }
 - (BOOL)is60Hz { return NO; }
 - (BOOL)is50Hz { return YES; }
 @end

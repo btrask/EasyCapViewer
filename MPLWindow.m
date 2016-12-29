@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #pragma mark NSWindow
 
 - (id)initWithContentRect:(NSRect)aRect
-      styleMask:(NSUInteger)aStyle
+      styleMask:(NSWindowStyleMask)aStyle
       backing:(NSBackingStoreType)bufferingType
       defer:(BOOL)flag
 {

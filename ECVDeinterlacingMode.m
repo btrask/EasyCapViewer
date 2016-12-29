@@ -413,12 +413,12 @@ static ECVPixelBufferDrawingOptions ECVFieldTypeDrawingOptions(ECVFieldType cons
 }
 - (BOOL)isInterlaced { return NO; }
 - (BOOL)isProgressive { return YES; }
-- (QTTime)frameRate
+- (CMTime)frameRate
 {
-	QTTime r = [_nativeFormat frameRate];
+	CMTime r = [_nativeFormat frameRate];
 	ECVRational const s = [self temporalResolution];
-	r.timeValue *= s.denom;
-	r.timeScale *= s.numer;
+	r.value *= s.denom;
+	r.timescale *= s.numer;
 	return r;
 }
 - (BOOL)is60Hz { return ECVRationalIsOne([self temporalResolution]) && [_nativeFormat is60Hz]; }

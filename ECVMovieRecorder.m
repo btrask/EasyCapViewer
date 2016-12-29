@@ -143,7 +143,7 @@ static OSStatus ECVCompressionDelegateHandler(id<ECVCompressionDelegate> const m
 - (id)init
 {
 	if((self = [super init])) {
-		_videoCodec = kJPEGCodecType;
+		_videoCodec = '@jpeg';
 		_videoQuality = 0.5f;
 		_stretchOutput = YES;
 		_cropRect = ECVUncroppedRect;

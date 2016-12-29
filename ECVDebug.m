@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import <mach/mach_port.h>
 #import <Foundation/NSDebug.h>
 #import <string.h>
-#import <QuickTime/QuickTimeErrors.h>
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
 	#import <OpenGL/gl.h>
 #endif
@@ -163,7 +162,7 @@ NSString *ECVOSStatusToString(OSStatus error)
 		ERROR_CASE(kQTMediaHasDisplayOffsetsErr)
 		ERROR_CASE(kQTDisplayTimeAlreadyInUseErr)
 		ERROR_CASE(kQTDisplayTimeTooEarlyErr)
-		ERROR_CASE(kQTTimeValueTooBigErr)
+		ERROR_CASE(kQMTimeValueTooBigErr)
 		ERROR_CASE(kQTVisualContextRequiredErr)
 		ERROR_CASE(kQTVisualContextNotAllowedErr)
 		ERROR_CASE(kQTPropertyBadValueSizeErr)

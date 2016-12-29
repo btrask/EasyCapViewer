@@ -125,7 +125,7 @@ static ICMCompressionSessionRef ECVCompressionSessionCreate(ECVCStorage *const s
 	ECVICMCSOSetProperty(opts, DurationsNeeded, (Boolean)true);
 	ECVICMCSOSetProperty(opts, AllowAsyncCompletion, (Boolean)true);
 	ECVVideoFormat *const format = [vs videoFormat];
-	QTTime const frameRate = [format frameRate];
+	CMTime const frameRate = [format frameRate];
 	NSTimeInterval frameRateInterval = 0.0;
 	if(QTGetTimeInterval(frameRate, &frameRateInterval)) ECVICMCSOSetProperty(opts, ExpectedFrameRate, X2Fix(1.0 / frameRateInterval));
 	ECVICMCSOSetProperty(opts, CPUTimeBudget, (UInt32)QTMakeTimeScaled(frameRate, ECVMicrosecondsPerSecond).timeValue);

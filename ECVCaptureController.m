@@ -24,7 +24,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #import "ECVCaptureController.h"
 
 #import <Foundation/NSHFSFileTypes.h>
-#import <QuickTime/QuickTime.h>
 
 // Models
 #import "ECVCaptureDocument.h"
@@ -394,7 +393,7 @@ static NSString *const ECVCropBorderKey = @"ECVCropBorder";
 		[NSNumber numberWithBool:YES], ECVVsyncKey,
 		[NSNumber numberWithInteger:GL_LINEAR], ECVMagFilterKey,
 		[NSNumber numberWithBool:NO], ECVShowDroppedFramesKey,
-		NSFileTypeForHFSTypeCode(kJPEGCodecType), ECVVideoCodecKey,
+		NSFileTypeForHFSTypeCode("jpeg"), ECVVideoCodecKey,
 		[NSNumber numberWithDouble:0.5f], ECVVideoQualityKey,
 		NSStringFromRect(ECVUncroppedRect), ECVCropRectKey,
 		[NSNumber numberWithInteger:ECVAspectRatioUnknown], ECVCropSourceAspectRatioKey,
